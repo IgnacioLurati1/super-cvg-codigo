@@ -1,0 +1,282 @@
+/* The graphs of the analysis and physics calculators (propias/_an-grafico.jsx), drawn by hand on the squared sheet: the
+   axes in pencil (--tinta-hoja), the function in pen (--foco), the construction of a method in red pen (--materia-1),
+   a second curve in green (--materia-2), what the method gives now with the highlighter. Each line has its own stroke,
+   so color is never the only clue. */
+.graf {
+  width: 100%;
+  margin: 4px 0 8px;
+}
+
+.graf__lamina {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  overflow: visible;
+  font-family: var(--fuente-ui);
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+.graf__eje {
+  stroke: var(--tinta-hoja);
+  stroke-width: 1.4;
+}
+
+.graf__marca {
+  stroke: var(--tinta-hoja);
+  stroke-width: 1;
+}
+
+.graf__numero {
+  fill: var(--texto-suave);
+  font-size: 12px;
+}
+
+.graf__nombre-eje {
+  fill: var(--texto-suave);
+  font-size: 13px;
+  font-style: italic;
+  font-weight: 600;
+}
+
+.graf__curva {
+  fill: none;
+  stroke: var(--foco);
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.graf__curva--segunda {
+  stroke: var(--materia-2);
+  stroke-dasharray: 9 5;
+}
+
+.graf__curva--recta {
+  stroke: var(--tinta-hoja);
+  stroke-width: 1.6;
+  stroke-dasharray: 2 5;
+}
+
+.graf__metodo {
+  fill: none;
+  stroke: var(--materia-1);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.graf__guia {
+  stroke: var(--tinta-hoja);
+  stroke-width: 1.2;
+  stroke-dasharray: 4 4;
+}
+
+.graf__punto {
+  fill: var(--superficie);
+  stroke: var(--texto);
+  stroke-width: 1.8;
+}
+
+.graf__punto--lleno {
+  fill: var(--texto);
+}
+
+.graf__punto--metodo {
+  fill: var(--superficie);
+  stroke: var(--materia-1);
+  stroke-width: 2;
+}
+
+/* What the method gives now: a highlighter dot circled in ink. */
+.graf__actual {
+  fill: var(--resaltador);
+  stroke: var(--texto);
+  stroke-width: 2;
+}
+
+.graf__rotulo {
+  fill: var(--texto);
+  font-size: 13px;
+  font-weight: 700;
+  paint-order: stroke;
+  stroke: var(--superficie);
+  stroke-width: 4px;
+  stroke-linejoin: round;
+}
+
+.graf__rotulo--metodo {
+  fill: var(--materia-1);
+}
+
+.graf__rotulo--suave {
+  fill: var(--texto-suave);
+  font-weight: 600;
+}
+
+.graf__vector line {
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+}
+
+.graf__vector path {
+  fill: currentColor;
+}
+
+.graf__vector {
+  color: var(--foco);
+}
+
+.graf__vector--metodo {
+  color: var(--materia-1);
+}
+
+.graf__vector--segunda {
+  color: var(--materia-2);
+}
+
+.graf__vector--tinta {
+  color: var(--texto);
+}
+
+.graf__vector--suave {
+  color: color-mix(in srgb, var(--foco) 75%, var(--superficie));
+}
+
+/* The legend: a piece of each line, with its name. */
+.graf-leyenda {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 18px;
+  margin: 0 0 8px;
+  padding: 0;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+  list-style: none;
+}
+
+.graf-leyenda li {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.graf-leyenda svg {
+  overflow: visible;
+}
+
+/* Back and forth between iterations, in ink on the sheet. */
+.graf-recorrer {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 8px;
+}
+
+.graf-recorrer__boton {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 1.5px solid var(--borde-control);
+  border-radius: 50%;
+  background: var(--superficie);
+  color: var(--texto);
+  cursor: pointer;
+  transition: background-color 120ms ease, transform 100ms ease;
+}
+
+.graf-recorrer__boton svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.graf-recorrer__boton:active:not([aria-disabled='true']) {
+  transform: scale(0.94);
+}
+
+.graf-recorrer__boton[aria-disabled='true'] {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.graf-recorrer__boton:focus-visible {
+  outline: 3px solid var(--foco);
+  outline-offset: 2px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .graf-recorrer__boton:hover:not([aria-disabled='true']) {
+    background: var(--superficie-2);
+  }
+}
+
+.graf-recorrer__cual {
+  min-width: 9.5em;
+  font-weight: 700;
+  text-align: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .graf-recorrer__boton:active:not([aria-disabled='true']) {
+    transform: none;
+  }
+}
+
+/* A formula as the notes write it, its exponents raised. */
+.fx {
+  font-variant-numeric: lining-nums;
+  white-space: normal;
+}
+
+.fx sup {
+  font-size: 0.72em;
+  line-height: 0;
+}
+
+.fx sup sup {
+  font-size: 0.85em;
+}
+
+/* An operation written out, with the number it gives highlighted at the end. */
+.cuenta-fin {
+  padding: 0 0.25em;
+  border-radius: 0.15em 0.45em 0.2em 0.5em;
+  background: var(--resaltador);
+  color: var(--resaltador-texto);
+  font-weight: 700;
+}
+
+/* A table of iterations whose last row is the answer. */
+.an-tabla tr[data-final] td,
+.an-tabla tr[data-final] th {
+  background: var(--resaltador);
+  color: var(--resaltador-texto);
+  font-weight: 700;
+}
+
+/* The iteration the graph shows, marked on the table by a line on its side. */
+.an-tabla tr[data-actual] th {
+  box-shadow: inset 4px 0 0 var(--materia-1);
+}
+
+/* A worked line of the sheet as one run of text, so an exponent, an index or a highlighted result sits in the line
+   instead of being spaced apart as its own piece. */
+.calc-hoja__cuenta.an-cuenta {
+  display: block;
+  line-height: 1.7;
+}
+
+.an-cuenta .calc-hoja__op {
+  margin-right: 0.5em;
+}
+
+.an-cuenta sub,
+.an-cuenta sup {
+  line-height: 0;
+}

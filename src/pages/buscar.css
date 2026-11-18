@@ -1,0 +1,448 @@
+/* Buscar en todas tus materias (Buscar.jsx). */
+.buscar h1 {
+  margin-bottom: 20px;
+}
+
+/* The search, big, with the magnifier inside the box. */
+.buscar__caja {
+  position: relative;
+  max-width: 48rem;
+  margin-bottom: 16px;
+}
+
+.buscar__caja .campo__control {
+  min-height: 3.5rem;
+  padding-left: 3rem;
+  border-color: var(--borde-control);
+  font-size: max(1.125rem, 16px);
+}
+
+.buscar__lupa {
+  position: absolute;
+  bottom: 1rem;
+  left: 0.875rem;
+  width: 1.5rem;
+  height: 1.5rem;
+  fill: none;
+  stroke: var(--texto-suave);
+  stroke-linecap: round;
+  stroke-width: 2;
+  pointer-events: none;
+}
+
+/* Searching inside the PDFs too: off until the student turns it on, and how the reading goes. */
+.buscar__pdf {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+  max-width: 48rem;
+  margin: -8px 0 20px;
+}
+
+.buscar__pdf-ayuda {
+  flex-basis: 100%;
+  margin: -10px 0 0 30px;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+}
+
+.buscar__pdf-estado {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  min-height: 36px;
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+.buscar__pdf-estado:empty {
+  display: none;
+}
+
+.buscar__pdf-barra {
+  width: 8rem;
+  height: 6px;
+  overflow: hidden;
+  border: 0;
+  border-radius: 3px;
+  background: var(--superficie-2);
+  appearance: none;
+}
+
+.buscar__pdf-barra::-webkit-progress-bar {
+  background: var(--superficie-2);
+}
+
+.buscar__pdf-barra::-webkit-progress-value {
+  background: var(--foco);
+}
+
+.buscar__pdf-barra::-moz-progress-bar {
+  background: var(--foco);
+}
+
+/* A piece of the page where the words are, under the name. */
+.fila__recorte {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+/* Words that do find something in the student's subjects, to start with a tap. */
+.buscar__sugeridas {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  max-width: 48rem;
+  margin: 0 0 24px;
+}
+
+.buscar__sugeridas-lista {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.buscar__sugeridas-titulo {
+  margin-right: 4px;
+  color: var(--texto-suave);
+}
+
+.buscar__sugerida {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 6px 14px;
+  border: 1px dashed var(--borde-control);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--texto);
+  cursor: pointer;
+  font: inherit;
+  transition: border-color 150ms ease-out, background-color 150ms ease-out;
+}
+
+.buscar__sugerida:active {
+  transform: scale(0.97);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .buscar__sugerida:hover {
+    border-style: solid;
+    background: var(--superficie);
+  }
+}
+
+/* How many there are, next to each filter and each subject. */
+.tipos__cuenta {
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+.tipos__opcion[aria-pressed='true'] .tipos__cuenta {
+  color: inherit;
+}
+
+.buscar__filtros {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  margin-bottom: 12px;
+}
+
+.buscar__tira {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+}
+
+/* The subjects with something found: one tap leaves only that one. */
+.buscar__materias {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 20px;
+  padding-top: 12px;
+  border-top: 1px solid var(--borde);
+}
+
+.buscar__materias .tipos__opcion {
+  min-height: 36px;
+  padding: 4px 12px;
+}
+
+.buscar__estado {
+  margin: 0 0 16px;
+  color: var(--texto-suave);
+}
+
+/* Found, by subject: its symbol and name on top, a few of its things below, and the rest one tap away. */
+.buscar__grupo {
+  margin-bottom: 28px;
+}
+
+.buscar__materia {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 6px;
+  font-size: var(--t-h3);
+}
+
+.buscar__materia a {
+  color: inherit;
+  text-decoration-color: color-mix(in srgb, currentColor 35%, transparent);
+  text-underline-offset: 3px;
+}
+
+.buscar__cuantos {
+  color: var(--texto-suave);
+  font-family: var(--fuente-ui);
+  font-size: var(--t-chica);
+  font-weight: 400;
+  font-variant-numeric: lining-nums tabular-nums;
+  white-space: nowrap;
+}
+
+/* In full text color, also on something already seen (whose name goes softer). */
+.buscar__grupo .fila__nombre mark,
+.buscar__grupo .fila__recorte mark {
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--aviso) 28%, transparent);
+  color: var(--texto);
+}
+
+.buscar__mas {
+  margin-top: 8px;
+}
+
+/* On a phone each row of filters is one line that slides sideways, so the results start near the top. The cut chip at
+   the edge says there is more. */
+@container pagina (max-width: 37.4375rem) {
+  .buscar__tira {
+    flex-wrap: nowrap;
+    gap: 6px;
+    margin-inline: calc(-1 * var(--margen));
+    padding: 4px var(--margen);
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+  }
+
+  .buscar__tira::-webkit-scrollbar {
+    display: none;
+  }
+
+  .buscar__tira .tipos {
+    flex-wrap: nowrap;
+  }
+
+  .buscar__tira .tipos__opcion {
+    flex: none;
+    white-space: nowrap;
+  }
+
+  .buscar__filtros {
+    display: block;
+  }
+
+  .buscar__materias {
+    border-top: 0;
+    padding-top: 4px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .buscar__sugerida,
+  .buscar__sugerida:active {
+    transition: none;
+    transform: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .buscar__grupo .fila__nombre mark,
+  .buscar__grupo .fila__recorte mark {
+    background: Mark;
+    color: MarkText;
+  }
+}
+
+/* Where it searches: the courses or the Drive folders (BuscarEnDrive.jsx). */
+.buscar__donde {
+  margin-bottom: 16px;
+}
+
+.drive__raiz {
+  margin-bottom: 28px;
+}
+
+.drive__cabeza {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+  padding-bottom: 6px;
+  border-bottom: 2px solid var(--borde);
+}
+
+.drive__nombre {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  font-size: var(--t-h3);
+}
+
+.drive__dato {
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+  font-variant-numeric: lining-nums;
+}
+
+.drive__acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.drive__lista {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Each level inside, a step to the right (less on a phone). */
+/* Under its item: Configuración has a .drive__fila of its own (configuracion.css), and the one that loads last would win. */
+.drive__item > .drive__fila {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 4px;
+  padding-left: calc(var(--nivel, 0) * clamp(12px, 3vw, 24px));
+}
+
+.drive__fila .fila__principal {
+  flex: 1;
+  min-width: 0;
+}
+
+.drive__item[data-escondido] > .drive__fila {
+  opacity: 0.6;
+}
+
+.drive__flecha {
+  flex: none;
+  width: 1.125rem;
+  height: 1.125rem;
+  fill: none;
+  stroke: var(--texto-suave);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2;
+  transition: transform 160ms ease-out;
+}
+
+[aria-expanded='true'] > .drive__flecha {
+  transform: rotate(90deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .drive__flecha {
+    transition: none;
+  }
+}
+
+.drive__esconder {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: var(--radio-control);
+  background: none;
+  color: var(--texto-suave);
+  cursor: pointer;
+}
+
+.drive__esconder:hover,
+.drive__esconder[aria-pressed='true'] {
+  color: var(--texto);
+  background: var(--superficie-2);
+}
+
+.drive__vacia,
+.drive__mas {
+  margin: 8px 0 8px calc(var(--nivel, 0) * clamp(12px, 3vw, 24px) + 36px);
+}
+
+.drive__vacia {
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+}
+
+.drive__armando {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
+  margin: 10px 0;
+  color: var(--texto-suave);
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+.drive__aviso {
+  margin: 10px 0;
+  color: var(--error);
+}
+
+.drive__sumar {
+  max-width: 48rem;
+  margin-top: 8px;
+}
+
+/* The box and its button on one line, level. */
+.drive__sumar-fila {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.drive__sumar-fila .campo__control {
+  flex: 1;
+  min-width: 0;
+}
+
+.drive__sumar-fila .boton {
+  flex: none;
+}
+
+/* The Drive's name opens and closes it whole. */
+.drive__abrir {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}

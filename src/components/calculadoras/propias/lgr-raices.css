@@ -1,0 +1,28 @@
+/* Lugar geométrico de las raíces (propias/lgr-raices.jsx): the open-loop poles as crosses, the zeros as rings and the
+   asymptotes dashed. */
+.lgr-polo {
+  fill: none;
+  stroke: var(--texto);
+  stroke-width: 2.4;
+  stroke-linecap: round;
+}
+
+.lgr-cero {
+  fill: var(--superficie);
+  stroke: var(--texto);
+  stroke-width: 2.2;
+}
+
+.lgr-asintota {
+  stroke: var(--materia-2);
+  stroke-width: 1.4;
+  stroke-dasharray: 6 5;
+}
+
+.lgr-rama {
+  stroke-width: 2.6;
+}
+
+.lgr-salida + .lgr-salida {
+  margin-top: 10px;
+}

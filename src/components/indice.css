@@ -1,0 +1,122 @@
+/* The index of the sections of a course (IndiceSecciones.jsx): only their titles, to go straight to one. */
+.indice__lista {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* The size of the text of the page, not of a label. */
+.indice__enlace {
+  display: block;
+  padding: 7px 12px;
+  border-radius: var(--radio-control);
+  color: var(--texto-suave);
+  font-size: var(--t-ui);
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+  text-decoration: none;
+}
+
+/* Two lines at most (the whole title is in `title`). Inside, so the padding doesn't show a third one. */
+.indice__texto {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+}
+
+/* The one being read. */
+.indice__enlace[aria-current='true'] {
+  background: var(--indice-actual, var(--superficie));
+  box-shadow: inset 3px 0 0 var(--accion);
+  color: var(--texto);
+  font-weight: 600;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .indice__enlace:hover {
+    color: var(--texto);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+}
+
+/* «Secciones» and «Classroom»: small titles, in the type of the titles of the page. */
+.indice__titulo {
+  margin: 0 0 8px;
+  padding: 0 12px;
+  color: var(--texto);
+  font-family: var(--fuente-titulos);
+  font-size: var(--t-h3);
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.indice__grupo {
+  margin-top: 24px;
+}
+
+.indice__nada {
+  margin: 0;
+  padding: 7px 12px;
+  color: var(--texto-suave);
+}
+
+/* Narrow screen: folded above the search, like the cards on the right. */
+.indice-plegable {
+  --indice-actual: var(--superficie-2);
+  margin-bottom: 16px;
+}
+
+.indice-plegable .indice {
+  padding: 0 8px 10px;
+}
+
+.indice-plegable .indice__enlace {
+  min-height: 44px;
+  padding: 12px 10px;
+}
+
+/* Folded, on a phone: the whole title, since there is no pointer to show its title. */
+.indice-plegable .indice__texto {
+  display: block;
+  -webkit-line-clamp: none;
+  line-clamp: none;
+  overflow-wrap: anywhere;
+}
+
+.indice__enlace:active {
+  background: var(--superficie-2);
+}
+
+/* Folded, «Ir a una sección» is the title: «Classroom» doesn't go above it. */
+.indice-plegable .indice__titulo {
+  font-size: var(--t-ui);
+}
+
+/* Wide screen: in the empty room to the left of the content column, fixed under the bar on top while the page goes
+   down, with its own scroll if it's taller than the screen. It hangs from the content's cell, to the left: neither
+   the content nor the column on the right move or get narrower. The width leaves 32px to the edge of the window: from
+   100rem (1600px with the normal letter) it's 14rem or more, room for the titles at the size of the text, whatever
+   the letter. The padding keeps the focus ring inside its scroll. IndiceSecciones.jsx measures the same width. */
+@container pagina (min-width: 100rem) {
+  .indice--costado {
+    --indice-ancho: min(17.5rem, calc((100vw - var(--ancho)) / 2 - 32px));
+    position: sticky;
+    top: calc(var(--alto-cabecera) + 24px);
+    grid-area: contenido;
+    align-self: start;
+    justify-self: start;
+    width: var(--indice-ancho);
+    max-height: calc(100vh - var(--alto-cabecera) - 48px);
+    max-height: calc(100dvh - var(--alto-cabecera) - 48px);
+    margin-left: calc(-1 * (var(--indice-ancho) + 40px));
+    padding: 6px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+  }
+}

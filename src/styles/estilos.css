@@ -1,0 +1,423 @@
+/* Styles and frames (ajustes.estilo, ajustes.bordes): only how things look, never where they are. The colors are in
+   tokens.css; this file holds what isn't a color: the ruled sheet, the gradients and the frames.
+   The lists go in :where(), so they weigh as little as the plain class and the states of each screen (today, hover,
+   chosen) still win. */
+
+/* ---------- Hoja: a ruled school sheet ---------- */
+
+/* The lines run under everything. */
+html[data-estilo='hoja'] body {
+  background:
+    repeating-linear-gradient(to bottom, transparent 0 calc(var(--renglon-alto) - 1px), var(--renglon) 0 var(--renglon-alto)),
+    var(--fondo);
+}
+
+/* The red margin hangs from each page, just left of its text: some pages are wider than others (the month of the
+   calendar on a big screen). It runs the whole height, behind everything, and the site clips what goes past it. */
+html[data-estilo='hoja'] .sitio {
+  overflow: clip;
+}
+
+html[data-estilo='hoja'] main .contenedor.pagina {
+  position: relative;
+}
+
+html[data-estilo='hoja'] main .contenedor.pagina::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: -100vh auto -100vh max(4px, calc(var(--margen) - 18px));
+  width: 2px;
+  background: var(--margen-rojo);
+  pointer-events: none;
+}
+
+/* The header is the top of the sheet: paper, ink, and the double red line. */
+html[data-estilo='hoja'] .cabecera {
+  background: var(--fondo);
+  color: var(--texto);
+  box-shadow:
+    0 2px 0 var(--margen-rojo),
+    0 5px 0 var(--fondo),
+    0 6px 0 var(--margen-rojo);
+}
+
+html[data-estilo='hoja'] .cabecera[data-compacta] .cabecera__menu {
+  background: var(--fondo);
+}
+
+html[data-estilo='hoja'] .cabecera :focus-visible {
+  outline-color: var(--foco);
+}
+
+/* On paper the header's buttons are drawn in ink, not in the gray of the controls. */
+html:is([data-estilo='hoja'], [data-estilo='profesional']) :is(.cabecera__boton, .cabecera__salir) {
+  border-color: currentColor;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  html[data-estilo='hoja'] :is(.cabecera__boton, .cabecera__salir, .cabecera__rapido, .cabecera__menu .cabecera__icono):hover {
+    background: color-mix(in srgb, currentColor 9%, transparent);
+  }
+}
+
+/* Titles by hand, the page's own underlined in red as in a folder. The small ones stay in print, they're read quickly. */
+html[data-estilo='hoja'] :is(h1, h2) {
+  letter-spacing: 0;
+}
+
+html:is([data-estilo='hoja'], [data-estilo='pizarron']) h3 {
+  font-family: var(--fuente-ui);
+}
+
+html[data-estilo='hoja'] :is(main h1, .lab-barra__titulo) {
+  text-decoration: underline 2px var(--margen-rojo);
+  text-underline-offset: 0.18em;
+  text-decoration-skip-ink: none;
+}
+
+/* What was a white card is written on the sheet: the lines show through. */
+html[data-estilo='hoja']
+  :where(
+    .destacado,
+    .semana__dia,
+    .materias__enlace,
+    .cal__dia,
+    .cal-semana__dia,
+    .evento,
+    .clases-hoy__clase,
+    .horario__mat,
+    .juntos__mat,
+    .calcs__item,
+    .area,
+    .pregunta,
+    .carrera-ficha,
+    .carrera-resumen,
+    .repaso-hoy,
+    .panel
+  ) {
+  background-color: transparent;
+}
+
+/* The cards of a course weigh more than the list: they go by name. */
+html[data-estilo='hoja'] .materia[data-vista='tarjetas'] .fila {
+  background-color: transparent;
+}
+
+/* ---------- Profesional and Batman: gradients instead of flat colors ----------
+   Batman is the same style in black and yellow: the colors are in tokens.css. */
+
+html:is([data-estilo='profesional'], [data-estilo='batman']) body {
+  background:
+    radial-gradient(1100px 620px at var(--luz-1-donde), var(--luz-1), transparent 65%),
+    radial-gradient(900px 560px at 100% 0%, var(--luz-2), transparent 60%),
+    linear-gradient(180deg, var(--cielo), var(--fondo) 640px);
+  background-color: var(--fondo);
+  background-attachment: fixed;
+}
+
+html:is([data-estilo='profesional'], [data-estilo='batman']) .cabecera {
+  background: linear-gradient(180deg, var(--cabecera-1), var(--cabecera-2));
+  color: var(--texto);
+  box-shadow: 0 1px 0 rgb(var(--brillo) / 0.18);
+}
+
+html:is([data-estilo='profesional'], [data-estilo='batman']) .cabecera[data-compacta] .cabecera__menu {
+  background: var(--cabecera-2);
+}
+
+html:is([data-estilo='profesional'], [data-estilo='batman']) .cabecera :focus-visible {
+  outline-color: var(--foco);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  html[data-estilo='profesional'] :is(.cabecera__boton, .cabecera__salir, .cabecera__rapido, .cabecera__menu .cabecera__icono):hover {
+    background: color-mix(in srgb, currentColor 9%, transparent);
+  }
+}
+
+/* Cards and floating panels: a light from the top left over their color, and a soft shadow under. */
+html:is([data-estilo='profesional'], [data-estilo='batman'])
+  :where(
+    .destacado,
+    .semana__dia,
+    .materias__enlace,
+    .cal__dia,
+    .cal-semana__dia,
+    .evento,
+    .clases-hoy__clase,
+    .horario__mat,
+    .juntos__mat,
+    .calcs__item,
+    .area,
+    .pregunta,
+    .carrera-ficha,
+    .carrera-resumen,
+    .repaso-hoy,
+    .materia[data-vista='tarjetas'] .fila,
+    .vista-hoy[data-vista='tablero'] .hoy__principal > .bloque,
+    .sysacad-hoja,
+    .sysacad-cifra,
+    .sysacad-certificado,
+    .eleccion,
+    .ajuste-si,
+    .form-fecha,
+    .entrar__formulario,
+    .panel,
+    .compartir,
+    .dialogo,
+    .campana__panel,
+    .combo__desplegable,
+    .cabecera__panel-mas
+  ) {
+  background-image: linear-gradient(160deg, var(--luz-tarjeta, rgb(255 255 255 / 0.07)), transparent 60%);
+  box-shadow:
+    inset 0 1px 0 rgb(var(--filo, 255 255 255) / var(--filo-fuerza, 0.06)),
+    0 12px 32px -20px var(--sombra, rgb(0 0 0 / 0.9));
+}
+
+html:is([data-estilo='profesional'], [data-estilo='batman']) :is(.boton:not(.boton--secundario, .boton--peligro), .panel.classroom > summary, .flotante__boton, .flotante__cabeza, .consultron__pregunta, .tipos__opcion[aria-pressed='true'], .mensajes__burbuja[data-mio] .mensajes__globo, .interruptor:checked) {
+  background-image: linear-gradient(135deg, var(--accion), var(--accion-fin, var(--accion-hover)));
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.18);
+}
+
+/* A gradient can't be eased into another: hovering lights the edge instead, which can. */
+html:is([data-estilo='profesional'], [data-estilo='batman']) .boton:not(.boton--secundario, .boton--peligro) {
+  transition:
+    box-shadow 160ms ease-out,
+    background-color 120ms ease;
+}
+
+@media (hover: hover) {
+  html:is([data-estilo='profesional'], [data-estilo='batman']) .boton:not(.boton--secundario, .boton--peligro):hover {
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.18),
+      0 0 0 1px rgb(var(--brillo) / 0.45),
+      0 6px 20px -8px var(--accion);
+  }
+}
+
+/* On today, the count can't take the action color when the action is as light as the highlighter. */
+html:is([data-estilo='batman'], [data-estilo='plano'], [data-estilo='pizarron']) .semana__dia[data-hoy] .semana__cantidad[data-hay] {
+  background: var(--resaltador-texto);
+  color: var(--resaltador);
+}
+
+/* The highlighter, from gold to amber. */
+html:is([data-estilo='profesional'], [data-estilo='batman']) :where(.marcado, .semana__dia[data-hoy], .cal__dia[data-hoy] .cal__numero) {
+  background-image: linear-gradient(110deg, var(--resaltador), color-mix(in oklab, var(--resaltador), #ff9f43 35%));
+}
+
+html:is([data-estilo='profesional'], [data-estilo='batman']):not([data-contraste='alto']) main h1 {
+  background-image: linear-gradient(100deg, var(--texto) 35%, var(--titulo-fin));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* ---------- Plano: an engineering blueprint ---------- */
+
+/* The grid: a small square every 24px and a big one every five. */
+html[data-estilo='plano'] body {
+  background:
+    linear-gradient(var(--cuadricula-mayor) 1px, transparent 1px) 0 0 / 120px 120px,
+    linear-gradient(90deg, var(--cuadricula-mayor) 1px, transparent 1px) 0 0 / 120px 120px,
+    linear-gradient(var(--cuadricula) 1px, transparent 1px) 0 0 / 24px 24px,
+    linear-gradient(90deg, var(--cuadricula) 1px, transparent 1px) 0 0 / 24px 24px,
+    radial-gradient(ellipse at 50% 0%, #144077, transparent 70%),
+    var(--fondo);
+  background-attachment: fixed;
+}
+
+/* The header is the title block of the sheet: a darker strip, closed by a double line. */
+html[data-estilo='plano'] .cabecera {
+  background: #0a2647;
+  color: var(--texto);
+  box-shadow:
+    0 1px 0 rgb(214 230 255 / 0.55),
+    0 4px 0 #0a2647,
+    0 5px 0 rgb(214 230 255 / 0.3);
+}
+
+html[data-estilo='plano'] .cabecera[data-compacta] .cabecera__menu {
+  background: #0a2647;
+}
+
+/* The page's title carries its dimension line, apart from the letters: a thin rule with a slanted tick near each end,
+   the way an architect measures. */
+html[data-estilo='plano'] main h1 {
+  --cota: color-mix(in srgb, currentColor 75%, transparent);
+  --marca: linear-gradient(to bottom right, transparent calc(50% - 0.8px), var(--cota) calc(50% - 0.8px), var(--cota) calc(50% + 0.8px), transparent calc(50% + 0.8px));
+  width: fit-content;
+  max-width: 100%;
+  padding-bottom: 0.5em;
+  background:
+    linear-gradient(var(--cota), var(--cota)) left 0 bottom 0.24em / 100% 1.5px no-repeat,
+    var(--marca) left 0.14em bottom 0.07em / 0.36em 0.36em no-repeat,
+    var(--marca) right 0.14em bottom 0.07em / 0.36em 0.36em no-repeat;
+  letter-spacing: 0.01em;
+}
+
+html[data-estilo='plano'] {
+  --recuadro: rgb(214 230 255 / 0.45);
+}
+
+html[data-estilo='plano'] .cabecera :focus-visible {
+  outline-color: var(--foco);
+}
+
+/* Drawn in ink: frames go dashed, like the hidden edges of a drawing. */
+html[data-estilo='plano'] {
+  --recuadro-trazo: dashed;
+}
+
+/* ---------- Pizarrón: the classroom's chalkboard ---------- */
+
+html[data-estilo='pizarron'] body {
+  background:
+    var(--pizarron-polvo),
+    radial-gradient(ellipse 80% 60% at 30% 0%, rgb(255 255 255 / 0.06), transparent 70%),
+    var(--fondo);
+  background-attachment: fixed;
+}
+
+/* The header is the wooden frame, with the chalk tray under it. */
+html[data-estilo='pizarron'] .cabecera {
+  background: linear-gradient(180deg, #8f6c47, #7f5f3f);
+  color: #fffaf0;
+  box-shadow:
+    0 3px 0 var(--pizarron-bandeja),
+    0 5px 8px -2px rgb(0 0 0 / 0.5);
+}
+
+html[data-estilo='pizarron'] .cabecera[data-compacta] .cabecera__menu {
+  background: #7f5f3f;
+}
+
+html[data-estilo='pizarron'] .cabecera :focus-visible {
+  outline-color: #fffaf0;
+}
+
+/* Chalk: a slight smudge around the titles, and the page's one underlined in yellow chalk. */
+html[data-estilo='pizarron'] :is(h1, h2) {
+  letter-spacing: 0;
+  text-shadow: 0 0 1px rgb(242 240 232 / 0.45);
+}
+
+html[data-estilo='pizarron'] :is(main h1, .lab-barra__titulo) {
+  text-decoration: underline wavy 2px var(--pizarron-amarillo);
+  text-underline-offset: 0.2em;
+  text-decoration-skip-ink: none;
+}
+
+html[data-estilo='pizarron'] {
+  --recuadro: rgb(242 240 232 / 0.4);
+}
+
+/* Cards keep an outline even without Bordes: ink on the blueprint, chalk on the board. */
+html:is([data-estilo='plano'], [data-estilo='pizarron'])
+  :where(
+    .destacado,
+    .semana__dia,
+    .materias__enlace,
+    .cal__dia,
+    .cal-semana__dia,
+    .evento,
+    .clases-hoy__clase,
+    .horario__mat,
+    .juntos__mat,
+    .calcs__item,
+    .area,
+    .pregunta,
+    .carrera-ficha,
+    .carrera-resumen,
+    .repaso-hoy,
+    .materia[data-vista='tarjetas'] .fila,
+    .panel,
+    .simbolo
+  ) {
+  box-shadow: inset 0 0 0 1px var(--contorno);
+}
+
+/* Handwritten letters reach farther than print: the highlighter grows a little up and down, and the lines of a title
+   keep apart so the next one doesn't cover a «g». */
+html:is([data-estilo='hoja'], [data-estilo='pizarron']) .marcado {
+  padding-block: 0.06em 0.16em;
+}
+
+html:is([data-estilo='hoja'], [data-estilo='pizarron']) :is(h1, h2) {
+  line-height: 1.35;
+  line-height: round(1.35em, 1px);
+}
+
+@media (forced-colors: active) {
+  html:is([data-estilo='plano'], [data-estilo='pizarron']) :is(h1, h2) {
+    background: none;
+    text-shadow: none;
+  }
+}
+
+/* ---------- Bordes: each block in its frame, in any style ---------- */
+
+html {
+  --recuadro: color-mix(in srgb, var(--borde-control) 55%, var(--borde));
+}
+
+html[data-estilo='hoja'] {
+  --recuadro: color-mix(in srgb, var(--texto) 45%, transparent);
+}
+
+html:is([data-estilo='profesional'], [data-estilo='batman']) {
+  --recuadro: rgb(var(--brillo) / 0.2);
+}
+
+html[data-contraste='alto'] {
+  --recuadro: var(--borde-control);
+}
+
+html[data-bordes='si']
+  :where(
+    .bloque,
+    .destacado,
+    .semana__dia,
+    .materias__enlace,
+    .cal__dia,
+    .cal-semana__dia,
+    .evento,
+    .clases-hoy__clase,
+    .horario__mat,
+    .juntos__mat,
+    .calcs__item,
+    .area,
+    .pregunta,
+    .carrera-ficha,
+    .carrera-resumen,
+    .repaso-hoy,
+    .form-fecha,
+    .panel,
+    .compartir
+  ) {
+  border: 1px var(--recuadro-trazo, solid) var(--recuadro);
+  border-radius: var(--radio-bloque);
+}
+
+/* A frame inside another one is lighter, so they don't weigh the same. */
+html[data-bordes='si'] :where(.bloque, .panel, .flotante, .dialogo) :where(.bloque, .destacado, .clases-hoy__clase, .horario__mat, .juntos__mat, .calcs__item, .area, .pregunta, .carrera-ficha, .carrera-resumen, .repaso-hoy, .form-fecha, .panel, .compartir) {
+  border-color: var(--borde);
+}
+
+/* A block that was only a title and its list gets room inside its frame. */
+html[data-bordes='si'] :where(.bloque) {
+  padding: clamp(14px, 2.5vw, 24px);
+}
+
+html[data-bordes='si'] :where(.bloque) > :where(h2:first-child) {
+  margin-top: 0;
+}
+
+@media (forced-colors: active) {
+  html:is([data-estilo='profesional'], [data-estilo='batman']) main h1 {
+    background: none;
+    color: CanvasText;
+  }
+}

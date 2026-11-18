@@ -1,0 +1,139 @@
+/* What the analysis and physics calculators write on the board (propias/_an-pizarron.jsx): the name in chalk, «=», and a
+   chalk line to write on, dashed at rest, solid yellow while writing, red chalk when it's wrong. */
+.pz-formula {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.pz-formula__nombre {
+  flex: none;
+  font-family: var(--fuente-titulos);
+  font-size: 1.375rem;
+  font-weight: 700;
+  font-style: italic;
+  white-space: nowrap;
+}
+
+.pz-formula__nombre span[aria-hidden] {
+  font-style: normal;
+}
+
+.pz-formula__control,
+.pz-dato__control {
+  min-width: 0;
+  height: 44px;
+  padding: 0 6px;
+  border: 0;
+  border-bottom: 2px dashed var(--pizarron-tiza-suave);
+  border-radius: 6px 6px 0 0;
+  background: transparent;
+  color: var(--pizarron-tiza);
+  caret-color: var(--pizarron-amarillo);
+  font: inherit;
+  font-size: 1.1875rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums lining-nums;
+  letter-spacing: 0.01em;
+  transition: background-color 120ms ease, border-color 120ms ease;
+}
+
+.pz-formula__control {
+  flex: 1;
+  width: 100%;
+}
+
+.pz-dato__control {
+  width: var(--ancho, 5rem);
+  text-align: center;
+}
+
+.pz-formula__control:focus,
+.pz-dato__control:focus {
+  outline: none;
+  border-bottom-style: solid;
+  border-bottom-color: var(--pizarron-amarillo);
+  background: color-mix(in srgb, var(--pizarron-tiza) 8%, transparent);
+}
+
+.pz-formula__control:focus-visible,
+.pz-dato__control:focus-visible {
+  outline: 2px solid var(--pizarron-amarillo);
+  outline-offset: 1px;
+}
+
+.pz-formula__control[aria-invalid='true'],
+.pz-dato__control[aria-invalid='true'] {
+  border-bottom-style: solid;
+  border-bottom-color: var(--pizarron-rojo);
+  color: var(--pizarron-rojo);
+}
+
+.pz-dato__control::placeholder {
+  color: color-mix(in srgb, var(--pizarron-tiza-suave) 70%, transparent);
+  font-weight: 400;
+}
+
+.pz-dato {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.pz-dato__nombre {
+  flex: none;
+  font-size: 1.125rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.pz-dato__unidad {
+  color: var(--pizarron-tiza-suave);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.pz-renglon {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.pz-renglon__datos {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 22px;
+}
+
+.calc__ejercicio .pz-error {
+  margin: 8px 0 0;
+  color: var(--pizarron-rojo);
+}
+
+/* The help under a formula: what can be written, in soft chalk. */
+.pz-ayuda {
+  margin: -6px 0 0;
+}
+
+.pz-ayuda code {
+  padding: 0 0.2em;
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--pizarron-tiza) 10%, transparent);
+  color: var(--pizarron-tiza);
+  font-family: inherit;
+  font-weight: 600;
+}
+
+@container pagina (max-width: 26rem) {
+  .pz-formula {
+    flex-wrap: wrap;
+    gap: 2px 8px;
+  }
+  .pz-formula__control {
+    flex-basis: 100%;
+  }
+}

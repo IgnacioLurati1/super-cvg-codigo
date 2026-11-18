@@ -1,0 +1,199 @@
+/* Pizarra of a live session: squared paper, like the student's notebook, that moves and zooms with the drawing. */
+.vpiz .vh-presentes {
+  padding: 6px 12px;
+  border-block-end: 1px solid var(--borde);
+}
+
+.vpiz-hoja {
+  position: relative;
+  flex: 1;
+  min-block-size: 0;
+  overflow: hidden;
+  background: var(--superficie);
+  touch-action: none;
+  user-select: none;
+  cursor: crosshair;
+}
+
+.vpiz-hoja:focus-visible {
+  outline: 3px solid var(--foco);
+  outline-offset: -3px;
+}
+
+.vpiz-hoja--mano {
+  cursor: grab;
+}
+
+.vpiz-hoja--mano:active {
+  cursor: grabbing;
+}
+
+.vpiz-hoja--mover {
+  cursor: move;
+}
+
+.vpiz-hoja--texto {
+  cursor: text;
+}
+
+.vpiz-hoja--goma {
+  cursor: cell;
+}
+
+.vpiz-svg {
+  position: absolute;
+  inset: 0;
+  inline-size: 100%;
+  block-size: 100%;
+}
+
+.vpiz-cuadro {
+  fill: none;
+  stroke: var(--borde);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+  opacity: 0.55;
+}
+
+.vpiz-figura,
+.vpiz-figura path {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.vpiz-texto {
+  font-family: var(--fuente-ui);
+  font-weight: 600;
+  white-space: pre;
+}
+
+/* Someone else's pointer: their arrow and their name, gliding between the marks that arrive. Only its place on the
+   sheet glides: the camera moves it at once, so it stays on what it points at while the sheet moves. */
+@property --vpiz-px {
+  syntax: '<number>';
+  inherits: false;
+  initial-value: 0;
+}
+
+@property --vpiz-py {
+  syntax: '<number>';
+  inherits: false;
+  initial-value: 0;
+}
+
+.vpiz-puntero {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 2px;
+  pointer-events: none;
+  color: var(--color-otro);
+  transform: translate(calc((var(--vpiz-px) - var(--vpiz-cx)) * var(--vpiz-z) * 1px), calc((var(--vpiz-py) - var(--vpiz-cy)) * var(--vpiz-z) * 1px));
+  transition: --vpiz-px 300ms linear, --vpiz-py 300ms linear;
+  will-change: transform;
+}
+
+.vpiz-puntero .vh-icono {
+  inline-size: 18px;
+  block-size: 18px;
+  fill: var(--color-otro);
+  stroke: var(--superficie);
+  stroke-width: 1.5;
+}
+
+.vpiz-puntero span {
+  margin-block-start: 14px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: var(--color-otro);
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vpiz-puntero {
+    transition: none;
+  }
+}
+
+/* What Mover chose: a dashed frame around it. */
+.vpiz-elegido {
+  fill: color-mix(in srgb, var(--foco) 6%, transparent);
+  stroke: var(--foco);
+  stroke-width: 1.5px;
+  stroke-dasharray: 5 4;
+  vector-effect: non-scaling-stroke;
+  pointer-events: none;
+}
+
+/* The rectangle Mover drags to choose: the focus color with a light fill. Only here, the others see what it chose
+   only when it moves. */
+.vpiz-rectangulo {
+  fill: color-mix(in srgb, var(--foco) 10%, transparent);
+  stroke: var(--foco);
+  stroke-width: 1px;
+  vector-effect: non-scaling-stroke;
+  pointer-events: none;
+}
+
+/* The letters of the text being written are chosen and copied as in any field. */
+.vpiz-escribir {
+  user-select: text;
+  position: absolute;
+  z-index: 2;
+  min-inline-size: 8ch;
+  padding: 0 2px;
+  border: 1px dashed var(--borde-control);
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--superficie) 85%, transparent);
+  font-family: var(--fuente-ui);
+  font-weight: 600;
+  line-height: 1.25;
+  resize: none;
+  field-sizing: content;
+  outline: none;
+}
+
+.vpiz-escribir:focus-visible {
+  border-style: solid;
+  border-color: var(--foco);
+}
+
+/* The colors: a swatch each, the chosen one with a ring. */
+.vpiz-colores {
+  gap: 4px;
+}
+
+
+.vpiz-grosor span {
+  inline-size: 18px;
+  block-size: var(--g);
+  border-radius: 99px;
+  background: currentColor;
+}
+
+.vpiz-grosor[aria-checked='true'] {
+  background: var(--superficie-2);
+}
+
+.vpiz-grosor[aria-checked='true']::after {
+  content: '';
+  position: absolute;
+  inset-inline: 7px;
+  inset-block-end: 4px;
+  block-size: 5px;
+  border-radius: 2px;
+  background: var(--resaltador);
+}
+
+.vpiz-zoom {
+  min-inline-size: 4ch;
+  font-size: var(--t-chica);
+  font-variant-numeric: tabular-nums lining-nums;
+  text-align: center;
+}

@@ -1,0 +1,15 @@
+node_modules/
+dist/
+build/
+coverage/
+.env
+.env.*
+!.env.example
+*.env
+*token*.txt
+*.log
+graphify-out/
+.playwright-cli/
+.claude/settings.local.json
+capturas/
+!.env.flujos

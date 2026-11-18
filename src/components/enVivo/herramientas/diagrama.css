@@ -1,0 +1,264 @@
+/* Diagrama de flujo of a live session (shared base, flujo.css on top): squared paper, blocks in ink, the summing junction as on the blackboard
+   (a circle with a cross, the sign next to each arrow that comes in) and square-cornered arrows. React Flow's own
+   colors are taken from the site's. */
+.vdia .vh-presentes {
+  padding: 6px 12px;
+  border-block-end: 1px solid var(--borde);
+}
+
+.vdia-ayuda {
+  margin: 0 6px;
+  font-size: var(--t-chica);
+  color: var(--texto-suave);
+}
+
+.vdia-elegido label {
+  flex: 1 1 180px;
+}
+
+.vdia-elegido .vdia-signo-campo {
+  flex: 0 1 auto;
+}
+
+.vdia-lienzo {
+  position: relative;
+  flex: 1;
+  min-block-size: 0;
+}
+
+.vdia .react-flow {
+  --xy-background-color: var(--superficie);
+  --xy-background-pattern-color: color-mix(in srgb, var(--borde) 55%, transparent);
+  --xy-edge-stroke: var(--texto);
+  --xy-edge-stroke-width: 1.6;
+  --xy-edge-stroke-selected: var(--accion-hover);
+  --xy-connectionline-stroke: var(--accion-hover);
+  --xy-connectionline-stroke-width: 1.6;
+  --xy-handle-background-color: var(--superficie);
+  --xy-handle-border-color: var(--texto);
+  --xy-selection-background-color: color-mix(in srgb, var(--foco) 12%, transparent);
+  --xy-selection-border: 1px dashed var(--foco);
+  --xy-attribution-background-color: transparent;
+  color: var(--texto);
+  font-family: var(--fuente-ui);
+}
+
+/* The site caps every svg at its box (base.css), and React Flow's arrows live in an svg of no size that draws outside
+   it: capped at zero, Chrome does not draw them. */
+.vdia .react-flow__edges svg,
+.vdia .react-flow__connectionline {
+  max-width: none;
+}
+
+.vdia .react-flow__edge.selected .react-flow__edge-path,
+.vdia .react-flow__edge:focus-visible .react-flow__edge-path {
+  stroke: var(--accion-hover);
+  stroke-width: calc(var(--vflu-g, 1.6px) + 0.8px);
+}
+
+.vdia .react-flow__arrowhead polyline {
+  stroke: var(--texto) !important;
+  fill: var(--texto) !important;
+}
+
+.vdia .react-flow__node {
+  border-radius: 4px;
+}
+
+.vdia .react-flow__node:focus-visible {
+  outline: 3px solid var(--foco);
+  outline-offset: 3px;
+}
+
+.vdia .react-flow__handle {
+  inline-size: 9px;
+  block-size: 9px;
+  border-width: 1.5px;
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+
+.vdia .react-flow__node:hover .react-flow__handle,
+.vdia .react-flow__node.selected .react-flow__handle,
+.vdia .react-flow__node:focus-visible .react-flow__handle,
+.vdia .react-flow.connecting .react-flow__handle,
+.vdia .react-flow__handle.connectingto {
+  opacity: 1;
+}
+
+/* On a touch screen the points are always there, a little bigger: there is no hover. */
+@media (pointer: coarse) {
+  .vdia .react-flow__handle {
+    inline-size: 14px;
+    block-size: 14px;
+    opacity: 1;
+  }
+}
+
+.vdia .react-flow__handle.connectingto,
+.vdia .react-flow__handle.valid {
+  background: var(--resaltador);
+}
+
+/* A block: a box in ink, its transfer function inside. */
+.vdia-bloque {
+  display: grid;
+  place-items: center;
+  min-inline-size: 104px;
+  min-block-size: 48px;
+  padding: 8px 16px;
+  border: 1.6px solid var(--texto);
+  border-radius: 3px;
+  background: var(--superficie);
+  font-size: 1.05rem;
+  font-weight: 600;
+  white-space: pre;
+  font-variant-numeric: lining-nums;
+}
+
+.vdia-vacio {
+  color: var(--texto-suave);
+  font-weight: 400;
+}
+
+.vdia-suma {
+  position: relative;
+  inline-size: 40px;
+  block-size: 40px;
+}
+
+.vdia-suma svg {
+  display: block;
+  inline-size: 100%;
+  block-size: 100%;
+  fill: var(--superficie);
+  stroke: var(--texto);
+  stroke-width: 1.6;
+}
+
+.vdia-signo {
+  position: absolute;
+  font-size: 1.15rem;
+  font-weight: 700;
+  line-height: 1;
+  pointer-events: none;
+}
+
+.vdia-signo--e0 {
+  inset-block-start: -14px;
+  inset-inline-start: -10px;
+}
+
+.vdia-signo--e1 {
+  inset-block-start: -16px;
+  inset-inline-end: -10px;
+}
+
+.vdia-signo--e2 {
+  inset-block-end: -16px;
+  inset-inline-end: -10px;
+}
+
+.vdia-extremo {
+  padding: 4px 10px;
+  font-size: 1.05rem;
+  font-weight: 600;
+  white-space: pre;
+  font-variant-numeric: lining-nums;
+}
+
+.vdia-rama {
+  display: grid;
+  place-items: center;
+  inline-size: 16px;
+  block-size: 16px;
+}
+
+.vdia-rama::before {
+  content: '';
+  inline-size: 8px;
+  block-size: 8px;
+  border-radius: 50%;
+  background: var(--texto);
+}
+
+/* Chosen here: the highlighter behind it. Chosen by someone else: a ring of their color. */
+.vdia-bloque.es-elegido,
+.vdia-extremo.es-elegido,
+.vdia-suma.es-elegido svg,
+.vdia-rama.es-elegido {
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--resaltador) 75%, transparent);
+  border-radius: 4px;
+}
+
+.vdia-suma.es-elegido svg {
+  border-radius: 50%;
+}
+
+[data-marcado].vdia-bloque,
+[data-marcado].vdia-extremo,
+[data-marcado].vdia-rama {
+  outline: 2px dashed var(--color-otro);
+  outline-offset: 4px;
+}
+
+[data-marcado].vdia-suma svg {
+  outline: 2px dashed var(--color-otro);
+  outline-offset: 3px;
+  border-radius: 50%;
+}
+
+.vdia-senal {
+  position: absolute;
+  padding: 0 3px;
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--superficie) 85%, transparent);
+  color: var(--texto);
+  font-size: 0.9rem;
+  font-weight: 600;
+  white-space: pre;
+  pointer-events: none;
+}
+
+.vdia-puntero {
+  position: absolute;
+  display: flex;
+  align-items: flex-start;
+  gap: 2px;
+  pointer-events: none;
+  color: var(--color-otro);
+  transition: transform 300ms linear;
+  z-index: 10;
+}
+
+.vdia-puntero .vh-icono {
+  inline-size: 18px;
+  block-size: 18px;
+  fill: var(--color-otro);
+  stroke: var(--superficie);
+  stroke-width: 1.5;
+}
+
+.vdia-puntero span {
+  margin-block-start: 14px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: var(--color-otro);
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vdia-puntero,
+  .vdia .react-flow__handle {
+    transition: none;
+  }
+}
+
+@media (max-width: 560px) {
+  .vdia-ayuda {
+    display: none;
+  }
+}

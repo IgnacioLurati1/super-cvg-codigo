@@ -1,0 +1,2359 @@
+/* Login */
+.entrar {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+  align-items: start;
+  gap: clamp(32px, 6vw, 72px);
+}
+
+.entrar h1 {
+  font-size: clamp(2.25rem, 5vw, 3.5rem);
+  line-height: 1.05;
+  margin: 0 0 20px;
+  max-width: 14em;
+}
+
+.entrar__bajada {
+  font-size: var(--t-h3);
+  margin: 0 0 28px;
+  max-width: 32em;
+}
+
+.entrar__promesas {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  max-width: 36em;
+  padding: 16px 0 0;
+  border-top: 1px solid var(--borde);
+  color: var(--texto-suave);
+  list-style: none;
+}
+
+.entrar__formulario {
+  display: grid;
+  gap: 16px;
+  padding: 24px;
+  border-radius: var(--radio-bloque);
+  background: var(--superficie);
+}
+
+.entrar__formulario h2 {
+  font-size: var(--t-h3);
+  margin: 0;
+}
+
+.entrar__formulario .mensaje {
+  margin: 0;
+}
+
+/* «Seguir conectado»: last in the form, in a box of its own, since it counts for Google too. */
+.entrar__recordar {
+  display: grid;
+  gap: 4px;
+  padding: 12px 14px;
+  border: 2px solid var(--accion);
+  border-radius: var(--radio-control);
+  background: var(--superficie-2);
+}
+
+.entrar__recordar-casilla {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  font-weight: 700;
+}
+
+.entrar__recordar-casilla input {
+  width: 22px;
+  height: 22px;
+  flex: none;
+  accent-color: var(--accion);
+}
+
+.entrar__recordar-ayuda {
+  margin: 0 0 0 34px;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+}
+
+.entrar__boton {
+  width: 100%;
+  min-height: 52px;
+}
+
+/* «Entrar con Google»: under the form, apart from it. */
+.entrar__google {
+  display: grid;
+  gap: 10px;
+  padding-top: 16px;
+  border-top: 1px solid var(--borde);
+}
+
+.entrar__o {
+  margin: 0;
+  color: var(--texto-suave);
+}
+
+/* Page heading */
+.titular {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.titular > :first-child {
+  min-width: 0;
+}
+
+.titular h1 {
+  margin: 0;
+  overflow-wrap: break-word;
+}
+
+.titular__fecha {
+  margin: 4px 0 0;
+  color: var(--texto-suave);
+}
+
+.titular__acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* On a phone the title's buttons take their own full row, so they can share it. */
+@media (max-width: 30rem) {
+  .titular__acciones,
+  .titular__botones {
+    flex: 1 1 100%;
+  }
+}
+
+/* Hoy with every block hidden. */
+.hoy__nada {
+  color: var(--texto-suave);
+}
+
+/* Today */
+.hoy {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+  align-items: start;
+  gap: 40px;
+}
+
+.destacado {
+  margin-bottom: 36px;
+  padding: 24px;
+  border-radius: var(--radio-bloque);
+  background: var(--superficie);
+}
+
+.destacado__cabeza {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.destacado__cuando {
+  margin: 0;
+  font-size: var(--t-h3);
+  font-weight: 700;
+}
+
+.destacado__titulo {
+  margin: 0 0 12px;
+  font-size: clamp(1.75rem, 4vw, 2.5rem);
+  line-height: 1.15;
+}
+
+.destacado__titulo a {
+  text-decoration: none;
+}
+
+.destacado__materia {
+  margin: 0;
+  color: var(--texto-suave);
+}
+
+/* A highlighter stroke over the title itself. */
+.marcado {
+  padding: 0 0.15em;
+  border-radius: 3px;
+  background: var(--resaltador);
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+/* Lists */
+.bloque {
+  margin-bottom: 32px;
+}
+
+.bloque h2 {
+  margin: 0 0 8px;
+  font-size: var(--t-h3);
+}
+
+.lista,
+.materias {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--borde);
+}
+
+.pendiente {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  min-height: 44px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--borde);
+  text-decoration: none;
+}
+
+.pendiente__texto {
+  display: grid;
+  flex: 1;
+  grid-template-columns: 8.5em minmax(0, 1fr);
+  gap: 2px 16px;
+  min-width: 0;
+}
+
+.pendiente__cuando {
+  grid-row: span 2;
+  font-weight: 600;
+}
+
+.pendiente__cuando--vencido {
+  color: var(--error);
+}
+
+.pendiente__titulo {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.pendiente__materia {
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+}
+
+.fila {
+  border-bottom: 1px solid var(--borde);
+}
+
+.fila__texto {
+  display: grid;
+  flex: 1;
+  gap: 2px;
+  min-width: 0;
+}
+
+.fila__principal {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+  text-decoration: none;
+}
+
+.fila__nombre {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.fila__dato {
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+  overflow-wrap: anywhere;
+}
+
+.notificacion__texto {
+  display: grid;
+  flex: 1;
+  gap: 2px;
+  min-width: 0;
+}
+
+.notificacion {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  min-height: 44px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--borde);
+  text-decoration: none;
+}
+
+.aviso__titulo {
+  overflow-wrap: anywhere;
+}
+
+.aviso__titulo--nuevo {
+  font-weight: 700;
+}
+
+/* Loading skeleton. It shows up after 150 ms, so a fast answer doesn't flash it. The shine is constant
+   motion (linear) and stops with reduced motion. The shapes use the text color at low strength, so they
+   follow every theme and contrast. */
+.cargando {
+  margin-bottom: 24px;
+  color: var(--texto-suave);
+}
+
+.esqueleto {
+  display: grid;
+  gap: 4px;
+  opacity: 0;
+  animation: esqueleto-aparece 200ms ease-out 150ms forwards;
+}
+
+.esqueleto__pieza {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr);
+  align-items: center;
+  column-gap: 12px;
+  row-gap: 8px;
+  padding-block: 12px;
+  border-bottom: 1px solid var(--borde);
+}
+
+.esqueleto i {
+  display: block;
+  height: 0.85em;
+  border-radius: 4px;
+  background: linear-gradient(90deg, transparent 0%, color-mix(in srgb, var(--texto) 6%, transparent) 50%, transparent 100%)
+    0 0 / 200% 100% no-repeat, color-mix(in srgb, var(--texto) 10%, transparent);
+  animation: esqueleto-brillo 1.4s linear infinite;
+}
+
+.esqueleto__pieza i:first-child {
+  grid-row: span 2;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+}
+
+.esqueleto__pieza i:nth-child(2) {
+  width: 62%;
+  height: 1.05em;
+}
+
+.esqueleto__pieza i:nth-child(3) {
+  width: 38%;
+}
+
+.esqueleto__pieza:nth-child(3n + 2) i:nth-child(2) {
+  width: 48%;
+}
+
+.esqueleto__pieza:nth-child(3n) i:nth-child(2) {
+  width: 74%;
+}
+
+.cargando--tarjetas .esqueleto {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr));
+  gap: 10px;
+}
+
+.cargando--tarjetas .esqueleto__pieza {
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
+  min-height: 140px;
+  padding: 18px;
+  border: 0;
+  border-radius: var(--radio-bloque);
+  background: var(--superficie);
+}
+
+.cargando--tarjetas .esqueleto__pieza i:first-child {
+  grid-row: auto;
+  width: 48px;
+  height: 48px;
+  margin-bottom: 12px;
+  border-radius: 12px;
+}
+
+.cargando--calendario .esqueleto {
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.cargando--calendario .esqueleto__pieza {
+  display: block;
+  padding: 0;
+  border: 0;
+}
+
+.cargando--calendario .esqueleto__pieza i:first-child {
+  width: 100%;
+  height: 96px;
+  border-radius: var(--radio-control);
+}
+
+@container pagina (max-width: 37.5rem) {
+  .cargando--calendario .esqueleto__pieza i:first-child {
+    height: 56px;
+  }
+}
+
+@keyframes esqueleto-aparece {
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes esqueleto-brillo {
+  from {
+    background-position: 100% 0, 0 0;
+  }
+  to {
+    background-position: -100% 0, 0 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .esqueleto i {
+    animation: none;
+  }
+}
+
+/* What arrives after the skeleton fades in instead of popping. Opacity only: it happens on every visit. */
+.materia__cuerpo,
+.materias,
+.lista,
+table.cal,
+.cal-semana,
+.cal-agenda,
+.vista-hoy .tareas {
+  animation: llega 180ms ease-out;
+}
+
+@keyframes llega {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .materia__cuerpo,
+  .materias,
+  .lista,
+  table.cal,
+  .cal-semana,
+  .cal-agenda,
+  .vista-hoy .tareas {
+    animation: none;
+  }
+}
+
+/* Courses */
+.materias__enlace {
+  display: flex;
+  align-items: center;
+  min-height: 56px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--borde);
+  font-size: 1.125rem;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+  text-decoration: none;
+}
+
+.volver {
+  margin: 0 0 4px;
+}
+
+.volver a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+}
+
+.pagina > h1 {
+  overflow-wrap: anywhere;
+}
+
+.filtro {
+  display: grid;
+  gap: 12px;
+  max-width: 35rem;
+  margin-bottom: 28px;
+}
+
+.resultados {
+  margin: 0 0 12px;
+  color: var(--texto-suave);
+}
+
+/* Sysacad Lindo, under the list: quiet, it is not the point of the page. */
+.sysacad {
+  display: grid;
+  justify-items: start;
+  gap: 12px;
+  max-width: 44em;
+  margin: 24px 0 0;
+  color: var(--texto-suave);
+}
+
+.sysacad__reserva {
+  visibility: hidden;
+}
+
+.sysacad__texto {
+  margin: 0;
+}
+
+.sysacad__acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* Opinar: one field, what is left under it, and the button with what is kept next to it. Lined up with the header,
+   like Notas; the column is narrowed inside (the page container comes in another stylesheet, in any order). */
+.opinar__bajada,
+.opinar__formulario,
+.opinar__cierre {
+  max-width: 40em;
+}
+
+.opinar__bajada {
+  margin: 0 0 24px;
+  color: var(--texto-suave);
+}
+
+.opinar__formulario {
+  display: grid;
+  gap: 16px;
+}
+
+textarea.opinar__texto {
+  min-height: 12em;
+  line-height: 1.5;
+}
+
+.opinar__debajo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 16px;
+}
+
+.opinar__queda {
+  margin-left: auto;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+  font-variant-numeric: tabular-nums;
+}
+
+.opinar__queda[data-tramo='sobra'] {
+  color: var(--error);
+  font-weight: 700;
+}
+
+.opinar__pie {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 20px;
+}
+
+.opinar__nota {
+  flex: 1 1 18em;
+  margin: 0;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+}
+
+.opinar__cierre {
+  display: grid;
+  justify-items: start;
+  gap: 12px;
+  padding-left: 16px;
+  border-left: 4px solid var(--ok);
+}
+
+.opinar__cierre h2 {
+  margin: 0;
+}
+
+.opinar__cierre h2:focus:not(:focus-visible) {
+  outline: none;
+}
+
+.opinar__cierre h2:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--foco) 55%, transparent);
+  outline-offset: 4px;
+}
+
+.opinar__cierre p {
+  margin: 0;
+}
+
+/* Notas del parche: each update with its title and date; what's new with its kind on the left, its name in bold and
+   what it does under it; the fixes apart, plain. */
+.parche__version + .parche__version {
+  margin-top: 40px;
+  padding-top: 32px;
+  border-top: 1px solid var(--borde);
+}
+
+.parche__version h2 {
+  margin: 0;
+}
+
+.parche__fecha {
+  margin: 4px 0 0;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+}
+
+.parche__lista {
+  display: grid;
+  gap: 14px;
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.parche__funcion {
+  display: grid;
+  grid-template-columns: 5.5rem minmax(0, 1fr);
+  gap: 12px;
+  align-items: baseline;
+}
+
+.parche__funcion p {
+  margin: 0;
+}
+
+.parche__puntos {
+  margin: 4px 0 0;
+  padding-left: 1.1em;
+  color: var(--texto-suave);
+}
+
+.parche__puntos li + li {
+  margin-top: 2px;
+}
+
+.parche__tipo {
+  justify-self: start;
+  padding: 1px 8px;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  font-size: var(--t-chica);
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.parche__tipo--nuevo {
+  color: var(--ok);
+}
+
+.parche__tipo--mejora {
+  color: var(--foco);
+}
+
+.parche__sub {
+  margin: 20px 0 0;
+  font-size: var(--t-ui);
+}
+
+.parche__arreglos {
+  margin: 6px 0 0;
+  padding-left: 1.1em;
+  color: var(--texto-suave);
+}
+
+.parche__arreglos li + li {
+  margin-top: 2px;
+}
+
+@container pagina (max-width: 30rem) {
+  .parche__funcion {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 4px;
+  }
+}
+
+@container pagina (max-width: 53.75rem) {
+  .entrar,
+  .hoy {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@container pagina (max-width: 30rem) {
+  .pendiente__texto {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .pendiente__cuando {
+    grid-row: auto;
+  }
+}
+
+.hoy__mas {
+  margin: 12px 0 0;
+}
+
+/* Filters */
+.tipos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.tipos__opcion {
+  min-height: 40px;
+  padding: 6px 14px;
+  border: 1px solid var(--borde-control);
+  border-radius: var(--radio-control);
+  background: var(--superficie);
+  color: var(--texto);
+  cursor: pointer;
+  font: inherit;
+  transition: transform 120ms ease;
+}
+
+.tipos__opcion[aria-pressed='true'] {
+  border-color: var(--accion);
+  background: var(--accion);
+  color: var(--accion-texto);
+}
+
+.tipos__opcion {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+/* On the pressed filter the drawing takes the color of its text, so it stays readable over the action color. */
+.tipos__opcion[aria-pressed='true'] .simbolo {
+  color: inherit;
+}
+
+.tipos__opcion:active {
+  transform: scale(0.97);
+}
+
+.opcion {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+}
+
+.opcion input {
+  width: 20px;
+  height: 20px;
+  flex: none;
+  accent-color: var(--accion);
+}
+
+/* Hidden sections */
+.seccion__cabeza {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 4px;
+}
+
+.seccion__cabeza h2 {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.seccion__ocultar {
+  flex: none;
+  min-height: 44px;
+  padding: 0 4px;
+  border: 0;
+  background: none;
+  color: var(--texto-suave);
+  cursor: pointer;
+  font: inherit;
+  font-size: var(--t-chica);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.deshecho {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  margin-bottom: 24px;
+  padding: 10px 16px;
+  border-radius: var(--radio-control);
+  background: var(--superficie);
+}
+
+.deshecho p {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+/* At the foot of the screen, over the page: hiding one thing after another doesn't move it. Clear of Consultron's
+   button on a phone. */
+.deshecho--flota {
+  position: fixed;
+  z-index: 30;
+  bottom: max(20px, env(safe-area-inset-bottom));
+  left: 50%;
+  width: min(30rem, calc(100vw - 32px));
+  margin: 0;
+  border: 1px solid var(--borde);
+  box-shadow: 0 6px 24px rgb(0 0 0 / 0.18);
+  translate: -50% 0;
+}
+
+@media (max-width: 40rem) {
+  .deshecho--flota {
+    left: 16px;
+    width: calc(100vw - 108px);
+    translate: none;
+  }
+
+  /* With Consultron on the left, the notice leaves that side free. */
+  html[data-consultron-lado='izquierda'] .deshecho--flota {
+    left: 92px;
+  }
+}
+
+.deshecho__botones {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.deshecho__cerrar {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: var(--radio-control);
+  background: none;
+  color: var(--texto-suave);
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.deshecho__cerrar:active {
+  color: var(--texto);
+  background: var(--fondo);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .deshecho__cerrar:hover {
+    color: var(--texto);
+  }
+}
+
+.ocultas {
+  margin-top: 8px;
+}
+
+.ocultas summary {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--texto-suave);
+  cursor: pointer;
+  font-weight: 600;
+  list-style-position: inside;
+}
+
+.ocultas__fila {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border-bottom: 1px solid var(--borde);
+  overflow-wrap: anywhere;
+}
+
+/* Week strip */
+.semana {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px;
+  margin-bottom: 32px;
+}
+
+.semana__dia {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  padding: 10px 2px;
+  border-radius: var(--radio-control);
+  background: var(--superficie);
+  text-decoration: none;
+  transition: transform 120ms ease;
+}
+
+.semana__dia:active {
+  transform: scale(0.97);
+}
+
+.semana__dia[data-hoy] {
+  background: var(--resaltador);
+}
+
+.semana__nombre {
+  font-size: var(--t-chica);
+}
+
+.semana__numero {
+  font-size: var(--t-h3);
+  font-weight: 700;
+  font-variant-numeric: lining-nums;
+}
+
+.semana__cantidad {
+  display: grid;
+  place-items: center;
+  min-width: 1.375rem;
+  min-height: 1.375rem;
+  padding: 0 0.3em;
+  border-radius: 1em;
+  font-size: var(--t-chica);
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.semana__cantidad[data-hay] {
+  background: var(--accion);
+  color: var(--accion-texto);
+}
+
+.semana__cantidad[data-vence] {
+  background: var(--error);
+  color: var(--error-texto);
+  /* A ring around it too: not only the color tells it apart. */
+  box-shadow: 0 0 0 2px var(--superficie), 0 0 0 3.5px var(--error);
+}
+
+/* Each day as the Calendario's month draws it (Hoy.jsx, `forma`), with its weekday on top. */
+.semana--calendario .cal__dia[data-hoy] .semana__nombre {
+  color: var(--texto);
+}
+
+.semana--calendario .cal__dia {
+  height: auto;
+  min-height: 7rem;
+  text-decoration: none;
+}
+
+/* Calendar */
+.cal__controles {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.cal__mes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.cal__mes h2 {
+  order: -1;
+  width: 100%;
+  margin: 0;
+  font-size: var(--t-h2);
+}
+
+.cal__filtros {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 8px 20px;
+}
+
+.cal__materia {
+  display: grid;
+  gap: 4px;
+  max-width: 100%;
+  font-size: var(--t-chica);
+  font-weight: 600;
+}
+
+.cal__materia select {
+  max-width: 17.5rem;
+  font-size: var(--t-ui);
+  font-weight: 400;
+}
+
+/* The month takes the whole width; the chosen day and the rest of the month go under it (to its right on a wide
+   screen, see the end of the calendar's rules). */
+.cal__cuerpo {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 24px;
+}
+
+/* Brought into sight from the grid (Calendario.jsx): a little room under it, not stuck to the screen's edge. */
+.cal__detalle > .bloque {
+  scroll-margin-bottom: 16px;
+}
+
+.cal {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: separate;
+  border-spacing: 3px;
+}
+
+.cal th {
+  padding: 4px 0;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+  font-weight: 600;
+}
+
+.cal abbr {
+  text-decoration: none;
+}
+
+.cal td {
+  padding: 0;
+  vertical-align: top;
+}
+
+.cal__dia {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  height: 7rem;
+  padding: 6px;
+  overflow: hidden;
+  border: 2px solid transparent;
+  border-radius: var(--radio-control);
+  background: var(--superficie);
+  color: var(--texto);
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+
+.cal__dia[data-fuera] {
+  background: transparent;
+  color: var(--texto-suave);
+}
+
+.cal__dia[aria-pressed='true'] {
+  border-color: var(--accion);
+}
+
+.cal__cabeza {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px;
+}
+
+.cal__numero {
+  align-self: flex-start;
+  padding: 0 5px;
+  border-radius: 4px;
+  font-weight: 600;
+  font-variant-numeric: lining-nums;
+}
+
+.cal__dia[data-hoy] .cal__numero {
+  background: var(--resaltador);
+  font-weight: 700;
+}
+
+/* Days the academic calendar paints whole (Calendario.jsx, marcaDelDia): no classes, an exam call, the end of a
+   cuatrimestre. The band says it in words too, so it is never only the color. */
+.cal__dia[data-facultad],
+.cal-semana__dia[data-facultad],
+.cal-leyenda__dia[data-facultad] {
+  --color-facultad: var(--texto-suave);
+  background: color-mix(in srgb, var(--color-facultad) 18%, var(--superficie));
+}
+
+/* Without classes, striped: it reads apart from the exam days even where the two colors come close. */
+.cal__dia[data-facultad='libre'],
+.cal-semana__dia[data-facultad='libre'],
+.cal-leyenda__dia[data-facultad='libre'] {
+  background-image: repeating-linear-gradient(135deg, transparent 0 7px, color-mix(in srgb, var(--color-facultad) 22%, transparent) 7px 9px);
+}
+
+.cal__dia[data-facultad='examen'],
+.cal-semana__dia[data-facultad='examen'],
+.cal-leyenda__dia[data-facultad='examen'] {
+  --color-facultad: var(--tipo-final);
+  background: color-mix(in srgb, var(--color-facultad) 26%, var(--superficie));
+}
+
+.cal__dia[data-facultad='cuatrimestre'],
+.cal-semana__dia[data-facultad='cuatrimestre'],
+.cal-leyenda__dia[data-facultad='cuatrimestre'] {
+  --color-facultad: var(--aviso);
+}
+
+/* Out of the month it stays, softer, so the grid reads the same at its edges. */
+.cal__dia[data-facultad][data-fuera] {
+  background: color-mix(in srgb, var(--color-facultad) 9%, transparent);
+}
+
+/* The cell has a fixed height: the band never shrinks under the chips (with two long ones it went down to nothing).
+   With a band, each chip takes one line, so all three fit. */
+.cal__marca {
+  display: -webkit-box;
+  flex-shrink: 0;
+  margin: 0;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.cal__marca + .cal__chips .cal__chip-texto {
+  -webkit-line-clamp: 1;
+}
+
+.cal__chips {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.cal__chip {
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+  min-width: 0;
+  font-size: 0.75rem;
+  line-height: 1.25;
+}
+
+.cal__chip-texto {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow-wrap: anywhere;
+}
+
+.cal__mas {
+  color: var(--texto-suave);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.cal__vacio {
+  margin: 0;
+  color: var(--texto-suave);
+}
+
+/* What only a phone uses (see the narrow page's rules at the end): each day's dots and their legend, the month's
+   arrows and the actions behind «…». On a computer the actions go in a row, as always. */
+.cal__puntos,
+.cal-leyenda,
+.cal__flecha,
+.cal-acciones__mas {
+  display: none;
+}
+
+.cal-acciones__resto,
+.cal-acciones__menu {
+  display: contents;
+}
+
+/* The courses taken out of here, with the way to bring them back. */
+.cal__fuera {
+  align-self: center;
+  margin: 0;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+}
+
+[data-materia='0'] { --color-materia: var(--materia-0); }
+[data-materia='1'] { --color-materia: var(--materia-1); }
+[data-materia='2'] { --color-materia: var(--materia-2); }
+[data-materia='3'] { --color-materia: var(--materia-3); }
+[data-materia='4'] { --color-materia: var(--materia-4); }
+[data-materia='5'] { --color-materia: var(--materia-5); }
+[data-materia='6'] { --color-materia: var(--materia-6); }
+[data-materia='7'] { --color-materia: var(--materia-7); }
+[data-materia='8'] { --color-materia: var(--materia-8); }
+[data-materia='9'] { --color-materia: var(--materia-9); }
+
+.eventos {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.evento__texto {
+  display: grid;
+  flex: 1;
+  gap: 2px;
+  min-width: 0;
+}
+
+.evento {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  min-height: 44px;
+  padding: 10px 12px;
+  border-radius: var(--radio-control);
+  background: var(--superficie);
+  text-decoration: none;
+}
+
+.evento__cuando,
+.evento__materia {
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+  overflow-wrap: anywhere;
+}
+
+.evento__titulo {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+/* Exams, finals and deliveries stand out: a stripe and the word on its color. The word always goes with it. */
+[data-tipo='parcial'] { --color-tipo: var(--tipo-parcial); }
+[data-tipo='final'] { --color-tipo: var(--tipo-final); }
+[data-tipo='entrega'] { --color-tipo: var(--tipo-entrega); }
+
+.evento__tipo {
+  display: inline-block;
+  margin-right: 6px;
+  padding: 0 6px;
+  border-radius: 4px;
+  background: var(--color-tipo);
+  color: var(--superficie);
+  font-weight: 700;
+}
+
+.eventos > li[data-tipo] > .evento {
+  box-shadow: inset 4px 0 0 var(--color-tipo);
+}
+
+.cal__chip-letra {
+  display: none;
+  padding: 0 3px;
+  border-radius: 3px;
+  background: var(--color-tipo);
+  color: var(--superficie);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.cal__chip[data-tipo] {
+  padding-left: 4px;
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--color-tipo) 14%, transparent);
+  box-shadow: inset 2px 0 0 var(--color-tipo);
+  font-weight: 600;
+}
+
+/* The student's own dates open to be changed. */
+button.evento {
+  width: 100%;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.evento__cambiar {
+  align-self: center;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+/* An own date with «Agregar a Google Calendar»: the row is the card, and the link goes under the text, outside the
+   button that opens the date. `--evento-sangria` lines it up with the text, past the symbol. */
+.evento-con-google {
+  --evento-sangria: calc(12px + 40px + 12px);
+  display: grid;
+  border-radius: var(--radio-control);
+  background: var(--superficie);
+}
+
+.evento-con-google > .evento {
+  padding-bottom: 2px;
+  background: transparent;
+}
+
+.eventos > li.evento-con-google[data-tipo] {
+  box-shadow: inset 4px 0 0 var(--color-tipo);
+}
+
+.eventos > li.evento-con-google[data-tipo] > .evento {
+  box-shadow: none;
+}
+
+.evento__google {
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  margin: 0 12px 4px var(--evento-sangria);
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* «Corregir» on a campus date: looks like the link to Google, as a button. */
+button.evento__corregir {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: var(--t-chica);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.evento__google:active {
+  color: var(--texto);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .evento__google:hover {
+    color: var(--texto);
+  }
+}
+
+/* Under the month the cards go side by side, as many as fit, one per row when two don't. Each one
+   is as tall as the tallest in its row, with «Corregir» or the link to Google at its foot. */
+.cal__detalle .eventos {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 17.5rem), 1fr));
+  gap: 12px;
+}
+
+.cal__detalle .eventos > li {
+  display: grid;
+}
+
+.cal__detalle .eventos > li.evento-con-google {
+  grid-template-rows: 1fr auto;
+}
+
+/* In a card stretched to its row, «Cambiar» stays up with the date instead of floating in the middle. */
+.cal__detalle .evento__cambiar {
+  align-self: flex-start;
+}
+
+/* Balanced lines keep the time whole («10:00 a. m.») instead of leaving «a. m.» alone on the next one. */
+.cal__detalle .evento__cuando {
+  text-wrap: balance;
+}
+
+/* Where the screen has room, the month's page widens so the chosen day and the month go in a column to the right of
+   the grid, which keeps the width it has on a page of the usual width (--ancho). 92.5rem (1480px with the normal
+   letter): that page plus the column, with room for a scrollbar. Narrower, the column goes under the grid. */
+.calendario {
+  --cal-lateral: 21.25rem;
+}
+
+@container pagina (min-width: 92.5rem) {
+  .contenedor.calendario[data-vista='mes'] {
+    max-width: calc(var(--ancho) + 32px + var(--cal-lateral));
+  }
+  .cal__cuerpo {
+    grid-template-columns: minmax(0, 1fr) var(--cal-lateral);
+    align-items: start;
+    gap: 32px;
+  }
+  .cal__detalle .eventos {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+  }
+  /* The skeleton stands where the grid will be, not under the column too. */
+  .calendario[data-vista='mes'] > .cargando {
+    max-width: calc(100% - 32px - var(--cal-lateral));
+  }
+}
+
+.titular__botones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* «Sumar a Google Calendar» wears Google's colors on its edge. A ring over the transparent border, so hover and
+   every theme keep their own background. */
+.boton--google {
+  position: relative;
+  border-color: transparent;
+}
+
+.boton--google::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  padding: 2px;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #4285f4, #ea4335 35%, #fbbc05 65%, #34a853);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  pointer-events: none;
+}
+
+/* With high contrast or the system's colors, the plain edge reads better. */
+:root[data-contraste='alto'] .boton--google {
+  border-color: currentColor;
+}
+
+:root[data-contraste='alto'] .boton--google::before {
+  display: none;
+}
+
+@media (forced-colors: active) {
+  .boton--google {
+    border-color: ButtonText;
+  }
+
+  .boton--google::before {
+    display: none;
+  }
+}
+
+/* Under the title of Calendario, how the link with Google Calendar goes: one quiet line, its dot and what to do. */
+/* The line, and under it what can be done, in line with its words. */
+.gcal {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  margin: -12px 0 24px;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+}
+
+.gcal__linea {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  max-width: 72ch;
+  margin: 0;
+}
+
+/* A dot in the color of how it goes. The words say the same, for whoever can't tell the colors apart. */
+.gcal__linea::before {
+  content: '';
+  flex: none;
+  width: 10px;
+  height: 10px;
+  margin-top: 0.3em;
+  margin-top: calc((1lh - 10px) / 2);
+  border-radius: 50%;
+  background: var(--texto-suave);
+}
+
+.gcal[data-tono='ok'] .gcal__linea::before {
+  background: var(--ok);
+}
+
+.gcal[data-tono='aviso'] .gcal__linea::before {
+  background: var(--aviso);
+}
+
+.gcal[data-tono='error'] .gcal__linea {
+  color: var(--error);
+  font-weight: 600;
+}
+
+.gcal[data-tono='error'] .gcal__linea::before {
+  background: var(--error);
+}
+
+/* While it passes the dates, the dot beats a few times and stays still. */
+.gcal[data-tono='espera'] .gcal__linea::before {
+  animation: gcal-latido 1.2s ease-in-out 4;
+}
+
+@keyframes gcal-latido {
+  50% {
+    opacity: 0.3;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gcal[data-tono='espera'] .gcal__linea::before {
+    animation: none;
+  }
+}
+
+.gcal > :not(.gcal__linea) {
+  margin-left: 18px;
+}
+
+.gcal__abrir {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  color: var(--texto);
+  font-weight: 600;
+  text-underline-offset: 2px;
+}
+
+.form-fecha {
+  display: grid;
+  gap: 16px;
+  margin-bottom: 24px;
+  padding: 20px;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-bloque);
+  background: var(--superficie);
+}
+
+.form-fecha h2 {
+  margin: 0;
+}
+
+.form-fecha .campo {
+  margin: 0;
+}
+
+.form-fecha__tipos {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.form-fecha__opciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.form-fecha__tipo {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--borde-control);
+  border-radius: 999px;
+  background: var(--superficie);
+  cursor: pointer;
+}
+
+.form-fecha__tipo {
+  transition: transform 120ms ease;
+}
+
+.form-fecha__tipo:active {
+  transform: scale(0.97);
+}
+
+.form-fecha__tipo[data-tipo] {
+  box-shadow: inset 4px 0 0 var(--color-tipo);
+}
+
+.form-fecha__tipo:has(input:checked) {
+  border-color: var(--texto);
+  background: var(--superficie-2);
+  font-weight: 700;
+}
+
+.form-fecha__tipo:has(input:focus-visible) {
+  outline: 3px solid var(--foco);
+  outline-offset: 2px;
+}
+
+.form-fecha__fila {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 11.25rem), 1fr));
+  gap: 16px;
+}
+
+.form-fecha__botones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.form-fecha__botones .boton--peligro {
+  margin-left: auto;
+}
+
+.form-fecha__nota {
+  margin: -8px 0 0;
+  color: var(--texto-suave);
+}
+
+/* The campus' dates deleted here: closed under the calendar, each with its way back. */
+.cal__borradas {
+  margin-top: 24px;
+}
+
+.cal__borradas summary {
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.cal__borradas-lista {
+  display: grid;
+  gap: 4px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cal__borradas-lista li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  padding: 8px 0;
+  border-top: 1px solid var(--borde);
+}
+
+.cal__borrada {
+  display: grid;
+  min-width: 0;
+}
+
+.cal__borrada-titulo {
+  overflow-wrap: anywhere;
+}
+
+.cal__borrada-dato {
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+}
+
+/* Preview sheet */
+.previa {
+  position: fixed;
+  inset: 0 0 0 auto;
+  width: min(40rem, 100vw);
+  max-width: 100vw;
+  height: 100dvh;
+  max-height: 100dvh;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: var(--fondo);
+  color: var(--texto);
+  opacity: 1;
+  overscroll-behavior: contain;
+  transform: translateX(0);
+  transition: transform 280ms cubic-bezier(0.32, 0.72, 0, 1), opacity 200ms ease;
+}
+
+@starting-style {
+  .previa[open] {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+}
+
+.previa::backdrop {
+  background: rgb(23 50 77 / 0.5);
+}
+
+html:has(.previa[open]) {
+  overflow: hidden;
+}
+
+.previa__caja {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  min-height: 100%;
+  padding: 20px var(--margen) 32px;
+}
+
+.previa__cabeza {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.previa__cabeza h2 {
+  margin: 0;
+  font-size: var(--t-h2);
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+
+.previa__cabeza .boton {
+  flex: none;
+}
+
+.previa__dato {
+  margin: 0;
+  color: var(--texto-suave);
+  overflow-wrap: anywhere;
+}
+
+.previa__descripcion {
+  margin: 4px 0;
+  overflow-wrap: anywhere;
+}
+
+/* A text area of the campus: its paragraphs, then its links as big targets. */
+.previa__texto {
+  margin: 4px 0;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+/* Formatted text: a text of one's own or a campus text area, with headings, lists and bold. */
+.texto-propio {
+  max-width: 68ch;
+  overflow-wrap: anywhere;
+}
+
+.texto-propio > :first-child {
+  margin-top: 0;
+}
+
+.texto-propio > :last-child {
+  margin-bottom: 0;
+}
+
+.texto-propio h3 {
+  margin: 16px 0 6px;
+  font-size: var(--t-ui);
+}
+
+/* A heading inside a unit, from the campus: a step smaller. */
+.texto-propio h4 {
+  margin: 12px 0 4px;
+  font-size: var(--t-chica);
+  color: var(--texto-suave);
+}
+
+.texto-propio p,
+.texto-propio ul {
+  margin: 0 0 10px;
+}
+
+.texto-propio ul {
+  padding-left: 1.25em;
+}
+
+.previa__enlaces {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.previa__enlace {
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  display: grid;
+  min-height: 44px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.previa__enlace-texto {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .previa__enlace:hover .previa__dominio {
+    text-decoration: underline;
+  }
+}
+
+.previa__vista {
+  min-height: 160px;
+  border-radius: var(--radio-control);
+  background: var(--superficie-2);
+}
+
+.previa__aviso {
+  display: grid;
+  gap: 12px;
+  justify-items: start;
+  margin: 0;
+  padding: 24px;
+}
+
+.previa__aviso p {
+  margin: 0;
+}
+
+.previa__imagen {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 0 auto;
+}
+
+.previa__acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.previa__video img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: var(--radio-control);
+  background: var(--superficie-2);
+}
+
+.previa__video-titulo {
+  margin: 12px 0 2px;
+  font-size: var(--t-h3);
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.previa__destino {
+  padding: 14px 16px;
+  border-radius: var(--radio-control);
+  background: var(--superficie);
+}
+
+.previa__dominio {
+  margin: 0 0 2px;
+  font-weight: 700;
+}
+
+.previa__direccion {
+  margin: 0;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+  overflow-wrap: anywhere;
+}
+
+.previa__alerta {
+  margin: 8px 0 0;
+  color: var(--error);
+  font-weight: 600;
+}
+
+.previa__fechas {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 14px 16px;
+  border-radius: var(--radio-control);
+  background: var(--superficie);
+}
+
+.previa__fechas dt {
+  font-weight: 600;
+}
+
+.previa__fechas dd {
+  margin: 0;
+  color: var(--texto-suave);
+}
+
+.pdf__hoja {
+  overflow: hidden;
+  border-radius: var(--radio-control);
+  background: var(--superficie);
+}
+
+.pdf__lienzo {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.pdf__paginas {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 10px;
+}
+
+.boton--chico:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .destacado__titulo a:hover,
+  a.pendiente:hover .pendiente__titulo,
+  .fila__principal:hover .fila__nombre,
+  a.notificacion:hover .aviso__titulo,
+  .materias__enlace:hover,
+  a.evento:hover .evento__titulo,
+  button.evento:hover .evento__titulo {
+    text-decoration: underline;
+  }
+  .seccion__ocultar:hover {
+    color: var(--texto);
+  }
+  .semana__dia:hover {
+    box-shadow: inset 0 0 0 2px var(--accion);
+  }
+  .cal__dia:not([aria-pressed='true']):hover {
+    border-color: var(--borde-control);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .previa {
+    transition: opacity 150ms ease;
+  }
+  @starting-style {
+    .previa[open] {
+      transform: none;
+    }
+  }
+}
+
+@container pagina (max-width: 38.75rem) {
+  .cal {
+    border-spacing: 2px;
+  }
+  .cal__dia {
+    align-items: center;
+    height: 3.75rem;
+    padding: 4px 2px;
+  }
+  .cal__numero {
+    align-self: center;
+  }
+  .cal__cabeza {
+    justify-content: center;
+  }
+  .cal__chips {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 3px;
+  }
+  .cal__chip-texto,
+  .cal__mas {
+    display: none;
+  }
+  .cal__chip-letra {
+    display: inline-block;
+  }
+  .semana--calendario .cal__dia {
+    min-height: 3.75rem;
+  }
+  .previa {
+    width: 100vw;
+  }
+
+  /* Each day: its number and a dot for each thing, never cut text. The academic calendar's band says it with the
+     cell's color and the legend under the grid; the day's list and its name for screen readers say it in words. */
+  .cal__dia {
+    gap: 6px;
+  }
+  .cal__chips,
+  .cal__marca,
+  .cal__mas {
+    display: none;
+  }
+  .cal__puntos {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    max-width: 100%;
+  }
+  .cal__punto,
+  .cal-leyenda__punto {
+    flex: none;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: currentColor;
+    color: var(--color-materia, var(--texto-suave));
+  }
+  .cal__punto[data-tipo],
+  .cal-leyenda__punto[data-tipo] {
+    color: var(--color-tipo);
+  }
+  /* Each kind also has its own shape, so it is not told by its color alone: a square for a parcial, a diamond for a
+     final, a circle for an entrega. */
+  .cal__punto[data-tipo='parcial'],
+  .cal-leyenda__punto[data-tipo='parcial'] {
+    border-radius: 1px;
+  }
+  .cal__punto[data-tipo='final'],
+  .cal-leyenda__punto[data-tipo='final'] {
+    border-radius: 1px;
+    transform: rotate(45deg) scale(0.92);
+  }
+  /* Done: the same color, hollow. */
+  .cal__punto[data-hecha],
+  .cal-leyenda__punto[data-hecha] {
+    background: transparent;
+    box-shadow: inset 0 0 0 1.5px currentColor;
+  }
+  .cal__puntos-mas {
+    color: var(--texto-suave);
+    font-size: 0.6875rem;
+    font-weight: 700;
+    font-variant-numeric: lining-nums;
+    line-height: 1;
+  }
+
+  .cal-leyenda {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 16px;
+    margin: 10px 0 0;
+    padding: 0;
+    color: var(--texto-suave);
+    font-size: var(--t-chica);
+    list-style: none;
+  }
+  .cal-leyenda li {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .cal-leyenda__punto {
+    width: 9px;
+    height: 9px;
+  }
+  .cal-leyenda__dia {
+    flex: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 4px;
+  }
+
+  /* The month with its arrows at its sides, in one line; «Hoy» at the end of it. */
+  .cal__controles {
+    gap: 12px;
+  }
+  .cal__mes {
+    flex-wrap: nowrap;
+    width: 100%;
+    gap: 4px;
+  }
+  .cal__mes h2 {
+    flex: 1;
+    order: 0;
+    width: auto;
+    min-width: 0;
+    padding: 0 4px;
+    font-size: 1.125rem;
+    text-align: center;
+    text-wrap: balance;
+  }
+  .cal__paso {
+    flex: none;
+    width: 40px;
+    min-height: 44px;
+    padding: 0;
+  }
+  .cal__paso-texto {
+    display: none;
+  }
+  .cal__flecha {
+    display: block;
+  }
+  .cal__hoy {
+    flex: none;
+    min-height: 44px;
+  }
+
+  /* The filters in two short lines: the course next to its label, the two options side by side where they fit. */
+  .cal__filtros {
+    width: 100%;
+    gap: 0 16px;
+  }
+  .cal__materia {
+    display: flex;
+    flex: 1 1 100%;
+    align-items: center;
+    gap: 12px;
+  }
+  .cal__materia select {
+    flex: 1;
+    min-width: 0;
+    max-width: none;
+  }
+  .cal__filtros .opcion {
+    font-size: var(--t-chica);
+  }
+
+  /* «Agregar una fecha» alone, the rest behind «…» at the other end of the row. */
+  .cal-acciones {
+    flex-wrap: nowrap;
+    width: 100%;
+  }
+  .cal-acciones__resto {
+    position: relative;
+    display: block;
+    margin-left: auto;
+  }
+  .cal-acciones__mas {
+    display: inline-flex;
+    width: 44px;
+    min-height: 44px;
+    padding: 0;
+  }
+  .cal-acciones__mas svg {
+    fill: currentColor;
+  }
+  .cal-acciones__menu {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    z-index: 5;
+    display: none;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    width: max-content;
+    max-width: calc(100vw - 32px);
+    padding: 10px;
+    border: 1px solid var(--borde-control);
+    border-radius: var(--radio-bloque);
+    background: var(--superficie);
+  }
+  .cal-acciones__resto[data-abierto] .cal-acciones__menu {
+    display: flex;
+  }
+}
+
+/* Lo que se toca responde al toque. */
+.fila__principal,
+.pendiente,
+.notificacion,
+.evento,
+.materias__enlace,
+.cal__dia,
+.seccion__ocultar {
+  transition: transform 120ms ease;
+}
+
+.fila__principal:active,
+.pendiente:active,
+.notificacion:active,
+.evento:active,
+.materias__enlace:active,
+.seccion__ocultar:active {
+  transform: scale(0.99);
+}
+
+.cal__dia:active {
+  transform: scale(0.97);
+}
+
+/* Symbols */
+.simbolo {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--color-materia, var(--texto)) 13%, var(--superficie));
+  color: var(--color-materia, var(--texto));
+}
+
+.simbolo svg {
+  width: 62%;
+  height: 62%;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.75;
+}
+
+.simbolo--grande {
+  width: 52px;
+  height: 52px;
+  border-radius: 13px;
+}
+
+.simbolo--enorme {
+  width: clamp(52px, 9vw, 76px);
+  height: clamp(52px, 9vw, 76px);
+  border-radius: 16px;
+}
+
+.simbolo--tipo {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: var(--superficie-2);
+  color: var(--texto-suave);
+}
+
+/* Each kind of thing with its color, taken from the courses' palette so it follows the color-blind modes. */
+.simbolo[data-tono] {
+  color: var(--color-tono);
+}
+
+.simbolo--tipo[data-tono] {
+  background: color-mix(in srgb, var(--color-tono) 15%, var(--superficie));
+}
+
+/* A screen with its color (the quick menu, Paleta.jsx). */
+.simbolo--tipo[data-materia] {
+  background: color-mix(in srgb, var(--color-materia) 15%, var(--superficie));
+  color: var(--color-materia);
+}
+
+[data-tono='pdf'],
+[data-tono='video'] { --color-tono: var(--materia-1); }
+[data-tono='doc'] { --color-tono: var(--materia-0); }
+[data-tono='planilla'] { --color-tono: var(--materia-2); }
+[data-tono='presentacion'],
+[data-tono='texto'] { --color-tono: var(--materia-4); }
+[data-tono='enlace'],
+[data-tono='imagen'] { --color-tono: var(--materia-5); }
+[data-tono='actividad'],
+[data-tono='formulario'],
+[data-tono='codigo'] { --color-tono: var(--materia-3); }
+[data-tono='drive'] { --color-tono: var(--materia-2); }
+[data-tono='videollamada'] { --color-tono: var(--materia-0); }
+
+.simbolo--mini {
+  width: 15px;
+  height: 15px;
+  background: none;
+}
+
+.simbolo--mini svg {
+  width: 100%;
+  height: 100%;
+  stroke-width: 2.2;
+}
+
+.materia__titulo {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.materia__titulo h1 {
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+/* The course's summary in El Santo Resumen, under the title. */
+.materia__santo {
+  margin: -16px 0 20px;
+}
+
+.materia__santo a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-weight: 600;
+}
+
+/* The calculators of the subject, in one line under its title. */
+.materia__calculadoras {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 16px;
+  margin: -12px 0 20px;
+}
+
+.materia__calculadoras-titulo {
+  color: var(--texto-suave);
+  font-weight: 600;
+}
+
+.materia__calculadoras ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.materia__calculadoras a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-weight: 600;
+}
+
+.materias {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 20rem), 1fr));
+  gap: 10px;
+  border-top: 0;
+}
+
+.materias__enlace {
+  display: flex;
+  gap: 14px;
+  height: 100%;
+  padding: 14px 16px;
+  border: 0;
+  border-radius: var(--radio-control);
+  background: var(--superficie);
+}
+
+.semana__nombre {
+  color: var(--texto-suave);
+}
+
+.semana__dia[data-hoy] .semana__nombre {
+  color: var(--texto);
+}

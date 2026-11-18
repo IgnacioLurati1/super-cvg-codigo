@@ -1,0 +1,155 @@
+/* An Excel or a CSV in the preview sheet (VistaPlanilla.jsx): its sheets as tabs, and a grid with the column letters and
+   the row numbers held while it scrolls. */
+.planilla {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.planilla__hojas {
+  display: flex;
+  flex: none;
+  gap: 2px;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--borde);
+  scrollbar-width: thin;
+}
+
+.planilla__hoja {
+  flex: none;
+  min-height: 44px;
+  max-width: 16rem;
+  overflow: hidden;
+  padding: 0 12px;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  background: transparent;
+  color: var(--texto-suave);
+  font: inherit;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .planilla__hoja:hover {
+    color: var(--texto);
+    background: var(--superficie-2);
+  }
+}
+
+.planilla__hoja:active {
+  background: var(--superficie-2);
+}
+
+.planilla__hoja[aria-selected='true'] {
+  border-bottom-color: var(--foco);
+  color: var(--texto);
+}
+
+.planilla__hoja:focus-visible {
+  outline: 2px solid var(--foco);
+  outline-offset: -3px;
+}
+
+.planilla__panel {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.planilla__marco {
+  flex: 1 1 auto;
+  min-height: 12rem;
+  overflow: auto;
+  overscroll-behavior: contain;
+  background: var(--superficie);
+}
+
+.planilla__marco:focus-visible {
+  outline: 2px solid var(--foco);
+  outline-offset: -3px;
+}
+
+.planilla__tabla {
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: var(--t-chica);
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+.planilla__tabla :is(td, th) {
+  max-width: 24rem;
+  padding: 4px 8px;
+  border-right: 1px solid var(--borde);
+  border-bottom: 1px solid var(--borde);
+  text-align: left;
+  vertical-align: top;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+}
+
+.planilla__tabla td {
+  min-width: 4rem;
+}
+
+.planilla__tabla td[data-numero] {
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* The letters on top and the numbers on the left stay while the grid scrolls. */
+.planilla__tabla thead :is(th, td) {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--superficie-2);
+  color: var(--texto-suave);
+  font-weight: 600;
+  text-align: center;
+}
+
+.planilla__tabla tbody th {
+  position: sticky;
+  left: 0;
+  background: var(--superficie-2);
+  color: var(--texto-suave);
+  font-weight: 600;
+  text-align: right;
+}
+
+.planilla__tabla thead .planilla__esquina {
+  left: 0;
+  z-index: 2;
+}
+
+.planilla__pie {
+  display: flex;
+  flex: none;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  align-items: center;
+  justify-content: center;
+  margin-top: 8px;
+}
+
+.planilla__pie p {
+  margin: 0;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+}
+
+.planilla > .previa__nota {
+  flex: none;
+  padding: 0 12px 8px;
+}
+
+.planilla__vacia {
+  flex: 1 1 auto;
+}

@@ -1,0 +1,1828 @@
+/* The lab: the editor is a squared sheet of the notebook, with its margin line; the line of an error, with the
+   highlighter, as in the PDFs. The code goes in the system's fixed-width letter, the rest in the site's. */
+@import '../styles/codigo.css';
+
+.lab h2 {
+  margin: 0;
+  font-size: var(--t-h3);
+}
+
+.laboratorio__ayuda {
+  margin: 0;
+  font-size: var(--t-chica);
+  color: var(--texto-suave);
+}
+
+.laboratorio__lenguaje {
+  display: inline-flex;
+  margin: 0;
+  padding: 3px;
+  border: 1px solid var(--borde-control);
+  border-radius: var(--radio-control);
+  background: var(--superficie);
+}
+
+.laboratorio__lenguaje-opcion {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 4px 14px;
+  border-radius: calc(var(--radio-control) - 2px);
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 120ms ease, color 120ms ease;
+}
+
+.laboratorio__lenguaje-opcion input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: inherit;
+}
+
+.laboratorio__lenguaje-opcion:has(input:checked) {
+  background: var(--accion);
+  color: var(--accion-texto);
+}
+
+.laboratorio__lenguaje-opcion:has(input:focus-visible) {
+  outline: 2px solid var(--foco);
+  outline-offset: 2px;
+}
+
+.laboratorio__lenguaje-opcion:has(input[aria-disabled='true']:not(:checked)) {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.laboratorio__origen {
+  margin: 0;
+  padding: 10px 14px;
+  border-left: 4px solid var(--resaltador);
+  border-radius: 0 var(--radio-control) var(--radio-control) 0;
+  background: var(--superficie);
+  font-size: var(--t-chica);
+}
+
+.laboratorio__previa {
+  font-family: var(--codigo-letra);
+}
+
+.laboratorio__correr {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 12px;
+}
+
+.laboratorio__estado {
+  margin: 0;
+  color: var(--texto-suave);
+}
+
+.laboratorio__dibujo {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+}
+
+.laboratorio__carga {
+  display: grid;
+  gap: 8px;
+}
+
+.laboratorio__carga progress {
+  width: 100%;
+  height: 10px;
+  accent-color: var(--accion);
+}
+
+/* The wait shows after a moment: from the browser's cache the engine is ready before that, and nothing blinks. */
+.laboratorio__carga--espera {
+  animation: laboratorio-espera 1ms 400ms both;
+}
+
+@keyframes laboratorio-espera {
+  from {
+    visibility: hidden;
+  }
+  to {
+    visibility: visible;
+  }
+}
+
+.laboratorio__carga.mensaje {
+  justify-items: start;
+}
+
+/* ---------- The lab as an editor (Laboratorio.jsx) ----------
+   The whole width of the page and the height of the window: the bar on top, the files on the left, the open files and
+   the sheet in the middle, the panel under it. Everything around the sheet is quiet, in the surfaces and borders of the
+   site, so the squared sheet with its margin line is what stands out. What a program wrote is marked with the
+   highlighter, as what changed in «Paso a paso». */
+.lab {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  height: calc(100dvh - var(--alto-cabecera));
+  min-height: 32rem;
+  background: var(--fondo);
+  color: var(--texto);
+}
+
+/* The bar on top: what's open on one side, how to run it on the other. */
+.lab-barra {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--borde);
+  background: var(--superficie);
+}
+
+.lab-barra__marca,
+.lab-barra__abierto,
+.lab-barra__guardar,
+.lab-barra__correr {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.lab-barra__abierto {
+  gap: 8px 14px;
+}
+
+.lab .lab-barra__titulo {
+  margin: 0;
+  font-size: var(--t-ui);
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.lab-barra__campo {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--t-chica);
+  color: var(--texto-suave);
+}
+
+.lab-barra__campo .campo__control {
+  width: 9rem;
+  min-height: 36px;
+  padding: 4px 8px;
+  color: var(--texto);
+}
+
+.lab-barra__campo select.campo__control {
+  width: auto;
+  min-width: 9rem;
+  max-width: 15rem;
+}
+
+@media (pointer: fine) {
+  .lab-barra__campo .campo__control {
+    font-size: var(--t-chica);
+  }
+}
+
+.lab-barra__proyecto {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-weight: 700;
+}
+
+/* The project's language, in the color of its files' label (.lab-tipo). */
+.lab-barra__lenguaje {
+  padding: 1px 8px;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  font-size: var(--t-chica);
+  line-height: 1.5;
+}
+
+.lab-barra__guardado {
+  font-size: var(--t-chica);
+  color: var(--texto-suave);
+}
+
+.lab-barra .laboratorio__lenguaje-opcion {
+  min-height: 30px;
+  padding: 2px 12px;
+  font-size: var(--t-chica);
+}
+
+.lab-barra__correr {
+  margin-left: auto;
+}
+
+.lab-panel__estado {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  font-size: var(--t-chica);
+  color: var(--texto-suave);
+  text-align: right;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* Buttons that are only a drawing: the files, closing a tab, the panel. */
+.lab-icono {
+  display: inline-grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radio-control);
+  background: none;
+  color: var(--texto);
+  cursor: pointer;
+  transition: background-color 120ms ease;
+}
+
+.lab-icono[aria-expanded='true'] {
+  background: var(--superficie-2);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .lab-icono:hover {
+    background: var(--superficie-2);
+  }
+}
+
+.lab-trazo {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* The body: files, edge, the middle; under the middle, an edge and the panel. */
+.lab-cuerpo {
+  display: grid;
+  grid-template-columns: var(--lab-archivos) 6px minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr) 6px var(--lab-panel);
+  grid-template-areas:
+    'archivos borde centro'
+    'archivos borde borde-panel'
+    'archivos borde panel';
+  min-height: 0;
+}
+
+.lab[data-sin-archivos] .lab-cuerpo {
+  grid-template-columns: 0 6px minmax(0, 1fr);
+}
+
+.lab[data-sin-panel] .lab-cuerpo {
+  grid-template-rows: minmax(0, 1fr) 6px auto;
+}
+
+.lab-cuerpo__archivos {
+  grid-area: archivos;
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  background: var(--superficie);
+}
+
+.lab-cuerpo__archivos[hidden] {
+  display: none;
+}
+
+/* The edges: a line of the border, which turns into the ink of the focus when the pointer is on it or it's dragged. */
+.lab-separador {
+  position: relative;
+  touch-action: none;
+  background: var(--fondo);
+}
+
+.lab-separador--x {
+  grid-area: borde;
+  cursor: col-resize;
+}
+
+.lab-separador--y {
+  grid-area: borde-panel;
+  cursor: row-resize;
+}
+
+.lab-separador::after {
+  content: '';
+  position: absolute;
+  background: var(--borde);
+  transition: background-color 120ms ease;
+}
+
+.lab-separador--x::after {
+  inset: 0 auto 0 2px;
+  width: 2px;
+}
+
+.lab-separador--y::after {
+  inset: 2px 0 auto;
+  height: 2px;
+}
+
+/* What a finger or the mouse can grab: about 24px, mostly over the editor so the list's scrollbar and the panel's tabs
+   stay theirs. */
+.lab-separador::before {
+  content: '';
+  position: absolute;
+  z-index: 2;
+}
+
+.lab-separador--x::before {
+  inset: 0 -14px 0 -3px;
+}
+
+.lab-separador--y::before {
+  inset: -14px 0 -3px;
+}
+
+.lab-separador[data-arrastrando]::after {
+  background: var(--foco);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .lab-separador:hover::after {
+    background: var(--foco);
+    transition-delay: 150ms;
+  }
+}
+
+.lab-separador:focus-visible {
+  outline: 3px solid var(--foco);
+  outline-offset: -2px;
+}
+
+/* The middle: the open files as tabs over the sheet. The one in view is part of the sheet. */
+.lab-centro {
+  grid-area: centro;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  background: var(--superficie);
+}
+
+.lab-centro__pestanas {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid var(--borde);
+  background: var(--fondo);
+}
+
+.lab-abiertos {
+  display: flex;
+  flex: 0 1 auto;
+  min-width: 0;
+  margin: 0 0 -1px;
+  padding: 0;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+}
+
+.lab-abiertos__item {
+  position: relative;
+  display: flex;
+  flex: none;
+  align-items: center;
+  border-right: 1px solid var(--borde);
+  border-bottom: 1px solid var(--borde);
+}
+
+.lab-abiertos__item[data-actual] {
+  border-bottom-color: var(--superficie);
+  background: var(--superficie);
+}
+
+.lab-abiertos__item[data-actual]::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: 2px;
+  background: var(--accion);
+}
+
+.lab-abiertos__nombre {
+  min-height: 38px;
+  padding: 6px 12px;
+  border: 0;
+  background: none;
+  color: var(--texto-suave);
+  font-family: var(--codigo-letra);
+  font-size: var(--t-chica);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.lab-abiertos__nombre[aria-selected='true'] {
+  color: var(--texto);
+}
+
+/* Which project, when two tabs have the same name. */
+.lab-abiertos__donde {
+  margin-left: 6px;
+  font-family: var(--fuente-ui);
+  color: var(--texto-suave);
+}
+
+/* What a program wrote, underlined with the highlighter. */
+.lab-abiertos__item[data-escrito] .lab-abiertos__nombre {
+  text-decoration: underline;
+  text-decoration-color: var(--resaltador);
+  text-decoration-thickness: 3px;
+  text-underline-offset: 4px;
+}
+
+.lab-abiertos__nombre:focus-visible,
+.lab-abiertos__cerrar:focus-visible {
+  outline-offset: -3px;
+}
+
+.lab-abiertos__cerrar {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  margin-right: 4px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radio-control);
+  background: none;
+  color: var(--texto-suave);
+  cursor: pointer;
+}
+
+.lab-abiertos__cerrar .lab-trazo {
+  width: 14px;
+  height: 14px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .lab-abiertos__cerrar:hover {
+    background: var(--superficie-2);
+    color: var(--texto);
+  }
+}
+
+.lab-centro__teclas {
+  flex: 0 100 auto;
+  align-self: center;
+  min-width: 0;
+  margin: 0;
+  padding: 0 12px;
+  overflow: hidden;
+  font-size: var(--t-chica);
+  color: var(--texto-suave);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.lab-centro .laboratorio__origen,
+.lab-centro .laboratorio__carga {
+  margin: 10px 12px 0;
+}
+
+.lab-centro .laboratorio__carga.mensaje {
+  margin-bottom: 10px;
+}
+
+.lab-escrito {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--borde);
+  background: var(--fondo-aviso);
+  font-size: var(--t-chica);
+}
+
+.lab-escrito p {
+  margin: 0;
+}
+
+.lab-escrito__botones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.lab-centro__hoja {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* While the E-R sheet loads: the same space, so nothing jumps. */
+.lab-centro__der-espera {
+  flex: 1;
+  background: var(--superficie);
+}
+
+.lab-centro__binario {
+  margin: 16px;
+  color: var(--texto-suave);
+}
+
+/* The sheet fills the middle: it scrolls inside, the page doesn't. */
+.lab .editor {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  border: 0;
+  border-radius: 0;
+}
+
+.lab .editor .cm-editor {
+  flex: 1;
+  min-height: 0;
+}
+
+.lab .editor .cm-scroller {
+  min-height: 0;
+  max-height: none;
+  overscroll-behavior: contain;
+}
+
+.lab .editor .cm-gutters {
+  min-height: 100%;
+}
+
+.lab .editor:has(.cm-focused) {
+  outline-offset: -2px;
+}
+
+/* The panel: its tabs, and what each one has, scrolling inside. */
+.lab-panel {
+  grid-area: panel;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  background: var(--superficie);
+}
+
+.lab-panel__cabeza {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0 6px 0 4px;
+  border-bottom: 1px solid var(--borde);
+  background: var(--fondo);
+}
+
+.lab[data-sin-panel] .lab-panel__cabeza {
+  border-bottom: 0;
+}
+
+/* Narrow, the tabs take the row: the state goes on its own line under them instead of being cut to a letter. */
+.lab[data-angosta] .lab-panel__cabeza {
+  flex-wrap: wrap;
+}
+.lab[data-angosta] .lab-panel__estado {
+  order: 3;
+  flex-basis: 100%;
+  padding: 0 4px 6px;
+  text-align: left;
+  white-space: normal;
+}
+
+/* Hidden, the panel is a line at the bottom of the window: its button stays clear of Consultron's. */
+.lab[data-sin-panel]:not([data-angosta]) .lab-panel__cabeza {
+  padding-right: 88px;
+}
+
+.lab-panel__pestanas {
+  display: flex;
+  min-width: 0;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+}
+
+.lab-panel__pestana {
+  flex: none;
+  min-height: 36px;
+  padding: 6px 12px;
+  border: 0;
+  background: none;
+  box-shadow: inset 0 -2px transparent;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.lab-panel__pestana[aria-selected='true'] {
+  box-shadow: inset 0 -2px var(--accion);
+  color: var(--texto);
+  font-weight: 700;
+}
+
+.lab-panel__pestana:focus-visible {
+  outline-offset: -3px;
+}
+
+.lab-panel__alternar {
+  width: 32px;
+  height: 32px;
+}
+
+.lab-panel__cuerpo {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.lab-panel__cuerpo[hidden],
+.lab-panel__hoja[hidden],
+.lab-panel__consola[hidden] {
+  display: none;
+}
+
+.lab-panel__hoja {
+  flex: 1;
+  min-height: 0;
+  padding: 12px;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+.lab-panel__hoja--consola {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+}
+
+.lab-panel__hoja--consola > .pasos {
+  padding: 12px;
+}
+
+.lab-panel__hoja--previa {
+  display: grid;
+  align-content: start;
+  gap: 6px;
+}
+
+.lab-panel__consola {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.lab .consola {
+  flex: 1;
+  min-height: 0;
+  max-height: none;
+  overscroll-behavior: contain;
+  border: 0;
+  border-radius: 0;
+}
+
+.lab .consola:focus-visible {
+  outline-offset: -3px;
+}
+
+.lab .medir--pestana {
+  padding-top: 0;
+  border-top: 0;
+}
+
+/* The files: by course, the projects as folders with their files under a guide line. */
+.lab-explorador {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+}
+
+.lab-explorador__cabeza {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: grid;
+  gap: 8px;
+  padding: 12px 12px 10px;
+  border-bottom: 1px solid var(--borde);
+  background: var(--superficie);
+}
+
+.lab .lab-explorador__cabeza h2 {
+  font-size: var(--t-chica);
+  color: var(--texto-suave);
+}
+
+.lab-explorador__botones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.lab-explorador__botones .boton {
+  min-height: 32px;
+  padding: 4px 10px;
+}
+
+.lab-explorador__lista {
+  display: grid;
+  align-content: start;
+  gap: 14px;
+  padding: 8px 6px 20px;
+}
+
+.lab-explorador__materia {
+  display: grid;
+  gap: 2px;
+}
+
+.lab-explorador__materia h3 {
+  margin: 0;
+  padding: 0 8px 2px;
+  font-size: var(--t-chica);
+  font-weight: 700;
+  color: var(--texto-suave);
+}
+
+.lab-explorador__ayuda {
+  margin: 0;
+  padding: 0 8px;
+  font-size: var(--t-chica);
+  color: var(--texto-suave);
+}
+
+.lab-arbol,
+.lab-arbol__hijos {
+  display: grid;
+  gap: 1px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.lab-arbol__hijos {
+  margin-left: 15px;
+  padding-left: 6px;
+  border-left: 1px solid var(--borde);
+}
+
+.lab-arbol__hijos[hidden] {
+  display: none;
+}
+
+.lab-arbol__fila {
+  display: flex;
+  align-items: center;
+  border-radius: var(--radio-control);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .lab-arbol__fila:hover {
+    background: var(--superficie-2);
+  }
+}
+
+.lab-arbol__nombre {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  min-height: 32px;
+  padding: 4px 8px;
+  border: 0;
+  border-radius: var(--radio-control);
+  background: none;
+  color: var(--texto);
+  font-size: var(--t-chica);
+  text-align: left;
+  cursor: pointer;
+}
+
+.lab-arbol__nombre[aria-current='true'] {
+  background: var(--superficie-2);
+  box-shadow: inset 3px 0 var(--accion);
+  font-weight: 700;
+}
+
+.lab-arbol__nombre:focus-visible {
+  outline-offset: -3px;
+}
+
+.lab-arbol__nombre:active,
+.lab-arbol__opciones:active {
+  background: var(--superficie-2);
+}
+
+/* Dragging a file: the row it left goes pale, and the project it would go into gets the edge of the focus. */
+.lab-arbol__fila[draggable='true'] {
+  -webkit-user-drag: element;
+}
+
+.lab-arbol__fila[data-arrastrado] {
+  opacity: 0.5;
+}
+
+.lab-arbol__item[data-sobre],
+.lab-explorador__lista[data-sobre] {
+  border-radius: var(--radio-control);
+  background: var(--superficie-2);
+  box-shadow: inset 0 0 0 2px var(--foco);
+}
+
+.lab-explorador__soltar {
+  margin: 0;
+  padding: 10px 8px;
+  border: 1px dashed var(--borde-control);
+  border-radius: var(--radio-control);
+  font-size: var(--t-chica);
+  color: var(--texto-suave);
+  text-align: center;
+}
+
+.lab-arbol__texto {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lab-arbol__ext,
+.lab-arbol__dato,
+.lab-arbol__lenguaje {
+  color: var(--texto-suave);
+  font-weight: 400;
+}
+
+.lab-arbol__dato,
+.lab-arbol__lenguaje {
+  margin-left: auto;
+  white-space: nowrap;
+}
+
+.lab-arbol__dibujo {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.lab-arbol__flecha {
+  width: 14px;
+  height: 14px;
+  transition: transform 160ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.lab-arbol__nombre[aria-expanded='true'] .lab-arbol__flecha {
+  transform: rotate(90deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lab-arbol__flecha {
+    transition: none;
+  }
+}
+
+:root[data-movimiento='reducido'] .lab-arbol__flecha,
+:root[data-movimiento='ninguno'] .lab-arbol__flecha {
+  transition: none;
+}
+
+.lab-arbol__carpeta {
+  display: inline-flex;
+  color: var(--texto-suave);
+}
+
+/* The kind of each file: its extension in the color of its language (the same as the editor's), the folder of a
+   project too. The letters say it without the color. */
+.lab-tipo {
+  flex: none;
+  min-width: 1.75rem;
+  padding: 0 3px;
+  border: 1px solid currentColor;
+  border-radius: 4px;
+  font-family: var(--codigo-letra);
+  font-size: 0.625rem;
+  font-weight: 700;
+  line-height: 1rem;
+  text-align: center;
+  color: var(--texto-suave);
+}
+
+.lab-tipo::before {
+  content: attr(data-texto);
+}
+
+.lab-tipo[data-tipo='python'],
+.lab-arbol__carpeta[data-tipo='python'],
+.lab-barra__lenguaje[data-tipo='python'] {
+  color: var(--codigo-funcion);
+}
+
+.lab-tipo[data-tipo='c'],
+.lab-arbol__carpeta[data-tipo='c'],
+.lab-barra__lenguaje[data-tipo='c'] {
+  color: var(--codigo-clave);
+}
+
+.lab-tipo[data-tipo='sql'],
+.lab-arbol__carpeta[data-tipo='sql'],
+.lab-barra__lenguaje[data-tipo='sql'] {
+  color: var(--codigo-tipo);
+}
+
+.lab-tipo[data-tipo='javascript'],
+.lab-arbol__carpeta[data-tipo='javascript'],
+.lab-barra__lenguaje[data-tipo='javascript'] {
+  color: var(--codigo-numero);
+}
+
+/* The file that runs, with the triangle of «Correr». */
+.lab-arbol__corre {
+  width: 12px;
+  height: 12px;
+  fill: var(--accion);
+  stroke: none;
+}
+
+/* What a program wrote: a dot of highlighter with an edge of ink, hollow if it isn't text; deleted, crossed out. */
+.lab-arbol__marca {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  margin-left: auto;
+  border: 1.5px solid var(--resaltador-texto);
+  border-radius: 50%;
+  background: var(--resaltador);
+}
+
+.lab-arbol__fila[data-marca='binario'] .lab-arbol__marca {
+  background: none;
+  border-color: var(--texto);
+}
+
+.lab-arbol__fila[data-marca='borrado'] .lab-arbol__texto {
+  color: var(--texto-suave);
+  text-decoration: line-through;
+}
+
+.lab-arbol__fila[data-marca='borrado'] .lab-arbol__marca {
+  display: none;
+}
+
+.lab-arbol__opciones {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  margin-right: 2px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radio-control);
+  background: none;
+  color: var(--texto-suave);
+  cursor: pointer;
+}
+
+.lab-arbol__opciones .lab-arbol__dibujo {
+  stroke-width: 3.2;
+}
+
+.lab-arbol__opciones[aria-expanded='true'] {
+  background: var(--superficie-2);
+  color: var(--texto);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .lab-arbol__opciones:hover {
+    color: var(--texto);
+  }
+
+  .lab-arbol__crear {
+    opacity: 0;
+    transition: opacity 120ms ease;
+  }
+
+  .lab-arbol__fila:is(:hover, :focus-within) .lab-arbol__crear {
+    opacity: 1;
+  }
+}
+
+@media not ((hover: hover) and (pointer: fine)) {
+  .lab-arbol__crear {
+    display: none;
+  }
+}
+
+.lab-arbol__crear .lab-arbol__dibujo {
+  stroke-width: 2;
+}
+
+/* What else a row does: a menu over everything (popover), beside the button or where the pointer was. */
+.lab-menu {
+  position: fixed;
+  inset: auto;
+  min-width: 11rem;
+  max-width: min(18rem, calc(100vw - 16px));
+  margin: 0;
+  padding: 4px;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-control);
+  background: var(--superficie);
+  color: var(--texto);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.16);
+  list-style: none;
+}
+
+.lab-menu:popover-open {
+  display: grid;
+  gap: 1px;
+  transition:
+    opacity 150ms ease-out,
+    transform 150ms cubic-bezier(0.23, 1, 0.32, 1);
+
+  @starting-style {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+}
+
+:root:is([data-movimiento='reducido'], [data-movimiento='ninguno']) .lab-menu:popover-open {
+  transition: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lab-menu:popover-open {
+    transition: opacity 150ms ease-out;
+  }
+}
+
+.lab-menu__accion {
+  width: 100%;
+  min-height: 32px;
+  padding: 4px 10px;
+  border: 0;
+  border-radius: calc(var(--radio-control) - 2px);
+  background: none;
+  color: var(--texto);
+  font-size: var(--t-chica);
+  text-align: left;
+  cursor: pointer;
+}
+
+.lab-menu__accion--peligro {
+  color: var(--error);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .lab-menu__accion:hover {
+    background: var(--superficie-2);
+  }
+}
+
+.lab-menu__accion:active {
+  background: var(--superficie-2);
+}
+
+.lab-menu__accion:focus-visible {
+  outline-offset: -3px;
+}
+
+.lab-arbol__etiqueta {
+  font-size: var(--t-chica);
+  color: var(--texto-suave);
+}
+
+.lab-arbol__form {
+  display: grid;
+  /* Never wider than the files' column, however long the field's own width would be. */
+  grid-template-columns: minmax(0, 1fr);
+  gap: 6px;
+  padding: 6px 8px;
+  border-radius: var(--radio-control);
+  background: var(--superficie-2);
+}
+
+.lab-arbol__campo {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--codigo-letra);
+  font-size: var(--t-chica);
+}
+
+.lab-arbol__form .campo__control {
+  min-height: 34px;
+  padding: 2px 8px;
+}
+
+.lab-arbol__campo .campo__control {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--codigo-letra);
+}
+
+.lab-arbol__tipo .campo__control {
+  width: auto;
+}
+
+@media (pointer: fine) {
+  .lab-arbol__form .campo__control {
+    font-size: var(--t-chica);
+  }
+}
+
+.lab-arbol__form-botones {
+  display: flex;
+  gap: 6px;
+}
+
+.lab-arbol__form-botones .boton {
+  min-height: 32px;
+  padding: 4px 12px;
+}
+
+/* On a phone: the files in a drawer from the left, the sheet as wide as the screen and the panel under it. */
+.lab[data-angosta] {
+  min-height: 0;
+}
+
+.lab[data-angosta] .lab-cuerpo {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 3fr) minmax(0, 2fr);
+  grid-template-areas:
+    'centro'
+    'panel';
+}
+
+.lab[data-angosta][data-sin-panel] .lab-cuerpo {
+  grid-template-rows: minmax(0, 1fr) auto;
+}
+
+.lab[data-angosta] .lab-panel {
+  border-top: 1px solid var(--borde);
+}
+
+/* Narrow, which file runs takes its own row: Correr, Paso a paso and Parar share the next one. */
+.lab[data-angosta] .lab-barra__campo {
+  flex: 1 1 100%;
+}
+
+.lab[data-angosta] .lab-barra__campo .campo__control {
+  flex: 1;
+  width: auto;
+  min-width: 0;
+}
+
+.lab[data-angosta] .lab-barra__correr {
+  margin-left: 0;
+}
+
+/* On a phone the files are a drawer: its button says so. */
+.lab[data-angosta] .lab-barra__marca .lab-icono {
+  display: inline-flex;
+  gap: 6px;
+  width: auto;
+  padding: 0 12px 0 8px;
+  border: 1px solid var(--borde-control);
+  font-size: var(--t-chica);
+  font-weight: 700;
+}
+
+.lab[data-angosta] .lab-centro__teclas {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+.lab-cajon {
+  inset: 0 auto 0 0;
+  width: min(88vw, 22rem);
+  max-width: none;
+  height: 100dvh;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  border: 0;
+  border-right: 1px solid var(--borde);
+  background: var(--superficie);
+  color: var(--texto);
+}
+
+.lab-cajon::backdrop {
+  background: rgb(0 0 0 / 0.4);
+}
+
+.lab-cajon[open] {
+  animation: lab-cajon 260ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+@keyframes lab-cajon {
+  from {
+    transform: translateX(-100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lab-cajon[open] {
+    animation-name: lab-fundido;
+  }
+}
+
+:root:is([data-movimiento='reducido'], [data-movimiento='ninguno']) .lab-cajon[open] {
+  animation-name: lab-fundido;
+}
+
+@keyframes lab-fundido {
+  from {
+    opacity: 0;
+  }
+}
+
+.lab-cajon__cabeza {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 8px 8px 16px;
+  border-bottom: 1px solid var(--borde);
+  background: var(--superficie);
+}
+
+.lab .lab-cajon__titulo {
+  margin: 0;
+  font-size: var(--t-ui);
+}
+
+.lab-cajon .lab-explorador__cabeza {
+  position: static;
+}
+
+/* The sheet. Each line of code on a row of squares of 24 px (more, with a big letter: --codigo-alto), which scroll with
+   the text. The letter and its size, as chosen in Configuración (public/ajustes.js); only Fira Code joins signs. */
+.editor {
+  border: 1px solid var(--borde-control);
+  border-radius: var(--radio-bloque);
+  background: var(--superficie);
+  overflow: hidden;
+}
+
+.editor .cm-editor {
+  font-size: var(--codigo-tamano, 0.9375rem);
+}
+
+/* The place of the editor while its code isn't there yet (a table's shared code, a moment). */
+.laboratorio__espera {
+  min-height: 15rem;
+  border-color: var(--borde);
+}
+
+.editor .cm-editor.cm-focused {
+  outline: none;
+}
+
+.editor:has(.cm-focused) {
+  outline: 2px solid var(--foco);
+  outline-offset: 2px;
+}
+
+.editor .cm-scroller {
+  min-height: 15rem;
+  max-height: min(70dvh, 40rem);
+  overflow-y: auto;
+  font-family: var(--codigo-letra);
+  font-variant-ligatures: var(--codigo-ligaduras, none);
+  line-height: var(--codigo-alto, 24px);
+  background-image: linear-gradient(var(--codigo-cuadricula) 1px, transparent 1px), linear-gradient(90deg, var(--codigo-cuadricula) 1px, transparent 1px);
+  background-size: var(--codigo-alto, 24px) var(--codigo-alto, 24px);
+  background-attachment: local;
+}
+
+.editor .cm-content {
+  padding-block: 0 24px;
+  caret-color: var(--texto);
+}
+
+.editor .cm-line {
+  padding-inline: 10px 6px;
+}
+
+.editor .cm-cursor {
+  border-left: 2px solid var(--texto);
+}
+
+.editor .cm-gutters {
+  min-height: 15rem;
+  border-right: 2px solid var(--codigo-margen);
+  background: var(--superficie);
+  color: var(--texto-suave);
+}
+
+.editor .cm-lineNumbers .cm-gutterElement {
+  min-width: 3ch;
+  padding-inline: 8px 6px;
+}
+
+.editor .cm-activeLine {
+  background: var(--codigo-linea);
+}
+
+.editor .cm-activeLineGutter {
+  background: none;
+  color: var(--texto);
+  font-weight: 700;
+}
+
+.editor .cm-selectionBackground,
+.editor .cm-focused .cm-selectionBackground,
+.editor .cm-content ::selection {
+  background: var(--codigo-seleccion);
+}
+
+/* The pair of brackets, underlined: the side of a box merged with the cursor right next to it (Ignacio, 16/11). */
+.editor .cm-matchingBracket {
+  background: var(--codigo-seleccion);
+  box-shadow: inset 0 -2px 0 var(--borde-control);
+}
+
+/* The line of the error, with the highlighter: its text in the highlighter's ink, so it reads in any theme. */
+.editor .editor__linea-error,
+.editor .editor__linea-error.cm-activeLine {
+  background: var(--resaltador);
+}
+
+.editor .editor__linea-error,
+.editor .editor__linea-error span {
+  color: var(--resaltador-texto);
+}
+
+/* As Error Lens: what went wrong, at the end of its line, in the error's color on the sheet's own (the line has the
+   highlighter); a warning of C, in the warning's, with a stripe on its line. Only for the eyes: the screen reader hears
+   it when the cursor gets to that line (Editor.jsx). */
+.editor .editor__lente {
+  display: inline-block;
+  max-width: 60ch;
+  margin-left: 3ch;
+  padding: 0 8px;
+  overflow: hidden;
+  border-left: 3px solid currentcolor;
+  border-radius: 0 var(--radio-control) var(--radio-control) 0;
+  background: var(--superficie);
+  color: var(--error);
+  font-family: var(--fuente-ui);
+  font-size: var(--t-chica);
+  font-style: normal;
+  font-weight: 400;
+  line-height: 1.5;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  vertical-align: baseline;
+  user-select: none;
+}
+
+.editor .editor__linea-error .editor__lente {
+  color: var(--error);
+}
+
+.editor .editor__lente[data-tono='aviso'] {
+  color: var(--aviso);
+}
+
+.editor .editor__linea-aviso {
+  box-shadow: inset 3px 0 var(--aviso);
+}
+
+@media (forced-colors: active) {
+  .editor .editor__lente {
+    border-left-color: CanvasText;
+  }
+
+  .editor .cm-editor .cm-tooltip.cm-tooltip-autocomplete > ul > li[aria-selected] {
+    outline: 2px solid Highlight;
+    outline-offset: -2px;
+  }
+}
+
+/* The autocomplete: CodeMirror's list, under the line being written, in the colors of the site. The one on view, as
+   the buttons; what matches, underlined; how it's called, softer. The places of a template, as a selection. */
+.editor .cm-editor .cm-tooltip.cm-tooltip-autocomplete,
+.editor .cm-editor .cm-tooltip.cm-completionInfo {
+  border: 1px solid var(--borde-control);
+  border-radius: var(--radio-control);
+  background: var(--superficie);
+  color: var(--texto);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.16);
+}
+
+/* Clear of the row being written, above it or under it. */
+.editor .cm-editor .cm-tooltip-autocomplete.cm-tooltip-below {
+  margin-top: 4px;
+}
+
+.editor .cm-editor .cm-tooltip-autocomplete.cm-tooltip-above {
+  margin-top: -4px;
+}
+
+.editor .cm-editor .cm-tooltip.cm-tooltip-autocomplete > ul {
+  min-width: min(16rem, calc(100vw - 32px));
+  max-width: min(40rem, calc(100vw - 18px));
+  max-height: min(14rem, 40dvh);
+  border-radius: calc(var(--radio-control) - 1px);
+  font-family: var(--codigo-letra);
+  font-size: var(--t-chica);
+}
+
+.editor .cm-editor .cm-tooltip.cm-tooltip-autocomplete > ul > li {
+  padding: 4px 10px 4px 6px;
+  line-height: 1.4;
+}
+
+.editor .cm-editor .cm-tooltip.cm-tooltip-autocomplete > ul > li[aria-selected] {
+  background: var(--accion);
+  color: var(--accion-texto);
+}
+
+.editor .cm-editor .cm-completionIcon {
+  opacity: 1;
+  color: var(--texto-suave);
+}
+
+.editor .cm-editor .cm-completionDetail {
+  margin-left: 1ch;
+  color: var(--texto-suave);
+  font-style: normal;
+}
+
+.editor .cm-editor li[aria-selected] :is(.cm-completionIcon, .cm-completionDetail) {
+  color: inherit;
+}
+
+.editor .cm-editor .cm-completionMatchedText {
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 2px;
+}
+
+.editor .cm-editor .cm-tooltip.cm-completionInfo {
+  padding: 4px 10px;
+  font-size: var(--t-chica);
+}
+
+.editor .cm-editor .cm-snippetField {
+  background: var(--codigo-seleccion);
+}
+
+.editor .cm-editor .cm-snippetFieldPosition {
+  border-left-color: var(--texto-suave);
+}
+
+.editor__margen-error .cm-gutterElement {
+  width: 1.25em;
+  padding: 0;
+  text-align: center;
+}
+
+.editor__signo {
+  color: var(--error);
+  font-weight: 700;
+}
+
+/* What the run left. The text as in a terminal; what the student typed, underlined with the highlighter. */
+.consola {
+  min-height: 7.5rem;
+  max-height: min(60dvh, 28rem);
+  overflow: auto;
+  padding: 12px 14px;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-bloque);
+  background: var(--superficie);
+  font-family: var(--codigo-letra);
+  font-size: 0.9375rem;
+  line-height: 1.5;
+}
+
+.consola:focus-visible {
+  outline: 2px solid var(--foco);
+  outline-offset: 2px;
+}
+
+.consola > * + * {
+  margin-top: 10px;
+}
+
+.consola__vacia {
+  margin: 0;
+  font-family: var(--fuente-ui);
+  color: var(--texto-suave);
+}
+
+.consola__texto {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.consola__err {
+  color: var(--error);
+}
+
+.consola__escrito {
+  box-shadow: inset 0 -3px var(--resaltador);
+}
+
+.consola__pedido {
+  display: inline;
+}
+
+.consola__campo {
+  width: min(100%, 24ch);
+  min-height: 0;
+  padding: 0 2px;
+  border: 0;
+  border-bottom: 3px solid var(--resaltador);
+  border-radius: 0;
+  background: none;
+  font-family: var(--codigo-letra);
+  font-size: inherit;
+  line-height: inherit;
+}
+
+.consola__campo:focus-visible {
+  outline: 2px solid var(--foco);
+  outline-offset: 2px;
+}
+
+.consola__linea,
+.consola__dato {
+  margin: 0;
+  font-family: var(--fuente-ui);
+}
+
+.consola__dato {
+  font-size: var(--t-chica);
+  color: var(--texto-suave);
+}
+
+.consola__resultado {
+  display: grid;
+  gap: 6px;
+}
+
+/* A matplotlib figure: its own white background, as matplotlib draws it, in any style. */
+.consola__imagen {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-control);
+}
+
+/* As wide as its columns, not the whole console: a short result doesn't stretch apart. */
+.consola__tabla {
+  width: fit-content;
+  max-width: 100%;
+  max-height: 20rem;
+  overflow: auto;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-control);
+}
+
+.consola__tabla:focus-visible {
+  outline: 2px solid var(--foco);
+  outline-offset: 2px;
+}
+
+.consola__tabla table {
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+.consola__tabla th,
+.consola__tabla td {
+  padding: 4px 12px;
+  border-bottom: 1px solid var(--borde);
+  text-align: left;
+  white-space: nowrap;
+}
+
+.consola__tabla th {
+  position: sticky;
+  top: 0;
+  background: var(--superficie-2);
+  font-family: var(--fuente-ui);
+  font-weight: 700;
+}
+
+.consola__tabla td[data-numero],
+.consola__tabla th[data-numero] {
+  text-align: right;
+}
+
+.consola__tabla tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.consola__nulo {
+  color: var(--texto-suave);
+  font-style: italic;
+}
+
+.consola__error {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: start;
+  gap: 8px;
+  padding: 10px 12px;
+  border-left: 4px solid var(--error);
+  border-radius: 0 var(--radio-control) var(--radio-control) 0;
+  background: var(--superficie-2);
+}
+
+.consola__error pre {
+  justify-self: stretch;
+  min-width: 0;
+  margin: 0;
+  color: var(--error);
+  font: inherit;
+}
+
+.consola__donde {
+  padding-bottom: 4px;
+  overflow-x: auto;
+  white-space: pre;
+}
+
+.consola__que {
+  font-weight: 700;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.consola__error .boton {
+  font-family: var(--fuente-ui);
+}
+
+.consola__aviso {
+  margin: 0;
+  font-family: var(--fuente-ui);
+}
+
+.consola__aviso--aviso {
+  color: var(--aviso);
+  font-weight: 700;
+}
+
+.consola__aviso--error {
+  color: var(--error);
+  font-weight: 700;
+}
+
+/* The practice database: its tables at hand while writing the query. */
+.laboratorio__tablas {
+  grid-area: tablas;
+  display: grid;
+  justify-items: start;
+  gap: 12px;
+}
+
+.tablas {
+  display: grid;
+  gap: 10px;
+  width: 100%;
+  margin: 0;
+}
+
+.tablas__tabla {
+  display: grid;
+  gap: 2px;
+}
+
+.tablas dt {
+  font-family: var(--codigo-letra);
+  font-weight: 700;
+}
+
+.tablas dd {
+  margin: 0;
+  font-family: var(--codigo-letra);
+  font-size: var(--t-chica);
+  color: var(--texto-suave);
+  overflow-wrap: anywhere;
+}
+
+.tablas__clave {
+  color: var(--texto);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.tablas__vista {
+  font-family: var(--fuente-ui);
+  font-weight: 400;
+  color: var(--texto-suave);
+}
+
+.tablas--esqueleto .esqueleto {
+  display: block;
+  height: 40px;
+  border-radius: var(--radio-control);
+  background: var(--superficie-2);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .tablas--esqueleto .esqueleto {
+    animation: laboratorio-brillo 1.4s ease-in-out infinite;
+  }
+}
+
+:root[data-movimiento='reducido'] .tablas--esqueleto .esqueleto,
+:root[data-movimiento='ninguno'] .tablas--esqueleto .esqueleto {
+  animation: none;
+}
+
+@keyframes laboratorio-brillo {
+  50% {
+    opacity: 0.55;
+  }
+}
+
+/* In the phone, the code at 16 px: with less, the phone zooms the page when touching it. */
+@media (pointer: coarse) {
+  .editor .cm-editor,
+  .consola {
+    font-size: max(16px, var(--codigo-tamano, 0.9375rem));
+  }
+
+  .lab-icono:active,
+  .lab-abiertos__nombre:active,
+  .lab-abiertos__cerrar:active,
+  .lab-panel__pestana:active {
+    background: var(--superficie-2);
+  }
+}
+
+/* Run, step and stop are short: on a phone they always share one row, each as wide as its text plus an even share. */
+@media (max-width: 30rem) {
+  .lab-barra__correr {
+    flex: 1 1 100%;
+  }
+  .lab-barra__correr > .boton.boton {
+    flex: 1 1 auto;
+    padding-inline: 8px;
+  }
+  .lab[data-angosta] .lab-barra__guardar {
+    flex: 1 1 100%;
+  }
+  .lab[data-angosta] .lab-barra__guardar > .boton {
+    width: 100%;
+  }
+}
+
+/* New outputs shared by the others in a live session, on the tab that shows them (as the chat's unread count). */
+.lab-panel__nuevas {
+  display: inline-block;
+  min-width: 1.125rem;
+  height: 1.125rem;
+  margin-inline-start: 6px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: var(--error);
+  color: var(--error-texto);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  line-height: 1.125rem;
+  font-variant-numeric: lining-nums;
+  text-align: center;
+  vertical-align: 1px;
+}

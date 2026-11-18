@@ -1,0 +1,418 @@
+/* The frame of the table's drawing and writing tools (Documento, Pizarra, Diagrama de bloques): a sheet with its
+   toolbar on top. The tool in use is marked like the rest of the site marks what matters: with the highlighter.
+   The table decides the height with --en-vivo-alto. */
+.vh-herramienta {
+  display: flex;
+  flex-direction: column;
+  block-size: var(--en-vivo-alto, clamp(420px, 72vh, 860px));
+  min-inline-size: 0;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-bloque);
+  background: var(--superficie);
+  color: var(--texto);
+  overflow: hidden;
+}
+
+.vh-barra {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 4px;
+  padding: 6px;
+  border-block-end: 1px solid var(--borde);
+  background: var(--superficie);
+}
+
+.vh-grupo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px;
+}
+
+.vh-grupo + .vh-grupo {
+  padding-inline-start: 4px;
+  border-inline-start: 1px solid var(--borde);
+}
+
+.vh-barra__fin {
+  margin-inline-start: auto;
+}
+
+.vh-boton {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-inline-size: 40px;
+  min-block-size: 40px;
+  padding: 0 8px;
+  border: 1px solid transparent;
+  border-radius: var(--radio-control);
+  background: transparent;
+  color: var(--texto);
+  font: inherit;
+  font-size: var(--t-chica);
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 120ms ease, transform 120ms ease;
+}
+
+.vh-boton:active:not(:disabled) {
+  transform: scale(0.96);
+}
+
+.vh-boton:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* The highlighter under the tool in use. */
+.vh-boton[aria-pressed='true'] {
+  background: var(--superficie-2);
+}
+
+.vh-boton[aria-pressed='true']::after {
+  content: '';
+  position: absolute;
+  inset-inline: 7px;
+  inset-block-end: 4px;
+  block-size: 5px;
+  border-radius: 2px;
+  background: var(--resaltador);
+  opacity: 0.9;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .vh-boton:hover:not(:disabled) {
+    background: var(--superficie-2);
+  }
+}
+
+.vh-icono {
+  inline-size: 20px;
+  block-size: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  position: relative;
+  z-index: 1;
+}
+
+.vh-boton__texto {
+  position: relative;
+  z-index: 1;
+}
+
+/* Who is in this tab: a dot of each one's color and the name. */
+.vh-presentes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  margin: 0;
+  padding: 0 4px;
+  list-style: none;
+  font-size: var(--t-chica);
+  color: var(--texto-suave);
+}
+
+.vh-presentes li {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.vh-presentes li::before {
+  content: '';
+  inline-size: 9px;
+  block-size: 9px;
+  border-radius: 50%;
+  background: var(--color-otro);
+}
+
+.vh-aviso {
+  margin: 12px;
+  padding: 10px 14px;
+  border-radius: var(--radio-control);
+  background: var(--fondo-aviso);
+  color: var(--texto);
+}
+
+/* A small floating form (the link of the document, the label of a block). */
+.vh-globo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 8px;
+  padding: 8px;
+  border-block-end: 1px solid var(--borde);
+  background: var(--superficie-2);
+}
+
+.vh-globo label {
+  display: grid;
+  gap: 4px;
+  flex: 1 1 220px;
+  font-size: var(--t-chica);
+  font-weight: 700;
+}
+
+.vh-globo input,
+.vh-globo select {
+  min-block-size: 40px;
+  padding: 6px 10px;
+  border: 1px solid var(--borde-control);
+  border-radius: var(--radio-control);
+  background: var(--superficie);
+  color: var(--texto);
+  font: inherit;
+  font-size: 16px;
+  font-weight: 400;
+}
+
+.vh-globo__error {
+  flex-basis: 100%;
+  margin: 0;
+  color: var(--error);
+  font-size: var(--t-chica);
+}
+
+@media (max-width: 560px) {
+  .vh-boton {
+    min-inline-size: 38px;
+    padding: 0 6px;
+  }
+}
+
+/* A small box next to what it is about (Globo.jsx): its own size, over the sheet, with a shadow that lifts it. Its
+   fields go one under the other, the buttons in a row. */
+.vh-pop {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  z-index: 20;
+  inline-size: max-content;
+  max-inline-size: min(20rem, calc(100% - 16px));
+  max-block-size: calc(100% - 16px);
+  overflow-y: auto;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-control);
+  background: var(--superficie);
+  color: var(--texto);
+  box-shadow: 0 10px 28px color-mix(in srgb, #000 22%, transparent), 0 1px 3px color-mix(in srgb, #000 12%, transparent);
+  animation: vh-pop 140ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+@keyframes vh-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vh-pop {
+    animation: none;
+  }
+}
+
+.vh-pop > .vh-globo {
+  align-items: end;
+  padding: 10px;
+  border: 0;
+  background: none;
+}
+
+.vh-pop .vh-globo label {
+  flex: 1 1 100%;
+}
+
+.vh-pop .vh-globo input:not([type]),
+.vh-pop .vh-globo input[type='text'],
+.vh-pop .vh-globo input[type='url'] {
+  inline-size: 16rem;
+  max-inline-size: 100%;
+}
+.vh-pop .vh-globo .vdia-signo-campo {
+  flex: 0 1 auto;
+}
+
+/* The small menu of the right click (MenuContextual.jsx): at the pointer, inside the tool and over its bar's room. */
+.vh-menu {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  min-inline-size: 13rem;
+  max-inline-size: min(18rem, calc(100% - 16px));
+  max-block-size: calc(100% - 16px);
+  overflow-y: auto;
+  padding: 4px;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-control);
+  background: var(--superficie);
+  color: var(--texto);
+  box-shadow: 0 10px 28px color-mix(in srgb, #000 22%, transparent), 0 1px 3px color-mix(in srgb, #000 12%, transparent);
+  animation: vh-menu 120ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+@keyframes vh-menu {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+}
+
+@keyframes vh-menu-quieto {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vh-menu {
+    animation-name: vh-menu-quieto;
+  }
+}
+
+.vh-menu__item {
+  display: grid;
+  grid-template-columns: 1rem 1fr auto;
+  align-items: center;
+  gap: 8px;
+  min-block-size: 34px;
+  padding: 0 10px 0 6px;
+  border: 0;
+  border-radius: calc(var(--radio-control) - 2px);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: var(--t-chica);
+  text-align: start;
+  cursor: pointer;
+}
+
+.vh-menu__item:focus-visible,
+.vh-menu__item:focus {
+  outline: none;
+  background: var(--superficie-2);
+}
+
+.vh-menu__item[aria-disabled='true'] {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.vh-menu__marca {
+  font-weight: 700;
+  text-align: center;
+}
+
+.vh-menu__atajo {
+  color: var(--texto-suave);
+  font-family: inherit;
+  font-size: 0.75rem;
+}
+
+.vh-menu__linea {
+  block-size: 1px;
+  margin: 4px 6px;
+  background: var(--borde);
+}
+
+.vh-menu__fila {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 6px 8px;
+}
+
+.vh-menu__muestra {
+  inline-size: 26px;
+  block-size: 26px;
+  padding: 0;
+  border: 2px solid var(--superficie);
+  border-radius: 50%;
+  background: var(--muestra);
+  box-shadow: 0 0 0 1px var(--borde-control);
+  cursor: pointer;
+}
+
+.vh-menu__muestra[aria-checked='true'] {
+  box-shadow: 0 0 0 2px var(--texto);
+}
+
+.vh-menu__muestra:focus-visible,
+.vh-menu__muestra:focus {
+  outline: 2px solid var(--texto);
+  outline-offset: 2px;
+}
+
+@media (pointer: coarse) {
+  .vh-menu__item {
+    min-block-size: 44px;
+  }
+
+  .vh-menu__muestra {
+    inline-size: 34px;
+    block-size: 34px;
+  }
+}
+
+.vh-menu__chip {
+  min-block-size: 30px;
+  padding: 0 10px;
+  border: 1px solid var(--borde-control);
+  border-radius: 999px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: var(--t-chica);
+  cursor: pointer;
+}
+
+.vh-menu__chip[aria-checked='true'] {
+  border-color: var(--texto);
+  background: var(--superficie-2);
+  font-weight: 700;
+}
+
+.vh-menu__chip:focus-visible,
+.vh-menu__chip:focus {
+  outline: 2px solid var(--texto);
+  outline-offset: 2px;
+}
+
+/* A color of the drawings' palette (Pizarra, Diagrama de flujo): a swatch each, the chosen one with a ring. */
+.vh-muestra {
+  flex: none;
+  inline-size: 28px;
+  block-size: 28px;
+  margin: 6px 2px;
+  padding: 0;
+  border: 2px solid var(--superficie);
+  border-radius: 50%;
+  background: var(--muestra);
+  box-shadow: 0 0 0 1px var(--borde-control);
+  cursor: pointer;
+  transition: transform 120ms ease;
+}
+
+.vh-muestra:active {
+  transform: scale(0.92);
+}
+
+.vh-muestra[aria-checked='true'] {
+  box-shadow: 0 0 0 2px var(--texto);
+}
+
+/* The right button drags the view (MenuContextual.jsx): the closed hand, over whatever the tool shows. */
+.vh-arrastrando,
+.vh-arrastrando * {
+  cursor: grabbing !important;
+}

@@ -1,0 +1,130 @@
+/* Ventana de congestión (propias/ventana-tcp.jsx). The curve as the book's figure draws it: a dot per round joined by
+   a line, Tahoe round and Reno square, each with its color of the notebook. The threshold dashed in the same color, the
+   losses as a pencil line from top to bottom and the axes in pencil. */
+
+.vt-caja {
+  min-width: 0;
+}
+
+.vt-grafico {
+  display: block;
+  max-width: 100%;
+  overflow: visible;
+  font-family: var(--fuente-ui);
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+.vt-eje,
+.vt-marca {
+  stroke: var(--tinta-hoja);
+  stroke-width: 1.5;
+}
+
+.vt-numero,
+.vt-nombre-eje {
+  fill: var(--texto);
+}
+
+.vt-nombre-eje {
+  fill: var(--texto-suave);
+}
+
+.vt-perdida line {
+  stroke: var(--tinta-hoja);
+  stroke-width: 1;
+  stroke-dasharray: 2 4;
+}
+
+.vt-perdida text {
+  fill: var(--texto-suave);
+}
+
+.vt-linea {
+  fill: none;
+  stroke: var(--so-tono);
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+
+.vt-umbral {
+  fill: none;
+  stroke: color-mix(in srgb, var(--so-tono) 70%, var(--superficie));
+  stroke-width: 1.5;
+  stroke-dasharray: 6 5;
+}
+
+.vt-punto {
+  fill: var(--superficie);
+  stroke: var(--so-tono);
+  stroke-width: 2;
+}
+
+/* The legend: the same mark of each line, and the threshold dashed. */
+.vt-leyenda {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 18px;
+  margin: 8px 0 0;
+  padding: 0;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+  list-style: none;
+}
+
+.vt-leyenda li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.vt-leyenda li::before {
+  content: '';
+  width: 0.7em;
+  height: 0.7em;
+  border: 2px solid var(--so-tono);
+  border-radius: 50%;
+}
+
+.vt-leyenda li[data-serie='reno']::before {
+  border-radius: 1px;
+}
+
+.vt-leyenda li[data-umbral]::before {
+  width: 1.4em;
+  height: 0;
+  border: 0;
+  border-top: 2px dashed var(--tinta-hoja);
+  border-radius: 0;
+}
+
+.vt-cada + .vt-cada {
+  margin-top: 12px;
+}
+
+/* ---------- Round by round ---------- */
+.vt-tabla td,
+.vt-tabla th {
+  text-align: right;
+}
+
+.vt-tabla .vt-tabla__serie {
+  text-align: left;
+}
+
+.vt-tabla .vt-fase {
+  color: var(--texto-suave);
+  text-align: left;
+}
+
+.vt-tabla .vt-fase[data-fase='perdida'] {
+  color: var(--error);
+  font-weight: 700;
+}
+
+.vt-tabla tr[data-perdida] th {
+  color: var(--error);
+}
+
+.vt-tabla td[data-primera] {
+  border-left: 1px solid var(--linea-hoja);
+}

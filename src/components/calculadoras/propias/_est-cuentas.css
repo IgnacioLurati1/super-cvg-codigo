@@ -1,0 +1,191 @@
+/* The math on the sheet (_cuentas.jsx): fractions, roots and combinatorial numbers that sit on the line of text, and
+   the result as measures. */
+.ce-cuenta {
+  max-width: 100%;
+  margin: 0 0 8px;
+  font-size: 1.0625rem;
+  line-height: 2.6;
+  font-variant-numeric: tabular-nums lining-nums;
+  overflow-wrap: anywhere;
+}
+
+.ce-cuenta + .ce-cuenta {
+  margin-top: -4px;
+}
+
+.ce-frac {
+  display: inline-grid;
+  justify-items: center;
+  margin: 0 0.15em;
+  line-height: 1.3;
+  vertical-align: middle;
+}
+
+.ce-frac__arriba {
+  padding: 0 0.2em 1px;
+  border-bottom: 1.5px solid currentColor;
+}
+
+.ce-frac__abajo {
+  padding: 1px 0.2em 0;
+}
+
+.ce-raiz {
+  display: inline-flex;
+  align-items: stretch;
+  vertical-align: middle;
+  line-height: 1.3;
+}
+
+.ce-raiz__signo {
+  flex: none;
+  width: 0.62em;
+  height: auto;
+  overflow: visible;
+}
+
+.ce-raiz__signo path {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5px;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.ce-raiz__dentro {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 0.2em 1px 0.1em;
+  border-top: 1.5px solid currentColor;
+}
+
+.ce-comb {
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+  line-height: 1.2;
+}
+
+.ce-comb__par {
+  font-size: 2.1em;
+  font-weight: 300;
+  line-height: 1;
+  transform: scaleX(0.7);
+}
+
+.ce-comb__numeros {
+  display: inline-grid;
+  justify-items: center;
+}
+
+/* The results: each measure named small on top, its value big under it. */
+.ce-fichas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px 30px;
+  margin: 0;
+}
+
+.ce-fichas__ficha {
+  display: grid;
+  align-content: start;
+  gap: 2px;
+  min-width: 0;
+}
+
+.ce-fichas dt {
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+  font-weight: 700;
+}
+
+.ce-fichas dd {
+  margin: 0;
+  font-size: 1.375rem;
+  font-weight: 700;
+  line-height: 1.3;
+  font-variant-numeric: tabular-nums lining-nums;
+  overflow-wrap: anywhere;
+}
+
+.ce-fichas__ficha[data-principal] dd {
+  font-size: clamp(1.5rem, 5vw, 2.25rem);
+}
+
+/* A table of the sheet that adds up: the row of the sums under a line, as by hand. */
+.tabla-pasos .ce-suma th,
+.tabla-pasos .ce-suma td {
+  border-top: 2px solid var(--texto);
+  border-bottom: 0;
+  font-weight: 700;
+}
+
+.tabla-pasos .ce-marcada td,
+.tabla-pasos .ce-marcada th {
+  background: var(--resaltador);
+  color: var(--resaltador-texto);
+}
+
+.tabla-pasos--altas .ce-marcada th {
+  font-weight: 700;
+}
+
+/* A value that sits apart in a table: soft ink. */
+.ce-suave {
+  color: var(--tinta-hoja);
+}
+
+/* Data in their squares, each with its place under it: the ordered data of a sample. */
+.ce-orden {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0;
+  margin: 4px 0 10px;
+  padding: 0;
+  list-style: none;
+}
+
+.ce-orden li {
+  display: grid;
+  justify-items: center;
+  min-width: calc(var(--lado-cuadro) * 1.75);
+  margin: 0 -1px -1px 0;
+  padding: 2px 4px 0;
+  border: 1px solid color-mix(in srgb, var(--tinta-hoja) 45%, transparent);
+  background: var(--superficie);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+.ce-orden small {
+  color: var(--texto-suave);
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.ce-orden li[data-marca] {
+  position: relative;
+  z-index: 1;
+  border-color: var(--texto);
+  background: var(--resaltador);
+  color: var(--resaltador-texto);
+}
+
+.ce-orden li[data-marca] small {
+  color: inherit;
+}
+
+.ce-cierre {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  font-weight: 700;
+}
+
+/* The name of a measure under the datum where it falls (q₁, x̃, q₃). */
+.ce-orden__nombre {
+  font-size: 0.8125rem;
+  font-style: italic;
+  font-weight: 700;
+  line-height: 1.2;
+}

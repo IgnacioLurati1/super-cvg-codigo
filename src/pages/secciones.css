@@ -1,0 +1,166 @@
+/* The sections of a campus course (Materia.jsx): the title folds them, the handle moves them. */
+.seccion__titular {
+  position: relative;
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+
+/* «Subir» and «Bajar», from a tap on the handle: floating under it, so the title doesn't move. */
+.seccion__mover {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 20;
+  display: flex;
+  gap: 6px;
+  padding: 6px;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-control);
+  background: var(--superficie);
+  box-shadow: 0 6px 18px rgb(0 0 0 / 0.14);
+}
+
+/* With a large letter on a narrow screen the title would be left a sliver next to its tools: they go under it. The
+   title keeps 10rem at least before that happens, so with the normal letter nothing moves. */
+.seccion__cabeza:has(> .seccion__titular) {
+  flex-wrap: wrap;
+}
+
+.seccion__cabeza > .seccion__titular {
+  flex-basis: 10rem;
+  min-width: 0;
+}
+
+/* Reached from the index or after a move: a little room under the bar on top. */
+.materia .bloque h2[id] {
+  scroll-margin-top: 16px;
+}
+
+/* The chevron goes right after the last word, also with a title in two lines. A name of one long word breaks
+   instead of pushing the page sideways. */
+.seccion__titulo {
+  display: block;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  min-height: 44px;
+  margin: 0;
+  padding: 7px 0;
+  border: 0;
+  border-radius: var(--radio-control);
+  background: none;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+
+.seccion__chevron {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  margin-left: 6px;
+  vertical-align: -0.1em;
+  fill: none;
+  stroke: var(--texto-suave);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2.4;
+  transition: transform 160ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.seccion__titulo[aria-expanded='false'] .seccion__chevron {
+  transform: rotate(-90deg);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .seccion__titulo:hover {
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 4px;
+  }
+
+  .seccion__titulo:hover .seccion__chevron {
+    stroke: var(--texto);
+  }
+}
+
+/* How many things a folded section has. */
+.seccion__cuantos {
+  flex: none;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: var(--superficie-2);
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+  font-variant-numeric: lining-nums;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* What folds. Its own block, so the height measured to animate it is the one it has. */
+.seccion__cuerpo {
+  display: flow-root;
+}
+
+.seccion__cuerpo[hidden] {
+  display: none;
+}
+
+/* The handle: drag it, or move it with the arrows. */
+.seccion__manija {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: 28px;
+  min-height: 44px;
+  margin-left: -6px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radio-control);
+  background: none;
+  color: var(--texto-suave);
+  cursor: grab;
+  touch-action: none;
+}
+
+.seccion__manija svg {
+  width: 20px;
+  height: 20px;
+  fill: currentColor;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .seccion__manija:hover {
+    background: var(--superficie-2);
+    color: var(--texto);
+  }
+}
+
+/* While a section is dragged every one is folded to its title, close together. The dragged one follows the pointer
+   (useArrastreDeSecciones.js) and the others move aside to open its place: a short transform, none with less motion. */
+.materia[data-arrastrando] {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.materia[data-arrastrando],
+.materia[data-arrastrando] * {
+  cursor: grabbing;
+}
+
+.materia[data-arrastrando] .bloque {
+  position: relative;
+  margin-bottom: 12px;
+  transition: transform 160ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.materia .bloque[data-agarrada] {
+  z-index: 2;
+  border-radius: var(--radio-control);
+  background: var(--superficie);
+  box-shadow: 0 0 0 4px var(--superficie), 0 0 0 6px var(--accion);
+  transition: none;
+}

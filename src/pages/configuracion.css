@@ -1,0 +1,1361 @@
+/* The screen */
+
+/* The sections, one at a time, like the tabs of the PDF reader's panel. They stay under the header while the page goes
+   down; on a phone they slide sideways, the last one cut at the edge to show there's more. */
+.ajustes__pestanas {
+  position: sticky;
+  top: var(--alto-cabecera);
+  z-index: 5;
+  display: flex;
+  gap: 0 8px;
+  margin-top: 8px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+  background: var(--fondo);
+  /* A line the tabs cover: a border would sit outside the scroll and under the chosen one's mark. */
+  box-shadow: inset 0 -1px 0 var(--borde);
+}
+
+.ajustes__pestanas::-webkit-scrollbar {
+  display: none;
+}
+
+/* Opened from below, a section starts under the tabs (the header's room is the page's scroll-padding-top). */
+.ajustes__panel {
+  scroll-margin-top: 44px;
+}
+
+.ajustes__pestana {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 12px;
+  white-space: nowrap;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  background: transparent;
+  color: var(--texto-suave);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition:
+    color 120ms ease,
+    transform 120ms ease-out;
+}
+
+.ajustes__pestana:active {
+  transform: scale(0.97);
+}
+
+.ajustes__pestana[aria-selected='true'] {
+  border-bottom-color: var(--foco);
+  color: var(--texto);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .ajustes__pestana:hover {
+    color: var(--texto);
+  }
+}
+
+/* The tabs already draw the line above the first section. */
+.ajustes__panel > .ajustes__seccion:first-child {
+  border-top: 0;
+}
+
+.ajustes__seccion {
+  display: grid;
+  gap: 16px 40px;
+  margin-bottom: 0;
+  padding-block: 32px;
+  border-top: 1px solid var(--borde);
+}
+
+.ajustes__seccion:last-child {
+  padding-bottom: 0;
+}
+
+.ajustes__cabeza p {
+  margin: 0;
+  color: var(--texto-suave);
+}
+
+.ajustes__cuerpo {
+  display: grid;
+  align-content: start;
+  gap: 28px;
+  min-width: 0;
+}
+
+@container pagina (min-width: 56.25rem) {
+  .ajustes__seccion {
+    grid-template-columns: minmax(0, 15rem) minmax(0, 1fr);
+  }
+}
+
+.ajustes__grupo {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.ajustes__leyenda {
+  margin-bottom: 8px;
+  padding: 0;
+  font-weight: 700;
+}
+
+.ajustes__ayuda {
+  margin: -4px 0 8px;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+}
+
+.elecciones {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
+  gap: 8px;
+}
+
+.elecciones[data-parejas] {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@container pagina (min-width: 37.5rem) {
+  .elecciones[data-parejas='letra'] {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  .elecciones[data-parejas='color'],
+  .elecciones[data-parejas='estilo'] {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.eleccion {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  min-width: 0;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid var(--borde-control);
+  border-radius: var(--radio-control);
+  background: var(--superficie);
+  cursor: pointer;
+  transition:
+    border-color 120ms ease-out,
+    background-color 120ms ease-out,
+    transform 120ms ease-out;
+}
+
+.lugar-menu__opcion:has(input:focus-visible) {
+  outline: 3px solid var(--foco, var(--accion));
+  outline-offset: 2px;
+}
+
+.eleccion:has(input:checked) {
+  border-color: var(--texto);
+  box-shadow: inset 0 0 0 1px var(--texto);
+}
+
+.eleccion:active {
+  transform: scale(0.97);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .eleccion:hover {
+    background: var(--superficie-2);
+  }
+}
+
+.eleccion input {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  margin: 2px 0 0;
+  accent-color: var(--accion);
+  cursor: pointer;
+}
+
+.eleccion:has(input:focus-visible) {
+  outline: 3px solid var(--foco, var(--accion));
+  outline-offset: 2px;
+}
+
+.eleccion__cuerpo {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-self: stretch;
+  gap: 4px;
+  min-width: 0;
+}
+
+.eleccion__nombre {
+  font-weight: 600;
+}
+
+.eleccion__texto {
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+}
+
+/* At the bottom, so the drawings of a row line up even if only one option has a description. */
+.eleccion .dibujo-vista,
+.eleccion .dibujo-tema,
+.eleccion .dibujo-pdf,
+.eleccion .muestra-menu,
+.eleccion .muestra-letra,
+.eleccion .muestra-color {
+  margin-top: auto;
+}
+
+/* Literal colors: this one shows the themes, whichever is on. */
+.dibujo-tema {
+  position: relative;
+  display: block;
+  height: 44px;
+  overflow: hidden;
+  border: 1px solid var(--borde-control);
+  border-radius: 4px;
+  background: #eef2f6;
+}
+
+.dibujo-tema::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: 10px;
+  background: #17324d;
+}
+
+.dibujo-tema::after {
+  content: '';
+  position: absolute;
+  inset: 16px 40% auto 8px;
+  height: 18px;
+  border-radius: 2px;
+  background: #ffffff;
+}
+
+.dibujo-tema[data-cual='oscuro'] {
+  background: #0f1923;
+}
+
+.dibujo-tema[data-cual='oscuro']::before {
+  background: #3578bd;
+}
+
+.dibujo-tema[data-cual='oscuro']::after {
+  background: #233240;
+}
+
+.dibujo-tema[data-cual='sistema'] {
+  background: linear-gradient(115deg, #eef2f6 50%, #0f1923 50%);
+}
+
+.dibujo-tema[data-cual='sistema']::before {
+  background: linear-gradient(115deg, #17324d 50%, #3578bd 50%);
+}
+
+.dibujo-tema[data-cual='sistema']::after {
+  background: linear-gradient(115deg, #ffffff 50%, #233240 50%);
+}
+
+/* The styles: a ruled sheet with its red margin, and the dark one with its gradients. */
+/* While the professional style holds the theme dark. */
+.ajustes__grupo:disabled .eleccion {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.dibujo-tema[data-cual='hoja'] {
+  background:
+    linear-gradient(to right, transparent 13px, #e2808a 13px 14px, transparent 14px),
+    repeating-linear-gradient(to bottom, transparent 0 6px, #d0e2f2 6px 7px),
+    #fcfdfe;
+}
+
+.dibujo-tema[data-cual='hoja']::before {
+  inset: 0 0 auto;
+  height: 9px;
+  border-bottom: 1px solid #e2808a;
+  background: #fcfdfe;
+}
+
+.dibujo-tema[data-cual='hoja']::after {
+  inset: 18px auto auto 20px;
+  width: 45%;
+  height: 3px;
+  background: #1f3b9b;
+  box-shadow: 0 7px 0 #1f3b9b;
+}
+
+.dibujo-tema[data-cual='profesional'] {
+  background: radial-gradient(circle at 15% 0%, #23345e, transparent 70%), #0b1120;
+}
+
+.dibujo-tema[data-cual='profesional']::before {
+  background: linear-gradient(90deg, #172443, #111a30);
+}
+
+.dibujo-tema[data-cual='profesional']::after {
+  background: linear-gradient(135deg, #3a63d6, #17758a);
+}
+
+.dibujo-tema[data-cual='batman'] {
+  background: radial-gradient(ellipse at 50% -20%, #4a3d0c, transparent 70%), #0c0d10;
+}
+
+.dibujo-tema[data-cual='batman']::before {
+  background: linear-gradient(180deg, #1b1d22, #0f1013);
+  border-bottom: 1px solid #5c4b10;
+}
+
+.dibujo-tema[data-cual='batman']::after {
+  background: linear-gradient(135deg, #f5c518, #e09a00);
+}
+
+.dibujo-tema[data-cual='plano'] {
+  background:
+    linear-gradient(rgb(214 230 255 / 0.18) 1px, transparent 1px) 0 0 / 8px 8px,
+    linear-gradient(90deg, rgb(214 230 255 / 0.18) 1px, transparent 1px) 0 0 / 8px 8px,
+    #0d3360;
+}
+
+.dibujo-tema[data-cual='plano']::before {
+  background: #0a2647;
+  border-bottom: 1px solid #c7d9f0;
+}
+
+.dibujo-tema[data-cual='plano']::after {
+  inset: 18px auto auto 10px;
+  width: 50%;
+  height: 12px;
+  border: 1px dashed #f2f7ff;
+  background: none;
+}
+
+.dibujo-tema[data-cual='pizarron'] {
+  background: #24392f;
+}
+
+.dibujo-tema[data-cual='pizarron']::before {
+  background: #8f6c47;
+  border-bottom: 2px solid #6f5236;
+}
+
+.dibujo-tema[data-cual='pizarron']::after {
+  inset: 20px auto auto 10px;
+  width: 50%;
+  height: 3px;
+  border-radius: 2px;
+  background: #f2f0e8;
+  box-shadow: 0 8px 0 -1px #f2d873;
+}
+
+.muestra-letra {
+  display: block;
+  font-weight: 600;
+  line-height: 1.1;
+  /* Whole pixels, so what comes after the sizes doesn't land between two (base.css, titles). */
+  line-height: round(1.1em, 1px);
+}
+
+.muestra-color {
+  display: block;
+  height: 24px;
+  border: 1px solid var(--borde-control);
+  border-radius: 4px;
+}
+
+.ajustes__paleta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.ajustes__paleta span {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+}
+
+.ajustes__paleta i {
+  width: 12px;
+}
+
+/* Colors */
+.ajustes__color {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+
+.ajustes__otro {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px 16px;
+}
+
+.ajustes__pozo {
+  display: block;
+  width: 72px;
+  height: 44px;
+  padding: 3px;
+  border: 1px solid var(--borde-control);
+  border-radius: var(--radio-control);
+  background: var(--superficie);
+  cursor: pointer;
+}
+
+.ajustes__previa {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  pointer-events: none;
+}
+
+.ajustes__previa .marcado {
+  font-weight: 700;
+}
+
+.ajustes__alerta {
+  margin: 0;
+  padding: 10px 12px;
+  border-left: 4px solid var(--aviso);
+  border-radius: var(--radio-control);
+  background: var(--fondo-aviso);
+  color: var(--texto);
+}
+
+/* Drawings of each view. Each piece stands for a block of the screen. */
+.dibujo-vista {
+  display: grid;
+  gap: 3px;
+  height: 56px;
+  padding: 5px;
+  overflow: hidden;
+  border: 1px solid var(--borde);
+  border-radius: 4px;
+  background: var(--fondo);
+}
+
+.dibujo-vista span {
+  min-height: 0;
+  border-radius: 2px;
+  background: var(--borde-control);
+}
+
+.dibujo-vista[data-forma='tablero'],
+.dibujo-vista[data-forma='tarjetas'] {
+  grid-template-columns: 1fr 1fr;
+}
+
+.dibujo-vista[data-forma='compacta'] {
+  gap: 2px;
+}
+
+.dibujo-vista[data-forma='tabla'] {
+  grid-template-columns: 2fr 1fr;
+  gap: 2px;
+}
+
+.dibujo-vista[data-forma='lista'] {
+  gap: 5px;
+}
+
+.dibujo-vista[data-forma='mes'] {
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.dibujo-vista[data-forma='semana'] {
+  grid-template-columns: repeat(7, 1fr);
+}
+
+.dibujo-vista[data-forma='secciones'] span:nth-child(odd) {
+  margin-right: 35%;
+}
+
+.dibujo-vista[data-forma='agenda'] span:nth-child(even) {
+  margin-left: 25%;
+}
+
+/* Data and resets */
+.ajustes__estado {
+  flex-basis: 100%;
+  margin: 0;
+}
+
+.ajustes__botones {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.ajustes__botones .boton {
+  text-align: center;
+}
+
+.ajustes__borrar {
+  color: var(--error);
+}
+
+.ajustes .mensaje {
+  margin: 12px 0 0;
+}
+
+/* «Guardar en tu Google Drive» (GuardarEnDrive.jsx): the switch, how it goes in one line, and what can be done. */
+.ajuste-drive,
+.instalar,
+.ajuste-si {
+  display: grid;
+  gap: 10px;
+  padding: 14px 16px;
+  border: 1px solid var(--borde-control);
+  border-radius: var(--radio-control);
+  background: var(--superficie);
+}
+
+.ajuste-drive__fila,
+.instalar__fila,
+.ajuste-si {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.ajuste-drive__texto,
+.instalar__texto,
+.ajuste-si__texto {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.ajuste-drive__nombre,
+.ajuste-si__nombre {
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.ajuste-drive__ayuda,
+.instalar__ayuda,
+.ajuste-si__ayuda,
+.ajuste-drive__cuenta,
+.ajuste-drive__faltan {
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+}
+
+.ajuste-drive__cuenta {
+  overflow-wrap: anywhere;
+}
+
+.ajuste-drive__estado {
+  display: grid;
+  gap: 2px;
+}
+
+.ajuste-drive__estado > p {
+  margin: 0;
+}
+
+.ajuste-drive__linea {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-weight: 600;
+}
+
+/* A dot in the color of how it goes. The words say the same, for whoever can't tell the colors apart. Next to the
+   first line when the text wraps. */
+.ajuste-drive__linea::before {
+  content: '';
+  flex: none;
+  width: 10px;
+  height: 10px;
+  margin-top: 0.4em;
+  margin-top: calc((1lh - 10px) / 2);
+  border-radius: 50%;
+  background: var(--texto-suave);
+}
+
+.ajuste-drive__linea[data-tono='ok']::before {
+  background: var(--ok);
+}
+
+.ajuste-drive__linea[data-tono='aviso']::before {
+  background: var(--aviso);
+}
+
+.ajuste-drive__linea[data-tono='error'] {
+  color: var(--error);
+}
+
+.ajuste-drive__linea[data-tono='error']::before {
+  background: var(--error);
+}
+
+/* While it saves, the dot beats a few times and stays still. */
+.ajuste-drive__linea[data-tono='espera']::before {
+  animation: drive-latido 1.2s ease-in-out 4;
+}
+
+@keyframes drive-latido {
+  50% {
+    opacity: 0.3;
+  }
+}
+
+.ajuste-drive .ajustes__botones,
+.ajuste-drive .mensaje {
+  margin: 0;
+}
+
+/* «Instalar Super CVG»: the same card, with its button or, on iPhone and iPad, the steps by hand. */
+.instalar__nombre {
+  font-weight: 700;
+}
+
+.instalar__fila .boton {
+  flex: none;
+}
+
+.instalar__pasos {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding-left: 1.4em;
+}
+
+/* Safari's Compartir, drawn as it looks there, so it's found at a glance. */
+.instalar__compartir {
+  display: inline-block;
+  width: 1.15em;
+  height: 1.15em;
+  vertical-align: -0.2em;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ajuste-drive__linea[data-tono='espera']::before {
+    animation: none;
+  }
+}
+
+/* Atajos de teclado: each group, with its keys on the left and what they do on the right. */
+.atajos h3 {
+  margin: 8px 0 6px;
+  font-size: var(--t-ui);
+}
+
+.atajos__lista {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+}
+
+.atajo {
+  display: grid;
+  grid-template-columns: minmax(9rem, auto) 1fr;
+  gap: 4px 16px;
+  align-items: baseline;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--borde);
+}
+
+.atajo dt,
+.atajo dd {
+  margin: 0;
+}
+
+.atajo[data-apagado] {
+  color: var(--texto-suave);
+}
+
+.atajo[data-apagado] kbd {
+  color: var(--texto-suave);
+}
+
+.atajo__teclas {
+  white-space: nowrap;
+}
+
+.atajo__teclas kbd {
+  display: inline-block;
+  min-width: 1.9em;
+  padding: 1px 6px;
+  border: 1px solid var(--borde-control);
+  border-bottom-width: 2px;
+  border-radius: 6px;
+  background: var(--superficie);
+  font-family: var(--fuente-ui);
+  font-size: var(--t-chica);
+  text-align: center;
+}
+
+/* A title that reads like the legends of the choices around it. */
+h3.ajustes__leyenda {
+  margin: 0 0 8px;
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+}
+
+/* A page of a PDF in small: literal colors, as a PDF comes, with a highlighted line, and over it the filter of the real
+   pages (pages/ajustes.css). So the dark one follows the slider as it moves. «Como el tema» lays the dark half over the
+   light one. */
+.dibujo-pdf {
+  position: relative;
+  display: block;
+  width: 40px;
+  height: 52px;
+  overflow: hidden;
+  border: 1px solid var(--borde-control);
+  border-radius: 3px;
+}
+
+.dibujo-pdf__hoja {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(#3a4a5a, #3a4a5a) 7px 10px / 24px 3px no-repeat,
+    linear-gradient(#3a4a5a, #3a4a5a) 7px 18px / 20px 3px no-repeat,
+    linear-gradient(#3a4a5a, #3a4a5a) 7px 26px / 24px 3px no-repeat,
+    linear-gradient(#3a4a5a, #3a4a5a) 7px 34px / 14px 3px no-repeat,
+    linear-gradient(#ffe14d, #ffe14d) 5px 24px / 28px 7px no-repeat,
+    #ffffff;
+}
+
+.dibujo-pdf__hoja[data-papel='sepia'] {
+  filter: var(--pdf-sepia);
+}
+
+.dibujo-pdf__hoja[data-papel='oscuro'] {
+  filter: var(--pdf-oscuras);
+}
+
+.dibujo-pdf__hoja + .dibujo-pdf__hoja {
+  clip-path: polygon(80% 0, 100% 0, 100% 100%, 20% 100%);
+}
+
+/* Four kinds of page, two by two (three and one alone looked like a leftover), and the slider of the dark ones under them. */
+.ajustes__pdf {
+  display: grid;
+  gap: 12px;
+}
+
+@container pagina (min-width: 37.5rem) {
+  .ajustes__pdf .elecciones {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.brillo-pdf {
+  display: grid;
+  gap: 6px;
+  max-width: 28rem;
+  padding: 14px 16px;
+  border: 1px solid var(--borde-control);
+  border-radius: var(--radio-control);
+  background: var(--superficie);
+}
+
+.brillo-pdf__cabeza {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 12px;
+}
+
+.brillo-pdf__nombre {
+  font-weight: 600;
+}
+
+.brillo-pdf__valor {
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+}
+
+.brillo-pdf__ayuda {
+  margin: 0;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+}
+
+/* The browser's own, in the color of the site, tall enough for a finger. */
+.brillo-pdf__control {
+  width: 100%;
+  min-height: 44px;
+  margin: 0;
+  accent-color: var(--accion);
+  cursor: pointer;
+}
+
+.brillo-pdf__control:focus-visible {
+  outline: 3px solid var(--foco, var(--accion));
+  outline-offset: 2px;
+}
+
+/* It shows up when the dark pages are chosen: a short fade from just above. With less motion, only the fade. */
+.brillo-pdf {
+  transition: opacity 200ms ease-out;
+}
+
+@starting-style {
+  .brillo-pdf {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .brillo-pdf {
+    transition: opacity 200ms ease-out, transform 200ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  @starting-style {
+    .brillo-pdf {
+      transform: translateY(-4px);
+    }
+  }
+}
+
+/* The header in small, in the colors of the real one, with each style. */
+.muestra-menu {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 40px;
+  padding: 0 12px;
+  overflow: hidden;
+  border-radius: 4px;
+  background: var(--accion);
+  color: var(--accion-texto);
+  font-size: var(--t-chica);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.muestra-menu__cosa {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 28px;
+}
+
+.muestra-menu svg {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linejoin: round;
+  stroke-width: 1.6;
+}
+
+.muestra-menu__cosa[data-actual] {
+  box-shadow: inset 0 -3px var(--resaltador);
+}
+
+.muestra-menu[data-estilo='solo-iconos'] {
+  gap: 8px;
+}
+
+.muestra-menu[data-estilo='pastillas'] {
+  gap: 4px;
+  padding: 0 6px;
+}
+
+.muestra-menu[data-estilo='pastillas'] .muestra-menu__cosa {
+  padding: 0 10px;
+  border-radius: 999px;
+}
+
+.muestra-menu[data-estilo='pastillas'] .muestra-menu__cosa[data-actual] {
+  background: var(--resaltador);
+  box-shadow: none;
+  color: var(--resaltador-texto);
+}
+
+/* Each screen of the menu, with where it goes: the choices in columns, so they line up from row to row (Configuración
+   has two). On a narrow screen, under its name. */
+/* The handle, the name, and the three places. */
+.lugares-menu {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr) repeat(3, max-content);
+  column-gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--borde);
+}
+
+.lugar-menu {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
+  align-items: center;
+  row-gap: 8px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--borde);
+}
+
+.lugar-menu__nombre {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+}
+
+.lugar-menu__nombre svg {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linejoin: round;
+  stroke-width: 1.6;
+}
+
+.lugar-menu__opciones {
+  display: grid;
+  grid-column: 3 / -1;
+  grid-template-columns: subgrid;
+}
+
+/* On a phone the handle goes beside the name, and the places under both, the whole width. */
+@media (max-width: 40rem) {
+  .lugares-menu {
+    grid-template-columns: max-content minmax(0, 1fr);
+  }
+
+  .lugar-menu__opciones {
+    grid-column: 1 / -1;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    column-gap: 6px;
+  }
+}
+
+.lugar-menu__opcion {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid var(--borde-control);
+  border-radius: var(--radio-control);
+  background: var(--superficie);
+  cursor: pointer;
+  font-size: var(--t-ui);
+  transition:
+    border-color 120ms ease,
+    background-color 120ms ease,
+    transform 120ms ease;
+}
+
+.lugar-menu__opcion:has(input:checked) {
+  border-color: var(--texto);
+  box-shadow: inset 0 0 0 1px var(--texto);
+}
+
+.lugar-menu__opcion:active {
+  transform: scale(0.97);
+}
+
+/* On a phone, three to a row: «En «Más»» fits on one line. */
+@media (max-width: 40rem) {
+  .lugar-menu__opcion {
+    gap: 6px;
+    padding: 0 8px;
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .lugar-menu__opcion:hover {
+    background: var(--superficie-2);
+  }
+}
+
+.lugar-menu__opcion input {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: var(--accion);
+  cursor: pointer;
+}
+
+/* Pantallas, by screen (Subpestanas): the screen on view is a filled pill. */
+.subpestanas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 28px 0 20px;
+}
+
+.subpestana {
+  min-height: 44px;
+  padding: 0 18px;
+  border: 1px solid var(--borde-control);
+  border-radius: 999px;
+  background: var(--superficie);
+  color: var(--texto);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 600;
+  transition:
+    background-color 120ms ease,
+    color 120ms ease,
+    transform 120ms ease-out;
+}
+
+.subpestana[aria-selected='true'] {
+  border-color: var(--texto);
+  background: var(--texto);
+  color: var(--fondo);
+}
+
+.subpestana:active {
+  transform: scale(0.97);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .subpestana[aria-selected='false']:hover {
+    background: var(--superficie-2);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .subpestana:active {
+    transform: none;
+  }
+}
+
+/* The choices and, beside them, the preview, which stays in sight while the list goes by. On a phone it goes first. */
+.subpanel {
+  container-type: inline-size;
+}
+
+.subpanel__cuerpo {
+  display: grid;
+  gap: 24px;
+}
+
+.subpanel__cuerpo > .vista-previa {
+  order: -1;
+}
+
+.subpanel__ajustes {
+  display: grid;
+  gap: 28px;
+  min-width: 0;
+}
+
+.subpanel__ajustes > .ajustes__grupo,
+.subpanel__ajustes .ajustes__grupo {
+  margin: 0;
+}
+
+.subpanel__grupo {
+  display: grid;
+  justify-items: start;
+  gap: 8px;
+}
+
+.subpanel__grupo > * {
+  margin: 0;
+}
+
+.subpanel__grupo > ul,
+.subpanel__grupo > details {
+  justify-self: stretch;
+}
+
+#materias-en-hoy {
+  scroll-margin-top: 64px;
+}
+
+/* Arriving at #hoy or #materias (the pill itself): the title of Configuración stays out, the pills in sight. */
+.subpestana {
+  scroll-margin-top: calc(var(--alto-cabecera) + 64px);
+}
+
+@container (min-width: 760px) {
+  .subpanel__cuerpo {
+    grid-template-columns: minmax(0, 1fr) minmax(260px, 320px);
+    align-items: start;
+    gap: 40px;
+  }
+
+  .subpanel__cuerpo > .vista-previa {
+    position: sticky;
+    top: calc(var(--alto-cabecera) + 64px);
+    order: 0;
+  }
+}
+
+/* Pasar tu estilo: the student's code, big enough to dictate, and the field for someone else's. */
+.pasar-estilo {
+  display: grid;
+  gap: 16px;
+}
+
+.pasar-estilo__etiqueta {
+  margin: 0 0 6px;
+  font-weight: 600;
+}
+
+.pasar-estilo__fila {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+
+.pasar-estilo__codigo {
+  padding: 8px 12px;
+  border: 1px dashed var(--borde-control);
+  border-radius: var(--radio-control);
+  background: var(--superficie);
+  font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+  font-size: 1.05rem;
+  font-variant-numeric: lining-nums;
+  letter-spacing: 0.06em;
+  overflow-wrap: anywhere;
+  user-select: all;
+}
+
+/* The button beside the field, level with it even under an error. */
+.pasar-estilo__usar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: start;
+  gap: 6px 12px;
+}
+
+.pasar-estilo__usar .campo {
+  display: contents;
+}
+
+.pasar-estilo__usar .campo > * {
+  grid-column: 1;
+  justify-self: stretch;
+}
+
+@media (min-width: 560px) {
+  .pasar-estilo__usar {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .pasar-estilo__usar > .boton {
+    grid-column: 2;
+    grid-row: 2;
+  }
+}
+
+/* Contenido de cada materia: two rows in each look (ajustes.contenido, propio.css), each with its kind's color. */
+.dibujo-contenido {
+  display: grid;
+  gap: 4px;
+  width: 100%;
+  max-width: 9rem;
+  margin-top: 6px;
+}
+
+.dibujo-contenido__fila {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 1.25rem;
+  padding: 0 6px;
+  border-radius: 4px;
+  background: var(--superficie-2);
+}
+
+/* The icon's square and the two lines of text: name and what it is. */
+.dibujo-contenido__fila::before {
+  content: '';
+  flex: none;
+  width: 0.875rem;
+  height: 0.875rem;
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--color-tono) 45%, var(--superficie));
+}
+
+.dibujo-contenido__fila::after {
+  content: '';
+  flex: 1;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--texto-suave);
+}
+
+.dibujo-contenido[data-contenido='franja'] .dibujo-contenido__fila::before {
+  width: 3px;
+  height: 0.875rem;
+  border-radius: 2px;
+  background: var(--color-tono);
+}
+
+.dibujo-contenido[data-contenido='tenida'] .dibujo-contenido__fila {
+  background: color-mix(in srgb, var(--color-tono) 30%, var(--superficie));
+}
+
+.dibujo-contenido[data-contenido='tenida'] .dibujo-contenido__fila::before {
+  background: var(--superficie);
+}
+
+.dibujo-contenido[data-contenido='linea'] {
+  gap: 0;
+}
+
+.dibujo-contenido[data-contenido='linea'] .dibujo-contenido__fila {
+  height: 0.875rem;
+  border-radius: 0;
+  background: none;
+  border-bottom: 1px solid var(--borde);
+}
+
+.dibujo-contenido[data-contenido='linea'] .dibujo-contenido__fila::before {
+  width: 0.5rem;
+  height: 0.5rem;
+  background: var(--color-tono);
+}
+
+.dibujo-contenido:is([data-contenido='mosaico'], [data-contenido='notas']) {
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.dibujo-contenido:is([data-contenido='mosaico'], [data-contenido='notas']) .dibujo-contenido__fila {
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  height: 2.5rem;
+}
+
+.dibujo-contenido:is([data-contenido='mosaico'], [data-contenido='notas']) .dibujo-contenido__fila::after {
+  flex: none;
+  width: 70%;
+}
+
+.dibujo-contenido[data-contenido='mosaico'] .dibujo-contenido__fila::before {
+  width: 1.125rem;
+  height: 1.125rem;
+}
+
+.dibujo-contenido[data-contenido='notas'] .dibujo-contenido__fila {
+  background: color-mix(in srgb, var(--color-tono) 30%, var(--superficie));
+  rotate: -3deg;
+}
+
+.dibujo-contenido[data-contenido='notas'] .dibujo-contenido__fila + .dibujo-contenido__fila {
+  rotate: 2deg;
+}
+
+.dibujo-contenido[data-contenido='notas'] .dibujo-contenido__fila::before {
+  background: var(--superficie);
+}
+
+/* Laboratorio: each letter written in itself, and the editor in small with what is chosen (the letter and its size come
+   from <html>, public/ajustes.js). Its own names: laboratorio.css loads after it with an .editor of its own. */
+.eleccion .ajustes-lab__letra {
+  margin-top: auto;
+  overflow: hidden;
+  font-size: 0.9375rem;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.ajustes-lab__muestra {
+  max-width: 40rem;
+  padding-block: 4px;
+  overflow-x: auto;
+  border: 1px solid var(--borde-control);
+  border-radius: var(--radio-control);
+  background: var(--superficie);
+  font-family: var(--codigo-letra, ui-monospace, 'Cascadia Mono', Consolas, monospace);
+  font-size: var(--codigo-tamano, 0.9375rem);
+  font-variant-ligatures: var(--codigo-ligaduras, none);
+  line-height: var(--codigo-alto, 24px);
+}
+
+.ajustes-lab__fila {
+  display: flex;
+  align-items: center;
+  white-space: pre;
+}
+
+.ajustes-lab__fila[data-error] {
+  background: var(--resaltador);
+  color: var(--resaltador-texto);
+}
+
+.ajustes-lab__numero {
+  flex: none;
+  width: 4ch;
+  padding-right: 8px;
+  border-right: 2px solid var(--borde-control);
+  color: var(--texto-suave);
+  text-align: right;
+}
+
+.ajustes-lab__fila[data-error] .ajustes-lab__numero {
+  color: inherit;
+}
+
+.ajustes-lab__codigo {
+  padding-inline: 10px 6px;
+}
+
+.ajustes-lab__lente {
+  margin-left: 2ch;
+  padding: 0 8px;
+  border-left: 3px solid currentcolor;
+  border-radius: 0 var(--radio-control) var(--radio-control) 0;
+  background: var(--superficie);
+  color: var(--error);
+  font-family: var(--fuente-ui);
+  font-size: var(--t-chica);
+  line-height: 1.5;
+}
+
+/* Coloración: one color per kind of code, side by side while they fit. */
+.ajustes-lab__colores {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 17rem), 1fr));
+  gap: 16px 24px;
+}
+
+.ajustes-lab__color {
+  display: grid;
+  gap: 8px;
+  align-content: start;
+}
+
+.ajustes-lab__fila-color {
+  align-items: center;
+}
+
+.ajustes-lab__ejemplo {
+  font-family: var(--codigo-letra);
+  font-size: 1rem;
+  font-weight: 700;
+}

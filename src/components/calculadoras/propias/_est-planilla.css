@@ -1,0 +1,60 @@
+/* The desk check as the notes' spreadsheet (_est-planilla.jsx): grouped headers with a line between groups, the clock
+   fixed on the left while the rest scrolls, and what comes from the row before in soft ink. */
+.ce-planilla th,
+.ce-planilla td {
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+.ce-planilla thead th {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.ce-planilla .ce-planilla__grupo {
+  padding-bottom: 2px;
+  border-bottom: 1px solid var(--tinta-hoja);
+  color: var(--texto);
+  text-align: center;
+}
+
+.ce-planilla [data-borde] {
+  border-left: 1px solid color-mix(in srgb, var(--tinta-hoja) 55%, transparent);
+}
+
+.ce-planilla .ce-planilla__grupo {
+  border-left: 1px solid color-mix(in srgb, var(--tinta-hoja) 55%, transparent);
+}
+
+.ce-planilla td[data-igual] {
+  color: color-mix(in srgb, var(--texto-suave) 80%, transparent);
+  font-weight: 400;
+}
+
+.ce-planilla .ce-planilla__evento {
+  text-align: left;
+}
+
+/* The clock stays while the spreadsheet scrolls sideways. */
+.ce-planilla .ce-planilla__reloj {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: var(--superficie);
+  text-align: right;
+}
+
+.ce-planilla .ce-marcada .ce-planilla__reloj {
+  background: var(--resaltador);
+}
+
+.ce-relato {
+  display: grid;
+  gap: 8px;
+  max-width: 68ch;
+  margin: 8px 0 0;
+  padding-left: 1.4em;
+}
+
+.ce-relato strong {
+  font-variant-numeric: tabular-nums lining-nums;
+}

@@ -1,0 +1,42 @@
+/* A course on the table: the pieces of the course page (panel.css, secciones.css, propio.css), with who brought it
+   under its name. */
+/* As wide as the course page's column of sections, beside its side column: the same rows in a line. */
+.materia-vivo {
+  width: 100%;
+  max-width: calc(var(--ancho) - 2 * var(--margen) - 20rem - 40px);
+  margin-inline: auto;
+  padding-bottom: calc(var(--barra, 0px) + 1.5rem);
+}
+
+.materia-vivo .materia__titulo {
+  margin-bottom: 16px;
+}
+
+.materia-vivo__cabeza {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.materia-vivo__titulo {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.materia-vivo__dato {
+  margin: 0;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+}
+
+/* Its sections' titles, one level under the course's name: as big as on the course page. */
+.materia-vivo .bloque h3 {
+  margin: 0 0 8px;
+  font-size: var(--t-h3);
+}
+
+.materia-vivo__error {
+  margin: 0 0 8px;
+  color: var(--error);
+  font-size: var(--t-chica);
+}

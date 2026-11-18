@@ -1,0 +1,515 @@
+/* «Paso a paso»: the program, one step at a time. The frames go as cards with the notebook's margin line, the one running
+   now with the pen's ink. The objects are drawn apart, a list as a row of squares of the sheet (two of the editor's
+   squares each), and the arrows go in the same ink. What changed in the step, underlined with the highlighter. */
+
+/* The arrows of the editor: full for the line that goes next, hollow for the one that just ran. */
+.editor .cm-line.editor__linea-sigue {
+  background: color-mix(in srgb, var(--codigo-clave) 15%, transparent);
+}
+
+:root[data-tema='oscuro'] .editor .cm-line.editor__linea-sigue {
+  background: color-mix(in srgb, var(--codigo-clave) 22%, transparent);
+}
+
+.editor .cm-line.editor__linea-recien {
+  background: color-mix(in srgb, var(--texto-suave) 8%, transparent);
+}
+
+.editor__flecha {
+  width: 0.95em;
+  height: 0.95em;
+  vertical-align: -0.12em;
+}
+
+.pasos__flecha {
+  width: 0.8em;
+  height: 0.8em;
+  vertical-align: -0.06em;
+}
+
+.editor__flecha--sigue path,
+.pasos__flecha path {
+  fill: var(--codigo-clave);
+}
+
+.editor__flecha--recien path,
+.pasos__flecha--hueca path {
+  fill: none;
+  stroke: var(--texto-suave);
+  stroke-width: 1.6;
+  stroke-linejoin: round;
+}
+
+.pasos {
+  container: pasos / inline-size;
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+}
+
+.pasos h3 {
+  margin: 0 0 8px;
+  font-size: var(--t-chica);
+  font-weight: 700;
+  color: var(--texto-suave);
+}
+
+.pasos__cabeza {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.pasos__aviso {
+  margin: 0;
+  padding: 10px 14px;
+  border-left: 4px solid var(--aviso);
+  border-radius: 0 var(--radio-control) var(--radio-control) 0;
+  background: var(--fondo-aviso);
+  font-weight: 700;
+}
+
+/* Going: before and after, how many there are and the slider for any of them. */
+.pasos__control {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+
+.pasos__cuenta {
+  margin: 0;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums lining-nums;
+  white-space: nowrap;
+}
+
+.pasos__deslizador {
+  flex: 0 1 28rem;
+  min-width: 8rem;
+  height: 44px;
+  margin: 0;
+  accent-color: var(--accion);
+  cursor: pointer;
+}
+
+.pasos__deslizador:focus-visible {
+  outline: 2px solid var(--foco);
+  outline-offset: 2px;
+}
+
+@container pasos (max-width: 30rem) {
+  .pasos__deslizador {
+    flex-basis: 100%;
+  }
+}
+
+/* What happens, said and with its line: the first thing to read in each step. */
+.pasos__que {
+  display: grid;
+  justify-items: start;
+  gap: 6px;
+  padding: 10px 14px;
+  border-left: 4px solid var(--codigo-clave);
+  border-radius: 0 var(--radio-control) var(--radio-control) 0;
+  background: var(--superficie);
+}
+
+.pasos__que:has(.pasos__error) {
+  border-left-color: var(--error);
+}
+
+.pasos__frase {
+  margin: 0;
+  font-size: 1.0625rem;
+  font-weight: 700;
+}
+
+.pasos__linea {
+  display: flex;
+  gap: 12px;
+  max-width: 100%;
+  padding: 2px 10px 2px 0;
+  border-radius: var(--radio-control);
+  font-family: var(--codigo-letra);
+  overflow-wrap: anywhere;
+}
+
+.pasos__numero {
+  min-width: 2ch;
+  padding-right: 8px;
+  border-right: 2px solid var(--codigo-margen);
+  color: var(--texto-suave);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.pasos__error {
+  margin: 0;
+  color: var(--error);
+  font-family: var(--codigo-letra);
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.pasos__leyenda {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 18px;
+  margin: -4px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--t-chica);
+  color: var(--texto-suave);
+}
+
+.pasos__leyenda li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pasos__resaltado {
+  box-shadow: inset 0 -3px var(--resaltador);
+  color: var(--texto);
+}
+
+/* The frames and the objects, side by side when there's room, with the arrows over them. */
+.pasos__mapa {
+  position: relative;
+  display: grid;
+  gap: 24px 56px;
+  align-items: start;
+}
+
+@container pasos (min-width: 34rem) {
+  .pasos__mapa {
+    grid-template-columns: minmax(12rem, 2fr) minmax(0, 3fr);
+  }
+}
+
+.pasos__lado {
+  min-width: 0;
+}
+
+.pasos__nada {
+  margin: 0;
+  color: var(--texto-suave);
+}
+
+.pasos__marcos {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.marco {
+  padding: 8px 12px 10px;
+  border: 1px solid var(--borde);
+  border-left: 3px solid var(--codigo-margen);
+  border-radius: 0 var(--radio-control) var(--radio-control) 0;
+  background: var(--superficie);
+}
+
+.marco[data-actual] {
+  border-left: 4px solid var(--codigo-clave);
+}
+
+.marco--ocultos {
+  border-style: dashed;
+  border-left-style: solid;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+}
+
+.marco__nombre {
+  margin: 0 0 6px;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.marco__vacio {
+  margin: 0;
+  font-size: var(--t-chica);
+  color: var(--texto-suave);
+}
+
+/* A name takes what it needs, up to 60% of the frame: it breaks only when the frame is narrow. */
+.marco__variables {
+  display: grid;
+  /* The names take what they need and leave the values at least 4 characters (a number, or the arrow of a list): a
+     long name breaks only when even that does not leave room. */
+  grid-template-columns: fit-content(calc(100% - 4ch - 12px)) minmax(4ch, 1fr);
+  gap: 4px 12px;
+  margin: 0;
+}
+
+.marco__variable {
+  display: contents;
+}
+
+.marco__variable dt {
+  font-family: var(--codigo-letra);
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+.marco__variable dd {
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.marco__variable--devuelve dt {
+  font-family: var(--fuente-ui);
+  font-style: italic;
+  color: var(--texto-suave);
+}
+
+/* A value as Python writes it, in the editor's colors; a reference, a dot of ink and the name of what it points to. */
+.valor {
+  font-family: var(--codigo-letra);
+}
+
+.valor--texto {
+  color: var(--codigo-texto);
+}
+
+.valor--numero {
+  color: var(--codigo-numero);
+}
+
+.valor--suave {
+  font-family: var(--fuente-ui);
+  font-style: italic;
+  color: var(--texto-suave);
+}
+
+.valor--ref {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--fuente-ui);
+  font-size: var(--t-chica);
+  color: var(--texto-suave);
+  white-space: nowrap;
+}
+
+.valor__punto {
+  flex: none;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--codigo-clave);
+}
+
+.valor[data-cambio] {
+  box-shadow: inset 0 -3px var(--resaltador);
+}
+
+.pasos__objetos {
+  display: grid;
+  gap: 20px;
+}
+
+.pasos__fila {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 20px 48px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Under the variables (a phone), one object per line: an arrow that comes into a box from the right crosses no other. */
+@container pasos (max-width: 33.99rem) {
+  .pasos__fila {
+    flex-direction: column;
+  }
+}
+
+.objeto {
+  display: grid;
+  justify-items: start;
+  gap: 4px;
+  max-width: 100%;
+}
+
+.objeto__nombre {
+  margin: 0;
+  font-size: var(--t-chica);
+  font-weight: 700;
+  color: var(--texto-suave);
+}
+
+.objeto__caja {
+  max-width: 100%;
+}
+
+/* A list: squares side by side, each with its index above. A tuple, gray (it doesn't change); a set, without indexes. */
+.objeto__celdas {
+  display: flex;
+  flex-wrap: wrap;
+  margin: 0;
+  padding: 0 1px 1px 0;
+  list-style: none;
+}
+
+.objeto__celda {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  justify-items: center;
+  align-items: end;
+  min-width: 48px;
+  min-height: 48px;
+  margin: 0 -1px -1px 0;
+  padding: 2px 8px 6px;
+  border: 1px solid var(--borde-control);
+  background: var(--superficie);
+}
+
+.objeto[data-tipo='tupla'] .objeto__celda {
+  background: var(--superficie-2);
+}
+
+.objeto[data-tipo='conjunto'] .objeto__celdas {
+  gap: 6px;
+  padding: 0;
+}
+
+.objeto[data-tipo='conjunto'] .objeto__celda {
+  grid-template-rows: 1fr;
+  align-items: center;
+  margin: 0;
+  padding: 4px 12px;
+  border-radius: 24px;
+}
+
+.objeto__indice {
+  font-family: var(--codigo-letra);
+  font-size: 0.75rem;
+  line-height: 1.2;
+  color: var(--texto-suave);
+}
+
+/* A dictionary or an object: two columns, what and how much. */
+.objeto__pares {
+  display: grid;
+  grid-template-columns: max-content minmax(0, auto);
+  margin: 0;
+  border: 1px solid var(--borde-control);
+  background: var(--superficie);
+}
+
+.objeto__par {
+  display: contents;
+}
+
+.objeto__par dt,
+.objeto__par dd {
+  min-width: 0;
+  margin: 0;
+  padding: 4px 10px;
+  border-bottom: 1px solid var(--borde);
+  overflow-wrap: anywhere;
+}
+
+.objeto__par dt {
+  border-right: 1px solid var(--borde);
+  font-family: var(--codigo-letra);
+}
+
+.objeto__par:last-child dt,
+.objeto__par:last-child dd {
+  border-bottom: 0;
+}
+
+.objeto__vacio {
+  display: grid;
+  place-items: center;
+  min-width: 72px;
+  min-height: 48px;
+  margin: 0;
+  padding: 0 12px;
+  border: 1px dashed var(--borde-control);
+  font-style: italic;
+  color: var(--texto-suave);
+}
+
+.objeto__mas {
+  margin: 0;
+  font-size: var(--t-chica);
+  color: var(--texto-suave);
+}
+
+.pasos__flechas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.pasos__flechas path {
+  fill: none;
+  stroke: var(--codigo-clave);
+  stroke-width: 1.75;
+  stroke-linecap: round;
+}
+
+.pasos__flechas marker path {
+  fill: var(--codigo-clave);
+  stroke: none;
+}
+
+/* What it had printed by then, as in the console. */
+.pasos__texto {
+  min-height: 3rem;
+  max-height: 16rem;
+  margin: 0;
+  overflow: auto;
+  padding: 10px 14px;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-bloque);
+  background: var(--superficie);
+  font-family: var(--codigo-letra);
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.pasos__texto:focus-visible {
+  outline: 2px solid var(--foco);
+  outline-offset: 2px;
+}
+
+@media (pointer: coarse) {
+  .pasos__texto {
+    font-size: 16px;
+  }
+}
+
+@media (forced-colors: active) {
+  .pasos__flechas path,
+  .editor__flecha--recien path,
+  .pasos__flecha--hueca path {
+    stroke: CanvasText;
+  }
+
+  .pasos__flechas marker path,
+  .editor__flecha--sigue path,
+  .pasos__flecha:not(.pasos__flecha--hueca) path {
+    fill: CanvasText;
+  }
+
+  .valor__punto {
+    forced-color-adjust: none;
+    background: CanvasText;
+  }
+}

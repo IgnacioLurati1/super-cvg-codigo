@@ -1,0 +1,460 @@
+/* SQL in the lab: the drawing of the database on the squared sheet, with its lines of ink in the margin; what to do
+   with the database; how SQLite solves a query and what MySQL writes another way. */
+
+.laboratorio__tablas > .dibujo,
+.laboratorio__tablas > .laboratorio__problema {
+  justify-self: stretch;
+}
+
+/* With SQL, the side column makes room for the drawing: a column and its type fit in one line. */
+@container pagina (min-width: 56rem) {
+  .laboratorio__mesa:has(> .laboratorio__tablas) {
+    grid-template-columns: minmax(12rem, 20rem) minmax(0, 1fr);
+  }
+}
+
+.dibujo {
+  position: relative;
+  min-width: 0;
+  padding: 12px 12px 12px calc(12px + var(--dibujo-margen, 0px));
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-bloque);
+  background-color: var(--superficie);
+  background-image: linear-gradient(var(--codigo-cuadricula) 1px, transparent 1px), linear-gradient(90deg, var(--codigo-cuadricula) 1px, transparent 1px);
+  background-size: 24px 24px;
+  background-position: -1px -1px;
+}
+
+.dibujo__tablas {
+  display: grid;
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Wide: the tables side by side, each as wide as a column and its type need. */
+.dibujo[data-columnas] .dibujo__tablas {
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  align-items: start;
+}
+
+.dibujo__tabla {
+  min-width: 0;
+  border: 1px solid var(--borde-control);
+  border-radius: var(--radio-control);
+  background: var(--superficie);
+}
+
+.dibujo__tabla[data-vista] {
+  border-style: dashed;
+}
+
+.dibujo__nombre {
+  margin: 0;
+  padding: 5px 10px 5px 28px;
+  border-bottom: 1px solid var(--borde);
+  border-radius: calc(var(--radio-control) - 1px) calc(var(--radio-control) - 1px) 0 0;
+  background: var(--superficie-2);
+  font-family: var(--codigo-letra);
+  font-size: var(--t-chica);
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.dibujo__vista {
+  font-family: var(--fuente-ui);
+  font-weight: 400;
+  color: var(--texto-suave);
+}
+
+.dibujo__columnas {
+  margin: 0;
+  padding: 4px 0;
+  list-style: none;
+}
+
+.dibujo__columna {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 6px;
+  padding: 1px 10px 1px 6px;
+  font-family: var(--codigo-letra);
+  font-size: var(--t-chica);
+  line-height: 1.5;
+}
+
+.dibujo__marca {
+  flex: none;
+  width: 16px;
+  align-self: center;
+  line-height: 0;
+}
+
+.dibujo__col {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.dibujo__columna[data-clave] .dibujo__col {
+  font-weight: 700;
+  text-decoration: underline;
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 3px;
+}
+
+.dibujo__llave {
+  width: 15px;
+  height: 15px;
+  fill: none;
+  stroke: var(--codigo-numero);
+  stroke-width: 1.7;
+  stroke-linecap: round;
+}
+
+.dibujo__dato {
+  margin-left: auto;
+  color: var(--texto-suave);
+  white-space: nowrap;
+}
+
+.dibujo__dato--hacia {
+  color: var(--codigo-clave);
+}
+
+.dibujo__flecha {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  margin-right: 3px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vertical-align: -1px;
+}
+
+.dibujo__lineas {
+  position: absolute;
+  inset: 0;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.dibujo__linea path {
+  fill: none;
+  stroke: var(--codigo-clave);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.dibujo__linea circle,
+.dibujo__linea .dibujo__punta {
+  fill: var(--codigo-clave);
+  stroke: none;
+}
+
+/* What to do with the database: its buttons, what it's loading, and what went wrong with its SQLite words. */
+.laboratorio__botones-base {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.laboratorio__estado-base:empty {
+  margin: -6px 0;
+}
+
+.laboratorio__problema {
+  display: grid;
+  gap: 8px;
+}
+
+.laboratorio__detalle {
+  margin: 0;
+  color: var(--error);
+  font-family: var(--codigo-letra);
+  font-size: var(--t-chica);
+  font-weight: 700;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* The console: a result with its download, the plan as a tree, and the lines about MySQL. */
+.consola__cabeza {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px 12px;
+}
+
+.consola__cabeza .boton {
+  font-family: var(--fuente-ui);
+}
+
+.plan {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-family: var(--fuente-ui);
+}
+
+.plan .plan {
+  margin: 6px 0 2px 4px;
+  padding-left: 14px;
+  border-left: 2px solid var(--borde);
+}
+
+.plan__paso {
+  position: relative;
+  padding-left: 16px;
+}
+
+.plan__paso::before {
+  content: '';
+  position: absolute;
+  left: 1px;
+  top: 0.55em;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--codigo-clave);
+}
+
+/* Going through a whole table is what costs: underlined with the highlighter. */
+.plan__paso[data-todo] > .plan__texto {
+  box-shadow: inset 0 -3px var(--resaltador);
+}
+
+/* What the query does, numbered in the order it's evaluated; a subquery, its own numbered list inside. */
+.consola__plan .consola__dato {
+  font-size: var(--t-chica);
+  font-weight: 400;
+  line-height: inherit;
+}
+
+.logica {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding-left: 1.6em;
+  font-family: var(--fuente-ui);
+}
+
+.logica .logica {
+  margin: 6px 0 2px;
+}
+
+.logica li::marker {
+  color: var(--texto-suave);
+  font-variant-numeric: tabular-nums;
+}
+
+/* On the console's own background: a chip that shows where the code starts and ends. */
+.logica code {
+  padding: 0 4px;
+  border-radius: 3px;
+  background: var(--superficie-2);
+  font-family: var(--codigo-letra);
+  font-size: 0.92em;
+  overflow-wrap: anywhere;
+}
+
+.logica code.consola__entero {
+  white-space: nowrap;
+}
+
+.plan__titulo {
+  margin: 4px 0 0;
+  font-size: var(--t-chica);
+  font-weight: 700;
+}
+
+.plan__abrir {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--texto);
+  font: inherit;
+  font-family: var(--fuente-ui);
+  cursor: pointer;
+}
+
+.plan__abrir:focus-visible {
+  outline: 2px solid var(--foco);
+  outline-offset: 2px;
+  border-radius: var(--radio-control);
+}
+
+.plan__flecha {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.plan__abrir[aria-expanded='true'] .plan__flecha {
+  transform: rotate(180deg);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .plan__flecha {
+    transition: transform 180ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+}
+
+:root[data-movimiento='reducido'] .plan__flecha,
+:root[data-movimiento='ninguno'] .plan__flecha {
+  transition: none;
+}
+
+.consola__pistas {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-family: var(--fuente-ui);
+  color: var(--texto);
+  overflow-wrap: anywhere;
+}
+
+.consola__pistas code {
+  padding: 0 4px;
+  border-radius: 3px;
+  background: var(--superficie);
+  font-family: var(--codigo-letra);
+  font-size: 0.92em;
+}
+
+.consola__pistas code.consola__entero {
+  white-space: nowrap;
+}
+
+.consola__dialecto {
+  display: grid;
+  gap: 4px;
+  padding: 8px 12px;
+  border-left: 4px solid var(--aviso);
+  border-radius: 0 var(--radio-control) var(--radio-control) 0;
+  background: var(--superficie-2);
+}
+
+.consola__dialecto .consola__dato {
+  color: var(--texto);
+  font-weight: 700;
+}
+
+/* Reviewing a CSV: the sheet of the side, with its body that scrolls and its buttons always at hand. */
+.csv .csv__caja {
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  height: 100%;
+  padding-bottom: 0;
+}
+
+.csv__cuerpo {
+  display: grid;
+  align-content: start;
+  gap: 16px;
+  min-height: 0;
+  margin: 0 -4px;
+  padding: 4px 4px 16px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.csv__forma {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr));
+  gap: 12px;
+}
+
+.csv__codigo {
+  font-family: var(--codigo-letra);
+}
+
+.csv__opcion {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.csv__opcion input {
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  accent-color: var(--accion);
+}
+
+.csv__columnas {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.csv__columnas legend {
+  margin-bottom: 8px;
+  padding: 0;
+  font-weight: 700;
+}
+
+.csv__lista {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.csv__columna {
+  display: grid;
+  grid-template-columns: 2.5ch minmax(0, 1.25fr) minmax(0, 1fr);
+  align-items: center;
+  gap: 4px 8px;
+}
+
+.csv__numero {
+  color: var(--texto-suave);
+  font-variant-numeric: tabular-nums lining-nums;
+  text-align: right;
+}
+
+.csv__error {
+  grid-column: 2 / -1;
+}
+
+.csv__subtitulo {
+  margin: 0 0 6px;
+  font-weight: 700;
+}
+
+.csv__muestra .consola__tabla {
+  font-family: var(--codigo-letra);
+  font-size: var(--t-chica);
+}
+
+.csv__pie {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 12px 0 calc(16px + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid var(--borde);
+  background: var(--fondo);
+}

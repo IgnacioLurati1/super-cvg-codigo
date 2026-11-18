@@ -1,0 +1,482 @@
+/* Lo que todo sitio trae resuelto. Sin identidad: el aspecto sale de tokens.css. */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  /* Un ancla no queda tapada por la cabecera fija. */
+  scroll-padding-top: var(--alto-cabecera);
+}
+
+body {
+  margin: 0;
+  background: var(--fondo);
+  color: var(--texto);
+  font-family: var(--fuente-ui);
+  font-size: var(--t-ui);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+img,
+svg,
+video {
+  display: block;
+  max-width: 100%;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--fuente-titulos);
+  line-height: 1.15;
+  /* Whole pixels: a title of 86.39px left everything under it half a pixel off, and what animates in jumped a pixel when
+     its animation ended and the browser drew it again on the page. */
+  line-height: round(1.15em, 1px);
+  text-wrap: balance;
+  overflow-wrap: break-word;
+}
+
+/* The browser's own margins, also in whole pixels (0.67em of 64px is 42.88px). */
+h1 {
+  margin-block: round(0.67em, 1px);
+}
+
+h2 {
+  margin-block: round(0.83em, 1px);
+}
+
+h3 {
+  margin-block: round(1em, 1px);
+}
+
+/* With a large letter a long word may not fit in a line of a title: it breaks with a hyphen, in Spanish. */
+html:not([data-letra='normal']) :is(h1, h2, h3) {
+  hyphens: auto;
+  hyphenate-limit-chars: 12 5 5;
+}
+
+h1 {
+  font-size: var(--t-h1);
+}
+
+h2 {
+  font-size: var(--t-h2);
+}
+
+h3 {
+  font-size: var(--t-h3);
+}
+
+a {
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 3px solid var(--foco);
+  outline-offset: 2px;
+}
+
+/* El contenido principal cuando el foco llega ahí al cambiar de pantalla (CambioDePantalla.jsx). */
+[data-foco-pantalla]:focus {
+  outline: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* The rule above makes every change a transition, the letter size too: while the root's size is still on its way,
+     the layouts that ask the page in rem (`@container pagina`) would keep the old answer. The root changes at once. */
+  html {
+    transition-duration: 0s !important;
+  }
+}
+
+/* Aparecer al bajar (src/lib/movimiento.js): este es el punto de partida. Cada sitio define sus propias
+   entradas con el valor de data-aparece («[data-aparece='foto']»), a partir de su oficio. `--orden` escalona. */
+@media (prefers-reduced-motion: no-preference) {
+  .con-movimiento [data-aparece] {
+    transition:
+      opacity 0.7s ease,
+      transform 0.8s cubic-bezier(0.2, 0.7, 0.2, 1);
+    transition-delay: calc(var(--orden, 0) * 90ms);
+  }
+  .con-movimiento [data-aparece]:not([data-visto]) {
+    opacity: 0;
+    transform: translateY(28px);
+  }
+}
+
+/* La barra de scroll aparece cuando la página crece y achica la ventana. La página mide siempre el ancho
+   entero, así lo centrado queda quieto; la franja debajo de la barra se recorta. Nada de scrollbar-gutter. */
+#root {
+  overflow-x: clip;
+}
+
+.sitio {
+  width: 100vw;
+  overflow-x: clip;
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* The page is the container the layouts ask about (`@container pagina (min-width: …rem)`), in rem: so they change
+   with the room there really is at the letter size chosen (html[data-letra]). Media queries can't do that, their rem
+   is always the browser's. As wide as the window, so with the normal letter it's the same as a media query. */
+.sitio > main {
+  flex: 1;
+  container: pagina / inline-size;
+}
+
+.contenedor {
+  width: 100%;
+  max-width: var(--ancho);
+  margin-inline: auto;
+  padding-inline: var(--margen);
+}
+
+.pagina {
+  padding-block: clamp(32px, 6vw, 72px);
+}
+
+/* A screen that broke (ErrorDePantalla): the title takes the focus with a soft ring only from the keyboard, and the ways
+   out go in a row. */
+.error-pantalla h1 {
+  width: fit-content;
+}
+
+.error-pantalla h1:focus:not(:focus-visible) {
+  outline: none;
+}
+
+.error-pantalla h1:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--foco) 55%, transparent);
+  outline-offset: 4px;
+}
+
+.error-pantalla p {
+  max-width: 40em;
+}
+
+.error-pantalla__salidas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+/* Texto para leer de corrido (Tu privacidad, Notas del parche): alineado con la cabecera y con renglones cómodos. Se
+   angosta lo de adentro y no la caja: así no compite con .contenedor, que en la build puede llegar después. */
+.texto-largo > * {
+  max-width: 44em;
+}
+
+.solo-lectores {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.saltar {
+  position: absolute;
+  left: var(--margen);
+  top: -60px;
+  z-index: 50;
+  padding: 10px 14px;
+  background: var(--accion);
+  color: var(--accion-texto);
+  border-radius: var(--radio-control);
+}
+
+.saltar:focus {
+  top: 10px;
+}
+
+/* Botones: uno de acción por pantalla, el resto secundarios. */
+.boton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 10px 20px;
+  border: 1px solid transparent;
+  border-radius: var(--radio-control);
+  background: var(--accion);
+  color: var(--accion-texto);
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 120ms ease;
+}
+
+@media (hover: hover) {
+  .boton:hover {
+    background: var(--accion-hover);
+  }
+  .boton--secundario:hover {
+    background: var(--superficie-2);
+  }
+}
+
+.boton:active:not(:disabled, [aria-disabled='true']) {
+  transform: scale(0.97);
+}
+
+button,
+a,
+summary,
+label {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.boton:disabled,
+.boton[aria-disabled='true'] {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.boton--secundario {
+  background: transparent;
+  border-color: currentColor;
+  color: var(--texto);
+}
+
+.boton--chico {
+  min-height: 36px;
+  padding: 6px 14px;
+  font-size: var(--t-chica);
+}
+
+/* On a phone, buttons that sit side by side share the row in equal parts and their text breaks inside, centered.
+   Two always stay in one row; with three or more, two fit and the rest wrap, taking the full width of their row.
+   `:where` keeps it at the weight of `.boton`, so a screen's own rule for a fixed-size button (an arrow, an icon) wins. */
+@media (max-width: 30rem) {
+  .boton:where(.boton + .boton, :has(+ .boton)) {
+    flex: 1 1 40%;
+    min-width: 0;
+    min-height: 44px;
+    padding-inline: 12px;
+    line-height: 1.2;
+    text-align: center;
+  }
+  .boton:where(:first-child:nth-last-child(2), :nth-child(2):last-child):where(.boton + .boton, :has(+ .boton)) {
+    flex-basis: 0;
+  }
+}
+
+.boton--peligro {
+  background: var(--error);
+  color: #fff;
+}
+
+/* Formularios. 16 px en los campos: con menos, el celular agranda la página al tocarlos. */
+.campo {
+  display: grid;
+  gap: 6px;
+}
+
+.campo__etiqueta {
+  font-weight: 700;
+}
+
+.campo__ayuda {
+  font-size: var(--t-chica);
+  color: var(--texto-suave);
+}
+
+/* The label and its help on one line, when the help goes on the side. */
+.campo__cabeza {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 10px;
+}
+
+.campo__control {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-control);
+  background: var(--superficie);
+  font-size: max(1rem, 16px);
+}
+
+textarea.campo__control {
+  min-height: 120px;
+  resize: vertical;
+}
+
+.campo__error {
+  font-size: var(--t-chica);
+  color: var(--error);
+  font-weight: 700;
+}
+
+/* Campo trampa: el que lo completa es un bot. Fuera de la vista y del teclado. */
+.campo-trampa {
+  position: absolute;
+  left: -9999px;
+}
+
+.mensaje {
+  padding: 12px 14px;
+  border-radius: var(--radio-control);
+  border-left: 4px solid currentColor;
+  background: var(--superficie-2);
+}
+
+.mensaje--error {
+  color: var(--error);
+}
+
+.mensaje--ok {
+  color: var(--ok);
+}
+
+.mensaje p {
+  margin: 0;
+  color: var(--texto);
+}
+
+/* Avisos del proveedor para admins (src/admin/AvisosProveedor.jsx). */
+.aviso-proveedor {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px var(--margen);
+  background: var(--fondo-aviso);
+  border-bottom: 1px solid var(--borde);
+}
+
+.aviso-proveedor p {
+  margin: 4px 0 0;
+}
+
+.aviso-proveedor__cerrar {
+  min-width: 44px;
+  min-height: 44px;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+
+.aviso-proveedor--critical {
+  background: var(--error);
+  color: #fff;
+}
+
+/* The switch: a native checkbox, so the keyboard and screen readers already know it. */
+.interruptor {
+  flex: none;
+  position: relative;
+  width: 48px;
+  height: 28px;
+  margin: 0;
+  border: 1px solid var(--borde-control);
+  border-radius: 999px;
+  background: var(--superficie-2);
+  appearance: none;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color 160ms ease-out, border-color 160ms ease-out;
+}
+
+.interruptor::before {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--texto-suave);
+  transform-origin: left center;
+  transition: transform 160ms cubic-bezier(0.2, 0, 0, 1), background-color 160ms ease-out;
+}
+
+.interruptor:checked {
+  border-color: var(--accion);
+  background: var(--accion);
+}
+
+.interruptor:checked::before {
+  background: var(--accion-texto);
+  transform: translateX(20px);
+  transform-origin: right center;
+}
+
+/* Pressed, the knob stretches toward where it goes, with transform only. */
+.interruptor:active:not(:disabled)::before {
+  transform: scaleX(1.2);
+}
+
+.interruptor:checked:active:not(:disabled)::before {
+  transform: translateX(20px) scaleX(1.2);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .interruptor:not(:disabled, :checked):hover {
+    border-color: var(--accion);
+  }
+}
+
+.interruptor:focus-visible {
+  outline: 3px solid var(--foco);
+  outline-offset: 2px;
+}
+
+.interruptor:disabled {
+  opacity: 0.55;
+  cursor: progress;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .interruptor,
+  .interruptor::before {
+    transition: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .interruptor {
+    border-color: CanvasText;
+  }
+  .interruptor::before {
+    background: CanvasText;
+  }
+  .interruptor:checked {
+    border-color: Highlight;
+    background: Highlight;
+  }
+  .interruptor:checked::before {
+    background: HighlightText;
+  }
+}

@@ -1,0 +1,77 @@
+/* Diagrama de caja (caja.jsx): the box drawn by hand on the sheet. The central half with the highlighter, whiskers and
+   median in ink, dashed lines down to the axis where each number is written, outliers apart in red. */
+.ce-caja {
+  width: 100%;
+  margin: 0 0 calc(var(--lado-cuadro) * 0.75);
+}
+
+.ce-caja__svg {
+  display: block;
+  overflow: visible;
+  font-family: var(--fuente-ui);
+  font-size: var(--ce-fs);
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+.ce-caja__guias line {
+  stroke: var(--tinta-hoja);
+  stroke-width: 1.2;
+  stroke-dasharray: 3 4;
+}
+
+.ce-caja__eje,
+.ce-caja__marca {
+  stroke: var(--tinta-hoja);
+  stroke-width: 1.3;
+}
+
+.ce-caja__bigotes line {
+  stroke: var(--texto);
+  stroke-width: 2.2;
+  stroke-linecap: round;
+}
+
+.ce-caja__caja {
+  fill: color-mix(in srgb, var(--resaltador) 70%, transparent);
+  stroke: var(--texto);
+  stroke-width: 2.2;
+}
+
+.ce-caja__mediana {
+  stroke: var(--texto);
+  stroke-width: 3.5;
+}
+
+.ce-caja__atipico {
+  fill: var(--superficie);
+  stroke: var(--materia-1);
+  stroke-width: 2;
+}
+
+.ce-caja__nombre {
+  font-size: 1.3em;
+  fill: var(--texto);
+  font-style: italic;
+  font-weight: 700;
+}
+
+.ce-caja__nombre tspan {
+  font-size: 0.75em;
+}
+
+.ce-caja__valor {
+  font-size: 1.1em;
+  fill: var(--texto);
+  font-weight: 600;
+}
+
+.ce-caja__valor[data-atipico] {
+  fill: var(--materia-1);
+}
+
+/* The measure that falls on a row of the frequency table. */
+.tabla-pasos .ce-caja__medida {
+  font-style: italic;
+  font-weight: 700;
+  text-align: left;
+}

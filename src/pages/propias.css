@@ -1,0 +1,628 @@
+/* Courses of one's own: create, view, edit and pick from the campus. */
+.propias__bajada {
+  max-width: 62ch;
+  margin: -12px 0 24px;
+  color: var(--texto-suave);
+}
+
+.propias__nota {
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+}
+
+.propias__botones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.propias-nueva__form {
+  display: grid;
+  gap: 20px;
+  max-width: 35rem;
+}
+
+/* The view */
+/* A text of the student's own reads as a note among the rows. */
+.propia__texto {
+  margin: 10px 0;
+  padding: 12px 16px;
+  border-left: 4px solid var(--resaltador);
+  border-radius: var(--radio-control);
+  background: var(--superficie);
+}
+
+/* A text of one's own, whole in the list where it can be arranged. */
+.fila__en-linea {
+  flex: 1;
+  min-width: 0;
+  margin: 10px 0;
+  padding: 12px 16px;
+  border-left: 4px solid var(--resaltador);
+  border-radius: var(--radio-control);
+  background: var(--superficie);
+}
+
+.fila[data-en-linea] .fila__linea {
+  align-items: flex-start;
+}
+
+.fila[data-en-linea] .fila__opciones {
+  margin-top: 10px;
+}
+
+.propia__falta .fila__principal {
+  cursor: default;
+}
+
+.propia__falta .fila__nombre {
+  color: var(--texto-suave);
+  font-weight: 500;
+}
+
+.propia__vacia {
+  display: grid;
+  justify-items: start;
+  gap: 12px;
+  padding: 20px;
+  border: 1px dashed var(--borde-control);
+  border-radius: var(--radio-bloque);
+}
+
+.propia__vacia p {
+  margin: 0;
+}
+
+.previa__santo {
+  justify-self: start;
+  margin: 4px 0 0;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: var(--resaltador);
+  color: var(--resaltador-texto);
+  font-size: var(--t-chica);
+  font-weight: 700;
+}
+
+/* «Armar tu versión» in a campus course */
+.materia__version {
+  display: grid;
+  justify-items: start;
+  gap: 8px;
+  padding: 14px 16px;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-bloque);
+  background: var(--superficie);
+}
+
+.materia__version p {
+  margin: 0;
+}
+
+.materia__versiones {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.materia__versiones a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+/* Long names with no spaces break instead of going out of the page. */
+.volver a {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+/* The editor */
+.editor__general {
+  display: grid;
+  gap: 16px;
+  max-width: 35rem;
+  margin-bottom: 28px;
+}
+
+.editor__categoria {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding: 16px 20px 20px;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-bloque);
+  background: var(--superficie);
+}
+
+.editor__categoria .lista {
+  border-top: 1px solid var(--borde);
+}
+
+.editor__cabeza {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.editor__nombre {
+  flex: 1 1 16.25rem;
+  min-width: 0;
+}
+
+.editor__nombre .campo__control {
+  font-weight: 700;
+}
+
+.editor__acciones,
+.editor__sumar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.editor__resumen {
+  cursor: default;
+}
+
+.editor__vacia,
+.editor__estado {
+  margin: 0;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+}
+
+.editor__estado:empty {
+  display: none;
+}
+
+.editor__form {
+  display: grid;
+  gap: 14px;
+  padding: 14px 0 4px;
+}
+
+.editor__muestra {
+  padding: 12px 14px;
+  border-left: 4px solid var(--resaltador);
+  border-radius: var(--radio-control);
+  background: var(--superficie-2);
+}
+
+.editor__muestra-titulo {
+  margin: 0 0 6px;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+  font-weight: 700;
+}
+
+.editor__santo {
+  margin: 0;
+}
+
+.editor__santo a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+}
+
+.editor__mover {
+  display: grid;
+  gap: 6px;
+  max-width: 26.25rem;
+  margin-top: 10px;
+}
+
+.editor__mover-fila {
+  display: flex;
+  gap: 6px;
+}
+
+.editor__mover-fila .campo__control {
+  flex: 1;
+  min-width: 0;
+}
+
+.editor__pie {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+/* Picking from the campus: the preview sheet, with its list and a footer that stays */
+.elegir__caja {
+  grid-template-rows: auto auto auto 1fr auto;
+  height: 100%;
+  padding-bottom: 0;
+}
+
+.elegir__filtros {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 12.5rem), 1fr));
+  gap: 12px;
+}
+
+.elegir__lista {
+  display: grid;
+  align-content: start;
+  gap: 16px;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.elegir__seccion {
+  display: grid;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.elegir__titulo {
+  padding: 0;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.elegir__todo {
+  justify-self: start;
+}
+
+/* A course can bring hundreds of rows: the ones out of view are not laid out. */
+.elegir__item,
+.editor__bloque {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 60px;
+}
+
+.elegir__item {
+  align-items: center;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--borde);
+  cursor: pointer;
+}
+
+.elegir__item:has(input:disabled) {
+  cursor: default;
+}
+
+/* Picking from El Santo Resumen: one more row, for where to look. The tips have no filters: one row less. */
+.santo__caja {
+  grid-template-rows: auto auto auto auto 1fr auto;
+}
+
+.consejos__caja {
+  grid-template-rows: auto auto 1fr auto;
+}
+
+/* The search has a hint and the subject does not: both controls line up at the bottom. */
+.santo__caja .elegir__filtros {
+  align-items: end;
+}
+
+.santo__donde {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.santo__trozo {
+  display: block;
+  margin-top: 2px;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+  overflow-wrap: anywhere;
+}
+
+.santo__consejo {
+  align-items: start;
+  padding: 10px 0;
+}
+
+.santo__consejo input {
+  margin-top: 3px;
+}
+
+.santo__consejo-texto {
+  display: block;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+.santo__trozo mark {
+  padding: 0 2px;
+  border-radius: 3px;
+  background: var(--superficie-2);
+  color: var(--texto);
+  font-weight: 700;
+}
+
+.elegir__pie {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 calc(var(--margen) * -1);
+  padding: 12px var(--margen) max(16px, env(safe-area-inset-bottom));
+  border-top: 1px solid var(--borde);
+  background: var(--fondo);
+}
+
+@container pagina (max-width: 38.75rem) {
+  .editor__categoria {
+    padding: 14px 14px 16px;
+  }
+
+  .editor__pie .boton {
+    flex: 1 1 100%;
+  }
+}
+
+/* Before connecting Classroom, in Crear una materia */
+.propias-nueva__classroom {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+}
+
+.propias-nueva__classroom p,
+.propias-nueva__nota {
+  margin: 0;
+  color: var(--texto-suave);
+}
+
+/* In a campus course: reading mode, the student's own sections and the form to add one. */
+.materia__titulo {
+  flex-wrap: wrap;
+}
+
+.materia__herramientas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-left: auto;
+}
+
+/* A card that just arrived (added, or passed from another section) glows for a moment. */
+.fila[data-recien] {
+  animation: fila-recien 1.8s ease-out;
+}
+
+@keyframes fila-recien {
+  from {
+    background: color-mix(in srgb, var(--resaltador) 40%, transparent);
+  }
+}
+
+/* Without motion, the color stays a moment and goes at once. */
+@media (prefers-reduced-motion: reduce) {
+  .fila[data-recien] {
+    animation-duration: 2.5s;
+    animation-timing-function: steps(1, end);
+  }
+}
+
+.materia__sin-nada:empty,
+.sumar-cosas__estado:empty {
+  margin: 0;
+}
+
+.sumar-cosas__estado {
+  margin: 0 0 8px;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+}
+
+.sumar-cosas:focus {
+  outline: none;
+}
+
+.materia__nueva svg,
+.seccion__sumar svg {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-width: 2.4;
+}
+
+/* The tools of each section: add to it, hide it (the campus' ones) or its options (the student's own). */
+.seccion__acciones {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 2px;
+}
+
+.seccion__sumar {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 44px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: var(--radio-control);
+  background: none;
+  color: var(--foco);
+  cursor: pointer;
+  font: inherit;
+  font-size: var(--t-chica);
+  font-weight: 600;
+  transition: transform 120ms ease-out;
+}
+
+.seccion__sumar[aria-expanded='true'] {
+  background: var(--superficie-2);
+}
+
+.seccion__sumar:active {
+  transform: scale(0.97);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .seccion__sumar:hover {
+    background: var(--superficie-2);
+  }
+}
+
+.seccion__opciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 4px 0 12px;
+}
+
+.seccion__opciones[hidden] {
+  display: none;
+}
+
+.seccion__renombrar {
+  display: flex;
+  flex: 1 1 20rem;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 8px 12px;
+  padding: 4px 0 8px;
+}
+
+.seccion__renombrar .campo {
+  flex: 1 1 13.75rem;
+  min-width: 0;
+}
+
+.seccion__vacia {
+  margin: 0;
+  padding: 6px 0 2px;
+  color: var(--texto-suave);
+}
+
+/* What can be added to a section, under its title. */
+.seccion__sumando {
+  margin: 6px 0 14px;
+  padding: 12px;
+  border: 1px dashed var(--borde-control);
+  border-radius: var(--radio-bloque);
+  background: var(--superficie);
+}
+
+.sumar-cosas .editor__form {
+  padding-top: 0;
+}
+
+.sumar-cosas__botones {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.sumar-cosas__opcion {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 6px 12px;
+  border: 1px solid var(--borde-control);
+  border-radius: var(--radio-control);
+  background: var(--superficie);
+  color: var(--texto);
+  cursor: pointer;
+  font: inherit;
+  font-size: var(--t-chica);
+  transition: transform 120ms ease-out;
+}
+
+.sumar-cosas__opcion .simbolo--mini {
+  width: 18px;
+  height: 18px;
+}
+
+.sumar-cosas__opcion:active,
+.sumar-cosas__cerrar:active {
+  transform: scale(0.97);
+}
+
+.sumar-cosas__cerrar {
+  min-height: 40px;
+  margin-left: auto;
+  padding: 0 8px;
+  border: 0;
+  background: none;
+  color: var(--texto-suave);
+  cursor: pointer;
+  font: inherit;
+  font-size: var(--t-chica);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: transform 120ms ease-out;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .sumar-cosas__cerrar:hover {
+    color: var(--texto);
+  }
+
+  .sumar-cosas__opcion:hover {
+    border-color: var(--foco);
+  }
+}
+
+@media (pointer: coarse) {
+  .sumar-cosas__opcion,
+  .sumar-cosas__cerrar {
+    min-height: 44px;
+  }
+}
+
+/* The filters of a course use the whole width: the search on top, every button in one row when they fit. */
+.filtro--materia {
+  max-width: none;
+}
+
+.filtro__botones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+}
+
+.materia__sumar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 8px 12px;
+  margin: -8px 0 24px;
+  padding: 16px;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-bloque);
+  background: var(--superficie);
+}
+
+.materia__sumar-botones {
+  display: flex;
+  gap: 8px;
+}
+
+.materia__sumar .campo {
+  flex: 1 1 15rem;
+  min-width: 0;
+}
+
+.previa__texto--formato {
+  white-space: normal;
+}

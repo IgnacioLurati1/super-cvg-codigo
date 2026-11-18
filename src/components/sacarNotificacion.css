@@ -1,0 +1,81 @@
+/* A notification with its button to take it out: the row and the button side by side, one line under both. */
+.con-sacar {
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+  border-bottom: 1px solid var(--borde);
+}
+
+.con-sacar > :first-child {
+  flex: 1;
+  min-width: 0;
+  border-bottom: 0;
+}
+
+.sacar-notificacion {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  margin-top: 2px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--texto-suave);
+  cursor: pointer;
+  transition: transform 120ms ease-out, color 150ms ease-out, background-color 150ms ease-out;
+}
+
+.sacar-notificacion svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-width: 2;
+}
+
+.sacar-notificacion:active {
+  transform: scale(0.94);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .sacar-notificacion:hover {
+    background: var(--superficie-2);
+    color: var(--texto);
+  }
+}
+
+/* Where it was: what happened and Deshacer. */
+.sacada {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  min-height: 44px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--borde);
+  animation: sacada-aparece 160ms ease-out;
+}
+
+.sacada__texto {
+  min-width: 0;
+  margin: 0;
+  color: var(--texto-suave);
+  overflow-wrap: anywhere;
+}
+
+@keyframes sacada-aparece {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sacar-notificacion {
+    transition: none;
+  }
+}

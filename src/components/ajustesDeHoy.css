@@ -1,0 +1,201 @@
+/* Hoy in Configuración (AjustesDeHoy.jsx): the blocks of each column with their handle and switch, what enters «Lo que
+   vence», and the courses that show in Hoy and the Calendario. */
+.orden-hoy__columnas {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
+  gap: 16px 24px;
+}
+
+.orden-hoy__columna {
+  min-width: 0;
+}
+
+.orden-hoy__titulo {
+  margin: 0 0 6px;
+  font-size: 1rem;
+}
+
+.orden-hoy__ayuda {
+  margin: -2px 0 8px;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+}
+
+.orden-hoy,
+.materias-hoy {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Room to drop a block even when the column is left empty; the column under a dragged row from the other one says it
+   takes it. */
+.orden-hoy {
+  min-height: 46px;
+  border-radius: var(--radio-control);
+  outline: 2px dashed transparent;
+  outline-offset: 4px;
+  transition: outline-color 150ms ease;
+}
+
+.orden-hoy[data-recibe] {
+  outline-color: var(--resaltador);
+}
+
+.orden-hoy__fila,
+.materias-hoy__fila {
+  border: 1px solid var(--borde-control);
+  border-radius: var(--radio-control);
+  background: var(--superficie);
+}
+
+.orden-hoy__linea,
+.materias-hoy__fila {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 52px;
+  padding: 4px 12px 4px 6px;
+}
+
+.materias-hoy__fila {
+  padding-left: 12px;
+}
+
+.orden-hoy__nombre,
+.materias-hoy__nombre {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: break-word;
+  cursor: pointer;
+}
+
+/* Hidden from Hoy: still there to order, quieter. */
+.orden-hoy__fila[data-oculto] .orden-hoy__nombre {
+  color: var(--texto-suave);
+}
+
+/* The handle: drag it, move it with the arrows, or tap it for «Subir» and «Bajar». */
+.orden-hoy__manija {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: 32px;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radio-control);
+  background: none;
+  color: var(--texto-suave);
+  cursor: grab;
+  touch-action: none;
+}
+
+.orden-hoy__manija svg {
+  width: 20px;
+  height: 20px;
+  fill: currentColor;
+}
+
+/* On a phone the touch is the only answer it gives. */
+.orden-hoy__manija:active {
+  background: var(--superficie-2);
+  color: var(--texto);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .orden-hoy__manija:hover {
+    background: var(--superficie-2);
+    color: var(--texto);
+  }
+}
+
+.orden-hoy__mover {
+  display: flex;
+  gap: 6px;
+  padding: 0 12px 10px 48px;
+}
+
+/* While a block is dragged the others move aside to open its place (useArrastreDeSecciones.js). */
+.orden-hoy[data-arrastrando] {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.orden-hoy[data-arrastrando],
+.orden-hoy[data-arrastrando] * {
+  cursor: grabbing;
+}
+
+.orden-hoy[data-arrastrando] .orden-hoy__fila {
+  position: relative;
+  transition: transform 160ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.orden-hoy .orden-hoy__fila[data-agarrada] {
+  z-index: 2;
+  box-shadow: 0 0 0 2px var(--accion), 0 8px 20px rgb(0 0 0 / 0.16);
+  transition: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .orden-hoy[data-arrastrando] .orden-hoy__fila {
+    transition: none;
+  }
+}
+
+html:is([data-movimiento='reducido'], [data-movimiento='ninguno']) .orden-hoy[data-arrastrando] .orden-hoy__fila {
+  transition: none;
+}
+
+.que-cuenta {
+  display: grid;
+  gap: 4px;
+}
+
+.que-cuenta__opcion {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  min-height: 44px;
+  padding: 10px 0;
+  cursor: pointer;
+}
+
+.que-cuenta__opcion input {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  margin: 2px 0 0;
+  accent-color: var(--accion);
+  cursor: pointer;
+}
+
+.que-cuenta__texto {
+  display: grid;
+  gap: 2px;
+}
+
+.que-cuenta__ayuda {
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+}
+
+/* Reached from Hoy («Ordenar») or the Calendario: the title starts under the tabs. */
+#hoy,
+#materias-en-hoy {
+  scroll-margin-top: 64px;
+}
+
+.materias-hoy__otras {
+  margin-top: 12px;
+}
+
+.materias-hoy__otras > summary {
+  min-height: 44px;
+  padding: 10px 0;
+  font-weight: 600;
+  cursor: pointer;
+}

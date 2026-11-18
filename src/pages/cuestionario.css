@@ -1,0 +1,553 @@
+/* A campus quiz (Cuestionario.jsx) and the review of an attempt (RevisionCuestionario.jsx), on the layout of a task
+   (tarea.css). The student's answer goes in the highlighter, the teacher's marks in the margin. */
+
+.cuestionario__sin-nota,
+.cuestionario__motivo {
+  margin: 0;
+  color: var(--texto-suave);
+}
+
+.cuestionario__motivo {
+  font-size: var(--t-chica);
+}
+
+.cuestionario__reglas {
+  display: grid;
+  gap: 6px;
+  width: 100%;
+  margin: 0;
+  padding: 12px 0 0;
+  border-top: 1px solid var(--borde);
+  list-style: none;
+}
+
+.cuestionario__reglas li {
+  padding-left: 14px;
+  border-left: 3px solid var(--borde-control);
+}
+
+.cuestionario__aviso {
+  display: grid;
+  justify-items: start;
+  gap: 12px;
+}
+
+.cuestionario__aviso p {
+  margin: 0;
+}
+
+.cuestionario__adjuntos {
+  margin-top: 16px;
+}
+
+/* The attempts, one under the other like the rows of the agenda. */
+.intentos {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--borde);
+}
+
+.intento {
+  display: grid;
+  gap: 10px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--borde);
+}
+
+.intento__cabeza {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+}
+
+.intento__titulo {
+  margin: 0;
+  font-size: var(--t-ui);
+}
+
+.intento__estado {
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+  font-weight: 700;
+}
+
+.intento[data-estado='en-curso'] .intento__estado,
+.intento[data-estado='vencido'] .intento__estado {
+  color: var(--aviso);
+}
+
+.intento__datos {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
+  gap: 10px 20px;
+  margin: 0;
+}
+
+.intento__datos div {
+  display: grid;
+  align-content: start;
+  gap: 2px;
+}
+
+.intento__datos dt {
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+  font-weight: 700;
+}
+
+.intento__datos dd {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 8px;
+  margin: 0;
+  font-variant-numeric: lining-nums;
+}
+
+.intento__datos .tarea-campus__marcado {
+  font-weight: 800;
+}
+
+.intento__vale {
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+}
+
+.intento__revisar {
+  justify-self: start;
+}
+
+.intento__cerrada {
+  margin: 0;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+}
+
+/* The review. */
+.revision__etiqueta {
+  color: var(--texto-suave);
+  font-weight: 700;
+}
+
+.revision__puntos {
+  margin: -6px 0 0;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+  font-variant-numeric: lining-nums;
+}
+
+.marca-resultado {
+  flex: none;
+}
+
+/* Beside the review, the card scrolls on its own when it doesn't fit: the button at its end stays within reach. */
+@container pagina (min-width: 56.25rem) {
+  .revision .tarea-campus__lateral {
+    max-height: calc(100vh - var(--alto-cabecera) - 32px);
+    max-height: calc(100dvh - var(--alto-cabecera) - 32px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    border-radius: var(--radio-bloque);
+  }
+}
+
+/* The sheet of marks: one box per question, the number and the teacher's mark. */
+.mapa {
+  width: 100%;
+  padding-top: 14px;
+  border-top: 1px solid var(--borde);
+}
+
+.mapa__lista {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(44px, 1fr));
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.mapa__casilla {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 2px;
+  min-height: 52px;
+  padding: 4px 2px;
+  border: 1px solid var(--borde-control);
+  border-radius: var(--radio-control);
+  background: var(--fondo);
+  color: var(--texto-suave);
+  text-decoration: none;
+  transition: transform 120ms ease-out, border-color 150ms ease;
+}
+
+.mapa__casilla:active {
+  border-color: var(--texto-suave);
+  transform: scale(0.96);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .mapa__casilla:hover {
+    border-color: var(--texto-suave);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mapa__casilla:active {
+    transform: none;
+  }
+}
+
+.mapa__casilla:focus-visible {
+  outline: 2px solid var(--foco);
+  outline-offset: 2px;
+}
+
+.mapa__numero {
+  color: var(--texto);
+  font-size: var(--t-chica);
+  font-weight: 800;
+  line-height: 1;
+  font-variant-numeric: lining-nums;
+}
+
+.mapa__casilla .marca-resultado {
+  width: 18px;
+  height: 18px;
+}
+
+.mapa__casilla:not([data-resultado])::after {
+  content: '';
+  width: 18px;
+  height: 18px;
+}
+
+.mapa__casilla[data-resultado='bien'] {
+  color: var(--ok);
+}
+
+.mapa__casilla[data-resultado='mal'] {
+  color: var(--error);
+}
+
+.mapa__casilla[data-resultado='parcial'] {
+  color: var(--aviso);
+}
+
+/* Each question, a sheet with its mark in the margin. */
+.preguntas {
+  display: grid;
+  gap: 20px;
+}
+
+.pregunta {
+  --tinta: var(--borde-control);
+  display: grid;
+  gap: 12px;
+  padding: 18px 20px 20px;
+  border-left: 4px solid var(--tinta);
+  border-radius: var(--radio-bloque);
+  background: var(--superficie);
+  scroll-margin-top: calc(var(--alto-cabecera) + 16px);
+}
+
+.pregunta[data-resultado='bien'] {
+  --tinta: var(--ok);
+}
+
+.pregunta[data-resultado='mal'] {
+  --tinta: var(--error);
+}
+
+.pregunta[data-resultado='parcial'] {
+  --tinta: var(--aviso);
+}
+
+.pregunta__cabeza {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 2px 10px;
+}
+
+.pregunta__marca {
+  display: grid;
+  grid-row: span 2;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--fondo);
+  color: var(--tinta);
+}
+
+.pregunta__marca:empty {
+  display: none;
+}
+
+.pregunta__marca:empty ~ * {
+  grid-column: 1 / -1;
+}
+
+.pregunta__marca .marca-resultado {
+  width: 22px;
+  height: 22px;
+}
+
+.pregunta__titulo {
+  margin: 0;
+  font-size: var(--t-h3);
+  line-height: 1.2;
+}
+
+.pregunta__titulo:focus {
+  outline: none;
+}
+
+.pregunta__titulo:focus-visible {
+  outline: 2px solid var(--foco);
+  outline-offset: 4px;
+}
+
+.pregunta__resultado {
+  margin: 0;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+  font-weight: 700;
+  font-variant-numeric: lining-nums;
+}
+
+.pregunta__cuerpo {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+}
+
+.pregunta__texto > :first-child {
+  margin-top: 0;
+}
+
+.pregunta__texto > :last-child {
+  margin-bottom: 0;
+}
+
+.pregunta__texto strong {
+  font-variant-numeric: lining-nums;
+}
+
+.pregunta__nota {
+  margin: 0;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+}
+
+.pregunta__etiqueta {
+  margin: 0 0 6px;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+  font-weight: 700;
+}
+
+/* The options, with the ones the student chose in the highlighter. */
+.alternativas {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.alternativa {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: var(--radio-control);
+}
+
+.alternativa[data-elegida] {
+  background: var(--fondo);
+}
+
+.alternativa__casilla {
+  width: 16px;
+  height: 16px;
+  margin-top: 0.2em;
+  border: 2px solid var(--borde-control);
+  border-radius: 50%;
+}
+
+.alternativa[data-varias] .alternativa__casilla {
+  border-radius: 3px;
+}
+
+.alternativa[data-elegida] .alternativa__casilla {
+  border-color: var(--texto);
+  background: var(--texto);
+  box-shadow: inset 0 0 0 2px var(--fondo);
+}
+
+.alternativa__texto {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.alternativa__nombre {
+  overflow-wrap: anywhere;
+}
+
+.alternativa[data-elegida] .alternativa__nombre {
+  justify-self: start;
+  padding: 0 0.15em;
+  border-radius: 3px;
+  background: var(--resaltador);
+  color: var(--resaltador-texto);
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+.alternativa__tuya,
+.respuesta__marca {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+  font-weight: 700;
+}
+
+.alternativa__tuya .marca-resultado,
+.respuesta__marca .marca-resultado {
+  width: 18px;
+  height: 18px;
+}
+
+[data-marca='bien'] > .alternativa__texto > .alternativa__tuya,
+[data-marca='bien'] .respuesta__marca {
+  color: var(--ok);
+}
+
+[data-marca='mal'] > .alternativa__texto > .alternativa__tuya,
+[data-marca='mal'] .respuesta__marca {
+  color: var(--error);
+}
+
+[data-marca='parcial'] > .alternativa__texto > .alternativa__tuya,
+[data-marca='parcial'] .respuesta__marca {
+  color: var(--aviso);
+}
+
+.alternativa__devolucion {
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+}
+
+.alternativa__devolucion > * {
+  margin: 0;
+}
+
+/* A written answer, a pair matched. */
+.respuesta__fila {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+  margin: 0;
+}
+
+.respuesta__valor {
+  padding: 0 0.15em;
+  border-radius: 3px;
+  background: var(--resaltador);
+  color: var(--resaltador-texto);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+.respuesta__hoja {
+  background: var(--fondo);
+}
+
+.respuesta__archivos {
+  margin: 0;
+  padding-left: 1.2em;
+  overflow-wrap: anywhere;
+}
+
+.pares {
+  display: grid;
+  margin: 0;
+  border-top: 1px solid var(--borde);
+}
+
+.par {
+  display: grid;
+  gap: 4px 16px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--borde);
+}
+
+.par dt {
+  overflow-wrap: anywhere;
+}
+
+.par dd {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+  margin: 0;
+}
+
+@container pagina (min-width: 37.5rem) {
+  .par {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: baseline;
+  }
+}
+
+.pregunta__correcta {
+  padding: 12px 16px;
+  border: 1px solid var(--ok);
+  border-radius: var(--radio-control);
+  background: var(--fondo);
+}
+
+.pregunta__correcta p:last-child {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.pregunta__devolucion {
+  background: var(--fondo);
+}
+
+.pregunta__devolucion > :last-child {
+  margin-bottom: 0;
+}
+
+@container pagina (max-width: 30rem) {
+  .pregunta {
+    padding: 16px 14px 18px;
+  }
+}
+
+@media (forced-colors: active) {
+  .alternativa[data-elegida] .alternativa__nombre,
+  .respuesta__valor,
+  .tarea-campus__marcado {
+    outline: 1px solid CanvasText;
+  }
+
+  .alternativa[data-elegida] .alternativa__casilla {
+    background: CanvasText;
+  }
+}

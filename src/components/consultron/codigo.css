@@ -1,0 +1,290 @@
+/* Consultron in «Código» (Codigo.jsx): its own class names, apart from the rest of Consultron and the lab. */
+
+.cvg-agente {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.cvg-agente__hilo {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 12px 14px;
+}
+
+.cvg-agente__hilo > * + * {
+  margin-top: 12px;
+}
+
+.cvg-agente__usos {
+  margin: 0;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+}
+
+.cvg-agente__vacio p {
+  margin: 0 0 8px;
+}
+
+.cvg-agente__ideas,
+.cvg-agente__todo {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.cvg-agente__aviso {
+  margin: 0;
+  padding: 8px 10px;
+  border-left: 4px solid var(--aviso);
+  background: var(--fondo-aviso);
+}
+
+.cvg-agente__turnos {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cvg-agente__turno + .cvg-agente__turno {
+  margin-top: 16px;
+}
+
+.cvg-agente__pedido {
+  width: fit-content;
+  max-width: 90%;
+  margin: 0 0 8px auto;
+  padding: 8px 12px;
+  border-radius: 12px 12px 4px;
+  background: var(--accion);
+  color: var(--accion-texto);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.cvg-agente__pasos {
+  margin: 0 0 8px;
+  padding: 0 0 0 4px;
+  list-style: none;
+  font-size: var(--t-chica);
+  color: var(--texto-suave);
+}
+
+.cvg-agente__paso {
+  position: relative;
+  padding-left: 16px;
+}
+
+.cvg-agente__paso::before {
+  content: '';
+  position: absolute;
+  top: 0.6em;
+  left: 2px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.cvg-agente__paso--dice {
+  color: var(--texto);
+}
+
+.cvg-agente__trabajando {
+  margin: 0;
+  color: var(--texto-suave);
+  font-style: italic;
+}
+
+.cvg-agente__respuesta p {
+  margin: 0 0 8px;
+  white-space: pre-wrap;
+}
+
+.cvg-agente__respuesta p code {
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: var(--superficie);
+  font-family: var(--codigo-letra, ui-monospace, 'Cascadia Mono', Consolas, monospace);
+  font-size: 0.9em;
+}
+
+.cvg-agente__bloque,
+.cvg-agente__dif {
+  margin: 0 0 8px;
+  overflow-x: auto;
+  border: 1px solid var(--borde);
+  border-radius: 8px;
+  font-family: var(--codigo-letra, monospace);
+  font-size: var(--t-chica);
+}
+
+.cvg-agente__bloque {
+  padding: 8px 10px;
+}
+
+.cvg-agente__propuestas {
+  padding: 10px;
+  border: 1px solid var(--borde);
+  border-radius: 12px;
+  background: var(--superficie);
+}
+
+.cvg-agente__titulo {
+  margin: 0 0 8px;
+  font-size: var(--t-ui);
+}
+
+.cvg-agente__archivo + .cvg-agente__archivo {
+  margin-top: 12px;
+}
+
+.cvg-agente__archivo-cabeza {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+  margin-bottom: 6px;
+}
+
+.cvg-agente__nombre {
+  min-height: 36px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accion);
+  font: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.cvg-agente__cuenta {
+  margin-right: auto;
+  font-family: var(--codigo-letra, monospace);
+  font-size: var(--t-chica);
+}
+
+.cvg-agente__tramo + .cvg-agente__tramo {
+  border-top: 1px dashed var(--borde);
+}
+
+.cvg-agente__linea {
+  display: flex;
+  min-width: fit-content;
+  text-decoration: none;
+  white-space: pre;
+}
+
+.cvg-agente__linea--quita {
+  background: color-mix(in srgb, var(--error) 14%, transparent);
+}
+
+.cvg-agente__linea--suma {
+  background: color-mix(in srgb, var(--ok) 16%, transparent);
+}
+
+.cvg-agente__num {
+  flex: none;
+  width: 3.5ch;
+  padding-right: 4px;
+  color: var(--texto-suave);
+  text-align: right;
+}
+
+.cvg-agente__signo {
+  flex: none;
+  width: 2ch;
+  text-align: center;
+  font-weight: 700;
+}
+
+.cvg-agente__codigo {
+  padding-right: 8px;
+}
+
+.cvg-agente__deshacer {
+  display: block;
+}
+
+.cvg-agente__caja {
+  flex: none;
+  padding: 10px 14px max(12px, env(safe-area-inset-bottom));
+  border-top: 1px solid var(--borde);
+}
+
+.cvg-agente__campo {
+  height: 4.5em;
+  min-height: 0;
+  resize: none;
+}
+
+.cvg-agente__fila {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.cvg-agente__solo {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  cursor: pointer;
+}
+
+.cvg-agente__va {
+  margin: 6px 0 0;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+}
+
+/* What Consultron proposes, marked in the lab's editor (enEditor.js). */
+.editor .cvg-dif__quita,
+.editor .cvg-dif__quita.cm-activeLine {
+  background: color-mix(in srgb, var(--error) 18%, transparent);
+  text-decoration: line-through;
+}
+
+.editor .cvg-dif__suma {
+  border-left: 3px solid var(--ok);
+  background: color-mix(in srgb, var(--ok) 20%, transparent);
+}
+
+/* The code of a line that comes in stays in the column of the others (6px of CodeMirror's line, less the border). */
+.editor .cvg-dif__fila {
+  padding: 0 2px 0 3px;
+  white-space: pre;
+}
+
+.editor .cvg-dif__barra {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--borde);
+  background: var(--superficie);
+  font-family: var(--fuente-ui);
+  font-size: var(--t-chica);
+}
+
+.editor .cvg-dif__barra span {
+  margin-right: 4px;
+}
+
+@media (forced-colors: active) {
+  .cvg-agente__linea--suma {
+    border-left: 3px solid CanvasText;
+  }
+
+  .cvg-agente__linea--quita {
+    text-decoration: line-through;
+  }
+}

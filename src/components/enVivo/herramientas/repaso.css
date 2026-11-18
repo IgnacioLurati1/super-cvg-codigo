@@ -1,0 +1,218 @@
+/* Repaso en grupo: the card and the end are the ones of the student's Repaso (FichaDeRepaso), one for the whole table;
+   under the card, who knew it, each one with their color and in words. */
+.ev-repaso {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+  max-width: 44rem;
+  min-width: 0;
+}
+
+/* On the table, in the middle of the tab, at the width of a round of Repaso: the chooser, the card with its controls
+   and the end. Over the bar of the session it leaves its room. */
+.envivo-mesa__una > .ev-repaso {
+  width: 100%;
+  margin: auto;
+  padding-block: 1rem;
+}
+
+.envivo-mesa:not([data-tactil]) .envivo-mesa__una > .ev-repaso {
+  padding-bottom: calc(var(--barra) + 1.5rem);
+}
+
+.ev-repaso__elegir {
+  display: grid;
+  justify-items: start;
+  gap: 12px;
+  width: 100%;
+  max-width: 30rem;
+  margin-inline: auto;
+}
+
+.ev-repaso__elegir .campo {
+  justify-self: stretch;
+  max-width: 30rem;
+}
+
+.ev-repaso__vacio,
+.ev-repaso__nota {
+  margin: 0;
+  color: var(--texto-suave);
+}
+
+/* Without cards of one's own: the same frame as an empty calculator, and where to make some. */
+.ev-repaso__vacio {
+  display: grid;
+  justify-items: start;
+  gap: 12px;
+  padding: 24px 16px;
+  border: 1px dashed var(--borde-control);
+  border-radius: var(--radio-bloque);
+}
+
+.ev-repaso__vacio p {
+  margin: 0;
+}
+
+.ev-repaso__cabeza {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 16px;
+}
+
+.ev-repaso__mazo,
+.ev-repaso__cuenta {
+  margin: 0;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+}
+
+.ev-repaso__titulo {
+  color: var(--texto);
+  font-weight: 700;
+}
+
+.ev-repaso__cuenta {
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+.ev-repaso__acciones {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.ev-repaso__marcar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.ev-repaso__siguiente {
+  margin-left: auto;
+}
+
+.ev-repaso__marcar .boton[aria-pressed='true'] {
+  border-color: currentColor;
+  box-shadow: inset 0 0 0 1px currentColor;
+}
+
+.ev-repaso__si[aria-pressed='true'] {
+  color: var(--ok);
+}
+
+.ev-repaso__no[aria-pressed='true'] {
+  color: var(--error);
+}
+
+.ev-repaso__gente {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--t-chica);
+}
+
+.ev-repaso__persona {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--texto-suave);
+}
+
+.ev-repaso__punto {
+  inline-size: 10px;
+  block-size: 10px;
+  border: 2px solid var(--de);
+  border-radius: 50%;
+}
+
+.ev-repaso__persona[data-marca] .ev-repaso__punto {
+  background: var(--de);
+}
+
+.ev-repaso__nombre {
+  color: var(--texto);
+  font-weight: 700;
+}
+
+.ev-repaso__sumar {
+  justify-self: start;
+}
+
+/* The end is the one of a round, centered; who knew what reads from the left. */
+.ev-repaso .repaso-fin {
+  margin: 8px auto 0;
+}
+
+.ev-repaso .repaso-fin .ev-repaso__acciones {
+  justify-content: center;
+  margin-top: 16px;
+}
+
+.ev-repaso__resumen {
+  text-align: start;
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ev-repaso__fila {
+  display: grid;
+  grid-template-columns: minmax(5rem, auto) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 6px 12px;
+}
+
+.ev-repaso__barra {
+  display: block;
+  block-size: 8px;
+  border-radius: 4px;
+  background: var(--superficie-2);
+  overflow: hidden;
+}
+
+.ev-repaso__barra > span {
+  display: block;
+  block-size: 100%;
+  background: var(--de);
+}
+
+.ev-repaso__numeros {
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+.ev-repaso__cuales {
+  grid-column: 1 / -1;
+  font-size: var(--t-chica);
+}
+
+.ev-repaso__cuales summary {
+  cursor: pointer;
+  color: var(--texto-suave);
+}
+
+.ev-repaso__cuales ul {
+  margin: 6px 0 0;
+  padding-left: 1.25rem;
+}
+
+@media (max-width: 30rem) {
+  .ev-repaso__fila {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .ev-repaso__barra {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+}

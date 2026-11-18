@@ -1,0 +1,816 @@
+.cabecera {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  background: var(--accion);
+  color: var(--accion-texto);
+}
+
+/* Relative: the folded menu hangs from the row, so it lines up with the page and not with the window. */
+.cabecera__fila {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-height: var(--alto-cabecera);
+  white-space: nowrap;
+}
+
+/* Nothing shrinks: if it doesn't fit it overflows, and Layout folds the header. */
+.cabecera__fila > * {
+  flex: none;
+}
+
+.cabecera a {
+  color: inherit;
+}
+
+.cabecera__marca {
+  margin-right: auto;
+  font-family: var(--fuente-titulos);
+  font-size: var(--t-h3);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.cabecera :focus-visible {
+  outline-color: var(--accion-texto);
+}
+
+.cabecera__boton,
+.cabecera__salir {
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid var(--borde-control);
+  border-radius: var(--radio-control);
+  background: none;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+}
+
+.cabecera__boton {
+  display: none;
+}
+
+.cabecera__boton:active,
+.cabecera__salir:active,
+.cabecera__menu a:active {
+  opacity: 0.7;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .cabecera__boton:hover,
+  .cabecera__salir:hover,
+  .cabecera__rapido:hover {
+    background: rgb(255 255 255 / 0.12);
+  }
+}
+
+.cabecera__rapido {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid currentColor;
+  border-radius: var(--radio-control);
+  background: none;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 600;
+  transition: transform 120ms ease-out;
+}
+
+/* Its name only for screen readers (and in its title): with the bell, the whole row doesn't fit in the widest container.
+   The magnifier and «Alt K» are enough to find it. */
+.cabecera__rapido-texto {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.cabecera__rapido:active {
+  transform: scale(0.97);
+}
+
+.cabecera__rapido svg {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-width: 2;
+}
+
+/* The shortcut only says something with a keyboard at hand. */
+.cabecera__atajo {
+  display: none;
+  padding: 0 6px;
+  border: 1px solid currentColor;
+  border-radius: 4px;
+  font: inherit;
+  font-size: var(--t-chica);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .cabecera__atajo {
+    display: inline;
+  }
+}
+
+/* 14px, not more: with «Más» (where Laboratorio starts) the row still fits unfolded in the container. */
+.cabecera__menu {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+/* The envelope and the gear go together, so the row still fits at 1024 with both. */
+.cabecera[data-estilo='texto']:not([data-compacta]) .cabecera__mensajes.cabecera__icono--solo + .cabecera__ajustes.cabecera__icono--solo {
+  margin-left: -10px;
+}
+
+.cabecera__menu a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-weight: 600;
+  text-decoration: none;
+  text-underline-offset: 6px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .cabecera__menu a:hover {
+    text-decoration: underline;
+  }
+}
+
+.cabecera__menu a[aria-current='page'] {
+  text-decoration: underline;
+  text-decoration-color: var(--resaltador);
+  text-decoration-thickness: 3px;
+}
+
+/* Mensajes and Configuración: only the envelope and the gear in the row; the names, for screen readers. */
+.cabecera__menu .cabecera__icono {
+  justify-content: center;
+  gap: 10px;
+  min-width: 44px;
+  border-radius: var(--radio-control);
+}
+
+.cabecera__icono svg {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linejoin: round;
+  stroke-width: 1.6;
+}
+
+.cabecera__icono-texto {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* Where it is, under the icon like the underline under the other links (and only that, also with its name). */
+.cabecera__menu .cabecera__icono[aria-current='page'] {
+  box-shadow: inset 0 -3px var(--resaltador);
+  border-radius: 0;
+  text-decoration: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .cabecera__menu .cabecera__icono:hover {
+    background: rgb(255 255 255 / 0.12);
+  }
+}
+
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .cabecera__ajustes svg {
+    transition: transform 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  .cabecera__ajustes:hover svg {
+    transform: rotate(45deg);
+  }
+}
+
+/* The unread conversations on the envelope, in the highlighter's yellow, with a ring of the header around it. */
+.cabecera__dibujo {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+}
+
+.cabecera__numero {
+  position: absolute;
+  top: -7px;
+  left: 13px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: var(--resaltador);
+  box-shadow: 0 0 0 2px var(--accion);
+  color: var(--resaltador-texto);
+  font-size: 0.75rem;
+  font-variant-numeric: lining-nums tabular-nums;
+  font-weight: 700;
+  line-height: 18px;
+  text-align: center;
+}
+
+.cabecera__boton {
+  position: relative;
+}
+
+.cabecera__punto {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--resaltador);
+  box-shadow: 0 0 0 2px var(--accion);
+}
+
+/* It shows up now and then: a short pop, from a bit smaller and not from nothing. */
+@media (prefers-reduced-motion: no-preference) {
+  .cabecera__numero,
+  .cabecera__punto {
+    transition: transform 200ms cubic-bezier(0.23, 1, 0.32, 1), opacity 200ms ease-out;
+  }
+
+  @starting-style {
+    .cabecera__numero,
+    .cabecera__punto {
+      opacity: 0;
+      transform: scale(0.6);
+    }
+  }
+}
+
+/* Folded: set by Layout when the links don't fit. Only the magnifier stays, with its name for screen readers. */
+.cabecera[data-compacta] .cabecera__boton {
+  display: block;
+}
+
+.cabecera[data-compacta] .cabecera__rapido {
+  padding: 0;
+}
+
+.cabecera[data-compacta] .cabecera__atajo {
+  display: none;
+}
+
+/* A panel under the bar, as wide as the page: its links start where «Super CVG» does. */
+.cabecera[data-compacta] .cabecera__menu {
+  position: absolute;
+  inset: 100% 0 auto;
+  display: none;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0;
+  max-height: calc(100dvh - var(--alto-cabecera));
+  padding: 8px var(--margen) 16px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border-bottom: 1px solid currentColor;
+  background: var(--accion);
+}
+
+.cabecera[data-compacta] .cabecera__menu[data-abierto] {
+  display: flex;
+}
+
+/* A button, not a bar across the panel. */
+.cabecera[data-compacta] .cabecera__salir {
+  align-self: flex-start;
+  margin-top: 8px;
+}
+
+/* In the folded menu, the envelope and the gear with their names, like the other links. */
+.cabecera[data-compacta] .cabecera__menu .cabecera__icono {
+  justify-content: flex-start;
+}
+
+.cabecera[data-compacta] .cabecera__icono-texto {
+  position: static;
+  width: auto;
+  height: auto;
+  overflow: visible;
+  clip-path: none;
+}
+
+.cabecera[data-compacta] .cabecera__menu .cabecera__icono[aria-current='page'] {
+  box-shadow: none;
+  text-decoration: underline;
+  text-decoration-color: var(--resaltador);
+  text-decoration-thickness: 3px;
+}
+
+/* The styles of the menu (Configuración). «iconos»: the drawing and the name. «solo-iconos»: only the drawing, closer
+   together, so the row holds more before folding. «pastillas»: the screen on view, painted with the highlighter. */
+.cabecera__menu .cabecera__icono:not(.cabecera__icono--solo) {
+  justify-content: flex-start;
+  padding: 0 8px;
+}
+
+.cabecera[data-estilo='iconos']:not([data-compacta]) .cabecera__menu {
+  gap: 8px;
+}
+
+.cabecera[data-estilo='solo-iconos']:not([data-compacta]) .cabecera__menu {
+  gap: 4px;
+}
+
+.cabecera[data-estilo='pastillas']:not([data-compacta]) .cabecera__menu {
+  gap: 4px;
+}
+
+.cabecera[data-estilo='pastillas']:not([data-compacta]) .cabecera__menu > a,
+.cabecera[data-estilo='pastillas']:not([data-compacta]) .cabecera__mas-boton {
+  padding: 0 14px;
+  border-radius: 999px;
+}
+
+.cabecera[data-estilo='pastillas']:not([data-compacta]) .cabecera__menu > .cabecera__icono--solo {
+  padding: 0 10px;
+}
+
+.cabecera[data-estilo='pastillas']:not([data-compacta]) .cabecera__menu > a[aria-current='page'],
+.cabecera[data-estilo='pastillas']:not([data-compacta]) .cabecera__mas-boton[data-actual] {
+  border-radius: 999px;
+  background: var(--resaltador);
+  box-shadow: none;
+  color: var(--resaltador-texto);
+  text-decoration: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .cabecera[data-estilo='pastillas']:not([data-compacta]) .cabecera__menu > a:not([aria-current='page']):hover,
+  .cabecera[data-estilo='pastillas']:not([data-compacta]) .cabecera__mas-boton:not([data-actual]):hover {
+    background: color-mix(in srgb, currentColor 14%, transparent);
+    text-decoration: none;
+  }
+}
+
+/* «Más»: a link of the row that opens the screens kept out of sight, in a list that grows from it. */
+.cabecera__mas {
+  position: relative;
+}
+
+.cabecera__mas-boton {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 44px;
+  padding: 0 4px;
+  border: 0;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 600;
+  text-underline-offset: 6px;
+}
+
+.cabecera__mas-boton:active {
+  opacity: 0.7;
+}
+
+.cabecera__mas-boton[data-actual] {
+  text-decoration: underline;
+  text-decoration-color: var(--resaltador);
+  text-decoration-thickness: 3px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .cabecera__mas-boton:hover {
+    text-decoration: underline;
+  }
+}
+
+.cabecera__mas-flecha {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2;
+}
+
+.cabecera__mas-boton[aria-expanded='true'] .cabecera__mas-flecha {
+  transform: rotate(180deg);
+}
+
+.cabecera__mas-boton .cabecera__punto {
+  top: 4px;
+  right: -2px;
+}
+
+.cabecera__panel-mas {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 1;
+  min-width: 15rem;
+  max-width: calc(100vw - 24px);
+  /* A phone on its side, or a big letter: the list scrolls instead of going under the screen. */
+  max-height: calc(100dvh - var(--alto-cabecera) - 16px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-bloque);
+  background: var(--superficie);
+  box-shadow: 0 12px 32px rgb(0 0 0 / 0.18);
+  color: var(--texto);
+  font-size: var(--t-ui);
+  transform-origin: 100% 0;
+}
+
+.cabecera .cabecera__panel-mas :focus-visible {
+  outline-color: var(--foco);
+}
+
+.cabecera__menu .cabecera__panel-mas a {
+  display: flex;
+  justify-content: flex-start;
+  gap: 12px;
+  width: 100%;
+  padding: 0 12px;
+  border-radius: var(--radio-control);
+}
+
+.cabecera__menu .cabecera__panel-mas a:active {
+  background: var(--superficie-2);
+}
+
+.cabecera__menu .cabecera__panel-mas a[aria-current='page'] {
+  border-radius: var(--radio-control);
+  background: var(--superficie-2);
+  box-shadow: inset 3px 0 var(--accion);
+  text-decoration: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .cabecera__menu .cabecera__panel-mas a:hover {
+    background: var(--superficie-2);
+    text-decoration: none;
+  }
+}
+
+.cabecera__panel-mas .cabecera__numero {
+  box-shadow: 0 0 0 2px var(--superficie);
+}
+
+/* It grows from its button and goes away at once; with less movement, only a fade. */
+@media (prefers-reduced-motion: no-preference) {
+  .cabecera__mas-flecha {
+    transition: transform 150ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  .cabecera__panel-mas {
+    transition: opacity 150ms ease-out, transform 150ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  @starting-style {
+    .cabecera__panel-mas {
+      opacity: 0;
+      transform: translateY(-4px) scale(0.96);
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cabecera__panel-mas {
+    transition: opacity 120ms ease-out;
+  }
+
+  @starting-style {
+    .cabecera__panel-mas {
+      opacity: 0;
+    }
+  }
+}
+
+/* Folded: the same screens after the rest, under a «Más» of their own. */
+.cabecera__grupo-mas {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  margin-top: 8px;
+  padding-top: 4px;
+  border-top: 1px solid color-mix(in srgb, currentColor 35%, transparent);
+}
+
+.cabecera__grupo-titulo {
+  margin: 0;
+  padding: 8px 0 2px;
+  font-size: var(--t-chica);
+  font-weight: 600;
+}
+
+main:focus {
+  outline: none;
+}
+
+.pie {
+  border-top: 1px solid var(--borde);
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+}
+
+.pie__fila {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px 24px;
+  padding-block: 24px;
+}
+
+.pie p {
+  margin: 0;
+}
+
+.pie__enlaces {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0 12px;
+}
+
+.pie__enlaces a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+}
+
+/* ---------- The menu on the left (Configuración, «Posición del menú») ----------
+   Only on a wide screen and with a session: below 1024px the bar on top stays (Layout.jsx, ANCHO_PARA_COSTADO, with
+   the same width). public/ajustes.js writes `data-menu-lado` before the first paint, so the column never jumps in.
+   The column is sticky and as tall as the window: the page goes beside it, with the footer. With no bar on top,
+   `--alto-cabecera` is 0, so what hangs under it (the tabs of Configuración, anchors, Mensajes) goes to the top. */
+@media (min-width: 1024px) {
+  html[data-menu-lado='izquierda']:has(.sitio[data-con-menu]) {
+    --alto-cabecera: 0px;
+    --ancho-lateral: 15rem;
+  }
+
+  /* With only the drawings, a narrow rail. */
+  html[data-menu-lado='izquierda']:has(.sitio[data-con-menu] .cabecera[data-estilo='solo-iconos']) {
+    --ancho-lateral: 5.5rem;
+  }
+
+  html[data-menu-lado='izquierda'] .sitio[data-con-menu] {
+    display: grid;
+    grid-template-columns: var(--ancho-lateral) minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) auto;
+  }
+
+  html[data-menu-lado='izquierda'] .sitio[data-con-menu] > .cabecera {
+    grid-row: 1 / -1;
+    align-self: start;
+    height: 100vh;
+    height: 100dvh;
+  }
+
+  html[data-menu-lado='izquierda'] .sitio[data-con-menu] > :is(main, .pie) {
+    grid-column: 2;
+    min-width: 0;
+  }
+
+  html[data-menu-lado='izquierda'] .sitio[data-con-menu] > .saltar:focus {
+    left: calc(var(--ancho-lateral) + var(--margen));
+  }
+
+  /* The name on top, the magnifier and the bell under it, then the screens. Only the screens scroll, if they don't fit. */
+  html[data-menu-lado='izquierda'] .sitio[data-con-menu] .cabecera__fila {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-rows: auto auto minmax(0, 1fr);
+    align-items: center;
+    gap: 12px 8px;
+    height: 100%;
+    max-width: none;
+    margin: 0;
+    padding: 20px 12px 16px 16px;
+    white-space: normal;
+  }
+
+  html[data-menu-lado='izquierda'] .sitio[data-con-menu] .cabecera__marca {
+    grid-column: 1 / -1;
+    margin: 0 0 4px;
+    line-height: 1.15;
+  }
+
+  /* As wide as the column leaves beside the bell, like a search field: the magnifier on the left, «Alt K» on the right. */
+  html[data-menu-lado='izquierda'] .sitio[data-con-menu] .cabecera__rapido {
+    justify-self: stretch;
+    justify-content: space-between;
+  }
+
+  .cabecera[data-lateral] .cabecera__menu {
+    grid-column: 1 / -1;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 2px;
+    align-self: stretch;
+    min-height: 0;
+    /* Room for the focus ring inside the scroll. */
+    margin: 0 -6px;
+    padding: 4px 6px 2px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+  }
+
+  .cabecera[data-lateral] .cabecera__menu a,
+  .cabecera[data-lateral] .cabecera__mas-boton {
+    justify-content: flex-start;
+    width: 100%;
+    padding: 0 10px;
+    border-radius: var(--radio-control);
+    text-decoration: none;
+  }
+
+  /* Where it is: a mark of the highlighter on its left edge, the way a list says it. */
+  .cabecera[data-lateral] .cabecera__menu a[aria-current='page'],
+  .cabecera[data-lateral] .cabecera__mas-boton[data-actual] {
+    background: color-mix(in srgb, currentColor 12%, transparent);
+    box-shadow: inset 3px 0 var(--resaltador);
+    text-decoration: none;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .cabecera[data-lateral] .cabecera__menu a:hover,
+    .cabecera[data-lateral] .cabecera__mas-boton:hover {
+      background: color-mix(in srgb, currentColor 9%, transparent);
+      text-decoration: none;
+    }
+  }
+
+  .cabecera[data-lateral] .cabecera__mas-flecha {
+    margin-left: auto;
+  }
+
+  .cabecera[data-lateral] .cabecera__mas-boton .cabecera__punto {
+    top: 8px;
+    right: 34px;
+  }
+
+  /* «Más» opens in the column, under its button, a step in. */
+  .cabecera[data-lateral] .cabecera__panel-mas {
+    position: static;
+    min-width: 0;
+    max-width: none;
+    max-height: none;
+    margin: 2px 0 4px 16px;
+    padding: 0 0 0 6px;
+    overflow: visible;
+    border: 0;
+    border-left: 1px solid color-mix(in srgb, currentColor 30%, transparent);
+    border-radius: 0;
+    background: none;
+    box-shadow: none;
+    color: inherit;
+    font-size: inherit;
+    transform-origin: 0 0;
+  }
+
+  .cabecera[data-lateral] .cabecera__panel-mas :focus-visible {
+    outline-color: inherit;
+  }
+
+  .cabecera[data-lateral] .cabecera__panel-mas .cabecera__numero {
+    box-shadow: 0 0 0 2px var(--accion);
+  }
+
+  /* The envelope, the gear and Salir at the bottom of the column. */
+  .cabecera__resorte {
+    flex: 1 0 12px;
+  }
+
+  .cabecera[data-lateral] .cabecera__salir {
+    margin-top: 6px;
+  }
+
+  /* The bell opens beside the column, from the top of the window. */
+  .cabecera[data-lateral] .campana__panel {
+    position: fixed;
+    top: 12px;
+    left: calc(var(--ancho-lateral) + 8px);
+    max-height: calc(100vh - 24px);
+    max-height: calc(100dvh - 24px);
+    transform-origin: 0 var(--desde-y, 0px);
+  }
+
+  /* The rail: everything in one column, centered, the names only on hover and for screen readers. With `html`, so it
+     weighs more than the column's own rules above. */
+  html .cabecera[data-lateral][data-estilo='solo-iconos'] .cabecera__fila {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto auto minmax(0, 1fr);
+    justify-items: center;
+    padding-inline: 10px;
+  }
+
+  html .cabecera[data-lateral][data-estilo='solo-iconos'] .cabecera__marca {
+    font-size: var(--t-ui);
+    text-align: center;
+  }
+
+  html .cabecera[data-lateral][data-estilo='solo-iconos'] .cabecera__rapido {
+    justify-self: center;
+    padding: 0;
+  }
+
+  html .cabecera[data-lateral][data-estilo='solo-iconos'] .cabecera__atajo {
+    display: none;
+  }
+
+  html .cabecera[data-lateral][data-estilo='solo-iconos'] .cabecera__menu {
+    justify-self: stretch;
+  }
+
+  html .cabecera[data-lateral][data-estilo='solo-iconos'] .cabecera__menu a,
+  html .cabecera[data-lateral][data-estilo='solo-iconos'] .cabecera__mas-boton {
+    justify-content: center;
+    padding: 0;
+  }
+
+  html .cabecera[data-lateral][data-estilo='solo-iconos'] .cabecera__mas-flecha {
+    margin-left: 0;
+  }
+
+  html .cabecera[data-lateral][data-estilo='solo-iconos'] .cabecera__mas-boton .cabecera__punto {
+    right: 2px;
+  }
+
+  html .cabecera[data-lateral][data-estilo='solo-iconos'] .cabecera__panel-mas {
+    margin: 2px 0 4px;
+    padding: 4px 0 0;
+    border-top: 1px solid color-mix(in srgb, currentColor 30%, transparent);
+    border-left: 0;
+  }
+
+  html .cabecera[data-lateral][data-estilo='solo-iconos'] .cabecera__salir {
+    padding: 0 6px;
+  }
+
+  /* Each style's edge goes on the right of the column instead of under the bar. */
+  html[data-estilo='hoja'] .cabecera[data-lateral] {
+    /* The column is the left edge of the sheet, without holes (Ignacio, 16/11). */
+    background: none;
+    /* The same sheet as the page: its lines go on under the column, and the red margin of the page closes it. */
+    box-shadow: none;
+  }
+
+  html[data-estilo='hoja'] .cabecera[data-lateral] .cabecera__fila {
+    padding-left: 38px;
+  }
+
+  html[data-estilo='hoja'] .cabecera[data-lateral][data-estilo='solo-iconos'] .cabecera__fila {
+    padding-right: 4px;
+    padding-left: 32px;
+  }
+
+  html[data-estilo='hoja'][data-menu-lado='izquierda'] .sitio[data-con-menu]::before {
+    content: none;
+  }
+
+  html:is([data-estilo='profesional'], [data-estilo='batman']) .cabecera[data-lateral] {
+    box-shadow: 1px 0 0 rgb(var(--brillo) / 0.18);
+  }
+
+  html[data-estilo='plano'] .cabecera[data-lateral] {
+    box-shadow:
+      1px 0 0 rgb(214 230 255 / 0.55),
+      4px 0 0 #0a2647,
+      5px 0 0 rgb(214 230 255 / 0.3);
+  }
+
+  html[data-estilo='pizarron'] .cabecera[data-lateral] {
+    box-shadow:
+      3px 0 0 var(--pizarron-bandeja),
+      5px 0 8px -2px rgb(0 0 0 / 0.5);
+  }
+}

@@ -1,0 +1,290 @@
+/* «Medir tiempos»: closed under its title until the student opens it. The chart, on a sheet like the console's: the dots
+   measured in the pen's ink, the curve of the fit in the numbers' color, and what it means said big above. */
+.medir {
+  display: grid;
+  gap: 12px;
+  padding-top: 8px;
+  border-top: 1px solid var(--borde);
+}
+
+.medir__titulo {
+  margin: 0;
+}
+
+.medir__abrir {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--texto);
+  font: inherit;
+  cursor: pointer;
+}
+
+.medir__abrir:focus-visible {
+  outline: 2px solid var(--foco);
+  outline-offset: 2px;
+  border-radius: var(--radio-control);
+}
+
+.medir__flecha {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.medir__abrir[aria-expanded='true'] .medir__flecha {
+  transform: rotate(180deg);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .medir__flecha {
+    transition: transform 180ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+}
+
+:root[data-movimiento='reducido'] .medir__flecha,
+:root[data-movimiento='ninguno'] .medir__flecha {
+  transition: none;
+}
+
+.medir__cuerpo {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+
+.medir__cuerpo[hidden] {
+  display: none;
+}
+
+.medir__form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: start;
+  gap: 12px 16px;
+}
+
+.medir__form > .campo {
+  flex: 1 1 10rem;
+  min-width: 0;
+}
+
+.medir__form > .medir__llamada {
+  flex: 3 1 20rem;
+}
+
+/* The sizes, on a line of their own: six numbers and room to add more. */
+.medir__form > .campo:has(.medir__tamanos) {
+  flex: 1 1 100%;
+  max-width: 30rem;
+}
+
+.medir__codigo {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--codigo-letra);
+}
+
+.medir__codigo > span {
+  flex: none;
+  color: var(--texto-suave);
+}
+
+.medir__codigo .campo__control,
+.medir__tamanos {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-family: var(--codigo-letra);
+}
+
+.medir__acciones {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 12px;
+  flex-basis: 100%;
+}
+
+.medir__estado {
+  margin: 0;
+  color: var(--texto-suave);
+}
+
+.medir__resultado {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+
+.medir__veredicto {
+  display: grid;
+  gap: 2px;
+}
+
+.medir__veredicto p {
+  margin: 0;
+}
+
+.medir__titular {
+  font-size: var(--t-h3);
+  font-weight: 700;
+}
+
+.medir__leyenda {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 18px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--t-chica);
+  color: var(--texto-suave);
+}
+
+.medir__leyenda li {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.medir__muestra-punto {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--codigo-clave);
+}
+
+.medir__muestra-curva {
+  width: 18px;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--codigo-numero);
+}
+
+.medir__grafico {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-bloque);
+  background: var(--superficie);
+}
+
+.medir__grafico svg {
+  display: block;
+  font-family: var(--fuente-ui);
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+.medir__marca line {
+  stroke: var(--borde);
+  stroke-width: 1;
+}
+
+.medir__marca line[data-cero] {
+  stroke: var(--borde-control);
+}
+
+text.medir__marca,
+.medir__marca text {
+  fill: var(--texto-suave);
+  font-size: 12px;
+}
+
+.medir__eje {
+  fill: var(--texto-suave);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.medir__curva {
+  fill: none;
+  stroke: var(--codigo-numero);
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+
+.medir__rotulo {
+  fill: var(--texto);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.medir__punto {
+  fill: var(--codigo-clave);
+  stroke: var(--superficie);
+  stroke-width: 2;
+}
+
+.medir__tabla {
+  width: min(100%, 20rem);
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+.medir__tabla th,
+.medir__tabla td {
+  padding: 4px 12px;
+  border-bottom: 1px solid var(--borde);
+  text-align: right;
+}
+
+.medir__tabla th {
+  font-size: var(--t-chica);
+  color: var(--texto-suave);
+}
+
+.medir__tabla th:first-child,
+.medir__tabla td:first-child {
+  text-align: left;
+  font-family: var(--codigo-letra);
+}
+
+.medir__tabla--funciones {
+  width: min(100%, 36rem);
+}
+
+.medir__tabla--funciones code {
+  overflow-wrap: anywhere;
+}
+
+.medir__subtitulo {
+  margin: 8px 0 0;
+  font-size: var(--t-ui);
+}
+
+/* What is measured: a name, not a line across the panel. */
+.medir__form > .campo:has(select) {
+  max-width: 24rem;
+}
+
+/* A number of laps, from 1 to 10. */
+.medir__form > .campo:has(.medir__vueltas) {
+  flex: 0 1 8rem;
+}
+
+@media (forced-colors: active) {
+  .medir__punto,
+  .medir__muestra-punto {
+    forced-color-adjust: none;
+    fill: CanvasText;
+    background: CanvasText;
+  }
+
+  .medir__curva {
+    stroke: Highlight;
+  }
+
+  .medir__muestra-curva {
+    forced-color-adjust: none;
+    background: Highlight;
+  }
+}

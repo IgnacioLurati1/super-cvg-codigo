@@ -1,0 +1,2191 @@
+/* Consultron: a chat with the student's notes. Each question is the student's bubble, each answer is text with yellow
+   tabs, like the ones stuck on a page of a book, that open the page it comes from. The same talk lives in the whole
+   screen (.consultron) and in a corner of every screen (.flotante). */
+.consultron {
+  --ancho-consultron: 46rem;
+}
+
+.consultron > * {
+  max-width: var(--ancho-consultron);
+}
+
+/* The robot, its name and, with a computer, «Achicar», in one line. */
+.consultron__cabeza {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.consultron__cabeza h1 {
+  flex: 1;
+  margin: 0;
+}
+
+.consultron__achicar {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.consultron__achicar svg,
+.consultron__robot svg,
+.consultron__adjuntar svg,
+.consultron__miniatura svg,
+.consultron__sacar svg,
+.flotante svg,
+.flotante__boton svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Consultron's face: yellow, like the tabs its answers point with. */
+.consultron__robot {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--resaltador);
+  color: var(--resaltador-texto);
+}
+
+.consultron__robot svg {
+  width: 20px;
+  height: 20px;
+}
+
+.consultron__robot--grande {
+  width: 64px;
+  height: 64px;
+  border-radius: 20px;
+}
+
+.consultron__robot--grande svg {
+  width: 38px;
+  height: 38px;
+}
+
+.consultron__bajada {
+  margin: 14px 0 32px;
+  color: var(--texto-suave);
+  font-size: var(--t-h3);
+  line-height: 1.45;
+}
+
+.consultron__estado,
+.consultron__lectura {
+  margin: 0;
+  color: var(--texto-suave);
+}
+
+.consultron__arranque {
+  display: grid;
+  gap: 12px;
+  padding: 20px 22px 22px;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-bloque);
+  background: var(--superficie);
+}
+
+.consultron__arranque h2 {
+  margin: 0;
+  font-size: var(--t-h3);
+}
+
+.consultron__arranque p {
+  margin: 0;
+}
+
+.consultron__arranque .boton {
+  justify-self: start;
+}
+
+.consultron__fila {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+}
+
+.consultron__barra {
+  width: 100%;
+  height: 6px;
+  overflow: hidden;
+  border: 0;
+  border-radius: 3px;
+  background: var(--superficie-2);
+  appearance: none;
+}
+
+.consultron__barra::-webkit-progress-bar {
+  background: var(--superficie-2);
+}
+
+.consultron__barra::-webkit-progress-value {
+  background: var(--foco);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .consultron__barra::-webkit-progress-value {
+    transition: width 0.3s ease-out;
+  }
+}
+
+.consultron__barra::-moz-progress-bar {
+  background: var(--foco);
+}
+
+.consultron__nota {
+  margin: 0;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+}
+
+.consultron__nota--error {
+  color: var(--error);
+}
+
+/* Empty, it takes no room, but stays for the screen reader to hear what comes. */
+.consultron__lectura:empty {
+  position: absolute;
+}
+
+.consultron__hilo {
+  display: grid;
+  gap: 28px;
+  margin-bottom: 28px;
+}
+
+.consultron__entrada {
+  display: grid;
+  gap: 10px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .consultron__entrada {
+    transition: opacity 180ms ease-out, transform 220ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  @starting-style {
+    .consultron__entrada {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+  }
+}
+
+/* The student's question: their bubble, on the right. A heading, so a screen reader goes from one to the next. */
+.consultron__pregunta {
+  justify-self: end;
+  max-width: min(85%, 36rem);
+  margin: 0;
+  padding: 9px 14px;
+  border-radius: 18px 18px 4px 18px;
+  background: var(--accion);
+  color: var(--accion-texto);
+  font-size: var(--t-ui);
+  font-weight: 500;
+  line-height: 1.45;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+/* In a live session (enVivo/herramientas/Consultron.jsx), someone else's question: their name over it, and their
+   color. */
+.consultron__autor {
+  justify-self: end;
+  margin: 0 6px -6px;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+  font-weight: 600;
+}
+
+.consultron__pregunta[data-autor] {
+  background: var(--color, var(--accion));
+  color: #fff;
+}
+
+/* The answer, next to the robot. */
+.consultron__respuesta {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: 12px;
+}
+
+.consultron__cuerpo {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  padding-top: 4px;
+}
+
+.consultron__texto {
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.consultron__texto > :first-child {
+  margin-top: 0;
+}
+
+.consultron__texto > :last-child {
+  margin-bottom: 0;
+}
+
+.consultron__texto p,
+.consultron__texto ul,
+.consultron__texto ol {
+  margin: 0 0 10px;
+}
+
+.consultron__texto li + li {
+  margin-top: 4px;
+}
+
+.consultron__pensando {
+  color: var(--texto-suave);
+}
+
+/* A formula drawn as math: a little bigger than the text, and one on its own line centered like in the notes. */
+.consultron__formula math {
+  font-size: 1.1em;
+}
+
+/* A wide formula scrolls sideways, never up and down: MathML can stick out a pixel above or below its box. */
+.consultron__formula--bloque {
+  margin: 8px 0;
+  padding-block: 2px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  text-align: center;
+  scrollbar-width: thin;
+}
+
+.consultron__texto code {
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: var(--superficie);
+  font-family: var(--codigo-letra, ui-monospace, 'Cascadia Mono', Consolas, monospace);
+  font-size: 0.9em;
+}
+
+.consultron__codigo pre code {
+  padding: 0;
+  background: none;
+  font-size: inherit;
+}
+
+/* Code in an answer, in the lab's fixed-width letter, scrolled sideways if it's wide. */
+.consultron__codigo {
+  display: grid;
+  gap: 8px;
+  margin: 0 0 10px;
+}
+
+.consultron__codigo pre {
+  margin: 0;
+  padding: 12px 14px;
+  overflow-x: auto;
+  border: 1px solid transparent;
+  border-radius: var(--radio-bloque);
+  background: var(--superficie);
+  font-family: var(--codigo-letra, ui-monospace, 'Cascadia Mono', Consolas, monospace);
+  font-size: var(--t-chica);
+  line-height: 1.55;
+  overflow-wrap: normal;
+  white-space: pre;
+  tab-size: 4;
+}
+
+.consultron__codigo .boton {
+  justify-self: start;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .consultron__pensando {
+    animation: consultron-pensando 1.6s ease-in-out infinite;
+  }
+
+  /* Each phrase comes in from a little below. */
+  .consultron__frase {
+    display: inline-block;
+    transition: opacity 200ms ease-out, transform 200ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  @starting-style {
+    .consultron__frase {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+  }
+}
+
+@keyframes consultron-pensando {
+  50% {
+    opacity: 0.7;
+  }
+}
+
+/* A piece the answer comes from: a yellow tab, like the ones stuck on a page of a book. */
+.consultron__cita {
+  position: relative;
+  min-width: 1.45em;
+  margin: 0 1px 0 3px;
+  padding: 0 0.3em;
+  border: 0;
+  border-radius: 4px;
+  background: var(--resaltador);
+  color: var(--resaltador-texto);
+  font: inherit;
+  font-size: 0.75em;
+  font-weight: 700;
+  font-variant-numeric: lining-nums tabular-nums;
+  line-height: 1.5;
+  vertical-align: 0.3em;
+  cursor: pointer;
+}
+
+/* The tab is small in the text: the finger gets more room around it. */
+.consultron__cita::after {
+  content: '';
+  position: absolute;
+  inset: -6px -5px;
+}
+
+.consultron__cita,
+.consultron__fuente {
+  touch-action: manipulation;
+  text-decoration: none;
+}
+
+/* A part of the site with no screen of its own: named, nothing to open. */
+span.consultron__cita,
+div.consultron__fuente {
+  cursor: default;
+}
+
+/* Tabbing back up, the box stuck at the bottom doesn't cover what has the focus. */
+.consultron__hilo :is(button, a) {
+  scroll-margin-bottom: 8rem;
+}
+
+@media (forced-colors: active) {
+  .consultron__cita,
+  .consultron__fuente-numero {
+    border: 1px solid ButtonText;
+  }
+}
+
+:is(a, button).consultron__cita:active {
+  transform: scale(0.94);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .consultron__cita:hover {
+    box-shadow: 0 0 0 2px var(--resaltador);
+  }
+}
+
+.consultron__cita:focus-visible,
+.consultron__fuente:focus-visible {
+  outline: 3px solid var(--foco);
+  outline-offset: 2px;
+}
+
+/* Copying an answer: quiet, under it. */
+/* Under an answer: copy it and listen to it. */
+.consultron__acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+}
+
+/* Dictating: the microphone in the color of action, while it listens. */
+.consultron__adjuntar[data-oyendo] {
+  background: var(--fondo-aviso);
+  color: var(--accion);
+}
+
+.consultron__dictado {
+  align-self: center;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+}
+
+.consultron__copiar {
+  display: inline-flex;
+  align-items: center;
+  justify-self: start;
+  gap: 6px;
+  min-height: 32px;
+  padding: 4px 8px;
+  margin-left: -8px;
+  border: 0;
+  border-radius: var(--radio-control);
+  background: none;
+  color: var(--texto-suave);
+  font: inherit;
+  font-size: var(--t-chica);
+  cursor: pointer;
+}
+
+.consultron__copiar svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.consultron__copiar:active {
+  transform: scale(0.97);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .consultron__copiar:hover {
+    color: var(--texto);
+    background: var(--superficie);
+  }
+}
+
+.consultron__fuentes :is(h3, h4) {
+  margin: 6px 0 8px;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+  font-weight: 600;
+}
+
+.consultron__fuentes ul {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.consultron__fuente {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-control);
+  background: var(--superficie);
+  color: var(--texto);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.consultron__fuente:active {
+  transform: scale(0.98);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .consultron__fuente:hover {
+    border-color: var(--borde-control);
+  }
+}
+
+.consultron__fuente-numero {
+  flex: none;
+  min-width: 1.6em;
+  border-radius: 4px;
+  background: var(--resaltador);
+  color: var(--resaltador-texto);
+  font-size: var(--t-chica);
+  font-weight: 700;
+  font-variant-numeric: lining-nums tabular-nums;
+  line-height: 1.6;
+  text-align: center;
+}
+
+.consultron__fuente-texto {
+  display: grid;
+  min-width: 0;
+}
+
+.consultron__fuente-nombre {
+  overflow-wrap: anywhere;
+}
+
+.consultron__fuente-dato {
+  overflow-wrap: anywhere;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+}
+
+.consultron__limpiar {
+  justify-self: start;
+  margin: 4px 0 0 -8px;
+  padding: 4px 8px;
+  border: 0;
+  border-radius: var(--radio-control);
+  background: none;
+  color: var(--texto-suave);
+  font: inherit;
+  font-size: var(--t-chica);
+  cursor: pointer;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .consultron__limpiar:hover {
+    color: var(--texto);
+    background: var(--superficie);
+  }
+}
+
+/* What isn't in the notes: said as a tag above the answer, not as a footnote. */
+.consultron__nota--general {
+  justify-self: start;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: var(--fondo-aviso);
+  color: var(--texto);
+  font-weight: 600;
+}
+
+/* The answer is a calculator: the data taken from the question, on a card, before opening it. */
+.consultron__calculo {
+  display: grid;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-bloque);
+  background: var(--superficie);
+}
+
+.consultron__calculo p {
+  margin: 0;
+}
+
+.consultron__calculo .boton {
+  justify-self: start;
+}
+
+.consultron__datos {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+}
+
+.consultron__datos div {
+  display: grid;
+  grid-template-columns: minmax(6rem, auto) 1fr;
+  gap: 12px;
+}
+
+.consultron__datos dt {
+  overflow-wrap: anywhere;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+  line-height: 1.6;
+}
+
+.consultron__datos dd {
+  margin: 0;
+  font-variant-numeric: lining-nums tabular-nums;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+.consultron__sugerida {
+  margin: 0;
+  font-size: var(--t-chica);
+}
+
+/* Where the question is written, stuck to the bottom while the answers go up under a fade. */
+.consultron__caja {
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+  padding: 24px 0 max(16px, env(safe-area-inset-bottom));
+  background: linear-gradient(to bottom, transparent, var(--fondo) 24px);
+}
+
+/* One box: what is asked, where it looks and the button. */
+.consultron__redactor {
+  position: relative;
+  border: 1px solid var(--borde);
+  border-radius: 20px;
+  background: var(--superficie);
+  box-shadow: 0 4px 18px rgb(0 0 0 / 0.08);
+}
+
+.consultron__redactor:has(.consultron__campo:focus) {
+  border-color: var(--foco);
+  box-shadow: 0 0 0 2px var(--foco);
+}
+
+.charla textarea.consultron__campo {
+  display: block;
+  min-height: 3.2em;
+  max-height: 12em;
+  padding: 14px 16px 4px;
+  border: 0;
+  background: transparent;
+  resize: none;
+  field-sizing: content;
+}
+
+/* The ring is the whole box's. */
+.charla textarea.consultron__campo:focus {
+  outline: none;
+}
+
+@media (forced-colors: active) {
+  .charla textarea.consultron__campo:focus {
+    outline: 2px solid Highlight;
+  }
+}
+
+.consultron__herramientas {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px 8px 12px;
+}
+
+.consultron__herramientas > .boton {
+  margin-left: auto;
+  border-radius: 999px;
+}
+
+/* Where it looks, over the box: the course and the kind of notes, two quiet pills. */
+.consultron__donde {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  margin: 0 4px 8px;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+}
+
+.charla .consultron__selector {
+  flex: 0 1 auto;
+  width: auto;
+  min-width: 0;
+  max-width: 16rem;
+  min-height: 32px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--superficie);
+  color: var(--texto);
+  font-size: var(--t-chica);
+}
+
+/* Narrow, without its word: the course takes what the kind leaves. */
+.charla[data-compacta] .consultron__donde > span {
+  display: none;
+}
+
+.charla[data-compacta] .consultron__selector {
+  flex: 1 1 0;
+  max-width: none;
+}
+
+.charla[data-compacta] .consultron__origen {
+  flex: 0 1 auto;
+}
+
+/* While it reads the PDFs, a thin line on top of the box, inside its rounded corners. */
+.consultron__barra--fina {
+  position: absolute;
+  top: 0;
+  left: 20px;
+  width: calc(100% - 40px);
+  height: 3px;
+}
+
+.consultron__debajo {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 2px 16px;
+  margin: 8px 6px 0;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+}
+
+/* The paperclip, first among the tools of the box. */
+.consultron__adjuntar {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  margin-left: -6px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--texto-suave);
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: transform 160ms ease-out;
+}
+
+.charla .consultron__adjuntar svg {
+  width: 20px;
+  height: 20px;
+}
+
+.consultron__adjuntar:active,
+.consultron__sacar:active {
+  transform: scale(0.94);
+}
+
+.consultron__adjuntar:focus-visible,
+.consultron__sacar:focus-visible {
+  outline: 3px solid var(--foco);
+  outline-offset: 1px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .consultron__adjuntar:hover,
+  .consultron__sacar:hover {
+    background: var(--superficie-2);
+    color: var(--texto);
+  }
+}
+
+/* What is attached: in the box, before asking, and under the bubble of its question. A chip with its thumbnail and name. */
+.consultron__adjuntos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 10px 10px 0;
+  list-style: none;
+}
+
+.consultron__adjunto {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  max-width: 100%;
+  padding: 3px;
+  border: 1px solid var(--borde);
+  border-radius: 10px;
+  background: var(--fondo);
+  font-size: var(--t-chica);
+  line-height: 1.3;
+}
+
+.consultron__miniatura {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  background: var(--superficie-2);
+  color: var(--texto-suave);
+  object-fit: cover;
+}
+
+.charla .consultron__miniatura svg {
+  width: 16px;
+  height: 16px;
+}
+
+.consultron__adjunto-nombre {
+  min-width: 0;
+  max-width: 12rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Its button to take it out: 28 px, bigger than a finger needs at the least. */
+.consultron__sacar {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--texto-suave);
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: transform 160ms ease-out;
+}
+
+.charla .consultron__sacar svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* While it reads it, its name is dimmer. */
+.consultron__adjunto[data-estado='leyendo'] .consultron__adjunto-nombre {
+  color: var(--texto-suave);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .consultron__adjunto[data-estado='leyendo'] .consultron__miniatura {
+    animation: consultron-pensando 1.6s ease-in-out infinite;
+  }
+
+  /* An attachment comes into the box as it's attached. */
+  .consultron__redactor .consultron__adjunto {
+    transition: opacity 160ms ease-out, transform 200ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  @starting-style {
+    .consultron__redactor .consultron__adjunto {
+      opacity: 0;
+      transform: translateY(4px) scale(0.97);
+    }
+  }
+}
+
+.consultron__adjuntos--pregunta {
+  justify-self: end;
+  justify-content: flex-end;
+  max-width: min(85%, 36rem);
+  margin-top: -4px;
+  padding: 0;
+}
+
+.consultron__adjuntos--pregunta .consultron__adjunto {
+  padding-right: 10px;
+  background: var(--superficie);
+}
+
+/* Why a file didn't go, under the box. Empty, it takes no room, but stays for the screen reader to hear what comes. */
+.consultron__problemas {
+  display: grid;
+  gap: 2px;
+  margin: 8px 6px 0;
+  color: var(--error);
+  font-size: var(--t-chica);
+  overflow-wrap: anywhere;
+}
+
+.consultron__problemas:empty {
+  position: absolute;
+  margin: 0;
+}
+
+.consultron__problemas p {
+  margin: 0;
+}
+
+/* Files dragged over the talk: the box says where to drop them. */
+.charla[data-arrastrando] .consultron__redactor {
+  border-color: var(--foco);
+}
+
+.consultron__soltar {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  margin: 0;
+  border: 2px dashed var(--foco);
+  border-radius: inherit;
+  background: color-mix(in srgb, var(--superficie) 90%, transparent);
+  color: var(--texto);
+  font-weight: 600;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .consultron__soltar {
+    transition: opacity 140ms ease-out;
+  }
+
+  @starting-style {
+    .consultron__soltar {
+      opacity: 0;
+    }
+  }
+}
+
+/* What is set on this computer: a card under the talk. */
+.consultron__pie {
+  display: grid;
+  gap: 12px;
+  margin-top: 40px;
+  padding: 18px 20px 20px;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-bloque);
+  background: var(--superficie);
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+}
+
+/* The empty count stays in the page for screen readers, without taking a gap of the grid. */
+.consultron__pie .consultron__nota:empty {
+  position: absolute;
+}
+
+.consultron__pie h2 {
+  margin: 0;
+  color: var(--texto);
+  font-size: var(--t-ui);
+}
+
+.consultron__pie .boton {
+  justify-self: start;
+}
+
+.consultron__al-abrir {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.consultron__al-abrir-texto {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.consultron__al-abrir-nombre {
+  color: var(--texto);
+  font-size: var(--t-ui);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* In the corner: the talk scrolls between its title and the box to write. */
+.charla[data-compacta] {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* What only screen readers get (base.css, .solo-lectores) is out of the flow: it stays inside the list and scrolls with
+   it. Left to a box further out, it would stretch that box as the answer grows. */
+.charla[data-compacta] .charla__lista {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 14px 16px 6px;
+}
+
+.charla[data-compacta] .consultron__hilo {
+  gap: 20px;
+  margin-bottom: 12px;
+}
+
+.charla[data-compacta] .consultron__caja {
+  position: static;
+  padding: 6px 12px 10px;
+  background: var(--fondo);
+}
+
+.charla[data-compacta] .consultron__redactor {
+  border-radius: 16px;
+  box-shadow: none;
+}
+
+.charla[data-compacta] textarea.consultron__campo {
+  min-height: 2.6em;
+  padding: 10px 12px 2px;
+}
+
+.charla[data-compacta] .consultron__respuesta {
+  gap: 10px;
+}
+
+.charla[data-compacta] .consultron__debajo {
+  margin: 6px 4px 0;
+}
+
+.charla__vacia {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  padding: 40px 24px;
+  color: var(--texto-suave);
+  text-align: center;
+}
+
+.charla__vacia p {
+  margin: 0;
+  max-width: 20rem;
+}
+
+/* Ideas to ask, as chips that ask at once. */
+.charla__ideas {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.consultron:not([data-compacta]) .charla__ideas,
+.charla:not([data-compacta]) .charla__ideas {
+  justify-content: flex-start;
+}
+
+.charla:not([data-compacta]) .charla__vacia {
+  justify-items: start;
+  padding: 0 0 16px;
+  text-align: left;
+}
+
+.charla__idea {
+  padding: 8px 14px;
+  border: 1px solid var(--borde-control);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--texto);
+  font: inherit;
+  font-size: var(--t-chica);
+  line-height: 1.4;
+  text-align: left;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: border-color 150ms ease-out, color 150ms ease-out, transform 120ms ease-out;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .charla__idea:hover {
+    border-color: var(--accion);
+    color: var(--accion);
+  }
+}
+
+.charla__idea:active {
+  transform: scale(0.97);
+}
+
+.charla__vacia .consultron__robot {
+  width: 56px;
+  height: 56px;
+}
+
+.charla__vacia .consultron__robot svg {
+  width: 32px;
+  height: 32px;
+}
+
+/* The button down on the right, on every screen. Over the page, under the header and the windows. */
+.flotante__boton,
+.flotante {
+  position: fixed;
+  right: calc(max(20px, env(safe-area-inset-right)) + var(--barra-derecha, 0px));
+  bottom: max(20px, env(safe-area-inset-bottom));
+  z-index: 30;
+}
+
+.flotante__boton {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--accion);
+  color: var(--accion-texto);
+  box-shadow: 0 6px 20px rgb(0 0 0 / 0.22);
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 160ms ease-out, box-shadow 160ms ease;
+}
+
+.flotante__boton svg {
+  width: 26px;
+  height: 26px;
+}
+
+.flotante__boton:active,
+.flotante__accion:active {
+  transform: scale(0.96);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .flotante__boton:hover {
+    box-shadow: 0 8px 26px rgb(0 0 0 / 0.3);
+  }
+}
+
+/* The page scrolls what gets the focus above the button down on the right. */
+html:has(.flotante__boton) {
+  scroll-padding-bottom: 96px;
+}
+
+.flotante__boton:focus-visible,
+.flotante__accion:focus-visible {
+  outline: 3px solid var(--foco);
+  outline-offset: 2px;
+}
+
+/* Over the header, the colour of the focus doesn't show: the one of its text does. */
+.flotante__cabeza .flotante__accion:focus-visible {
+  outline-color: var(--accion-texto);
+  outline-offset: 0;
+}
+
+/* Loaded on the video card, also when it loaded by itself as Super CVG opened: a dot on the button. */
+.flotante__boton[data-listo]::before {
+  content: '';
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--fondo);
+  border-radius: 50%;
+  background: var(--ok);
+}
+
+/* While the model loads in the background, a ring goes around the button. */
+.flotante__boton[data-cargando]::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border: 2px solid transparent;
+  border-top-color: var(--foco);
+  border-radius: 50%;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .flotante__boton[data-cargando]::after {
+    animation: flotante-girar 1.1s linear infinite;
+  }
+}
+
+@keyframes flotante-girar {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
+.flotante {
+  display: flex;
+  flex-direction: column;
+  width: min(520px, calc(100vw - 40px));
+  max-width: calc(100vw - 20px - max(20px, env(safe-area-inset-right)) - var(--barra-derecha, 0px));
+  height: min(640px, calc(100dvh - 120px));
+  overflow: hidden;
+  border: 1px solid var(--borde);
+  border-radius: 16px;
+  background: var(--fondo);
+  box-shadow: 0 18px 48px rgb(0 0 0 / 0.25);
+  transform-origin: bottom right;
+  transition: opacity 180ms ease-out, transform 220ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+@starting-style {
+  .flotante {
+    opacity: 0;
+    transform: translateY(8px) scale(0.97);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flotante {
+    transition: opacity 180ms ease-out;
+  }
+
+  @starting-style {
+    .flotante {
+      transform: none;
+    }
+  }
+}
+
+.flotante__cabeza {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 8px 8px 14px;
+  background: var(--accion);
+  color: var(--accion-texto);
+}
+
+.flotante__cabeza h2 {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  font-size: var(--t-ui);
+}
+
+.flotante__accion {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.flotante__accion svg {
+  width: 20px;
+  height: 20px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .flotante__accion:hover {
+    background: rgb(255 255 255 / 0.14);
+  }
+}
+
+.flotante__arranque {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 16px;
+}
+
+@media (forced-colors: active) {
+  .flotante__boton,
+  .flotante__cabeza {
+    border: 1px solid CanvasText;
+  }
+}
+
+/* What was marked in a PDF to ask about (Adjuntos.jsx, Marcado): a quote with a line at its side, in the box and under
+   its question. Three lines of it are enough to know which one. */
+.consultron__marcado {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 10px 10px 0;
+}
+
+.consultron__marcado-texto {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  margin: 0;
+  padding: 2px 0 2px 10px;
+  border-left: 3px solid var(--foco);
+  font-size: var(--t-chica);
+  line-height: 1.4;
+}
+
+.consultron__marcado .consultron__marcado-texto {
+  flex: 1;
+}
+
+.consultron__marcado-donde {
+  color: var(--texto-suave);
+  font-weight: 600;
+}
+
+.consultron__marcado-texto q {
+  display: -webkit-box;
+  quotes: '«' '»';
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+}
+
+.consultron__marcado-texto--pregunta {
+  justify-self: end;
+  max-width: min(85%, 36rem);
+  margin-top: -4px;
+}
+
+/* Practice (Practica.jsx): the button by the clip, the theme to choose, and the question as a card in the talk. */
+.consultron__practicar {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 0 12px 0 8px;
+  border: 1px solid var(--borde);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--texto-suave);
+  font: inherit;
+  font-size: var(--t-chica);
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: transform 160ms ease-out, color 150ms ease, border-color 150ms ease;
+}
+
+/* In the corner and on a phone, only its icon: the name stays for screen readers and in its tip. */
+.charla[data-compacta] .consultron__practicar {
+  justify-content: center;
+  width: 36px;
+  padding: 0;
+}
+
+.charla[data-compacta] .consultron__practicar-texto {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (max-width: 480px) {
+  .charla .consultron__donde > span {
+    display: none;
+  }
+
+  .charla .consultron__selector {
+    flex: 1 1 0;
+    max-width: none;
+  }
+
+  .consultron__practicar {
+    justify-content: center;
+    width: 36px;
+    padding: 0;
+  }
+
+  .consultron__practicar-texto {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+
+.consultron__practicar[aria-expanded='true'] {
+  border-color: var(--accion);
+  color: var(--texto);
+}
+
+.consultron__practicar svg,
+.charlas__borrar svg,
+.practica__cerrar svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.consultron__practicar:active,
+.practica__cerrar:active {
+  transform: scale(0.97);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .consultron__practicar:hover {
+    border-color: var(--borde-control);
+    color: var(--texto);
+  }
+
+  .practica__cerrar:hover {
+    background: var(--superficie-2);
+    color: var(--texto);
+  }
+}
+
+.practica__armar {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 8px;
+  padding: 10px 6px 10px 14px;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-bloque);
+  background: var(--superficie);
+  transition: opacity 180ms ease-out, transform 180ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+@starting-style {
+  .practica__armar {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+
+.practica__armar-titulo {
+  margin: 0;
+  font-size: var(--t-chica);
+  font-weight: 600;
+}
+
+.practica__armar-fila {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.practica__tema {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.practica__cerrar {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--texto-suave);
+  cursor: pointer;
+}
+
+.practica {
+  display: grid;
+  gap: 10px;
+}
+
+.practica__etiqueta {
+  justify-self: start;
+  margin: 0;
+  padding: 1px 8px;
+  border-radius: 4px;
+  background: var(--resaltador);
+  color: var(--resaltador-texto);
+  font-size: var(--t-chica);
+  font-weight: 600;
+}
+
+.practica__pregunta {
+  margin: 0;
+  font-family: var(--fuente-titulos);
+  font-size: 1.125rem;
+  font-weight: 600;
+  line-height: 1.4;
+  text-wrap: pretty;
+}
+
+.practica__responder {
+  display: grid;
+  gap: 8px;
+}
+
+.practica__campo {
+  width: 100%;
+  min-height: 5.5em;
+  resize: vertical;
+}
+
+.practica__botones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.practica__tuya {
+  padding: 4px 12px;
+  border-left: 3px solid var(--borde);
+  color: var(--texto-suave);
+}
+
+.practica__tuya :is(h3, h4),
+.practica__lista :is(h3, h4) {
+  margin: 0 0 4px;
+  font-size: var(--t-chica);
+  font-weight: 600;
+}
+
+.practica__tuya p {
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.practica__resultado {
+  display: grid;
+  gap: 10px;
+}
+
+.practica__lista ul {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.practica__lista li {
+  position: relative;
+  padding-left: 22px;
+}
+
+/* A check, a half and a dash: the state of each idea, also without color. */
+.practica__lista li::before {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 16px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.practica__lista--bien li::before {
+  content: '✓';
+  color: var(--ok);
+}
+
+.practica__lista--medias li::before {
+  content: '◐';
+  color: var(--aviso);
+}
+
+.practica__lista--falta li::before {
+  content: '–';
+  color: var(--error);
+}
+
+.practica__lista--bien :is(h3, h4) {
+  color: var(--ok);
+}
+
+.practica__lista--medias :is(h3, h4) {
+  color: var(--aviso);
+}
+
+.practica__lista--falta :is(h3, h4) {
+  color: var(--error);
+}
+
+.practica__ojo {
+  margin: 0;
+  padding: 8px 12px;
+  border-radius: var(--radio-control);
+  background: var(--fondo-aviso);
+  color: var(--texto);
+}
+
+.practica__trozo {
+  margin-top: 6px;
+  font-size: var(--t-chica);
+}
+
+.practica__trozo summary {
+  color: var(--texto-suave);
+  cursor: pointer;
+}
+
+.practica__trozo p {
+  margin: 6px 0 0;
+  padding: 8px 12px;
+  border-radius: var(--radio-control);
+  background: var(--superficie-2);
+  overflow-wrap: anywhere;
+}
+
+.practica__otra {
+  justify-self: start;
+}
+
+/* The talks of before (Charlas.jsx), under the ideas of the empty talk. */
+.charlas {
+  display: grid;
+  gap: 6px;
+  width: 100%;
+  max-width: 34rem;
+  margin-top: 12px;
+  text-align: left;
+}
+
+.charlas__titulo {
+  margin: 0;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+  font-weight: 600;
+}
+
+.charlas__lista {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-bloque);
+  background: var(--superficie);
+  list-style: none;
+  overflow: hidden;
+}
+
+/* Inside the list's rounded box: the focus ring goes inward, so it isn't cut. */
+.charlas__abrir:focus-visible,
+.charlas__borrar:focus-visible {
+  outline-offset: -3px;
+}
+
+.charlas__item {
+  display: flex;
+  align-items: center;
+}
+
+.charlas__item + .charlas__item {
+  border-top: 1px solid var(--borde);
+}
+
+.charlas__abrir {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: baseline;
+  gap: 12px;
+  min-width: 0;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--texto);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.charlas__primera {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.charlas__cuando {
+  flex: none;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+.charlas__borrar {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--texto-suave);
+  cursor: pointer;
+}
+
+.charlas__abrir:active,
+.charlas__borrar:active {
+  transform: scale(0.98);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .charlas__abrir:hover {
+    background: var(--superficie-2);
+  }
+
+  .charlas__borrar:hover {
+    color: var(--error);
+  }
+}
+
+.charlas__mas {
+  justify-self: start;
+  margin-left: -8px;
+  padding: 4px 8px;
+  border: 0;
+  border-radius: var(--radio-control);
+  background: none;
+  color: var(--texto-suave);
+  font: inherit;
+  font-size: var(--t-chica);
+  cursor: pointer;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .practica__armar {
+    transition: opacity 180ms ease-out;
+  }
+}
+
+/* Consultron beside a PDF (VisorPdf.jsx) or a summary (VisorResumen.jsx), consultron/EnVisor.jsx. Where it goes over
+   the pages is up to each viewer. */
+.lector__consultron {
+  position: relative;
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  width: var(--ancho-consultron, 380px);
+  min-height: 0;
+  overflow: hidden;
+  border-left: 1px solid var(--borde);
+  background: var(--fondo);
+}
+
+/* Consultron only in its box (Configuración, «Aparición»): in a reader too, the box down on the right, over what is
+   read, as .flotante everywhere else. Over each reader's own place for it. */
+html .lector__consultron.lector__consultron--caja {
+  position: fixed;
+  z-index: 30;
+  top: auto;
+  right: calc(max(20px, env(safe-area-inset-right)) + var(--barra-derecha, 0px));
+  bottom: max(20px, env(safe-area-inset-bottom));
+  left: auto;
+  width: min(520px, calc(100vw - 40px));
+  height: min(640px, calc(100dvh - 120px));
+  border: 1px solid var(--borde);
+  border-radius: 16px;
+  box-shadow: 0 18px 48px rgb(0 0 0 / 0.25);
+  transform-origin: bottom right;
+  transition: opacity 180ms ease-out, transform 220ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+@starting-style {
+  html .lector__consultron.lector__consultron--caja {
+    opacity: 0;
+    transform: translateY(8px) scale(0.97);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html .lector__consultron.lector__consultron--caja {
+    transition: opacity 180ms ease-out;
+  }
+
+  @starting-style {
+    html .lector__consultron.lector__consultron--caja {
+      transform: none;
+    }
+  }
+}
+
+html[data-consultron-lado='izquierda'] .lector__consultron.lector__consultron--caja {
+  right: auto;
+  left: max(20px, env(safe-area-inset-left));
+  transform-origin: bottom left;
+}
+
+/* Its left edge, beside what is read: dragged, or with the arrows, it makes Consultron wider or narrower (EnVisor.jsx
+   keeps it under its tope). It takes no room; the line shows on hover, while dragging and with the focus. */
+.lector__consultron-borde {
+  position: absolute;
+  z-index: 3;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 10px;
+  cursor: col-resize;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Under a finger it takes the width a finger needs. */
+@media (pointer: coarse) {
+  .lector__consultron-borde {
+    width: 24px;
+  }
+}
+
+/* Its two buttons, at the end of their way. */
+.lector__consultron-cabeza .flotante__accion[aria-disabled='true'] {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.lector__consultron-cabeza .flotante__accion[aria-disabled='true']:active {
+  transform: none;
+}
+
+.lector__consultron-borde::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 2px;
+  background: transparent;
+  transition: background-color 120ms ease;
+}
+
+.lector__consultron-borde:focus-visible {
+  outline: none;
+}
+
+.lector__consultron-borde:focus-visible::after,
+.lector__consultron-borde[data-arrastrando]::after {
+  width: 4px;
+  background: var(--foco);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .lector__consultron-borde:hover::after {
+    background: var(--borde-control);
+  }
+}
+
+@media (forced-colors: active) {
+  .lector__consultron-borde:focus-visible::after,
+  .lector__consultron-borde[data-arrastrando]::after {
+    background: Highlight;
+  }
+}
+
+/* While the edge is dragged, a sheet over the row keeps the pointer out of a summary's frame, and nothing gets
+   selected. */
+[data-ancho-consultron='arrastrando'] {
+  user-select: none;
+}
+
+[data-ancho-consultron='arrastrando']::after {
+  content: '';
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  cursor: col-resize;
+}
+
+.lector__consultron svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.lector__consultron .flotante__accion svg {
+  width: 20px;
+  height: 20px;
+}
+
+.lector__consultron-cabeza h3 {
+  flex: 1;
+  margin: 0;
+  font-size: var(--t-ui);
+}
+
+/* In its corner, its top edge is dragged to make it taller or shorter (Ancho.jsx, under the height of the window). Like
+   the edge of its width: it takes no room, and the line shows on hover, while dragging and with the focus. */
+.flotante {
+  max-height: calc(100dvh - 96px);
+}
+
+.flotante__borde-alto {
+  position: absolute;
+  z-index: 3;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 8px;
+  cursor: row-resize;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.flotante__borde-alto::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 2px;
+  background: transparent;
+  transition: background-color 120ms ease;
+}
+
+.flotante__borde-alto:focus-visible {
+  outline: none;
+}
+
+.flotante__borde-alto:focus-visible::after,
+.flotante__borde-alto[data-arrastrando]::after {
+  height: 4px;
+  background: var(--accion-texto);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .flotante__borde-alto:hover::after {
+    background: var(--accion-texto);
+  }
+}
+
+@media (forced-colors: active) {
+  .flotante__borde-alto:focus-visible::after,
+  .flotante__borde-alto[data-arrastrando]::after {
+    background: Highlight;
+  }
+}
+
+/* The buttons of its size, at the end of their way. */
+.flotante__cabeza .flotante__accion[aria-disabled='true'] {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.flotante__cabeza .flotante__accion[aria-disabled='true']:active {
+  transform: none;
+}
+
+/* A computer that can't run Consultron: why, and Gemini's permissions to ask anyway. */
+.consultron__sin-compu {
+  display: grid;
+  gap: 12px;
+}
+
+.consultron__sin-compu > p {
+  margin: 0;
+}
+
+/* Where Gemini could answer: the model, and beside it the offer to turn Gemini on. */
+.consultron__opciones {
+  display: grid;
+  gap: 12px;
+}
+
+.consultron__oferta {
+  display: grid;
+  gap: 8px;
+  padding: 16px 18px;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-bloque);
+  background: var(--superficie);
+}
+
+.consultron__oferta p {
+  margin: 0;
+  color: var(--texto-suave);
+}
+
+.consultron__oferta .consultron__oferta-titulo {
+  color: var(--texto);
+  font-weight: 700;
+}
+
+.consultron__oferta .boton {
+  justify-self: start;
+}
+
+/* In the empty talk beside a summary, as wide as the talk and read from the left. */
+.charla__vacia .consultron__oferta {
+  justify-self: stretch;
+  text-align: left;
+}
+
+.charla__vacia .consultron__oferta p {
+  max-width: none;
+}
+
+/* Gemini answers already: what the model needs, short, over the talk. */
+.consultron__con-nube {
+  flex: none;
+  padding: 12px 16px 0;
+}
+
+.consultron__arranque--corto {
+  padding: 12px 14px;
+  gap: 8px;
+}
+
+.consultron__arranque--corto p {
+  color: var(--texto-suave);
+}
+
+/* ---------- How the chat looks (Configuración, «Consultron»; public/ajustes.js writes it to <html>) ---------- */
+
+/* Its own color in place of the main one: the button, the header, the questions and its buttons. */
+html[data-consultron-color='propio'] :is(.flotante, .flotante__boton, .consultron, .lector__consultron, .consultron-muestra) {
+  --accion: var(--consultron-accion);
+  --accion-hover: var(--consultron-accion-hover);
+  --accion-fin: var(--consultron-accion-hover);
+  --accion-texto: var(--consultron-accion-texto);
+}
+
+/* The size of the letter of the talk, against the one of the site. The sizes inside follow it. */
+html[data-consultron-letra='chica'] .consultron__hilo {
+  --escala-charla: 0.9;
+}
+
+html[data-consultron-letra='grande'] .consultron__hilo {
+  --escala-charla: 1.15;
+}
+
+html:not([data-consultron-letra='normal']) .consultron__hilo {
+  --t-ui: calc(1rem * var(--escala-charla, 1));
+  --t-chica: calc(0.875rem * var(--escala-charla, 1));
+  font-size: calc(1rem * var(--escala-charla, 1));
+}
+
+/* Charla: the answer in a bubble too, on the left. */
+html[data-consultron-forma='charla'] .consultron__cuerpo {
+  padding: 10px 14px;
+  border-radius: 4px 18px 18px 18px;
+  background: var(--superficie);
+  box-shadow: inset 0 0 0 1px var(--borde);
+}
+
+/* Documento: no bubbles. The question is a title over a line of its color, and the answer goes under it, full width.
+   Strong enough to take off the gradient of Profesional and Batman (estilos.css). */
+html[data-consultron-forma='documento'] .consultron__entrada > .consultron__pregunta.consultron__pregunta {
+  justify-self: stretch;
+  max-width: none;
+  padding: 0 0 6px;
+  border-bottom: 2px solid var(--accion);
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  color: var(--texto);
+  font-weight: 700;
+}
+
+html[data-consultron-forma='documento'] .consultron__respuesta,
+html[data-consultron-forma='compacta'] .consultron__respuesta {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+html[data-consultron-forma='documento'] .consultron__respuesta > .consultron__robot,
+html[data-consultron-forma='compacta'] .consultron__respuesta > .consultron__robot {
+  display: none;
+}
+
+/* Compacta: the same, closer together. */
+html[data-consultron-forma='compacta'] .consultron__hilo {
+  gap: 14px;
+}
+
+html[data-consultron-forma='compacta'] .consultron__entrada {
+  gap: 6px;
+}
+
+html[data-consultron-forma='compacta'] .consultron__pregunta {
+  padding: 6px 11px;
+  border-radius: 14px 14px 4px 14px;
+  line-height: 1.35;
+}
+
+html[data-consultron-forma='compacta'] .consultron__texto {
+  line-height: 1.45;
+}
+
+html[data-consultron-forma='compacta'] .consultron__texto p,
+html[data-consultron-forma='compacta'] .consultron__texto ul,
+html[data-consultron-forma='compacta'] .consultron__texto ol {
+  margin-bottom: 6px;
+}
+
+/* The button down on the left: the corner opens there, and its edge to make it wider is on its right. With the menu
+   on the left too (Layout.css, `--ancho-lateral`), it goes beside the menu's column, not under it. */
+html[data-consultron-lado='izquierda'] :is(.flotante__boton, .flotante) {
+  right: auto;
+  left: calc(var(--ancho-lateral, 0px) + max(20px, env(safe-area-inset-left)));
+}
+
+html[data-consultron-lado='izquierda'] .flotante {
+  max-width: calc(100vw - var(--ancho-lateral, 0px) - 20px - max(20px, env(safe-area-inset-left)));
+  transform-origin: bottom left;
+}
+
+html[data-consultron-lado='izquierda'] .flotante > .lector__consultron-borde {
+  right: 0;
+  left: auto;
+}
+
+html[data-consultron-lado='izquierda'] .flotante__cabeza .flotante__accion[aria-label$='angosto'] svg,
+html[data-consultron-lado='izquierda'] .flotante__cabeza .flotante__accion[aria-label$='ancho'] svg {
+  scale: -1 1;
+}
+
+/* The chat in small, in Configuración. */
+.consultron-muestra {
+  display: block;
+  max-width: 30rem;
+  padding: 16px;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-bloque);
+  background: var(--fondo);
+}
+
+.consultron-muestra .consultron__hilo {
+  margin: 0;
+}
+
+.ajustes__previa .consultron-muestra {
+  padding: 0;
+  border: 0;
+  background: none;
+}
+
+.ajustes__previa .consultron-muestra .consultron__pregunta {
+  display: inline-block;
+}
+
+html[data-consultron-lado='izquierda'] .flotante > .lector__consultron-borde::after {
+  right: 0;
+  left: auto;
+}
+
+/* Its three letter sizes fit in one row, also on a phone. */
+.elecciones[data-parejas='tres'] {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.ajustes__previa .consultron-muestra .consultron__pregunta {
+  max-width: none;
+  white-space: nowrap;
+}
+
+/* The mode: asking from the notes or working on the code (Flotante.jsx, only in the lab). */
+.cvg-modos {
+  display: flex;
+  flex: none;
+  gap: 4px;
+  padding: 6px 14px;
+  border-bottom: 1px solid var(--borde);
+}
+
+.cvg-modos__boton {
+  flex: 1;
+  min-height: 36px;
+  border: 1px solid var(--borde);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--texto);
+  font: inherit;
+  font-size: var(--t-chica);
+  cursor: pointer;
+}
+
+.cvg-modos__boton[aria-pressed='true'] {
+  border-color: var(--accion);
+  background: var(--accion);
+  color: var(--accion-texto);
+  font-weight: 700;
+}
+
+@media (forced-colors: active) {
+  .cvg-modos__boton[aria-pressed='true'] {
+    border-width: 3px;
+  }
+}

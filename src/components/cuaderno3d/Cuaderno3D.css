@@ -1,0 +1,51 @@
+/* The landing's 3D still life. The space is reserved before three.js arrives, so nothing jumps when it shows. */
+.cuaderno3d {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+}
+
+.cuaderno3d__escena {
+  position: absolute;
+  inset: 0;
+}
+
+/* touch-action: pan-y keeps vertical swipes scrolling the page on a phone; horizontal ones turn the notebook. */
+.cuaderno3d__lienzo {
+  display: block;
+  width: 100%;
+  height: 100%;
+  touch-action: pan-y;
+  cursor: grab;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  opacity: 0;
+  transform: translateY(12px) scale(0.98);
+  transition:
+    opacity 0.6s cubic-bezier(0.23, 1, 0.32, 1),
+    transform 0.9s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.cuaderno3d--lista .cuaderno3d__lienzo {
+  opacity: 1;
+  transform: none;
+}
+
+.cuaderno3d__lienzo--arrastrando {
+  cursor: grabbing;
+}
+
+/* Reduced motion: it only fades in. «Sin animaciones» hides even the copy of the page saved in the HTML. */
+@media (prefers-reduced-motion: reduce) {
+  .cuaderno3d__lienzo {
+    transform: none;
+  }
+}
+
+html[data-movimiento='reducido'] .cuaderno3d__lienzo {
+  transform: none;
+}
+
+html[data-movimiento='ninguno'] .cuaderno3d {
+  display: none;
+}

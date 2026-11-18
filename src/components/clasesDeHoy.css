@@ -1,0 +1,58 @@
+/* En la facu, in Hoy (ClasesDeHoy.jsx). */
+.clases-hoy__lista {
+  display: grid;
+  gap: 6px;
+  margin: 0 0 8px;
+  padding: 0;
+  list-style: none;
+}
+
+.clases-hoy__clase {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 2px 12px;
+  align-items: baseline;
+  padding: 8px 12px;
+  border-left: 4px solid var(--color-materia, var(--texto-suave));
+  border-radius: var(--radio-control);
+  background: var(--superficie);
+}
+
+.clases-hoy__clase[aria-current] {
+  background: color-mix(in srgb, var(--color-materia, var(--texto-suave)) 16%, var(--superficie));
+}
+
+/* What already happened today goes softer, without leaving. */
+.clases-hoy__clase[data-paso] .clases-hoy__materia {
+  color: var(--texto-suave);
+  font-weight: 400;
+}
+
+.clases-hoy__hora,
+.clases-hoy__aula {
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+.clases-hoy__aula {
+  grid-column: 2;
+}
+
+.clases-hoy__materia {
+  font-weight: 600;
+}
+
+.clases-hoy__ahora {
+  margin-left: 8px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: var(--accion);
+  color: var(--accion-texto);
+  font-size: var(--t-chica);
+}
+
+.clases-hoy__libre,
+.clases-hoy__mesas {
+  margin: 0 0 8px;
+}

@@ -1,0 +1,22 @@
+/* Truth table (propias/tabla-verdad.jsx). The table itself uses .tabla-pasos and .tabla-verdad of calculadoras.css. */
+.tv-formula {
+  font-size: 1.375rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.tv-tabla th,
+.tv-tabla td {
+  min-width: 2.25rem;
+}
+
+.tv-tabla .tabla-verdad__numero {
+  min-width: 1.75rem;
+  padding-right: 4px;
+}
+
+/* The rows where the formula gives false: their number in the mistake's ink, as a pencil mark on the margin. */
+.tv-tabla tr[data-falsa] th.tabla-verdad__numero {
+  color: var(--error);
+  font-weight: 800;
+}

@@ -1,0 +1,177 @@
+/* Repaso's index cards on paper, ruled in blue with the red line on top, like the ones you buy at the bookshop: the
+   card of a round and the pile at its end. The page of Repaso uses the same paper for its pile of today. */
+.repaso-pagina,
+.repaso-ficha,
+.repaso-fin {
+  --papel: var(--superficie);
+  --renglon: color-mix(in srgb, var(--foco) 22%, transparent);
+  --margen-rojo: color-mix(in srgb, var(--error) 55%, transparent);
+  --alto-renglon: 1.75rem;
+  /* Where the writing starts on a card: under the padding, the course's two lines and a little air. The red line goes
+     just above, and each ruled line under a line of text. */
+  --arriba: calc(12px + 2.75rem + 10px);
+}
+
+.repaso-pila__capa {
+  position: absolute;
+  inset: 0;
+  border: 1px solid var(--borde);
+  border-radius: 4px;
+  background:
+    linear-gradient(var(--margen-rojo), var(--margen-rojo)) 0 24px / 100% 2px no-repeat,
+    repeating-linear-gradient(to bottom, transparent 0 17px, var(--renglon) 17px 18px) 0 26px / 100% calc(100% - 26px) no-repeat,
+    var(--papel);
+  box-shadow: 0 1px 3px color-mix(in srgb, var(--texto) 14%, transparent);
+  transform: translate(calc(var(--i) * 4px), calc(var(--i) * 4px)) rotate(calc((var(--i) - 1.5) * 1.6deg));
+}
+
+.repaso-pila__capa:nth-last-child(2) {
+  transform: translate(calc(var(--i) * 4px), calc(var(--i) * 4px));
+}
+
+/* The card: both faces on the same spot; turning it shows the back. */
+.repaso-ficha {
+  display: grid;
+  perspective: 1400px;
+}
+
+.repaso-ficha__cara {
+  grid-area: 1 / 1;
+  min-height: 15rem;
+  padding: 12px 28px 28px;
+  border: 1px solid var(--borde);
+  border-top: 5px solid var(--m, var(--borde-control));
+  border-radius: 6px;
+  background:
+    linear-gradient(var(--margen-rojo), var(--margen-rojo)) 0 calc(var(--arriba) - 6px) / 100% 2px no-repeat,
+    repeating-linear-gradient(to bottom, transparent 0 calc(var(--alto-renglon) - 1px), var(--renglon) calc(var(--alto-renglon) - 1px) var(--alto-renglon)) 0 calc(var(--arriba) + 3px) / 100% 100% no-repeat,
+    var(--papel);
+  box-shadow: 0 2px 6px color-mix(in srgb, var(--texto) 10%, transparent);
+  backface-visibility: hidden;
+  transition: transform 0.22s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.repaso-ficha__dorso {
+  transform: rotateY(180deg);
+}
+
+.repaso-ficha--vuelta .repaso-ficha__frente {
+  transform: rotateY(-180deg);
+}
+
+.repaso-ficha--vuelta .repaso-ficha__dorso {
+  transform: rotateY(0deg);
+}
+
+.repaso-ficha__materia::before {
+  content: '';
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: 8px;
+  border-radius: 2px;
+  background: var(--m, var(--borde-control));
+}
+
+.repaso-ficha__materia,
+.repaso-ficha__pregunta {
+  height: 2.75rem;
+  margin: 0 0 10px;
+  overflow: hidden;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  align-content: end;
+}
+
+.repaso-ficha__texto {
+  margin: 0;
+  font-size: 1.25rem;
+  line-height: var(--alto-renglon);
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+.repaso-ficha__texto--vacio {
+  color: var(--texto-suave);
+  font-style: italic;
+}
+
+.repaso-fin {
+  max-width: 36rem;
+  margin: 24px auto;
+  text-align: center;
+}
+
+.repaso-fin__pila {
+  position: relative;
+  width: 180px;
+  height: 112px;
+  margin: 0 auto 28px;
+}
+
+.repaso-fin__sello {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: grid;
+  place-items: center;
+  width: 72px;
+  height: 72px;
+  border: 3px solid var(--ok);
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--papel) 70%, transparent);
+  color: var(--ok);
+  font-size: 1.75rem;
+  font-weight: 700;
+  font-variant-numeric: lining-nums;
+  transform: translate(-40%, -36%) rotate(-12deg);
+  animation: repaso-sello 0.35s cubic-bezier(0.23, 1, 0.32, 1) 0.15s both;
+}
+
+@keyframes repaso-sello {
+  from {
+    opacity: 0;
+    transform: translate(-40%, -36%) rotate(-12deg) scale(1.35);
+  }
+}
+
+.repaso-fin__titulo {
+  margin: 0 0 8px;
+  font-size: var(--t-h2);
+}
+
+/* The end takes the focus to be read; it is not something to touch. */
+.repaso-fin:focus-visible {
+  outline: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .repaso-ficha__cara {
+    transition: none;
+  }
+
+  .repaso-fin__sello {
+    animation-name: repaso-aparece;
+  }
+}
+
+@keyframes repaso-aparece {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (max-width: 560px) {
+  .repaso-ficha__cara {
+    min-height: 13rem;
+    padding: 12px 18px 20px;
+  }
+
+  .repaso-ficha__texto {
+    font-size: 1.125rem;
+  }
+}

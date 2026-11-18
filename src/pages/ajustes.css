@@ -1,0 +1,67 @@
+/* What the settings change on every screen. Global, on purpose: App.jsx imports this up front, after the screens that
+   bring panel.css, so it wins over them. Configuración itself loads apart (configuracion.css). */
+
+/* The highlighter always has its own text color, whatever the theme. */
+.marcado,
+.semana__dia[data-hoy],
+.cal__dia[data-hoy] .cal__numero,
+.cal-semana__dia[data-hoy] .cal__numero {
+  color: var(--resaltador-texto);
+}
+
+.semana__dia[data-hoy] .semana__nombre {
+  color: inherit;
+}
+
+/* In the dark theme the error is a light color: white on top wouldn't read. */
+.boton--peligro,
+.aviso--error,
+.aviso-proveedor--critical {
+  color: var(--error-texto);
+}
+
+@media (hover: hover) {
+  .boton--peligro:hover {
+    background: var(--error);
+  }
+}
+
+/* The header border follows the header text, on any main color. */
+.cabecera__boton,
+.cabecera__salir,
+.cabecera__rapido {
+  border-color: currentColor;
+}
+
+/* Forced reduced motion. Same as the system preference in base.css, plus what would stay hidden waiting to appear.
+   «Sin animaciones» gets the same, and the landing's 3D doesn't even load (Cuaderno3D.jsx). */
+html[data-movimiento='reducido'] *,
+html[data-movimiento='reducido'] *::before,
+html[data-movimiento='reducido'] *::after,
+html[data-movimiento='ninguno'] *,
+html[data-movimiento='ninguno'] *::before,
+html[data-movimiento='ninguno'] *::after {
+  animation-duration: 0s !important;
+  animation-delay: 0s !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0s !important;
+  transition-delay: 0s !important;
+  scroll-behavior: auto !important;
+}
+
+html[data-movimiento='reducido'] [data-aparece],
+html[data-movimiento='ninguno'] [data-aparece] {
+  opacity: 1 !important;
+  transform: none !important;
+}
+
+/* The filters of the PDF pages (lector.css), here so the drawings of Configuración show the same. Dark: the paper turns
+   and the hue rotates back, as white as `--pdf-brillo` says (public/ajustes.js). Sepia: the first contrast lifts the
+   ink and the sepia warms it, the second one takes gray off so the ink stays brown while the paper stays cream, and the
+   saturation brings back the colors of the PDF and of the highlighters, which the sepia had pulled together: they keep
+   apart as much as on the dark pages. No step goes out of range on the way, so every browser gives the same: paper
+   #f7e9d0 and ink #302a1f, 11.9 to 1. A stronger sepia browns the ink more, but leaves the four highlighters alike. */
+:root {
+  --pdf-oscuras: invert(var(--pdf-brillo, 0.92)) hue-rotate(180deg);
+  --pdf-sepia: contrast(0.4) sepia(0.22) contrast(1.8) saturate(1.35);
+}

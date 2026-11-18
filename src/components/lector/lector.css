@@ -1,0 +1,1418 @@
+/* The PDF reader. The frame and its skeleton are in espera.css. The pages are paper in both themes: a PDF is drawn
+   on white, and the highlighters work on it as on a printed page (they darken, the ink stays black). */
+
+.lector {
+  --r-amarillo: #ffe14d;
+  --r-verde: #a8e69c;
+  --r-celeste: #9ed7ff;
+  --r-rosa: #ffb3d0;
+  --tinta: #0b5a9e;
+  position: relative;
+}
+
+/* ---------- Full screen (PantallaCompleta.jsx) ---------- */
+/* The browser's: the reader is the whole screen. Where there is none (an iPhone), it covers the screen with CSS, and
+   the sheet it is in drops its slide so the reader is fixed to the screen and not to the sheet. */
+.lector:fullscreen {
+  width: 100%;
+  height: 100%;
+}
+
+.lector[data-pantalla='css'] {
+  position: fixed;
+  z-index: 20;
+  inset: 0;
+  width: 100%;
+  height: 100dvh;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
+dialog:has(.lector[data-pantalla='css']) {
+  transform: none;
+}
+
+/* ---------- Bar ---------- */
+/* When it doesn't fit it scrolls sideways, without a scrollbar: the edge with more buttons behind it fades
+   (data-mas, from VisorPdf). The second layer keeps the line under the bar whole. */
+.lector__barra {
+  --borde-mas: 36px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.lector__barra[data-mas] {
+  mask:
+    var(--mascara-mas) 0 0 / 100% 100% no-repeat,
+    linear-gradient(#000, #000) 0 100% / 100% 1px no-repeat;
+}
+
+.lector__barra[data-mas='derecha'] {
+  --mascara-mas: linear-gradient(to left, transparent, #000 var(--borde-mas));
+}
+
+.lector__barra[data-mas='izquierda'] {
+  --mascara-mas: linear-gradient(to right, transparent, #000 var(--borde-mas));
+}
+
+.lector__barra[data-mas='ambos'] {
+  --mascara-mas: linear-gradient(to right, transparent, #000 var(--borde-mas), #000 calc(100% - var(--borde-mas)), transparent);
+}
+
+.lector__barra::-webkit-scrollbar {
+  display: none;
+}
+
+.lector__grupo {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 2px;
+}
+
+.lector__grupo--fin {
+  margin-left: auto;
+}
+
+.lector__boton,
+.lector__zoom {
+  position: relative;
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  min-width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radio-control);
+  background: transparent;
+  color: var(--texto);
+  font: inherit;
+  cursor: pointer;
+  transition: background-color 120ms ease, color 120ms ease;
+}
+
+.lector__boton svg {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.lector__zoom {
+  min-width: 60px;
+  padding-inline: 6px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+.lector__boton[aria-pressed='true'],
+.lector__zoom[aria-pressed='true'] {
+  background: var(--superficie-2);
+  color: var(--foco);
+}
+
+.lector__boton:active:not(:disabled, [aria-disabled='true']),
+.lector__zoom:active,
+.lector__color:active,
+.lector__mini-ir:active,
+.lector__chico:active {
+  transform: scale(0.97);
+}
+
+.lector__boton:disabled,
+.lector__boton[aria-disabled='true'] {
+  opacity: 0.4;
+  cursor: default;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .lector__boton:hover:not(:disabled),
+  .lector__zoom:hover {
+    background: var(--superficie-2);
+  }
+}
+
+@media (pointer: coarse) {
+  .lector__boton,
+  .lector__zoom {
+    min-width: 44px;
+    height: 44px;
+  }
+}
+
+.lector__cuenta {
+  display: inline-grid;
+  place-items: center;
+  min-width: 20px;
+  height: 20px;
+  margin-left: 6px;
+  padding: 0 5px;
+  border-radius: 10px;
+  background: var(--resaltador);
+  color: var(--resaltador-texto);
+  font-size: 0.75rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+.lector__cuenta--boton {
+  position: absolute;
+  top: 1px;
+  right: 0;
+  min-width: 17px;
+  height: 17px;
+  margin: 0;
+  padding: 0 4px;
+  font-size: 0.6875rem;
+}
+
+.lector__ir {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  margin-inline: 6px;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+.lector__ir-campo {
+  width: auto;
+  min-width: 3ch;
+  height: 36px;
+  padding: 0 6px;
+  border: 1px solid var(--borde-control);
+  border-radius: var(--radio-control);
+  background: var(--fondo);
+  color: var(--texto);
+  font: inherit;
+  font-size: max(1rem, 16px);
+  font-weight: 600;
+  text-align: center;
+  field-sizing: content;
+}
+
+.lector__ir-total {
+  color: var(--texto-suave);
+  white-space: nowrap;
+}
+
+/* A narrow reader keeps what matters: the zoom is also done with two fingers. */
+.lector[data-angosto] .lector__barra {
+  gap: 0;
+  padding-inline: 4px;
+}
+
+.lector[data-angosto] .lector__zoom {
+  min-width: 52px;
+}
+
+.lector[data-angosto] .lector__ir {
+  margin-inline: 2px;
+}
+
+/* ---------- «Más herramientas», on a phone ---------- */
+/* One row whatever the width: each tool is its icon over a short name, all of the same width, so it takes one line of the
+   screen and never covers the file. */
+.lector__mas {
+  display: grid;
+  flex: none;
+  grid-auto-columns: minmax(0, 1fr);
+  grid-auto-flow: column;
+  gap: 4px;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--borde);
+  background: var(--superficie);
+  transition: opacity 150ms ease-out;
+}
+
+@starting-style {
+  .lector__mas {
+    opacity: 0;
+  }
+}
+
+.lector__mas-opcion {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-width: 0;
+  min-height: 44px;
+  padding: 4px 2px;
+  border: 1px solid var(--borde-control);
+  border-radius: var(--radio-control);
+  background: var(--superficie);
+  color: var(--texto);
+  font: inherit;
+  font-size: 0.75rem;
+  line-height: 1.15;
+  text-align: center;
+  overflow-wrap: anywhere;
+  cursor: pointer;
+  transition: background-color 120ms ease-out, transform 120ms ease-out;
+}
+
+.lector__mas-opcion svg {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.lector__mas-opcion:active {
+  transform: scale(0.97);
+}
+
+.lector__mas-opcion[aria-pressed='true'] {
+  border-color: var(--texto);
+  background: var(--superficie-2);
+  box-shadow: inset 0 0 0 1px var(--texto);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .lector__mas-opcion:hover {
+    background: var(--superficie-2);
+  }
+}
+
+/* ---------- Find ---------- */
+.lector__buscar {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--borde);
+  background: var(--superficie);
+}
+
+.lector__buscar-campo {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 40px;
+  padding: 0 10px;
+  border: 1px solid var(--borde-control);
+  border-radius: var(--radio-control);
+  background: var(--fondo);
+  color: var(--texto);
+  font: inherit;
+  font-size: max(1rem, 16px);
+}
+
+.lector__buscar-cuenta {
+  flex: none;
+  min-width: 4.5em;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+  font-variant-numeric: tabular-nums lining-nums;
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* ---------- Reading aloud (Voz.jsx) ---------- */
+/* Under the bar, like the search: it covers no text and the pages keep their place. */
+.lector__voz {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--borde);
+  background: var(--superficie);
+}
+
+.lector__voz-donde {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0 4px;
+  overflow: hidden;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+  font-variant-numeric: tabular-nums lining-nums;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Wide enough for «1,75×»: changing the speed doesn't move the other buttons. */
+.lector__voz-velocidad,
+.lector[data-angosto] .lector__voz-velocidad {
+  min-width: 60px;
+}
+
+.lector[data-angosto] .lector__voz {
+  gap: 0;
+  padding-inline: 4px;
+}
+
+/* Its button, pressed, doesn't touch the «de N» of the pages. */
+.lector[data-angosto] .lector__grupo--fin {
+  padding-left: 4px;
+}
+
+/* ---------- Messages over the pages ---------- */
+.lector__aviso {
+  display: flex;
+  flex: none;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--borde);
+  background: var(--fondo-aviso);
+}
+
+.lector__aviso p {
+  flex: 1 1 14rem;
+  margin: 0;
+}
+
+.lector__aviso--error p {
+  color: var(--error);
+  font-weight: 600;
+}
+
+/* Over the pages and over the panel: «Deshacer» can come from it. */
+.lector__flotante {
+  position: absolute;
+  z-index: 8;
+  bottom: 16px;
+  left: 50%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: max-content;
+  max-width: calc(100% - 32px);
+  padding: 8px 8px 8px 16px;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-bloque);
+  background: var(--superficie);
+  box-shadow: 0 6px 20px rgb(23 50 77 / 0.18);
+  transform: translateX(-50%);
+  transition: opacity 200ms ease, transform 200ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+@starting-style {
+  .lector__flotante {
+    opacity: 0;
+    transform: translate(-50%, 8px);
+  }
+}
+
+.lector__flotante p {
+  margin: 0;
+  text-wrap: pretty;
+}
+
+.lector__flotante .boton {
+  flex: none;
+  white-space: nowrap;
+}
+
+.lector__flotante-cerrar {
+  margin-left: -6px;
+}
+
+.lector__flotante-cerrar svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* ---------- Body: the panel and the pages ---------- */
+.lector__cuerpo {
+  position: relative;
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.lector__marco {
+  touch-action: pan-x pan-y;
+  /* The reader puts the scroll back itself after a size change (VisorPdf, anclar). */
+  overflow-anchor: none;
+}
+
+.lector__marco:focus-visible {
+  outline: 2px solid var(--foco);
+  outline-offset: -3px;
+}
+
+.lector__paginas {
+  position: relative;
+  margin: 0 auto;
+  transform-origin: 0 0;
+}
+
+.lector__pagina {
+  position: absolute;
+  isolation: isolate;
+  overflow: hidden;
+  /* A page out of view costs neither style nor layout nor paint: after a zoom only the text of the pages in view is
+     laid out again. */
+  content-visibility: auto;
+  background: var(--hoja);
+  box-shadow: 0 1px 2px rgb(23 50 77 / 0.16), 0 6px 18px rgb(23 50 77 / 0.08);
+  --scale-round-x: 1px;
+  --scale-round-y: 1px;
+}
+
+:root[data-tema='oscuro'] .lector__pagina {
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.5), 0 6px 18px rgb(0 0 0 / 0.3);
+}
+
+/* Dark pages: the paper turns dark and the ink light, and the hue rotates back so colors stay near their own. The
+   highlights and what's found blend with the paper inside the page, so they turn with it. The filter turns the edge
+   too: this light gray ends up a dark one. How white the ink gets is the student's (`--pdf-brillo`, 0.92 unless
+   chosen): a black page and white letters tire more than gray on gray. Both filters are in pages/ajustes.css. */
+:root[data-pdf='oscuro'] .lector__pagina,
+:root[data-pdf='tema'][data-tema='oscuro'] .lector__pagina,
+:root[data-pdf='oscuro'] .lector__miniaturas canvas,
+:root[data-pdf='tema'][data-tema='oscuro'] .lector__miniaturas canvas {
+  filter: var(--pdf-oscuras);
+}
+
+/* Sepia pages, chosen or as the light half of «Como el tema». The highlights turn with the paper too, and stay apart. */
+:root[data-pdf='sepia'] .lector__pagina,
+:root[data-pdf='tema'][data-tema='claro'][data-pdf-claro='sepia'] .lector__pagina,
+:root[data-pdf='sepia'] .lector__miniaturas canvas,
+:root[data-pdf='tema'][data-tema='claro'][data-pdf-claro='sepia'] .lector__miniaturas canvas {
+  filter: var(--pdf-sepia);
+}
+
+:root[data-pdf='oscuro'] .lector__pagina,
+:root[data-pdf='tema'][data-tema='oscuro'] .lector__pagina {
+  box-shadow: 0 0 0 1px rgb(203 203 203);
+}
+
+.lector__dibujo,
+.lector__resaltados,
+.lector__marcas {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.lector__dibujo {
+  z-index: 0;
+}
+
+.lector__lienzo {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* The part in view drawn sharp over a page with fewer pixels than the screen (Pagina.jsx); its place comes in percent. */
+.lector__detalle {
+  position: absolute;
+  display: block;
+}
+
+.lector__hoja-esperando {
+  z-index: 1;
+}
+
+/* They blend as a whole with the drawing under them: a mark inside a layer of its own would only blend with that layer. */
+.lector__resaltados {
+  z-index: 2;
+  mix-blend-mode: multiply;
+}
+
+.lector__marcas {
+  z-index: 3;
+  mix-blend-mode: multiply;
+}
+
+.lector .textLayer {
+  z-index: 4;
+}
+
+/* The student's highlighters: they darken the paper and leave the ink as it is. */
+.lector__resaltado,
+.lector__hallazgo {
+  position: absolute;
+}
+
+.lector__resaltado {
+  margin: -1px -1px;
+  padding: 1px;
+  border-radius: 2px;
+  box-sizing: content-box;
+  background: var(--r-amarillo);
+  opacity: 0.85;
+}
+
+.lector__resaltado--verde {
+  background: var(--r-verde);
+}
+
+.lector__resaltado--celeste {
+  background: var(--r-celeste);
+}
+
+.lector__resaltado--rosa {
+  background: var(--r-rosa);
+}
+
+.lector__resaltado--abierto {
+  opacity: 1;
+  box-shadow: 0 2px 0 0 var(--tinta);
+}
+
+/* Jumping to a highlight from the notes: a ring that fades, to find it on the page. */
+.lector__resaltado--destello {
+  animation: lector-destello 700ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+@keyframes lector-destello {
+  from {
+    box-shadow: 0 0 0 6px rgb(11 90 158 / 0.45);
+  }
+  to {
+    box-shadow: 0 0 0 0 rgb(11 90 158 / 0);
+  }
+}
+
+.lector__hallazgo {
+  margin: -1px;
+  padding: 1px;
+  border-radius: 2px;
+  box-sizing: content-box;
+  background: rgb(11 90 158 / 0.2);
+}
+
+.lector__hallazgo--actual {
+  background: rgb(11 90 158 / 0.42);
+  outline: 2px solid var(--tinta);
+  outline-offset: 1px;
+}
+
+/* ---------- Text of the pages (from pdf.js, written flat) ---------- */
+.textLayer {
+  position: absolute;
+  inset: 0;
+  overflow: clip;
+  opacity: 1;
+  line-height: 1;
+  text-align: initial;
+  letter-spacing: normal;
+  word-spacing: normal;
+  text-size-adjust: none;
+  forced-color-adjust: none;
+  transform-origin: 0 0;
+  caret-color: CanvasText;
+  color-scheme: only light;
+  --min-font-size: 1;
+  --text-scale-factor: calc(var(--total-scale-factor) * var(--min-font-size));
+  --min-font-size-inv: calc(1 / var(--min-font-size));
+}
+
+.textLayer span,
+.textLayer br {
+  position: absolute;
+  color: transparent;
+  white-space: pre;
+  cursor: text;
+  transform-origin: 0% 0%;
+  user-select: text;
+}
+
+.textLayer > :not(.markedContent),
+.textLayer .markedContent span:not(.markedContent) {
+  z-index: 1;
+  --font-height: 0;
+  font-size: calc(var(--text-scale-factor) * var(--font-height));
+  --scale-x: 1;
+  --rotate: 0deg;
+  transform: rotate(var(--rotate)) scaleX(var(--scale-x)) scale(var(--min-font-size-inv));
+}
+
+.textLayer .markedContent {
+  display: contents;
+}
+
+.textLayer span[role='img'] {
+  user-select: none;
+  cursor: default;
+}
+
+.textLayer ::selection {
+  background: rgb(11 90 158 / 0.3);
+  color: transparent;
+}
+
+.textLayer br::selection {
+  background: transparent;
+}
+
+.textLayer .endOfContent {
+  position: absolute;
+  inset: 100% 0 0;
+  z-index: 0;
+  display: block;
+  cursor: default;
+  user-select: none;
+}
+
+.textLayer.selecting .endOfContent {
+  top: 0;
+}
+
+/* ---------- Highlighting a selection ---------- */
+.lector__barra-sel,
+.lector__globo {
+  position: absolute;
+  z-index: 8;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-bloque);
+  background: var(--superficie);
+  color: var(--texto);
+  box-shadow: 0 8px 28px rgb(23 50 77 / 0.22);
+  transform-origin: top left;
+  transition: opacity 150ms ease-out, transform 150ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+:root[data-tema='oscuro'] .lector__barra-sel,
+:root[data-tema='oscuro'] .lector__globo {
+  box-shadow: 0 8px 28px rgb(0 0 0 / 0.5);
+}
+
+@starting-style {
+  .lector__barra-sel,
+  .lector__globo {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
+
+.lector__barra-sel {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+}
+
+.lector__color {
+  display: inline-block;
+  flex: none;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 2px solid var(--superficie);
+  border-radius: 50%;
+  background: var(--r-amarillo);
+  box-shadow: 0 0 0 1px var(--borde-control);
+  cursor: pointer;
+  transition: box-shadow 120ms ease;
+}
+
+.lector__color[data-color='verde'] {
+  background: var(--r-verde);
+}
+
+.lector__color[data-color='celeste'] {
+  background: var(--r-celeste);
+}
+
+.lector__color[data-color='rosa'] {
+  background: var(--r-rosa);
+}
+
+.lector__color[aria-pressed='true'] {
+  box-shadow: 0 0 0 2px var(--texto);
+}
+
+@media (pointer: coarse) {
+  .lector__color {
+    width: 40px;
+    height: 40px;
+  }
+}
+
+.lector__barra-nota:not(:last-child) {
+  border-radius: 0;
+}
+
+.lector__barra-nota {
+  min-height: 32px;
+  margin-left: 2px;
+  padding: 4px 12px;
+  border: 0;
+  border-left: 1px solid var(--borde);
+  border-radius: 0 var(--radio-control) var(--radio-control) 0;
+  background: transparent;
+  color: var(--texto);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+@media (pointer: coarse) {
+  .lector__barra-nota {
+    min-height: 40px;
+  }
+}
+
+.lector__globo {
+  display: grid;
+  gap: 10px;
+  width: min(300px, calc(100vw - 32px));
+  padding: 12px;
+}
+
+.lector__colores {
+  display: flex;
+  gap: 6px;
+}
+
+.lector__globo-nota {
+  max-height: 12em;
+  margin: 0;
+  overflow: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.lector__globo-form {
+  display: grid;
+  gap: 8px;
+}
+
+.lector__globo-texto {
+  min-height: 96px;
+}
+
+.lector__globo-botones {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.lector__globo-cerrar {
+  margin-left: auto;
+}
+
+/* On a phone the bubble is a sheet over the bottom of the reader, so the keyboard does not cover it. */
+.lector__hoja-globo {
+  position: absolute;
+  z-index: 8;
+  right: 0;
+  bottom: 0;
+  left: 0;
+}
+
+.lector__hoja-globo .lector__globo {
+  position: static;
+  width: auto;
+  border-width: 1px 0 0;
+  border-radius: var(--radio-bloque) var(--radio-bloque) 0 0;
+  padding: 14px var(--margen) max(14px, env(safe-area-inset-bottom));
+  transform-origin: bottom center;
+}
+
+@starting-style {
+  .lector__hoja-globo .lector__globo {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+}
+
+/* ---------- Panel ---------- */
+.lector__panel {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  width: var(--ancho-panel, 280px);
+  min-height: 0;
+  border-right: 1px solid var(--borde);
+  background: var(--superficie);
+}
+
+/* Its edge, beside the pages: dragged, or with the arrows, it makes the panel wider or narrower (VisorPdf.jsx keeps it
+   under its tope). It sits over the border without taking room; the line shows on hover, while dragging and with the
+   focus. */
+.lector__borde-panel {
+  position: relative;
+  z-index: 3;
+  flex: none;
+  width: 24px;
+  margin: 0 -12px;
+  cursor: col-resize;
+  touch-action: none;
+}
+
+.lector__borde-panel::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 11px;
+  width: 2px;
+  background: transparent;
+  transition: background-color 120ms ease;
+}
+
+.lector__borde-panel:focus-visible {
+  outline: none;
+}
+
+.lector__borde-panel:focus-visible::after,
+.lector__borde-panel[data-arrastrando]::after {
+  left: 10px;
+  width: 4px;
+  background: var(--foco);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .lector__borde-panel:hover::after {
+    background: var(--borde-control);
+  }
+}
+
+@media (forced-colors: active) {
+  .lector__borde-panel:focus-visible::after,
+  .lector__borde-panel[data-arrastrando]::after {
+    background: Highlight;
+  }
+}
+
+.lector[data-panel='encima'] .lector__panel {
+  position: absolute;
+  z-index: 7;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: min(320px, calc(100% - 48px));
+  box-shadow: 8px 0 28px rgb(23 50 77 / 0.2);
+  transition: transform 220ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+@starting-style {
+  .lector[data-panel='encima'] .lector__panel {
+    transform: translateX(-100%);
+  }
+}
+
+.lector__pestanas {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 4px 0 8px;
+  border-bottom: 1px solid var(--borde);
+}
+
+.lector__pestanas [role='tablist'] {
+  display: flex;
+  flex: 1 1 auto;
+  gap: 2px;
+  min-width: 0;
+}
+
+.lector__pestana {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 10px;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  background: transparent;
+  color: var(--texto-suave);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.lector__pestana[aria-selected='true'] {
+  border-bottom-color: var(--foco);
+  color: var(--texto);
+}
+
+.lector__panel-cerrar {
+  margin-left: auto;
+}
+
+.lector__panel-cuerpo {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding: 12px;
+}
+
+.lector__panel-cuerpo:focus-visible {
+  outline: 2px solid var(--foco);
+  outline-offset: -3px;
+}
+
+.lector__vacio {
+  color: var(--texto-suave);
+}
+
+.lector__vacio p {
+  margin: 0 0 8px;
+}
+
+.lector__vacio p:first-child {
+  color: var(--texto);
+  font-weight: 600;
+}
+
+/* Notes, by page */
+.lector__notas,
+.lector__notas ul {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.lector__notas {
+  gap: 16px;
+}
+
+.lector__notas-pagina {
+  margin: 0 0 6px;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+  font-weight: 700;
+  font-variant-numeric: lining-nums;
+}
+
+.lector__nota {
+  display: grid;
+  gap: 4px;
+  padding: 2px 0 2px 10px;
+  border-left: 4px solid var(--r-amarillo);
+}
+
+.lector__nota[data-color='verde'] {
+  border-left-color: var(--r-verde);
+}
+
+.lector__nota[data-color='celeste'] {
+  border-left-color: var(--r-celeste);
+}
+
+.lector__nota[data-color='rosa'] {
+  border-left-color: var(--r-rosa);
+}
+
+.lector__nota-ir {
+  display: grid;
+  gap: 4px;
+  padding: 2px 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.lector__nota-cita {
+  overflow-wrap: anywhere;
+}
+
+.lector__nota-texto {
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .lector__nota-ir:hover .lector__nota-cita,
+  .lector__indice-ir:hover {
+    text-decoration: underline;
+  }
+  .lector__chico:hover {
+    background: var(--superficie-2);
+  }
+  .lector__mini-ir:hover .lector__mini {
+    box-shadow: 0 0 0 2px var(--borde-control);
+  }
+}
+
+.lector__nota-acciones {
+  display: flex;
+  gap: 4px;
+}
+
+.lector__chico {
+  min-height: 32px;
+  padding: 4px 8px;
+  border: 0;
+  border-radius: var(--radio-control);
+  background: transparent;
+  color: var(--foco);
+  font: inherit;
+  font-size: var(--t-chica);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+@media (pointer: coarse) {
+  .lector__chico {
+    min-height: 40px;
+  }
+}
+
+/* Pages in small */
+.lector__miniaturas {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
+  gap: 14px 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  justify-items: center;
+}
+
+/* A long PDF has hundreds of small pages: the ones far from view are not laid out. Before the first time, the size
+   of an A4 one; after, the size it had. */
+.lector__miniaturas li {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 112px auto 180px;
+}
+
+.lector__mini-ir {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  padding: 4px;
+  border: 0;
+  border-radius: var(--radio-control);
+  background: transparent;
+  color: var(--texto-suave);
+  font: inherit;
+  font-size: var(--t-chica);
+  font-variant-numeric: lining-nums;
+  cursor: pointer;
+}
+
+.lector__mini {
+  display: block;
+  width: 104px;
+  overflow: hidden;
+  background: var(--hoja);
+  box-shadow: 0 0 0 1px var(--borde);
+}
+
+.lector__mini canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.lector__mini-ir[aria-current='page'] {
+  color: var(--texto);
+  font-weight: 700;
+}
+
+.lector__mini-ir[aria-current='page'] .lector__mini {
+  box-shadow: 0 0 0 3px var(--foco);
+}
+
+/* The file's own index */
+.lector__indice,
+.lector__indice ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.lector__indice ul {
+  padding-left: 14px;
+}
+
+.lector__indice-ir {
+  display: block;
+  width: 100%;
+  min-height: 36px;
+  padding: 6px 4px;
+  border: 0;
+  background: transparent;
+  color: var(--texto);
+  font: inherit;
+  text-align: left;
+  overflow-wrap: anywhere;
+  cursor: pointer;
+}
+
+/* ---------- Keyboard help ---------- */
+.lector__ayuda {
+  position: absolute;
+  z-index: 9;
+  top: 8px;
+  right: 8px;
+  width: min(380px, calc(100% - 16px));
+  max-height: calc(100% - 16px);
+  overflow: auto;
+  padding: 12px 16px 16px;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-bloque);
+  background: var(--superficie);
+  box-shadow: 0 8px 28px rgb(23 50 77 / 0.22);
+}
+
+.lector__ayuda-cabeza {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.lector__ayuda h3 {
+  margin: 0;
+  font-size: var(--t-ui);
+}
+
+.lector__ayuda dl {
+  display: grid;
+  gap: 8px;
+  margin: 8px 0 0;
+}
+
+.lector__ayuda dl > div {
+  display: grid;
+  grid-template-columns: 9.5em minmax(0, 1fr);
+  gap: 12px;
+  align-items: baseline;
+}
+
+.lector__ayuda dd {
+  margin: 0;
+}
+
+.lector__ayuda-nota {
+  margin: 12px 0 0;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+}
+
+.lector__ayuda kbd {
+  font: inherit;
+  font-size: var(--t-chica);
+  font-weight: 700;
+  font-variant-numeric: lining-nums;
+}
+
+.lector__error {
+  margin: 16px;
+}
+
+/* ---------- Consultron (consultron/EnVisor.jsx) ---------- */
+/* Beside the pages, on the right, where the reader is wide; over them, from the right, where it isn't. */
+.lector[data-consultron='encima'] .lector__consultron {
+  position: absolute;
+  z-index: 7;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(380px, calc(100% - 48px));
+  box-shadow: -8px 0 28px rgb(23 50 77 / 0.2);
+  transition: transform 220ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+@starting-style {
+  .lector[data-consultron='encima'] .lector__consultron {
+    transform: translateX(100%);
+  }
+}
+
+/* A notice over the pages stays over them, not under the chat. */
+.lector[data-consultron='lado'] .lector__flotante {
+  left: calc(50% - var(--ancho-consultron, 380px) / 2);
+  max-width: calc(100% - var(--ancho-consultron, 380px) - 32px);
+}
+
+/* The piece of a source of Consultron on its page: a soft highlighter with a line under each row and one at its side,
+   so it isn't told only by its color. Under the text, it covers nothing. */
+.lector__fuente,
+.lector__fuente-borde {
+  position: absolute;
+  animation: lector-fuente 260ms cubic-bezier(0.23, 1, 0.32, 1) both;
+}
+
+.lector__fuente {
+  margin: -1px;
+  padding: 1px;
+  border-radius: 2px;
+  box-sizing: content-box;
+  background: rgb(255 214 64 / 0.38);
+  box-shadow: inset 0 -2px 0 rgb(11 90 158 / 0.7);
+}
+
+.lector__fuente-borde {
+  border-radius: 2px;
+  background: var(--tinta);
+}
+
+@keyframes lector-fuente {
+  from {
+    opacity: 0;
+  }
+}
+
+/* ---------- Less movement and system colors ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .lector__barra-sel,
+  .lector__globo,
+  .lector__flotante,
+  .lector[data-panel='encima'] .lector__panel,
+  .lector[data-consultron='encima'] .lector__consultron {
+    transition: opacity 150ms ease;
+  }
+  @starting-style {
+    .lector__barra-sel,
+    .lector__globo,
+    .lector__hoja-globo .lector__globo {
+      transform: none;
+    }
+    .lector__flotante {
+      transform: translateX(-50%);
+    }
+    .lector[data-panel='encima'] .lector__panel {
+      transform: none;
+    }
+    .lector[data-consultron='encima'] .lector__consultron {
+      opacity: 0;
+      transform: none;
+    }
+  }
+  .lector__resaltado--destello {
+    animation-name: lector-destello-quieto;
+  }
+  @keyframes lector-destello-quieto {
+    from {
+      opacity: 0.4;
+    }
+    to {
+      opacity: 0.85;
+    }
+  }
+}
+
+@media (forced-colors: active) {
+  .lector__pagina {
+    outline: 1px solid CanvasText;
+  }
+  .lector__resaltados,
+  .lector__marcas {
+    mix-blend-mode: normal;
+  }
+  .lector__resaltado {
+    forced-color-adjust: none;
+    background: transparent;
+    outline: 2px solid Highlight;
+    opacity: 1;
+  }
+  .lector__hallazgo {
+    forced-color-adjust: none;
+    background: transparent;
+    outline: 1px dashed CanvasText;
+  }
+  .lector__hallazgo--actual {
+    outline: 3px solid Highlight;
+  }
+  .lector__fuente {
+    forced-color-adjust: none;
+    background: transparent;
+    box-shadow: none;
+    outline: 2px solid Highlight;
+  }
+  .lector__fuente-borde {
+    forced-color-adjust: none;
+    background: Highlight;
+  }
+  .lector__consultron {
+    border-left-color: CanvasText;
+  }
+  .lector__color {
+    forced-color-adjust: none;
+    border-color: Canvas;
+    box-shadow: 0 0 0 1px CanvasText;
+  }
+  .lector__color[aria-pressed='true'] {
+    box-shadow: 0 0 0 3px Highlight;
+  }
+  .lector__nota {
+    border-left-color: CanvasText;
+  }
+  .lector__mini-ir[aria-current='page'] .lector__mini {
+    outline: 3px solid Highlight;
+  }
+}
+
+/* ---------- Printing: only the pages, one per sheet (imprimir.js) ---------- */
+.impresion {
+  display: none;
+}
+
+@media print {
+  body > :not(.impresion),
+  dialog {
+    display: none !important;
+  }
+  .impresion {
+    display: block;
+  }
+  .impresion img {
+    display: block;
+    width: 100%;
+    height: 100vh;
+    object-fit: contain;
+    break-after: page;
+  }
+  .impresion img:last-child {
+    break-after: auto;
+  }
+  @page {
+    margin: 0;
+  }
+}
+
+/* ---------- A live session (enVivo/herramientas/apunte/): each highlight in its author's color ---------- */
+.lector__resaltado--autor {
+  background: color-mix(in srgb, var(--autor) 38%, transparent);
+  opacity: 1;
+}
+
+.lector__color--autor {
+  background: color-mix(in srgb, var(--autor) 38%, #ffffff);
+}
+
+.lector__globo-autor {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-weight: 600;
+}
+
+.lector__punto-autor {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--autor);
+}
+
+.lector__nota[data-autor] {
+  border-left-color: var(--autor);
+}
+
+.lector__nota-autor {
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+  font-weight: 600;
+}

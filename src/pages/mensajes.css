@@ -1,0 +1,1049 @@
+/* Mensajes: the list of conversations and one of them, side by side in a box when there is room (Mensajes.jsx measures
+   it and sets data-angosta), one or the other on a phone. Ink bubbles are the student's; the highlighter marks what is
+   unread, like everywhere else on the site. */
+
+.mensajes {
+  --alto-caja: max(480px, calc(100dvh - var(--alto-cabecera) - 48px));
+  padding-block: 24px;
+}
+
+.mensajes__caja {
+  display: grid;
+  grid-template-columns: minmax(16.875rem, 21.25rem) minmax(0, 1fr);
+  height: var(--alto-caja);
+  overflow: hidden;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-bloque);
+  background: var(--superficie);
+}
+
+.mensajes h1 {
+  margin: 0;
+  font-size: var(--t-h2);
+  line-height: 1.1;
+}
+
+/* The list. */
+.mensajes__lista-panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border-right: 1px solid var(--borde);
+}
+
+.mensajes__lista-cabeza {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  padding: 20px 16px 12px;
+}
+
+.mensajes__filtro {
+  position: relative;
+  margin: 0 16px 12px;
+}
+
+.mensajes__filtro svg {
+  position: absolute;
+  top: 50%;
+  left: 12px;
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: var(--texto-suave);
+  stroke-linecap: round;
+  stroke-width: 2;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.mensajes__filtro .campo__control {
+  padding-left: 38px;
+}
+
+.mensajes__llegaron {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0 16px 12px;
+  padding: 8px 8px 8px 12px;
+  border-radius: var(--radio-control);
+  background: var(--fondo-aviso);
+  font-size: var(--t-chica);
+  font-weight: 600;
+}
+
+.mensajes__nada-filtro {
+  margin: 4px 16px 12px;
+  color: var(--texto-suave);
+}
+
+.mensajes__lista-cuerpo {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.mensajes__lista-cuerpo > .cargando,
+.mensajes__lista-cuerpo > .mensaje {
+  margin: 0 16px;
+}
+
+.mensajes__conversaciones {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.mensajes__abrir {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 64px;
+  padding: 10px 16px;
+  border: 0;
+  border-top: 1px solid var(--borde);
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 120ms ease-out;
+}
+
+.mensajes__abrir[aria-current='true'] {
+  background: var(--superficie-2);
+  box-shadow: inset 3px 0 var(--accion);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .mensajes__abrir:hover {
+    background: color-mix(in srgb, var(--superficie-2) 60%, transparent);
+  }
+}
+
+.mensajes__abrir:focus-visible {
+  outline-offset: -3px;
+}
+
+.mensajes__fila-texto {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.mensajes__fila-arriba,
+.mensajes__fila-abajo {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+}
+
+.mensajes__fila-abajo {
+  align-items: center;
+}
+
+.mensajes__nombre {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mensajes__detalle {
+  margin-left: 6px;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+  font-weight: 400;
+}
+
+.mensajes__cuando {
+  flex: none;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+.mensajes__ultimo {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Unread: the name under the highlighter, the count in ink. */
+.mensajes__conversacion-fila[data-sin-leer] .mensajes__nombre-texto {
+  padding: 0 4px;
+  border-radius: 3px;
+  background: var(--resaltador);
+  color: var(--resaltador-texto);
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+
+.mensajes__conversacion-fila[data-sin-leer] .mensajes__ultimo {
+  color: var(--texto);
+  font-weight: 600;
+}
+
+.mensajes__sin-leer {
+  flex: none;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: 11px;
+  background: var(--accion);
+  color: var(--accion-texto);
+  font-size: 0.75rem;
+  font-variant-numeric: lining-nums tabular-nums;
+  font-weight: 700;
+  line-height: 22px;
+  text-align: center;
+}
+
+.mensajes__mas {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  padding: 16px;
+  border-top: 1px solid var(--borde);
+}
+
+.mensajes__vacio {
+  display: grid;
+  justify-items: start;
+  gap: 12px;
+  padding: 8px 16px 24px;
+}
+
+.mensajes__vacio p {
+  margin: 0;
+  color: var(--texto-suave);
+}
+
+.mensajes__error {
+  margin: 0;
+  color: var(--error);
+  font-size: var(--t-chica);
+  font-weight: 700;
+}
+
+/* People and groups: round, so they don't pass for a course's symbol (square). */
+.mensajes__avatar {
+  --tono: var(--materia-0);
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  overflow: hidden;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--tono) 22%, var(--superficie));
+  color: var(--texto);
+  font-size: 0.95rem;
+  font-variant-numeric: lining-nums;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.mensajes__avatar--chico {
+  width: 36px;
+  height: 36px;
+  font-size: 0.8rem;
+}
+
+.mensajes__avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.mensajes__avatar svg {
+  width: 56%;
+  height: 56%;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.75;
+}
+
+.mensajes__avatar[data-tono='1'] { --tono: var(--materia-1); }
+.mensajes__avatar[data-tono='2'] { --tono: var(--materia-2); }
+.mensajes__avatar[data-tono='3'] { --tono: var(--materia-3); }
+.mensajes__avatar[data-tono='4'] { --tono: var(--materia-4); }
+.mensajes__avatar[data-tono='5'] { --tono: var(--materia-5); }
+
+/* One conversation, or a new message. */
+.mensajes__panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+/* A file dragged from a folder over the conversation: the whole panel takes it. */
+.mensajes__soltar {
+  position: absolute;
+  inset: 6px;
+  z-index: 5;
+  display: grid;
+  place-items: center;
+  border: 2px dashed var(--foco);
+  border-radius: var(--radio-bloque);
+  background: color-mix(in srgb, var(--superficie) 88%, var(--foco));
+  color: var(--texto);
+  font-size: 1.125rem;
+  font-weight: 700;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .mensajes__soltar {
+    animation: mensajes-soltar 140ms ease-out;
+  }
+}
+
+@keyframes mensajes-soltar {
+  from {
+    opacity: 0;
+  }
+}
+
+.mensajes__cabeza {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 72px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--borde);
+}
+
+.mensajes__titulos {
+  flex: 1;
+  min-width: 0;
+}
+
+/* A long name of a person or a group: two lines, and only then cut, so it can be read. */
+.mensajes__titulos h2 {
+  display: -webkit-box;
+  margin: 0;
+  overflow: hidden;
+  font-size: var(--t-h3);
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.mensajes__titulos h2:focus {
+  outline: none;
+}
+
+.mensajes__subtitulo {
+  margin: 2px 0 0;
+  overflow: hidden;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mensajes__campus {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-size: var(--t-chica);
+  font-weight: 600;
+}
+
+.mensajes__volver {
+  flex: none;
+}
+
+.mensajes__hilo {
+  flex: 1;
+  min-height: 0;
+  padding: 8px 20px 16px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: var(--fondo);
+}
+
+.mensajes__hilo:focus-visible {
+  outline-offset: -3px;
+}
+
+.mensajes__hilo > .mensaje {
+  margin-top: 16px;
+}
+
+.mensajes__anteriores {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  padding: 8px 0;
+}
+
+.mensajes__primero {
+  max-width: 28em;
+  margin: 32px auto;
+  color: var(--texto-suave);
+  text-align: center;
+}
+
+.mensajes__dia + .mensajes__dia {
+  margin-top: 8px;
+}
+
+/* The day between two lines, like a date written across the page of an agenda. */
+.mensajes__fecha {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 16px 0 12px;
+  color: var(--texto-suave);
+  font-family: var(--fuente-ui);
+  font-size: var(--t-chica);
+  font-weight: 600;
+}
+
+.mensajes__fecha::before,
+.mensajes__fecha::after {
+  content: '';
+  flex: 1;
+  border-top: 1px solid var(--borde);
+}
+
+.mensajes__burbujas {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.mensajes__burbuja {
+  display: grid;
+  justify-items: start;
+  gap: 4px;
+}
+
+.mensajes__burbuja[data-seguido] {
+  margin-top: -6px;
+}
+
+.mensajes__burbuja[data-mio] {
+  justify-items: end;
+}
+
+.mensajes__autor {
+  margin: 0 0 0 12px;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+  font-weight: 700;
+}
+
+.mensajes__globo {
+  max-width: min(78%, 36em);
+  padding: 8px 12px 6px;
+  overflow-wrap: anywhere;
+  border: 1px solid var(--borde);
+  border-radius: 16px 16px 16px 4px;
+  background: var(--superficie);
+  color: var(--texto);
+}
+
+.mensajes__burbuja[data-seguido] .mensajes__globo {
+  border-top-left-radius: 4px;
+}
+
+.mensajes__burbuja[data-mio] .mensajes__globo {
+  border-color: var(--accion);
+  border-radius: 16px 16px 4px;
+  background: var(--accion);
+  color: var(--accion-texto);
+}
+
+.mensajes__burbuja[data-mio][data-seguido] .mensajes__globo {
+  border-top-right-radius: 4px;
+}
+
+.mensajes__globo .texto-propio > :first-child {
+  margin-top: 0;
+}
+
+.mensajes__globo .texto-propio > :last-child {
+  margin-bottom: 0;
+}
+
+.mensajes__globo .texto-propio p,
+.mensajes__globo .texto-propio ul {
+  margin: 0 0 6px;
+}
+
+.mensajes__burbuja[data-mio] .mensajes__globo a {
+  color: inherit;
+}
+
+.mensajes__plano,
+.mensajes__sin-texto {
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+.mensajes__sin-texto {
+  font-style: italic;
+}
+
+.mensajes__hora {
+  display: block;
+  margin-top: 2px;
+  color: var(--texto-suave);
+  font-size: 0.75rem;
+  font-variant-numeric: lining-nums tabular-nums;
+  text-align: right;
+}
+
+.mensajes__burbuja[data-mio] .mensajes__hora {
+  color: inherit;
+}
+
+/* On its way: faint until the campus says it has it. */
+.mensajes__burbuja[data-estado='saliendo'] .mensajes__globo {
+  opacity: 0.6;
+}
+
+/* It didn't go: the bubble stays as a draft, dashed, with what to do under it. */
+.mensajes__burbuja[data-estado='fallo'] .mensajes__globo {
+  border: 1px dashed var(--error);
+  background: var(--superficie);
+  color: var(--texto);
+}
+
+.mensajes__burbuja[data-estado='fallo'] .mensajes__hora {
+  display: none;
+}
+
+.mensajes__fallo {
+  display: grid;
+  justify-items: end;
+  gap: 6px;
+  max-width: min(78%, 36em);
+  text-align: right;
+}
+
+.mensajes__fallo p {
+  margin: 0;
+  color: var(--error);
+  font-size: var(--t-chica);
+}
+
+.mensajes__fallo-botones {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .mensajes__burbuja[data-estado='saliendo'] .mensajes__globo {
+    transition: opacity 160ms ease-out, transform 180ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  @starting-style {
+    .mensajes__burbuja[data-estado='saliendo'] .mensajes__globo {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+  }
+}
+
+/* While the messages come: bubbles of both sides, in grey. */
+.mensajes__esqueleto {
+  display: grid;
+  gap: 12px;
+  padding-top: 16px;
+}
+
+.mensajes__esqueleto > span {
+  width: min(60%, 320px);
+  height: 44px;
+  border-radius: 16px;
+  background: var(--superficie-2);
+}
+
+.mensajes__esqueleto > span[data-lado='mio'] {
+  justify-self: end;
+  width: min(45%, 240px);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .mensajes__esqueleto > span {
+    animation: mensajes-brillo 1.4s ease-in-out infinite;
+  }
+}
+
+@keyframes mensajes-brillo {
+  50% {
+    opacity: 0.55;
+  }
+}
+
+/* Writing. */
+.mensajes__escribir {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 8px 10px;
+  padding: 12px 16px;
+  border-top: 1px solid var(--borde);
+  background: var(--superficie);
+}
+
+.mensajes__campo {
+  min-height: 44px;
+  max-height: 200px;
+  overflow-y: auto;
+  resize: none;
+  line-height: 1.4;
+}
+
+textarea.mensajes__campo {
+  min-height: 44px;
+  resize: none;
+}
+
+.mensajes__mandar {
+  min-width: 96px;
+}
+
+.mensajes__ayuda {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 4px 12px;
+  grid-column: 1 / -1;
+  margin: 0;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+}
+
+.mensajes__largo {
+  margin-left: auto;
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+.mensajes__largo[data-pasado] {
+  color: var(--error);
+  font-weight: 700;
+}
+
+.mensajes__no-puede {
+  margin: 0;
+  padding: 16px;
+  border-top: 1px solid var(--borde);
+  background: var(--superficie);
+  color: var(--texto-suave);
+}
+
+/* A file (lib/adjuntos.js): the paperclip next to the box, the file chosen over it, and the first time, what happens
+   with it before Google's window. */
+.mensajes__escribir[data-adjuntar] {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+}
+
+.mensajes__clip {
+  width: 44px;
+  padding: 0;
+  border-color: var(--borde-control);
+}
+
+.mensajes__clip svg {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+}
+
+.mensajes__adjuntar,
+.mensajes__elegido,
+.mensajes__problema {
+  grid-column: 1 / -1;
+}
+
+.mensajes__adjuntar {
+  padding: 12px 14px;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-bloque);
+  background: var(--fondo);
+}
+
+.mensajes__adjuntar-titulo {
+  margin: 0 0 4px;
+  font-family: var(--fuente-ui);
+  font-size: var(--t-ui);
+}
+
+.mensajes__adjuntar p {
+  max-width: 40em;
+  margin: 0 0 10px;
+}
+
+.mensajes__adjuntar .mensaje {
+  margin: 10px 0 0;
+}
+
+.mensajes__adjuntar-botones {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+/* «Adjuntar <name>» with a long name without spaces wraps instead of leaving the screen. */
+.mensajes__adjuntar-botones .boton {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+.mensajes__adjuntar-botones p.mensajes__adjuntar-espera {
+  margin: 0;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+  font-weight: 600;
+}
+
+.mensajes__elegido {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 8px 8px 10px;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-bloque);
+  background: var(--fondo);
+}
+
+.mensajes__elegido-texto p {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.mensajes__elegido-nombre {
+  font-weight: 700;
+}
+
+.mensajes__elegido-aviso {
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+}
+
+.mensajes__problema {
+  margin: 0;
+  color: var(--error);
+  font-size: var(--t-chica);
+  font-weight: 600;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .mensajes__adjuntar,
+  .mensajes__elegido {
+    transition: opacity 180ms ease-out, transform 200ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  @starting-style {
+    .mensajes__adjuntar,
+    .mensajes__elegido {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+  }
+}
+
+/* A file in a message: a card inside the bubble, light on the student's ink. */
+.adjunto {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  width: min(17rem, 100%);
+  margin: 2px 0 6px;
+  padding: 8px 10px;
+  border: 1px solid var(--borde);
+  border-radius: 10px;
+  background: var(--fondo);
+  color: var(--texto);
+  text-decoration: none;
+}
+
+.mensajes__burbuja[data-mio] .mensajes__globo .adjunto {
+  border-color: transparent;
+  background: var(--superficie);
+  color: var(--texto);
+}
+
+.mensajes__burbuja[data-estado='fallo'] .mensajes__globo .adjunto {
+  border-color: var(--borde);
+  background: var(--fondo);
+}
+
+.adjunto__texto {
+  display: grid;
+  min-width: 0;
+}
+
+.adjunto__nombre {
+  font-weight: 700;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.adjunto__dato {
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+}
+
+button.adjunto {
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+:is(a, button).adjunto {
+  transition: border-color 120ms ease, transform 120ms ease-out;
+}
+
+:is(a, button).adjunto:active {
+  transform: scale(0.98);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  :is(a, button).adjunto:hover {
+    border-color: var(--borde-control);
+  }
+
+  :is(a, button).adjunto:hover .adjunto__nombre {
+    text-decoration: underline;
+  }
+}
+
+.adjunto__barra {
+  display: block;
+  width: 100%;
+  height: 6px;
+  margin-top: 6px;
+  overflow: hidden;
+  border: 0;
+  border-radius: 3px;
+  background: var(--superficie-2);
+  accent-color: var(--accion);
+  appearance: none;
+}
+
+.adjunto__barra::-webkit-progress-bar {
+  background: var(--superficie-2);
+}
+
+.adjunto__barra::-webkit-progress-value {
+  background: var(--accion);
+}
+
+.adjunto__barra::-moz-progress-bar {
+  background: var(--accion);
+}
+
+/* Going up, the bar says it is on its way: the bubble doesn't fade as well. */
+.mensajes__burbuja[data-estado='saliendo'][data-subiendo] .mensajes__globo {
+  opacity: 1;
+}
+
+/* A new message: finding the person. */
+.mensajes__buscar-persona {
+  flex: 1;
+  min-height: 0;
+  padding: 16px;
+  overflow-y: auto;
+}
+
+.mensajes__buscar-persona .campo {
+  max-width: 32em;
+  margin-bottom: 12px;
+}
+
+.mensajes__personas {
+  max-width: 32em;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  transition: opacity 120ms ease-out;
+}
+
+.mensajes__personas--viejas {
+  opacity: 0.6;
+}
+
+.mensajes__persona {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 56px;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: var(--radio-control);
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 120ms ease-out;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .mensajes__persona:hover {
+    background: var(--superficie-2);
+  }
+}
+
+.mensajes__persona:active,
+.mensajes__abrir:active {
+  background: var(--superficie-2);
+}
+
+.mensajes__persona-nombre {
+  flex: 1;
+  min-width: 0;
+  font-weight: 600;
+}
+
+.mensajes__persona-dato {
+  flex: none;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+}
+
+/* Nothing chosen yet, with room: an invitation. */
+.mensajes__panel--nada {
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 32px;
+  background: var(--fondo);
+  text-align: center;
+}
+
+.mensajes__panel--nada svg {
+  width: 72px;
+  height: 72px;
+  fill: none;
+  stroke: var(--texto-suave);
+  stroke-linejoin: round;
+  stroke-width: 1;
+}
+
+.mensajes__panel--nada p {
+  max-width: 22em;
+  margin: 0;
+  color: var(--texto-suave);
+}
+
+/* On a phone: the list flows with the page, the conversation fills the screen under the header. */
+.mensajes[data-angosta] {
+  padding: 0;
+}
+
+.mensajes[data-angosta] .mensajes__caja {
+  display: block;
+  height: auto;
+  overflow: visible;
+  border: 0;
+  border-radius: 0;
+  background: none;
+}
+
+.mensajes[data-angosta] .mensajes__lista-panel {
+  border-right: 0;
+  padding-block: 24px 32px;
+}
+
+.mensajes[data-angosta] .mensajes__lista-cabeza {
+  padding: 0 var(--margen) 12px;
+}
+
+.mensajes[data-angosta] .mensajes__filtro,
+.mensajes[data-angosta] .mensajes__llegaron,
+.mensajes[data-angosta] .mensajes__nada-filtro {
+  margin-inline: var(--margen);
+}
+
+.mensajes[data-angosta] .mensajes__lista-cuerpo {
+  overflow: visible;
+}
+
+.mensajes[data-angosta] .mensajes__lista-cuerpo > .cargando,
+.mensajes[data-angosta] .mensajes__lista-cuerpo > .mensaje {
+  margin-inline: var(--margen);
+}
+
+.mensajes[data-angosta] .mensajes__abrir {
+  padding-inline: var(--margen);
+}
+
+.mensajes[data-angosta] .mensajes__conversaciones {
+  border-bottom: 1px solid var(--borde);
+}
+
+.mensajes[data-angosta] .mensajes__panel {
+  height: calc(100dvh - var(--alto-cabecera));
+  background: var(--superficie);
+}
+
+.mensajes[data-angosta] .mensajes__cabeza {
+  gap: 10px;
+  padding-inline: var(--margen) 12px;
+}
+
+/* On a phone the campus link goes on its own line under the name, so the name keeps the room. */
+.mensajes[data-angosta] .mensajes__cabeza {
+  flex-wrap: wrap;
+  row-gap: 0;
+}
+
+.mensajes[data-angosta] .mensajes__campus {
+  order: 9;
+  flex-basis: 100%;
+  justify-content: flex-end;
+  min-height: 32px;
+}
+
+.mensajes[data-angosta] .mensajes__hilo {
+  padding-inline: var(--margen);
+}
+
+.mensajes[data-angosta] .mensajes__escribir {
+  padding-inline: var(--margen);
+}
+
+.mensajes[data-angosta] .mensajes__globo,
+.mensajes[data-angosta] .mensajes__fallo {
+  max-width: 86%;
+}

@@ -1,0 +1,711 @@
+/* Sysacad: the copies Sysacad Lindo keeps, as a folder. One tab sticking out per page of Sysacad, with how long ago it
+   was seen under its name, and the sheet of the chosen one joined to it. */
+.sysacad-pagina__bajada {
+  max-width: 44em;
+  color: var(--texto-suave);
+}
+
+/* While there is nothing to show: why, and the one thing to do. A dashed edge, like an empty folder. */
+.sysacad-estado {
+  max-width: 40em;
+  margin-top: 24px;
+  padding: 20px 22px;
+  border: 1px dashed var(--borde-control);
+  border-radius: var(--radio-bloque);
+  background: var(--superficie);
+}
+
+.sysacad-estado:focus:not(:focus-visible) {
+  outline: none;
+}
+
+.sysacad-estado__titulo {
+  margin: 0 0 6px;
+  font-size: var(--t-h3);
+}
+
+.sysacad-estado__texto {
+  margin: 0;
+  color: var(--texto-suave);
+}
+
+.sysacad-estado__acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+/* It is a copy: said once, quietly, with Sysacad at hand. */
+.sysacad-aviso {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  margin-top: 20px;
+  padding: 10px 10px 10px 16px;
+  border-radius: var(--radio-control);
+  background: var(--fondo-aviso);
+}
+
+.sysacad-aviso p {
+  margin: 0;
+}
+
+.sysacad-carpeta {
+  margin-top: 28px;
+  animation: llega 180ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sysacad-carpeta {
+    animation: none;
+  }
+}
+
+/* The tabs sit on the sheet's top edge; the chosen one covers it, so it and its sheet are one piece. */
+.sysacad-solapas {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  gap: 4px;
+  margin-bottom: -1px;
+  /* No left padding: the first tab's edge has to fall on the sheet's square corner, or a sliver of it shows. */
+  padding: 4px 4px 0 0;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  overscroll-behavior-x: contain;
+}
+
+/* More tabs past the right edge: the edge fades, so the row reads as one that scrolls. */
+.sysacad-solapas--sigue {
+  mask-image: linear-gradient(to right, #000 calc(100% - 40px), transparent);
+}
+
+.sysacad-solapa {
+  flex: none;
+  display: grid;
+  gap: 1px;
+  min-height: 44px;
+  padding: 9px 16px 8px;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-bloque) var(--radio-bloque) 0 0;
+  background: var(--superficie-2);
+  color: var(--texto-suave);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 120ms ease-out, color 120ms ease-out;
+  user-select: none;
+}
+
+.sysacad-solapa[aria-selected='false']:active {
+  background: var(--superficie);
+  color: var(--texto);
+}
+
+.sysacad-solapa[aria-selected='true'] {
+  border-bottom-color: var(--superficie);
+  background: var(--superficie);
+  color: var(--texto);
+  box-shadow: inset 0 3px 0 var(--accion);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .sysacad-solapa[aria-selected='false']:hover {
+    color: var(--texto);
+  }
+}
+
+.sysacad-solapa:focus-visible {
+  outline-offset: -4px;
+}
+
+.sysacad-solapa__nombre {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.sysacad-solapa__cuando {
+  font-size: var(--t-chica);
+  font-variant-numeric: tabular-nums lining-nums;
+  white-space: nowrap;
+}
+
+.sysacad-hoja {
+  min-width: 0;
+  padding: clamp(16px, 3vw, 28px);
+  border: 1px solid var(--borde);
+  border-radius: 0 var(--radio-bloque) var(--radio-bloque) var(--radio-bloque);
+  background: var(--superficie);
+}
+
+/* ---------- Each copy, the way Sysacad Lindo redraws it ----------
+   Its name and the date Sysacad gave; what matters first (an average, a count); filters that say how many they leave;
+   the subjects in a band per year, as in Tu carrera. Every state is a word, a color and a swatch of its own shape, the
+   same ones as Tu carrera. */
+.sysacad-hoja {
+  --c-aprobada: var(--ok);
+  --c-regular: var(--accion-hover);
+  --c-cursando: var(--materia-3);
+  --c-pendiente: var(--borde-control);
+}
+
+.sysacad-copia__cabeza {
+  margin-bottom: 20px;
+}
+
+.sysacad-copia__titulo {
+  margin: 0;
+  overflow-wrap: anywhere;
+  font-size: var(--t-h2);
+  line-height: 1.1;
+}
+
+.sysacad-copia__al {
+  margin: 6px 0 0;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+.sysacad-copia__cuerpo > :first-child {
+  margin-top: 0;
+}
+
+.sysacad-copia__subtitulo {
+  margin: 24px 0 8px;
+  font-size: 1.0625rem;
+}
+
+.sysacad-copia__parrafo {
+  max-width: 60ch;
+  margin: 0 0 14px;
+}
+
+.sysacad-copia__vacia {
+  color: var(--texto-suave);
+}
+
+.sysacad-linea {
+  display: block;
+}
+
+/* What matters first: the big figure on the left, what goes with it beside. */
+.sysacad-cifras {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.sysacad-cifra {
+  min-width: 0;
+  padding: 16px 18px;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-bloque);
+}
+
+.sysacad-cifra--promedio {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+@container pagina (min-width: 48rem) {
+  .sysacad-cifras {
+    grid-template-columns: minmax(10rem, auto) minmax(0, 2fr) minmax(0, 1.4fr);
+  }
+  .sysacad-cifras:has(> :nth-child(2):last-child) {
+    grid-template-columns: minmax(10rem, auto) minmax(0, 1fr);
+  }
+}
+
+.sysacad-cifra__numero {
+  margin: 0;
+  font-family: var(--fuente-titulos);
+  font-size: clamp(2.5rem, 6vw, 3.25rem);
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+.sysacad-cifra__titulo {
+  margin: 0 0 10px;
+  font-family: var(--fuente-titulos);
+  font-size: var(--t-h3);
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.sysacad-cifra__texto {
+  margin: 4px 0 0;
+  color: var(--texto-suave);
+}
+
+.sysacad-cifra__titulo + .sysacad-cifra__texto {
+  margin-top: 0;
+}
+
+.sysacad-cifra__nota {
+  margin: 10px 0 0;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+}
+
+.sysacad-cifra__pie {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin: 10px 0 0;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+  font-variant-numeric: lining-nums;
+}
+
+/* How far along: approved, regular and taking now, in the order they come. */
+.sysacad-barra {
+  display: flex;
+  height: 10px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--texto) 10%, transparent);
+}
+
+.sysacad-barra__parte--aprobada {
+  background: var(--c-aprobada);
+}
+
+.sysacad-barra__parte--regular {
+  background: repeating-linear-gradient(90deg, var(--c-regular) 0 5px, color-mix(in srgb, var(--c-regular) 55%, var(--superficie)) 5px 7px);
+}
+
+.sysacad-barra__parte--cursando {
+  background: repeating-linear-gradient(135deg, var(--c-cursando) 0 3px, color-mix(in srgb, var(--c-cursando) 45%, var(--superficie)) 3px 6px);
+}
+
+/* What holds back the most: the subject, and how many it holds back on the right. */
+.sysacad-frenos {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sysacad-freno {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 2px 16px;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--borde);
+}
+
+.sysacad-freno__nombre {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.sysacad-freno__cuantas {
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+  font-variant-numeric: lining-nums;
+  white-space: nowrap;
+}
+
+.sysacad-frenos__mas summary {
+  width: fit-content;
+  min-height: 40px;
+  padding: 10px 0;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  cursor: pointer;
+}
+
+.sysacad-frenos__mas summary:active,
+.sysacad-orden:active {
+  opacity: 0.7;
+}
+
+.sysacad-frenos__mas[open] summary {
+  padding-bottom: 0;
+}
+
+/* The search and the filters, together over the list. */
+.sysacad-filtros {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 24px;
+  margin-bottom: 8px;
+}
+
+.sysacad-buscar {
+  flex: 1 1 100%;
+}
+
+.sysacad-buscar .campo {
+  width: min(100%, 26rem);
+}
+
+.sysacad-filtro {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  min-width: 0;
+}
+
+.sysacad-filtro__nombre {
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+}
+
+.sysacad-filtro__cuenta {
+  margin-left: 6px;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+.tipos__opcion[aria-pressed='true'] .sysacad-filtro__cuenta {
+  color: inherit;
+}
+
+.sysacad-cuenta {
+  margin: 12px 0 0;
+  color: var(--texto-suave);
+}
+
+.sysacad-cuenta:empty {
+  display: none;
+}
+
+/* A band per year, like Tu carrera: the number big and quiet, the name and how far along. */
+.sysacad-anio {
+  padding: 24px 0 4px;
+}
+
+.sysacad-anio + .sysacad-anio {
+  border-top: 1px solid var(--borde);
+}
+
+.sysacad-anio__cabeza {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+  margin-bottom: 6px;
+}
+
+.sysacad-anio__numero {
+  font-family: var(--fuente-titulos);
+  font-size: 2.25rem;
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: lining-nums;
+  color: color-mix(in srgb, var(--texto) 22%, transparent);
+}
+
+.sysacad-anio__titulo {
+  margin: 0;
+  font-size: var(--t-h3);
+}
+
+.sysacad-anio__cuenta {
+  margin: 0 0 0 auto;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+  font-variant-numeric: lining-nums;
+}
+
+/* A table, as text. Wider than the sheet, it scrolls on its own and the page stays put. */
+.sysacad-tabla {
+  margin: 8px 0 20px;
+  overflow-x: auto;
+}
+
+.sysacad-anio .sysacad-tabla {
+  margin-bottom: 12px;
+}
+
+/* The tables of every year share their columns, so they line up one under the other. The ones with no view of their
+   own keep a width to read them (minWidth, from SysacadVistas.jsx), and scroll sideways on a phone. */
+.sysacad-anio .sysacad-tabla__tabla {
+  table-layout: fixed;
+}
+
+.sysacad-anio .sysacad-tabla__tabla td {
+  overflow-wrap: anywhere;
+}
+
+.sysacad-anio .sysacad-tabla__tabla th {
+  white-space: normal;
+}
+
+.sysacad-col-estado {
+  width: 26%;
+}
+
+.sysacad-col-registro {
+  width: 19%;
+}
+
+.sysacad-col-horas {
+  width: 4.5rem;
+}
+
+.sysacad-col-nota {
+  width: 3.5rem;
+}
+
+.sysacad-col-falta {
+  width: 55%;
+}
+
+/* On a phone, each subject is a short card: the name on top, its state and grade under it. */
+@container pagina (max-width: 36rem) {
+  .sysacad-tabla__tabla--tarjetas,
+  .sysacad-tabla__tabla--tarjetas tbody {
+    display: block;
+  }
+  /* The titles stay for a screen reader, out of sight. */
+  .sysacad-tabla__tabla--tarjetas thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .sysacad-tabla__tabla--tarjetas tr {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4px 14px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--borde);
+  }
+  .sysacad-tabla__tabla--tarjetas tbody tr:last-child {
+    border-bottom: 0;
+  }
+  .sysacad-tabla .sysacad-tabla__tabla--tarjetas td {
+    width: auto;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+  }
+  .sysacad-tabla__tabla--tarjetas td:empty {
+    display: none;
+  }
+  .sysacad-tabla__tabla--tarjetas .sysacad-materia {
+    flex: 1 1 100%;
+    font-weight: 600;
+  }
+  .sysacad-tabla__tabla--tarjetas .sysacad-nota {
+    margin-left: auto;
+  }
+  .sysacad-tabla__tabla--tarjetas .sysacad-col-registro {
+    white-space: nowrap;
+  }
+}
+
+.sysacad-tabla__tabla {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+.sysacad-tabla th,
+.sysacad-tabla td {
+  padding: 10px 16px 10px 0;
+  border-bottom: 1px solid var(--borde);
+  text-align: left;
+  vertical-align: top;
+}
+
+.sysacad-tabla tr > :last-child {
+  padding-right: 0;
+}
+
+.sysacad-tabla th {
+  border-bottom: 2px solid var(--texto);
+  color: var(--texto);
+  font-size: var(--t-chica);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.sysacad-tabla tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.sysacad-tabla td {
+  min-width: 3ch;
+}
+
+.sysacad-materia {
+  min-width: 14ch;
+  overflow-wrap: anywhere;
+}
+
+.sysacad-tabla .sysacad-num {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.sysacad-suave {
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+}
+
+/* The grade carries the row: bigger, on the right. */
+.sysacad-nota {
+  font-family: var(--fuente-titulos);
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .sysacad-tabla tbody tr:hover td {
+    background: color-mix(in srgb, var(--superficie-2) 55%, transparent);
+  }
+}
+
+/* A state: its word, in its color, after a swatch with the shape Tu carrera gives it. */
+.sysacad-estado-de {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.sysacad-estado-de::before {
+  content: '';
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  transform: translateY(1px);
+}
+
+.sysacad-estado-de--aprobada {
+  color: var(--c-aprobada);
+  font-weight: 600;
+}
+
+.sysacad-estado-de--aprobada::before {
+  background: var(--c-aprobada);
+}
+
+.sysacad-estado-de--regular {
+  font-weight: 600;
+}
+
+.sysacad-estado-de--regular::before {
+  background: var(--c-regular);
+}
+
+.sysacad-estado-de--cursando::before {
+  background: repeating-linear-gradient(135deg, var(--c-cursando) 0 3px, color-mix(in srgb, var(--c-cursando) 45%, var(--superficie)) 3px 6px);
+}
+
+.sysacad-estado-de--pendiente {
+  color: var(--texto-suave);
+}
+
+.sysacad-estado-de--pendiente::before {
+  outline: 1.5px dashed var(--c-pendiente);
+  outline-offset: -1.5px;
+}
+
+.sysacad-estado-de--otro::before {
+  display: none;
+}
+
+/* Sorting: the whole title is the button; the arrow shows only on the column in use. */
+.sysacad-orden {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  margin: -6px 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.sysacad-orden__flecha[data-sube]::after {
+  content: '';
+  display: block;
+  border-inline: 4px solid transparent;
+  border-top: 5px solid currentColor;
+}
+
+.sysacad-orden__flecha[data-sube='true']::after {
+  transform: rotate(180deg);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .sysacad-orden:hover {
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+}
+
+.sysacad-cuenta-fila {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: 12px;
+}
+
+.sysacad-cuenta-fila .boton {
+  margin-top: 12px;
+}
+
+.sysacad-total {
+  margin: -8px 0 20px;
+  font-weight: 600;
+  font-variant-numeric: lining-nums;
+}
+
+/* Certificados: each one a card. */
+.sysacad-certificados {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 14rem), 1fr));
+  gap: 12px;
+  margin: 0 0 16px;
+  padding: 0;
+  list-style: none;
+}
+
+.sysacad-certificado {
+  padding: 16px 18px;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-bloque);
+  font-family: var(--fuente-titulos);
+  font-size: 1.0625rem;
+  font-weight: 700;
+}
+
+.sysacad-nota-al-pie {
+  max-width: 60ch;
+  margin: 0;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+}
+
+
+/* Bordes: the folder takes the frame of the style, without rounding the corner under the first tab. */
+html[data-bordes='si'] :is(.sysacad-hoja, .sysacad-solapa) {
+  border-color: var(--recuadro);
+}
+
+html[data-bordes='si'] .sysacad-solapa[aria-selected='true'] {
+  border-bottom-color: var(--superficie);
+}

@@ -1,0 +1,110 @@
+/* Where a campus task is, as a word with its color (the task page and its preview). The word always goes: the color
+   never says it alone. */
+.chip-tarea {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 2px 12px;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  font-size: var(--t-chica);
+  font-weight: 700;
+  line-height: 1.2;
+  font-variant-numeric: lining-nums;
+}
+
+.chip-tarea[data-estado='sin'] {
+  background: var(--fondo-aviso);
+  color: var(--aviso);
+}
+
+.chip-tarea[data-estado='borrador'] {
+  border-style: dashed;
+  background: var(--superficie-2);
+  color: var(--texto);
+}
+
+.chip-tarea[data-estado='entregada'] {
+  color: var(--ok);
+}
+
+.chip-tarea[data-estado='calificada'] {
+  border-color: var(--accion);
+  background: var(--accion);
+  color: var(--accion-texto);
+}
+
+/* The preview of a task, in the sheet of Previa.jsx. */
+.tarea-previa {
+  display: grid;
+  gap: 12px;
+}
+
+.tarea-previa__estado {
+  display: grid;
+  justify-items: start;
+  gap: 8px;
+  padding: 14px 16px;
+  border-radius: var(--radio-control);
+  background: var(--superficie);
+}
+
+.tarea-previa__dato {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  font-size: var(--t-h3);
+  font-weight: 700;
+  font-variant-numeric: lining-nums;
+}
+
+.tarea-previa__dato[data-vencida] {
+  color: var(--error);
+}
+
+.tarea-previa__fecha {
+  display: block;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+  font-weight: 400;
+}
+
+/* While the campus answers: the shape of the state, the same height. */
+.tarea-previa__esqueleto {
+  display: grid;
+  gap: 10px;
+  padding: 14px 16px;
+  border-radius: var(--radio-control);
+  background: var(--superficie);
+}
+
+.tarea-previa__esqueleto i {
+  display: block;
+  width: 7rem;
+  height: 28px;
+  border-radius: 999px;
+  background: var(--superficie-2);
+}
+
+.tarea-previa__esqueleto i + i {
+  width: 12rem;
+  height: 44px;
+  border-radius: var(--radio-control);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .tarea-previa__esqueleto i {
+    animation: tarea-brillo 1.4s ease-in-out infinite;
+  }
+}
+
+:root[data-movimiento='reducido'] .tarea-previa__esqueleto i,
+:root[data-movimiento='ninguno'] .tarea-previa__esqueleto i {
+  animation: none;
+}
+
+@keyframes tarea-brillo {
+  50% {
+    opacity: 0.55;
+  }
+}

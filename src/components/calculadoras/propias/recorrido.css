@@ -1,0 +1,110 @@
+/* Traversals of binary trees (propias/recorrido.jsx). The tree is drawn with _log-trazos. */
+.arb-resultado {
+  letter-spacing: 0.04em;
+  word-spacing: 0.12em;
+}
+
+.arb-controles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 2px 0 12px;
+}
+
+/* The traversal written square by square on the sheet: each visit in its square, with its number small on top. */
+.arb-orden {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.arb-orden__casilla {
+  display: grid;
+  justify-items: center;
+  min-width: calc(var(--lado-cuadro) * 1.5);
+}
+
+.arb-orden__numero {
+  color: var(--texto-suave);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.arb-orden__nombre {
+  display: grid;
+  place-items: center;
+  min-width: calc(var(--lado-cuadro) * 1.5);
+  height: calc(var(--lado-cuadro) * 1.5);
+  padding: 0 4px;
+  border: 1.5px dashed var(--borde-control);
+  border-radius: 4px;
+  font-size: 1.125rem;
+  font-weight: 700;
+}
+
+.arb-orden__casilla[data-vista] .arb-orden__nombre {
+  border-style: solid;
+  border-color: var(--resaltador-texto);
+  background: var(--resaltador);
+  color: var(--resaltador-texto);
+}
+
+.arb-orden__casilla[data-ahora] .arb-orden__nombre {
+  outline: 3px solid var(--foco);
+  outline-offset: 1px;
+}
+
+.arb-orden__casilla[data-vista] .arb-orden__numero {
+  color: var(--foco);
+}
+
+/* The three traversals, the chosen one with the highlighter. */
+.arb-tres {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.arb-tres__uno {
+  display: grid;
+  gap: 0 10px;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: baseline;
+}
+
+.arb-tres__nombre {
+  font-weight: 700;
+}
+
+.arb-tres__regla,
+.arb-tres__da {
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+}
+
+.arb-tres__orden,
+.arb-tres__da {
+  grid-column: 1 / -1;
+}
+
+.arb-tres__orden {
+  justify-self: start;
+  font-size: 1.125rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  word-spacing: 0.12em;
+  overflow-wrap: anywhere;
+}
+
+.arb-tres__uno[data-elegido] .arb-tres__orden {
+  padding: 0 0.25em;
+  border-radius: 0.15em 0.45em 0.2em 0.5em;
+  background: var(--resaltador);
+  color: var(--resaltador-texto);
+}

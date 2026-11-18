@@ -1,0 +1,132 @@
+/* The order of the menu in Configuración (PantallasDelMenu.jsx): each row moves by its handle, like the sections of a
+   course. The rows are in configuracion.css. */
+.lugar-menu__agarre {
+  position: relative;
+  align-self: center;
+}
+
+.lugar-menu__manija {
+  display: inline-grid;
+  place-items: center;
+  width: 32px;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radio-control);
+  background: none;
+  color: var(--texto-suave);
+  cursor: grab;
+  touch-action: none;
+}
+
+.lugar-menu__manija svg {
+  width: 20px;
+  height: 20px;
+  fill: currentColor;
+}
+
+/* On a phone the touch is the only answer it gives. */
+.lugar-menu__manija:active {
+  background: var(--superficie-2);
+  color: var(--texto);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .lugar-menu__manija:hover {
+    background: var(--superficie-2);
+    color: var(--texto);
+  }
+}
+
+/* «Subir» and «Bajar», from a tap on the handle: floating under it, so the row doesn't move. */
+.lugar-menu__mover {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 20;
+  display: flex;
+  gap: 6px;
+  padding: 6px;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-control);
+  background: var(--superficie);
+  box-shadow: 0 6px 18px rgb(0 0 0 / 0.14);
+}
+
+/* Alt and its number, for whoever has a keyboard. */
+.lugar-menu__atajo {
+  display: none;
+  margin-left: 4px;
+  padding: 0 6px;
+  border: 1px solid var(--borde-control);
+  border-radius: 4px;
+  color: var(--texto-suave);
+  font: inherit;
+  font-size: var(--t-chica);
+  font-variant-numeric: lining-nums tabular-nums;
+  font-weight: 400;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .lugar-menu__atajo {
+    display: inline;
+  }
+}
+
+/* While one is dragged, the others make room: a short transform (useArrastreDeSecciones.js), none with less motion. */
+.lugares-menu[data-arrastrando] {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.lugares-menu[data-arrastrando],
+.lugares-menu[data-arrastrando] * {
+  cursor: grabbing;
+}
+
+.lugares-menu[data-arrastrando] .lugar-menu {
+  position: relative;
+  transition: transform 160ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.lugares-menu .lugar-menu[data-agarrada] {
+  z-index: 2;
+  border-radius: var(--radio-control);
+  background: var(--superficie);
+  box-shadow: 0 0 0 4px var(--superficie), 0 0 0 6px var(--accion), 0 12px 24px -12px rgb(0 0 0 / 0.4);
+  transition: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lugares-menu[data-arrastrando] .lugar-menu {
+    transition: none;
+  }
+}
+
+/* «Posición del menú», in small: the page with its bar on top or its column on the left. */
+.muestra-lado {
+  display: grid;
+  height: 44px;
+  margin-top: auto;
+  overflow: hidden;
+  border: 1px solid var(--borde-control);
+  border-radius: 4px;
+  background: var(--fondo);
+}
+
+.muestra-lado[data-lado='arriba'] {
+  grid-template-rows: 10px minmax(0, 1fr);
+}
+
+.muestra-lado[data-lado='izquierda'] {
+  grid-template-columns: 20% minmax(0, 1fr);
+}
+
+.muestra-lado i {
+  background: var(--accion);
+}
+
+.muestra-lado b {
+  margin: 6px 10px;
+  background: repeating-linear-gradient(to bottom, var(--borde) 0 3px, transparent 3px 8px);
+}

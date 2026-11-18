@@ -1,0 +1,657 @@
+/* Tu horario (Horario.jsx): the week as columns of days on a computer, one list on a phone. */
+.horario__aviso {
+  max-width: 48rem;
+  margin: 0 0 16px;
+  padding: 10px 14px;
+  border-left: 4px solid var(--aviso);
+  border-radius: var(--radio-control);
+  background: var(--fondo-aviso);
+}
+
+.horario__barra {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px 24px;
+  margin-bottom: 16px;
+}
+
+.horario__cuatri {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* What goes on now and what comes next, in one line above the week. */
+.horario__ya {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin: 0 0 16px;
+  font-weight: 600;
+}
+
+/* Always there, so a reader hears when it changes: empty, it takes no room. */
+.horario__ya:empty {
+  margin: 0;
+}
+
+/* ---------- The week ---------- */
+.horario__semana {
+  --paso: 0.5rem;
+  --cabeza-dia: 2.75rem;
+  display: grid;
+  grid-template-columns: 3.25rem repeat(var(--dias), minmax(0, 1fr));
+  gap: 0 6px;
+  margin-bottom: 24px;
+}
+
+.horario__horas {
+  display: grid;
+  grid-template-rows: repeat(var(--filas), var(--paso));
+  margin: var(--cabeza-dia) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.horario__horas li {
+  grid-row: var(--desde) / span 12;
+  margin-top: -0.6em;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+.horario__dia {
+  min-width: 0;
+}
+
+.horario__nombre-dia {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: var(--cabeza-dia);
+  margin: 0;
+  font-family: var(--fuente-ui);
+  font-size: var(--t-ui);
+  font-weight: 600;
+}
+
+.horario__hoy {
+  padding: 0 8px;
+  border-radius: 999px;
+  background: var(--accion);
+  color: var(--accion-texto);
+  font-size: var(--t-chica);
+  font-weight: 600;
+}
+
+.horario__clases {
+  position: relative;
+  display: grid;
+  grid-template-rows: repeat(var(--filas), var(--paso));
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid var(--borde);
+  /* The hours as faint lines: one each 60 minutes, that is each 12 steps. */
+  background-image: repeating-linear-gradient(to bottom, transparent 0, transparent calc(12 * var(--paso) - 1px), var(--borde) calc(12 * var(--paso) - 1px), var(--borde) calc(12 * var(--paso)));
+  list-style: none;
+}
+
+.horario__dia[data-hoy] .horario__clases {
+  border-top-color: var(--accion);
+  background-color: color-mix(in srgb, var(--accion) 5%, transparent);
+}
+
+.horario__bloque {
+  /* What a short class lacks to reach a touch area of 44px, and the free half of the room above and below it. */
+  --falta: max(0px, 44px - var(--pasos) * var(--paso) + 4px);
+  --libre-arriba: calc(var(--antes, 0) * var(--paso) / 2 + 2px);
+  --libre-abajo: calc(var(--despues, 0) * var(--paso) / 2 + 2px);
+  --ancho-carril: calc((100% - (var(--carriles, 1) - 1) * 4px) / var(--carriles, 1));
+  grid-row: var(--desde) / var(--hasta);
+  grid-column: 1;
+  /* Side by side with the classes it overlaps: its lane, of as many as its group has. */
+  width: var(--ancho-carril);
+  min-height: 0;
+  margin-left: calc(var(--carril, 0) * (var(--ancho-carril) + 4px));
+  padding: 2px 0;
+}
+
+.horario__clase {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  border-left: 4px solid var(--color-materia, var(--texto-suave));
+  border-radius: var(--radio-control);
+  background: color-mix(in srgb, var(--color-materia, var(--texto-suave)) 14%, var(--superficie));
+  color: var(--texto);
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+  transition: background-color 150ms ease-out, transform 150ms ease-out;
+}
+
+/* The touch area of a short class: up to 44px, half above and half below, or more on the side that has room. Never
+   over another class. */
+.horario__clase::after {
+  position: absolute;
+  top: calc(-1 * min(var(--libre-arriba), max(var(--falta) / 2, var(--falta) - var(--libre-abajo))));
+  right: 0;
+  bottom: calc(-1 * min(var(--libre-abajo), max(var(--falta) / 2, var(--falta) - var(--libre-arriba))));
+  left: -4px;
+  content: '';
+}
+
+/* What it says, cut at the edge of the class. */
+.horario__texto {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  height: 100%;
+  padding: 6px 8px;
+  overflow: hidden;
+}
+
+/* In the columns, a class of less than 35 minutes: its hour and its name in one line, the classroom in its detail. */
+@container pagina (min-width: 48rem) {
+  .horario__bloque[data-corta] .horario__texto {
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
+    padding: 0 6px;
+    white-space: nowrap;
+  }
+
+  .horario__bloque[data-corta] :is(.horario__hora, .horario__materia) {
+    font-size: 0.75rem;
+    line-height: 1;
+  }
+
+  .horario__bloque[data-corta] .horario__hora {
+    flex: none;
+  }
+
+  .horario__bloque[data-corta] .horario__materia {
+    display: block;
+    min-width: 0;
+    text-overflow: ellipsis;
+  }
+
+  .horario__bloque[data-corta] .horario__aula {
+    display: none;
+  }
+}
+
+/* Changed by hand: the same color, with a dashed edge. */
+.horario__bloque[data-amano] .horario__clase {
+  border-left-style: dashed;
+}
+
+.horario__clase[aria-expanded='true'] {
+  outline: 2px solid var(--color-materia, var(--texto));
+  outline-offset: 1px;
+}
+
+.horario__clase:active {
+  transform: scale(0.98);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .horario__clase:hover {
+    background: color-mix(in srgb, var(--color-materia, var(--texto-suave)) 24%, var(--superficie));
+  }
+}
+
+.horario__hora,
+.horario__aula {
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+.horario__materia {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  font-weight: 600;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+/* Now, as a line across today. */
+.horario__ahora {
+  grid-row: var(--desde);
+  grid-column: 1;
+  z-index: 1;
+  height: 0;
+  border-top: 2px solid var(--error);
+  pointer-events: none;
+}
+
+.horario__ahora::before {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  margin: -5px 0 0 -4px;
+  border-radius: 50%;
+  background: var(--error);
+  content: '';
+}
+
+.horario__libre {
+  grid-row: 1 / span 6;
+  margin: 8px 0 0;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+}
+
+/* ---------- Detail, and the subjects with their commission and their classes by hand ---------- */
+.horario__detalle {
+  max-width: 48rem;
+  padding: 16px;
+  border-left: 4px solid var(--color-materia, var(--texto-suave));
+  border-radius: var(--radio-bloque);
+  background: var(--superficie);
+}
+
+.horario__detalle-cabeza {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.horario__detalle-cabeza h2 {
+  flex: 1;
+  margin: 0;
+}
+
+.horario__detalle-dato {
+  margin: 0 0 6px;
+}
+
+.horario__campos {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 14rem), 1fr));
+  gap: 12px 16px;
+  margin-bottom: 16px;
+  align-items: end;
+}
+
+/* The commission and the classroom of a class, side by side while they fit. */
+.horario__ajustes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px 24px;
+  margin-top: 12px;
+}
+
+.horario__ajustes > .campo {
+  flex: 0 1 16rem;
+}
+
+.horario__aula-form {
+  flex: 1 1 20rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.horario__aula-form .campo {
+  flex: 1 1 10rem;
+}
+
+.horario__aula-form .boton {
+  flex: none;
+}
+
+.horario__acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.horario__materias {
+  max-width: 48rem;
+}
+
+.horario__mat-lista {
+  display: grid;
+  gap: 8px;
+  margin: 0 0 12px;
+  padding: 0;
+  list-style: none;
+}
+
+.horario__mat {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  padding: 10px 12px;
+  border-left: 4px solid var(--color-materia, var(--borde-control));
+  border-radius: var(--radio-control);
+  background: var(--superficie);
+}
+
+/* One the student doesn't take: there, quieter, to take it back. */
+.horario__mat[data-fuera] {
+  border-left-color: var(--borde-control);
+  background: none;
+  box-shadow: inset 0 0 0 1px var(--borde);
+}
+
+.horario__mat[data-fuera] .horario__mat-nombre {
+  color: var(--texto-suave);
+  font-weight: 400;
+}
+
+.horario__mat-nombre {
+  display: flex;
+  flex: 1 1 14rem;
+  flex-direction: column;
+  min-width: 0;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.horario__mat-dato {
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+  font-weight: 400;
+}
+
+.horario__mat-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.horario__mat-acciones .campo__control {
+  width: auto;
+  max-width: 100%;
+  min-height: 44px;
+}
+
+/* The classes of a subject, by hand: under its row, the whole width. */
+.horario__mat-editor {
+  flex: 1 1 100%;
+  min-width: 0;
+}
+
+.horario__editor {
+  display: grid;
+  gap: 12px;
+  margin-top: 4px;
+  padding-top: 12px;
+  border-top: 1px solid var(--borde);
+}
+
+.horario__editor-ayuda,
+.horario__editor-vacio {
+  margin: 0;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+}
+
+/* Each class in a row on a computer; on a phone, the day across, the hours side by side, the classroom with «Quitar». */
+.horario__editor-fila {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-areas: 'dia dia' 'desde hasta' 'aula quitar';
+  gap: 10px 12px;
+  align-items: start;
+  min-width: 0;
+  margin: 0;
+  padding: 8px 12px 12px;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-control);
+}
+
+.horario__editor-fila legend {
+  padding: 0 4px;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+  font-variant-numeric: lining-nums;
+}
+
+.horario__editor-fila > :nth-of-type(1) {
+  grid-area: dia;
+}
+
+.horario__editor-fila > :nth-of-type(2) {
+  grid-area: desde;
+}
+
+.horario__editor-fila > :nth-of-type(3) {
+  grid-area: hasta;
+}
+
+.horario__editor-fila > :nth-of-type(4) {
+  grid-area: aula;
+}
+
+.horario__editor-fila > :nth-of-type(5) {
+  grid-area: quitar;
+}
+
+@container pagina (min-width: 44rem) {
+  .horario__editor-fila {
+    grid-template-columns: minmax(8rem, 1.3fr) repeat(3, minmax(6.5rem, 1fr)) auto;
+    grid-template-areas: 'dia desde hasta aula quitar';
+  }
+}
+
+.horario__editor-quitar {
+  justify-items: start;
+}
+
+.horario__editor-quitar .boton {
+  min-height: 44px;
+}
+
+.horario__editor-sumar {
+  justify-self: start;
+}
+
+/* Back to the faculty's: there, quiet, at the end. */
+.horario__volver {
+  min-height: 44px;
+  margin-left: auto;
+  padding: 0 4px;
+  border: 0;
+  background: none;
+  color: var(--texto-suave);
+  font: inherit;
+  font-size: var(--t-chica);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+  transition: transform 120ms ease-out, color 120ms ease;
+}
+
+.horario__volver:active {
+  transform: scale(0.97);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .horario__volver:hover {
+    color: var(--texto);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .horario__volver {
+    transition: color 120ms ease;
+  }
+
+  .horario__volver:active {
+    transform: none;
+  }
+}
+
+.horario__detalle-pie {
+  margin-top: 12px;
+}
+
+.horario__sumar {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--borde);
+}
+
+.horario__sumar-ayuda {
+  margin: 0 0 12px;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+}
+
+.horario__vacio {
+  max-width: 48rem;
+  padding: 16px;
+  border: 1px dashed var(--borde-control);
+  border-radius: var(--radio-bloque);
+}
+
+.horario__vacio p {
+  margin: 0;
+}
+
+/* «Compartir mi horario», under Tus materias. */
+.horario__compartir {
+  max-width: 48rem;
+  margin-bottom: 32px;
+}
+
+.horario__fuente {
+  max-width: 48rem;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+}
+
+.horario__fuente p {
+  margin: 0 0 8px;
+}
+
+.horario__otros summary {
+  cursor: pointer;
+  /* Its line is short: room to touch it. */
+  padding: 4px 0;
+}
+
+.horario__otros ul {
+  margin: 8px 0 0;
+  padding-left: 1.2em;
+}
+
+.horario__otros li + li {
+  margin-top: 6px;
+}
+
+/* What a career lacks, under its link. */
+.horario__otros-nota {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+/* On a phone, the days one under the other, each with its classes as rows. */
+@container pagina (max-width: 47.9375rem) {
+  .horario__semana {
+    display: block;
+  }
+
+  .horario__horas {
+    display: none;
+  }
+
+  .horario__dia {
+    margin-bottom: 12px;
+  }
+
+  .horario__dia[data-vacio] {
+    display: none;
+  }
+
+  .horario__nombre-dia {
+    height: auto;
+    margin-bottom: 6px;
+  }
+
+  .horario__clases {
+    display: grid;
+    grid-template-rows: none;
+    gap: 6px;
+    border-top: 0;
+    background: none;
+  }
+
+  .horario__dia[data-hoy] .horario__clases {
+    background: none;
+  }
+
+  .horario__bloque {
+    grid-row: auto;
+    width: auto;
+    margin-left: 0;
+    padding: 0;
+  }
+
+  .horario__clase {
+    height: auto;
+    min-height: 44px;
+  }
+
+  .horario__clase::after {
+    display: none;
+  }
+
+  .horario__texto {
+    display: grid;
+    grid-template-columns: 7.5rem 1fr;
+    gap: 2px 12px;
+    align-items: baseline;
+    height: auto;
+    padding: 10px 12px;
+  }
+
+  .horario__aula {
+    grid-column: 2;
+  }
+
+  /* The detail of a class, right under it. */
+  .horario__en-dia .horario__detalle {
+    margin: 2px 0 6px;
+  }
+
+  .horario__ahora {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .horario__clase,
+  .horario__clase:active {
+    transition: none;
+    transform: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .horario__clase {
+    border: 1px solid ButtonText;
+    border-left-width: 4px;
+  }
+
+  .horario__ahora,
+  .horario__ahora::before {
+    border-color: Highlight;
+    background: Highlight;
+  }
+}

@@ -1,0 +1,287 @@
+/* Documento of a live session: a sheet to write on together, the others' carets in their color with their name. */
+.vdoc .vh-presentes {
+  padding: 6px 12px;
+  border-block-end: 1px solid var(--borde);
+}
+
+/* The desk, and on it a page: the width and the edge of a page of the PDF reader, its margins a share of its own
+   width. Its paper is white with dark ink, and turns like the reader's pages (dark, sepia or as the theme, chosen in
+   Configuración): the same filters, so it keeps the contrast the reader keeps. */
+.vdoc-hoja {
+  position: relative;
+  flex: 1;
+  min-block-size: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  container-type: inline-size;
+  padding: clamp(10px, 3cqi, 28px) 0 25vh;
+  background: var(--superficie-2);
+}
+
+.vdoc-papel {
+  --ancho-hoja: min(760px, calc(100cqi - 20px));
+  --tinta: #1d2733;
+  --tinta-suave: #5a6573;
+  --linea-papel: #d5dbe2;
+  --fondo-codigo: #eef1f4;
+  position: relative;
+  inline-size: var(--ancho-hoja);
+  min-block-size: calc(var(--ancho-hoja) * 842 / 595);
+  margin-inline: auto;
+  padding: calc(var(--ancho-hoja) * 0.09) calc(var(--ancho-hoja) * 0.085);
+  background: var(--papel);
+  color: var(--tinta);
+  box-shadow: 0 1px 2px rgb(23 50 77 / 0.16), 0 6px 18px rgb(23 50 77 / 0.08);
+}
+
+:root[data-tema='oscuro'] .vdoc-papel {
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.5), 0 6px 18px rgb(0 0 0 / 0.3);
+}
+
+:root[data-pdf='oscuro'] .vdoc-papel,
+:root[data-pdf='tema'][data-tema='oscuro'] .vdoc-papel {
+  filter: var(--pdf-oscuras);
+  box-shadow: 0 0 0 1px rgb(203 203 203);
+}
+
+:root[data-pdf='sepia'] .vdoc-papel,
+:root[data-pdf='tema'][data-tema='claro'][data-pdf-claro='sepia'] .vdoc-papel {
+  filter: var(--pdf-sepia);
+}
+
+/* The page dark, chosen with «Modo oscuro»: its own colors, so the filters of the PDF reader don't turn it twice.
+   Without it, the page turns with the reader's filter as always. In a light site the page takes the ink of the site as
+   paper; in a dark one, its surface. */
+:root[data-pdf][data-tema] .vdoc-papel.vdoc-papel--oscuro {
+  filter: none;
+}
+
+.vdoc-papel--oscuro {
+  --tinta: var(--superficie);
+  --tinta-suave: color-mix(in srgb, var(--superficie) 72%, var(--texto));
+  --linea-papel: color-mix(in srgb, var(--superficie) 45%, var(--texto));
+  --fondo-codigo: color-mix(in srgb, var(--texto) 80%, var(--superficie));
+  --enlace: color-mix(in srgb, var(--superficie) 70%, var(--accion-hover));
+  background: var(--texto);
+  box-shadow: 0 0 0 1px var(--borde);
+}
+
+:root[data-tema='oscuro'] .vdoc-papel--oscuro {
+  --tinta: var(--texto);
+  --tinta-suave: var(--texto-suave);
+  --linea-papel: var(--borde);
+  --fondo-codigo: var(--superficie-2);
+  --enlace: var(--foco);
+  background: var(--superficie);
+}
+
+.vdoc-papel--oscuro .vdoc-seleccion {
+  background: color-mix(in srgb, var(--color-otro) 40%, transparent);
+}
+
+.vdoc-texto {
+  min-block-size: 100%;
+  outline: none;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.vdoc-texto:focus-visible {
+  outline: none;
+}
+
+/* No frame around the sheet while writing: the caret shows where one is, as in any word processor. Choosing a
+   typeface or a style from the bar gives the focus back to the text, and the frame lit up as if the whole document
+   were chosen. */
+
+.vdoc-texto > :first-child {
+  margin-block-start: 0;
+}
+
+.vdoc-texto h1,
+.vdoc-texto h2 {
+  font-family: var(--fuente-titulos);
+  line-height: 1.2;
+  margin: 1.2em 0 0.4em;
+}
+
+.vdoc-texto h1 {
+  font-size: var(--t-h2);
+}
+
+.vdoc-texto h2 {
+  font-size: var(--t-h3);
+}
+
+.vdoc-texto h3 {
+  font-size: var(--t-ui);
+}
+
+.vdoc-texto p {
+  margin: 0 0 0.6em;
+}
+
+.vdoc-texto ul,
+.vdoc-texto ol {
+  margin: 0 0 0.6em;
+  padding-inline-start: 1.5em;
+}
+
+.vdoc-texto li > p {
+  margin: 0.1em 0;
+}
+
+.vdoc-texto code {
+  padding: 0.1em 0.3em;
+  border-radius: 4px;
+  background: var(--fondo-codigo);
+  font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+  font-size: 0.92em;
+}
+
+.vdoc-texto pre {
+  margin: 0 0 0.8em;
+  padding: 10px 14px;
+  border-radius: var(--radio-control);
+  background: var(--fondo-codigo);
+  overflow-x: auto;
+}
+
+.vdoc-texto pre code {
+  padding: 0;
+  background: none;
+}
+
+.vdoc-texto a {
+  color: var(--enlace, #1f5ea8);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.vdoc-texto blockquote {
+  margin: 0 0 0.6em;
+  padding-inline-start: 12px;
+  border-inline-start: 3px solid var(--linea-papel);
+  color: var(--tinta-suave);
+}
+
+/* An empty sheet says where to start. */
+.vdoc-texto > p:only-child:has(> br.ProseMirror-trailingBreak:only-child)::before {
+  content: 'Escribí acá.';
+  position: absolute;
+  color: var(--tinta-suave);
+  pointer-events: none;
+}
+
+/* The others: a thin caret of their color with their name on top, and their selection tinted. */
+.vdoc-caret {
+  position: relative;
+  margin-inline: -1px;
+  border-inline-start: 2px solid var(--color-otro);
+  pointer-events: none;
+  word-break: normal;
+}
+
+.vdoc-caret__nombre {
+  position: absolute;
+  inset-block-end: 100%;
+  inset-inline-start: -2px;
+  padding: 1px 5px;
+  border-radius: 3px 3px 3px 0;
+  background: var(--color-otro);
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1.3;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.vdoc-caret__nombre::after {
+  content: attr(data-nombre);
+}
+
+.vdoc-seleccion {
+  background: color-mix(in srgb, var(--color-otro) 22%, transparent);
+}
+
+.vdoc-abrir {
+  align-self: center;
+  font-weight: 700;
+}
+
+/* Download: a small menu under its button. */
+.vdoc-bajar {
+  position: relative;
+}
+
+.vdoc-bajar > summary {
+  list-style: none;
+}
+
+.vdoc-bajar > summary::-webkit-details-marker {
+  display: none;
+}
+
+.vdoc-bajar__menu {
+  position: absolute;
+  inset-inline-end: 0;
+  inset-block-start: calc(100% + 4px);
+  z-index: 5;
+  display: grid;
+  min-inline-size: 190px;
+  padding: 4px;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-control);
+  background: var(--superficie);
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--texto) 18%, transparent);
+  transform-origin: top right;
+}
+
+.vdoc-bajar__menu .vh-boton {
+  justify-content: flex-start;
+  font-weight: 400;
+}
+
+.vdoc-bajar[open] .vdoc-bajar__menu {
+  animation: vdoc-menu 150ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+@keyframes vdoc-menu {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
+
+/* The typefaces of the list (LETRAS in src/lib/enVivo/documento.js), on the text marked with one. */
+.vdoc-texto .vdoc-letra--kalam {
+  font-family: Kalam, 'Segoe Print', 'Comic Sans MS', cursive;
+}
+
+.vdoc-texto .vdoc-letra--serifa {
+  font-family: Georgia, 'Times New Roman', serif;
+}
+
+.vdoc-texto .vdoc-letra--mono {
+  font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+}
+
+/* The typefaces' button keeps its width while the caret walks through text in other typefaces. */
+.vdoc-letras > summary {
+  justify-content: space-between;
+  min-inline-size: 9.5rem;
+}
+
+/* The typefaces' list opens under its button, to the right. */
+.vdoc-letras .vdoc-bajar__menu {
+  inset-inline-start: 0;
+  inset-inline-end: auto;
+  min-inline-size: 170px;
+  transform-origin: top left;
+}
+
+.vdoc-letras__flecha {
+  font-size: 0.75em;
+  opacity: 0.7;
+}

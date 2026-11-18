@@ -1,0 +1,399 @@
+/* How each style moves when a screen or its data shows up (ajustes.estilo). Only when movement is allowed: the system
+   doesn't ask to reduce it and Configuración says neither «Reducir siempre» nor «Sin animaciones» (pages/ajustes.css
+   stops everything there anyway). Only transform, opacity, filter, clip-path and, on one title, its background size.
+   Nothing stays applied once it ends: `backwards` holds the first frame during the delay and lets go at the end, so no
+   transform is left behind to trap what's fixed inside a page, and where a turn pivots lives in the keyframes.
+
+   The page, its blocks and the cards that arrive with the data share three rules below; each style says which
+   animation goes in each one (--entra-*). Titles that are written by hand or typed have their own rules, and need
+   where their words end (--letras, src/lib/escritura.js). */
+
+/* The order of a block among its siblings: the first eight go one after the other, the rest with the eighth. Not
+   inherited: the first card inside the fifth block starts first among its own. */
+@property --entra-orden {
+  syntax: '<integer>';
+  inherits: false;
+  initial-value: 0;
+}
+
+main :nth-child(2) {
+  --entra-orden: 1;
+}
+main :nth-child(3) {
+  --entra-orden: 2;
+}
+main :nth-child(4) {
+  --entra-orden: 3;
+}
+main :nth-child(5) {
+  --entra-orden: 4;
+}
+main :nth-child(6) {
+  --entra-orden: 5;
+}
+main :nth-child(7) {
+  --entra-orden: 6;
+}
+main :nth-child(n + 8) {
+  --entra-orden: 7;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html:not([data-movimiento='reducido'], [data-movimiento='ninguno']) main .contenedor.pagina {
+    animation: var(--entra-pagina, none);
+  }
+
+  html:not([data-movimiento='reducido'], [data-movimiento='ninguno']) main .contenedor.pagina > * {
+    animation: var(--entra-bloque, none);
+    animation-delay: calc(var(--entra-bloque-espera, 0ms) + var(--entra-orden) * var(--entra-bloque-paso, 50ms));
+  }
+
+  html:not([data-movimiento='reducido'], [data-movimiento='ninguno'])
+    :where(
+      .destacado,
+      .semana__dia,
+      .materias__enlace,
+      .evento,
+      .clases-hoy__clase,
+      .horario__mat,
+      .calcs__item,
+      .carrera-ficha,
+      .repaso-hoy,
+      .materia .fila
+    ) {
+    animation: var(--entra-tarjeta, none);
+    animation-delay: calc(var(--entra-orden) * var(--entra-tarjeta-paso, 35ms));
+  }
+
+  /* What arrives after its screen (src/lib/llegadas.js) already waited behind the skeleton: it starts at once, its
+     blocks, cards and titles without waiting their turn. */
+  html:not([data-movimiento='reducido'], [data-movimiento='ninguno']) main .contenedor.pagina [data-llega] {
+    --entra-bloque-espera: 0ms;
+    --entra-bloque-paso: 0ms;
+    --entra-tarjeta-paso: 0ms;
+  }
+
+  html:not([data-movimiento='reducido'], [data-movimiento='ninguno']) main .contenedor.pagina :is([data-llega], [data-llega] *):is(h1, h2) {
+    animation-delay: 0s !important;
+  }
+}
+
+/* ---------- Original: the screen rises a little, and its blocks after it ---------- */
+
+html[data-estilo='original'] {
+  --entra-pagina: entra-sube 320ms cubic-bezier(0.23, 1, 0.32, 1) backwards;
+  --entra-bloque: entra-sube-poco 360ms cubic-bezier(0.23, 1, 0.32, 1) backwards;
+  --entra-bloque-espera: 60ms;
+  --entra-bloque-paso: 40ms;
+  --entra-tarjeta: entra-sube-poco 280ms cubic-bezier(0.23, 1, 0.32, 1) backwards;
+}
+
+/* ---------- Hoja: a sheet laid on the folder, then written in ink ---------- */
+
+html[data-estilo='hoja'] {
+  /* The sheet is laid flat, without turning: the turn made students dizzy. */
+  --entra-pagina: entra-aparece 260ms ease-out backwards;
+  /* What's on the page comes up like ink soaking in, one block after the other. */
+  --entra-bloque: hoja-tinta 360ms cubic-bezier(0.23, 1, 0.32, 1) backwards;
+  --entra-bloque-espera: 140ms;
+  --entra-tarjeta: hoja-tinta 300ms cubic-bezier(0.23, 1, 0.32, 1) backwards;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* The red margin is ruled from the top of the page down, one screen long; what's below shows when it ends, out of
+     sight. Its box starts 100vh above the page (estilos.css). */
+  html[data-estilo='hoja']:not([data-movimiento='reducido'], [data-movimiento='ninguno']) main .contenedor.pagina::before {
+    animation: hoja-margen 650ms cubic-bezier(0.23, 1, 0.32, 1) 80ms backwards;
+  }
+
+  /* Titles are written by hand, left to right, up to where their words end, so the pen doesn't run over blank paper. */
+  html[data-estilo='hoja']:not([data-movimiento='reducido'], [data-movimiento='ninguno']) main .contenedor.pagina h1 {
+    animation: escribe 620ms cubic-bezier(0.45, 0.05, 0.4, 1) 120ms backwards;
+  }
+
+  html[data-estilo='hoja']:not([data-movimiento='reducido'], [data-movimiento='ninguno']) main .contenedor.pagina h2 {
+    animation: escribe 460ms cubic-bezier(0.45, 0.05, 0.4, 1) 260ms backwards;
+  }
+}
+
+/* ---------- Profesional: panels that tilt up into place ---------- */
+
+html[data-estilo='profesional'] {
+  --entra-pagina: pro-panel 480ms cubic-bezier(0.23, 1, 0.32, 1) backwards;
+  --entra-bloque: pro-sube 440ms cubic-bezier(0.23, 1, 0.32, 1) backwards;
+  --entra-bloque-espera: 100ms;
+  --entra-bloque-paso: 60ms;
+  --entra-tarjeta: pro-tarjeta 380ms cubic-bezier(0.23, 1, 0.32, 1) backwards;
+  --entra-tarjeta-paso: 40ms;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* The title comes into focus as it rises. */
+  html[data-estilo='profesional']:not([data-movimiento='reducido'], [data-movimiento='ninguno']) main .contenedor.pagina h1 {
+    animation: pro-titulo 560ms cubic-bezier(0.23, 1, 0.32, 1) 80ms backwards;
+  }
+
+  html[data-estilo='profesional']:not([data-movimiento='reducido'], [data-movimiento='ninguno']) main .contenedor.pagina h2 {
+    animation: pro-titulo 420ms cubic-bezier(0.23, 1, 0.32, 1) 180ms backwards;
+  }
+}
+
+/* ---------- Batman: the signal lights the page, cards swing in like a cape ---------- */
+
+html[data-estilo='batman'] {
+  --entra-pagina: batman-senal 560ms cubic-bezier(0.23, 1, 0.32, 1) backwards;
+  --entra-bloque: batman-pasa 300ms cubic-bezier(0.23, 1, 0.32, 1) backwards;
+  --entra-bloque-espera: 120ms;
+  --entra-bloque-paso: 45ms;
+  --entra-tarjeta: batman-capa 420ms cubic-bezier(0.23, 1, 0.32, 1) backwards;
+  --entra-tarjeta-paso: 40ms;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* The beam: a yellow light over the screen that fades out. The page's circle clips it, so it lights only what the
+     signal has reached. Behind the content, and gone when it ends. */
+  html[data-estilo='batman']:not([data-movimiento='reducido'], [data-movimiento='ninguno']) main .contenedor.pagina::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    opacity: 0;
+    background: radial-gradient(circle at 50% 0, color-mix(in srgb, var(--resaltador) 24%, transparent), transparent 75%);
+    animation: batman-luz 900ms ease-out backwards;
+  }
+
+  /* The title lands hard. */
+  html[data-estilo='batman']:not([data-movimiento='reducido'], [data-movimiento='ninguno']) main .contenedor.pagina h1 {
+    animation: batman-golpe 380ms cubic-bezier(0.23, 1, 0.32, 1) 100ms backwards;
+  }
+}
+
+/* ---------- Plano: plotted from the top, titles typed, the dimension line drawn ---------- */
+
+html[data-estilo='plano'] {
+  --entra-pagina: plano-traza 700ms cubic-bezier(0.77, 0, 0.175, 1) backwards;
+  --entra-bloque: plano-dibuja 360ms cubic-bezier(0.23, 1, 0.32, 1) backwards;
+  --entra-bloque-espera: 150ms;
+  /* Cards come up off the drawing, as if extruded. */
+  --entra-tarjeta: plano-extruye 420ms cubic-bezier(0.23, 1, 0.32, 1) backwards;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html[data-estilo='plano']:not([data-movimiento='reducido'], [data-movimiento='ninguno']) main .contenedor.pagina h1 {
+    animation:
+      escribe 640ms steps(18, end) 120ms backwards,
+      plano-cota 520ms cubic-bezier(0.23, 1, 0.32, 1) 320ms backwards;
+  }
+
+  html[data-estilo='plano']:not([data-movimiento='reducido'], [data-movimiento='ninguno']) main .contenedor.pagina h2 {
+    animation: escribe 420ms steps(12, end) 240ms backwards;
+  }
+}
+
+/* ---------- Pizarrón: chalk on the board ---------- */
+
+html[data-estilo='pizarron'] {
+  --entra-pagina: entra-aparece 260ms ease-out backwards;
+  /* Blocks settle like chalk dust: only a fade. A blur or a scale on text redraws its letters when it ends, and the
+     names on the cards flickered. */
+  --entra-bloque: tiza-polvo 460ms cubic-bezier(0.23, 1, 0.32, 1) backwards;
+  --entra-bloque-espera: 160ms;
+  --entra-bloque-paso: 60ms;
+  --entra-tarjeta: tiza-polvo 360ms cubic-bezier(0.23, 1, 0.32, 1) backwards;
+  --entra-tarjeta-paso: 40ms;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* Written in chalk. */
+  html[data-estilo='pizarron']:not([data-movimiento='reducido'], [data-movimiento='ninguno']) main .contenedor.pagina h1 {
+    animation: escribe 700ms cubic-bezier(0.45, 0.05, 0.4, 1) 120ms backwards;
+  }
+
+  html[data-estilo='pizarron']:not([data-movimiento='reducido'], [data-movimiento='ninguno']) main .contenedor.pagina h2 {
+    animation: escribe 480ms cubic-bezier(0.45, 0.05, 0.4, 1) 260ms backwards;
+  }
+}
+
+/* ---------- The animations ---------- */
+
+@keyframes entra-aparece {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes entra-sube {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+@keyframes entra-sube-poco {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+/* Written left to right, a little past the letters on every side so slanted strokes and underlines aren't cut. */
+@keyframes escribe {
+  from {
+    clip-path: inset(-0.3em 100% -0.4em -0.3em);
+  }
+  to {
+    clip-path: inset(-0.3em calc(100% - var(--letras, 100%) - 0.3em) -0.4em -0.3em);
+  }
+}
+
+@keyframes hoja-margen {
+  from {
+    clip-path: inset(100vh -2px calc(100% - 100vh) -2px);
+  }
+  to {
+    clip-path: inset(0 -2px calc(100% - 200vh) -2px);
+  }
+}
+
+@keyframes hoja-tinta {
+  from {
+    opacity: 0;
+    filter: blur(2px);
+  }
+}
+
+@keyframes pro-panel {
+  from {
+    opacity: 0;
+    transform-origin: center top;
+    transform: perspective(1400px) rotateX(6deg) translateY(18px);
+  }
+  50% {
+    opacity: 1;
+  }
+  to {
+    transform-origin: center top;
+  }
+}
+
+@keyframes pro-sube {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+
+@keyframes pro-tarjeta {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+}
+
+@keyframes pro-titulo {
+  from {
+    opacity: 0;
+    filter: blur(6px);
+    transform: translateY(0.3em);
+  }
+}
+
+/* A circle of light from the top of the page, big enough to cover any screen. */
+@keyframes batman-senal {
+  from {
+    opacity: 0;
+    clip-path: circle(0 at 50% 0);
+  }
+  30% {
+    opacity: 1;
+  }
+  to {
+    clip-path: circle(160vmax at 50% 0);
+  }
+}
+
+@keyframes batman-luz {
+  from {
+    opacity: 1;
+  }
+}
+
+@keyframes batman-pasa {
+  from {
+    opacity: 0;
+    transform: translateX(-12px);
+  }
+}
+
+@keyframes batman-capa {
+  from {
+    opacity: 0;
+    transform-origin: left center;
+    transform: perspective(900px) rotateY(-28deg);
+  }
+  to {
+    transform-origin: left center;
+  }
+}
+
+@keyframes batman-golpe {
+  from {
+    opacity: 0;
+    filter: blur(4px);
+    transform-origin: left center;
+    transform: scale(1.12);
+  }
+  to {
+    transform-origin: left center;
+  }
+}
+
+/* The plotter runs down one screen; what's below shows when it ends, out of sight. The whole width of the screen: the
+   sections of a course hang off the page on the left, and they're plotted with it. */
+@keyframes plano-traza {
+  from {
+    clip-path: inset(-20px -100vw 100% -100vw);
+  }
+  to {
+    clip-path: inset(-20px -100vw calc(100% - 100vh) -100vw);
+  }
+}
+
+@keyframes plano-dibuja {
+  from {
+    opacity: 0;
+    transform-origin: 0 0;
+    transform: scale(0.97);
+  }
+  to {
+    transform-origin: 0 0;
+  }
+}
+
+@keyframes plano-extruye {
+  from {
+    opacity: 0;
+    transform-origin: center top;
+    transform: perspective(700px) rotateX(30deg);
+  }
+  to {
+    transform-origin: center top;
+  }
+}
+
+/* The dimension line of the title (estilos.css) grows from the left, its end ticks with it. */
+@keyframes plano-cota {
+  from {
+    background-size:
+      0 1.5px,
+      0 0,
+      0 0;
+  }
+}
+
+@keyframes tiza-polvo {
+  from {
+    opacity: 0;
+  }
+}

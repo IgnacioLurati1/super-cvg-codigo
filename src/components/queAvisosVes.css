@@ -1,0 +1,71 @@
+/* «Qué avisos ves» in Configuración (QueAvisosVes.jsx): a box per kind, two to a row where there's room. */
+.avisos-que-ves {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 17rem), 1fr));
+  gap: 8px;
+}
+
+.aviso-que-ves {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid var(--borde-control);
+  border-radius: var(--radio-control);
+  background: var(--superficie);
+  cursor: pointer;
+  transition:
+    border-color 120ms ease,
+    background-color 120ms ease,
+    transform 120ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aviso-que-ves:active {
+    transform: none;
+  }
+}
+
+.aviso-que-ves:has(input:checked) {
+  border-color: var(--texto);
+}
+
+.aviso-que-ves:has(input:focus-visible) {
+  outline: 3px solid var(--foco, var(--accion));
+  outline-offset: 2px;
+}
+
+.aviso-que-ves:active {
+  transform: scale(0.97);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .aviso-que-ves:hover {
+    background: var(--superficie-2);
+  }
+}
+
+.aviso-que-ves input {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  margin: 2px 0 0;
+  accent-color: var(--accion);
+  cursor: pointer;
+}
+
+.aviso-que-ves__texto {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.aviso-que-ves__nombre {
+  font-weight: 600;
+}
+
+.aviso-que-ves__ayuda {
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+}

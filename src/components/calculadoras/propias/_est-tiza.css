@@ -1,0 +1,268 @@
+/* What the statistics, stocks and simulation calculators write on the board (_tiza.jsx). Chalk lines and chalk
+   words over the board of calculadoras.css: soft chalk for names, full chalk for what's written. */
+.ce-datos {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 14px 28px;
+}
+
+.ce-grupo {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.ce-grupo > legend {
+  margin-bottom: 8px;
+}
+
+.ce-dato {
+  gap: 2px;
+  min-width: 0;
+}
+
+.ce-dato--ancho {
+  flex: 1 1 100%;
+}
+
+.ce-dato__nombre {
+  color: var(--pizarron-tiza-suave);
+  font-size: var(--t-chica);
+  font-weight: 600;
+}
+
+.ce-dato__linea {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+}
+
+.ce-dato__simbolo {
+  flex: none;
+  font-size: 1.25rem;
+  font-weight: 700;
+  font-variant-numeric: lining-nums;
+  white-space: nowrap;
+}
+
+.ce-dato__unidad {
+  flex: none;
+  color: var(--pizarron-tiza-suave);
+  font-size: var(--t-chica);
+}
+
+.calc__ejercicio .ce-dato .ce-dato__control {
+  width: 6.5rem;
+  min-height: 40px;
+  padding: 4px 6px;
+  font-size: 1.125rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums lining-nums;
+  caret-color: var(--pizarron-amarillo);
+}
+
+.calc__ejercicio .ce-dato--ancho .ce-dato__control {
+  flex: 1 1 auto;
+  width: 100%;
+  min-width: 0;
+}
+
+.calc__ejercicio .ce-dato textarea.ce-dato__control {
+  min-height: 0;
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.calc__ejercicio .ce-dato .campo__control:focus-visible {
+  outline: 2px solid var(--pizarron-amarillo);
+  outline-offset: 2px;
+}
+
+/* A small table drawn in chalk: the head underlined, a line between the columns. */
+.ce-tabla {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px 24px;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.ce-tabla__marco {
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+}
+
+.ce-tabla__grilla {
+  border-collapse: collapse;
+}
+
+.ce-tabla__grilla th {
+  padding: 0 6px 4px;
+  border-bottom: 2px solid var(--pizarron-tiza-suave);
+  color: var(--pizarron-tiza-suave);
+  font-size: var(--t-chica);
+  font-weight: 700;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.ce-tabla__grilla th + th,
+.ce-tabla__grilla td + td {
+  border-left: 2px solid color-mix(in srgb, var(--pizarron-tiza-suave) 55%, transparent);
+}
+
+.ce-tabla__grilla td {
+  padding: 2px 6px;
+}
+
+.ce-tabla__celda {
+  width: 5.5rem;
+  height: 40px;
+  padding: 0 4px;
+  border: 0;
+  border-bottom: 2px dashed color-mix(in srgb, var(--pizarron-tiza-suave) 60%, transparent);
+  border-radius: 6px 6px 0 0;
+  background: transparent;
+  color: var(--pizarron-tiza);
+  caret-color: var(--pizarron-amarillo);
+  font: inherit;
+  font-size: 1.0625rem;
+  font-variant-numeric: tabular-nums lining-nums;
+  text-align: center;
+  transition: background-color 120ms ease, border-color 120ms ease;
+}
+
+.ce-tabla__celda:focus {
+  outline: none;
+  border-bottom-style: solid;
+  border-bottom-color: var(--pizarron-amarillo);
+  background: color-mix(in srgb, var(--pizarron-tiza) 8%, transparent);
+}
+
+.ce-tabla__celda:focus-visible {
+  outline: 2px solid var(--pizarron-amarillo);
+  outline-offset: 1px;
+}
+
+.ce-tabla__celda[aria-invalid='true'] {
+  border-bottom-style: solid;
+  border-bottom-color: var(--pizarron-rojo);
+  color: var(--pizarron-rojo);
+}
+
+/* Written across, as the notes write a short distribution: the name of each row on the left, under a line. */
+.ce-tabla--horizontal .ce-tabla__grilla th {
+  padding: 0 10px 0 0;
+  border-right: 2px solid var(--pizarron-tiza-suave);
+  border-bottom: 0;
+  text-align: left;
+}
+
+.ce-tabla--horizontal .ce-tabla__grilla th + td,
+.ce-tabla--horizontal .ce-tabla__grilla td + td {
+  border-left: 0;
+}
+
+.ce-tabla--horizontal .ce-tabla__grilla tr + tr td,
+.ce-tabla--horizontal .ce-tabla__grilla tr + tr th {
+  border-top: 2px solid color-mix(in srgb, var(--pizarron-tiza-suave) 55%, transparent);
+}
+
+.ce-tabla--horizontal .ce-tabla__celda {
+  width: 4.25rem;
+}
+
+/* A range in chalk: the line, and a round piece of chalk to drag. */
+.ce-desliza {
+  display: grid;
+  gap: 2px;
+  min-width: min(100%, 16rem);
+  flex: 1 1 16rem;
+}
+
+.ce-desliza__linea {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ce-desliza__valor {
+  min-width: 3.25rem;
+  font-size: 1.25rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+.ce-desliza__rango {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 44px;
+  margin: 0;
+  background: none;
+  cursor: pointer;
+  appearance: none;
+}
+
+.ce-desliza__rango::-webkit-slider-runnable-track {
+  height: 3px;
+  border-radius: 2px;
+  background: var(--pizarron-tiza-suave);
+}
+
+.ce-desliza__rango::-moz-range-track {
+  height: 3px;
+  border-radius: 2px;
+  background: var(--pizarron-tiza-suave);
+}
+
+.ce-desliza__rango::-webkit-slider-thumb {
+  width: 22px;
+  height: 22px;
+  margin-top: -9.5px;
+  border: 2px solid var(--pizarron);
+  border-radius: 50%;
+  background: var(--pizarron-tiza);
+  appearance: none;
+}
+
+.ce-desliza__rango::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--pizarron);
+  border-radius: 50%;
+  background: var(--pizarron-tiza);
+}
+
+.ce-desliza__rango:focus-visible {
+  outline: 2px solid var(--pizarron-amarillo);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* The bar of choices that only changes what's asked, under the data. */
+.ce-pregunta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 14px 28px;
+}
+
+/* Two blocks of the board side by side when they fit (the parameters, and what to calculate), one under the other on
+   the phone. */
+.ce-dos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr));
+  gap: 18px 40px;
+  align-items: start;
+}
+
+/* A wide table in a column scrolls inside it instead of widening the board. */
+.ce-dos > * {
+  min-width: 0;
+}

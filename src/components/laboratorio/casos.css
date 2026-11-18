@@ -1,0 +1,337 @@
+/* «Casos» in the lab's panel: the list of cases on one side and the one chosen on the other, with what came out. What
+   differs is marked with the highlighter, as the line of an error in the editor. Each state says its name: the color
+   only goes with it. */
+.lab-casos {
+  container: lab-casos / inline-size;
+  display: grid;
+  gap: 12px;
+}
+
+.lab-casos__barra {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+
+.lab-casos__resumen {
+  margin: 0;
+  font-size: var(--t-chica);
+  color: var(--texto-suave);
+}
+
+.lab-casos__vacio {
+  display: grid;
+  justify-items: start;
+  gap: 10px;
+}
+
+.lab-casos__cuerpo {
+  display: grid;
+  gap: 16px;
+}
+
+.lab-casos__lado {
+  display: grid;
+  align-content: start;
+  justify-items: start;
+  gap: 8px;
+  min-width: 0;
+}
+
+.lab-casos__lista {
+  display: grid;
+  gap: 2px;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.lab-casos__item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 40px;
+  padding: 6px 8px;
+  border: 1px solid transparent;
+  border-radius: var(--radio-control);
+  background: none;
+  color: var(--texto);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.lab-casos__item:active {
+  background: var(--superficie-2);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .lab-casos__item:hover {
+    background: var(--superficie-2);
+  }
+}
+
+.lab-casos__item[aria-current='true'] {
+  border-color: var(--borde-control);
+  background: var(--superficie-2);
+}
+
+.lab-casos__item[aria-current='true'] .lab-casos__nombre {
+  font-weight: 700;
+}
+
+.lab-casos__item:focus-visible {
+  outline: 2px solid var(--foco);
+  outline-offset: 2px;
+}
+
+.lab-casos__estado {
+  flex: none;
+  padding: 0 8px;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  font-size: var(--t-chica);
+  font-weight: 700;
+  line-height: 1.5;
+  white-space: nowrap;
+  color: var(--texto-suave);
+}
+
+.lab-casos__estado[data-estado='paso'] {
+  color: var(--ok);
+}
+
+.lab-casos__estado[data-estado='fallo'],
+.lab-casos__estado[data-estado='error'] {
+  color: var(--error);
+}
+
+.lab-casos__estado[data-estado='tiempo'] {
+  color: var(--aviso);
+}
+
+.lab-casos__estado[data-estado='corriendo'] {
+  color: var(--foco);
+}
+
+.lab-casos__nombre {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lab-casos__detalle {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  min-width: 0;
+  /* As wide as a few lines of a console need, not the whole panel. */
+  max-width: 52rem;
+}
+
+.lab-casos__campo {
+  display: grid;
+  align-content: start;
+  gap: 6px;
+  min-width: 0;
+}
+
+.lab-casos__textos {
+  display: grid;
+  gap: 12px;
+}
+
+.lab-casos__texto {
+  min-height: 6rem;
+  font-family: var(--codigo-letra);
+  resize: vertical;
+}
+
+.lab-casos__exacto {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 2px 10px;
+}
+
+.lab-casos__exacto input {
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  accent-color: var(--accion);
+}
+
+.lab-casos__exacto label {
+  min-height: 24px;
+  align-content: center;
+}
+
+.lab-casos__exacto .campo__ayuda {
+  grid-column: 2;
+}
+
+.lab-casos__fila {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 8px 12px;
+}
+
+.lab-casos__campo--nombre {
+  flex: 0 1 18rem;
+}
+
+.lab-casos__acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.lab-casos__resultado {
+  display: grid;
+  justify-items: start;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--borde);
+  border-left: 4px solid var(--texto-suave);
+  border-radius: var(--radio-bloque);
+}
+
+.lab-casos__resultado[data-estado='paso'] {
+  border-left-color: var(--ok);
+}
+
+.lab-casos__resultado[data-estado='fallo'],
+.lab-casos__resultado[data-estado='error'] {
+  border-left-color: var(--error);
+}
+
+.lab-casos__resultado[data-estado='tiempo'] {
+  border-left-color: var(--aviso);
+}
+
+.lab-casos__frase,
+.lab-casos__rotulo {
+  margin: 0;
+  font-weight: 700;
+}
+
+.lab-casos__rotulo {
+  font-size: var(--t-chica);
+}
+
+.lab-casos__tabla-caja {
+  justify-self: stretch;
+  max-height: 16rem;
+  overflow: auto;
+}
+
+.lab-casos__tabla {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-family: var(--codigo-letra);
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.lab-casos__tabla thead th {
+  position: sticky;
+  top: 0;
+  padding: 2px 8px;
+  background: var(--superficie);
+  font-family: var(--fuente-ui);
+  font-size: var(--t-chica);
+  text-align: left;
+}
+
+.lab-casos__tabla thead th:first-child,
+.lab-casos__tabla tbody th {
+  width: 3rem;
+}
+
+.lab-casos__tabla tbody th {
+  padding: 2px 8px;
+  color: var(--texto-suave);
+  font-weight: 400;
+  text-align: right;
+  vertical-align: top;
+}
+
+.lab-casos__tabla td {
+  padding: 2px 8px;
+  vertical-align: top;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.lab-casos__tabla tbody tr {
+  border-top: 1px solid var(--borde);
+}
+
+.lab-casos__tabla tbody tr:not([data-tipo='igual']) {
+  background: color-mix(in srgb, var(--error) 9%, transparent);
+}
+
+.lab-casos__tabla tbody tr:not([data-tipo='igual']) th {
+  color: var(--error);
+  font-weight: 700;
+}
+
+.lab-casos__marca {
+  background: var(--resaltador);
+  color: var(--resaltador-texto);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.lab-casos__nada {
+  color: var(--texto-suave);
+  font-family: var(--fuente-ui);
+  font-style: italic;
+}
+
+.lab-casos__salida,
+.lab-casos__error {
+  justify-self: stretch;
+  max-height: 12rem;
+  margin: 0;
+  padding: 8px 10px;
+  overflow: auto;
+  border-radius: var(--radio-control);
+  background: var(--fondo);
+  font-family: var(--codigo-letra);
+  font-size: 0.875rem;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.lab-casos__error {
+  color: var(--error);
+}
+
+@container lab-casos (min-width: 40rem) {
+  .lab-casos__cuerpo {
+    grid-template-columns: minmax(11rem, 16rem) minmax(0, 1fr);
+  }
+
+  .lab-casos__textos {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (forced-colors: active) {
+  .lab-casos__item[aria-current='true'] {
+    border-color: Highlight;
+  }
+
+  .lab-casos__marca {
+    forced-color-adjust: none;
+    background: Mark;
+    color: MarkText;
+  }
+}

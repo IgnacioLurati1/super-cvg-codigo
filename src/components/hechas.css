@@ -1,0 +1,253 @@
+/* What the student marked as done (Hecha.jsx): the tick, the card of a task or a quiz, Hoy and the calendar. */
+.icono-hecha {
+  flex: none;
+  color: var(--ok);
+}
+
+/* The card of a task or a quiz. */
+.marca-hecha {
+  display: grid;
+  justify-items: start;
+  gap: 8px;
+}
+
+.marca-hecha__texto {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin: 0;
+  font-weight: 600;
+}
+
+.marca-hecha__texto .icono-hecha,
+.hechas-aviso__texto .icono-hecha {
+  margin-top: 0.15em;
+}
+
+.marca-hecha__ayuda {
+  margin: 0;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+}
+
+/* Hoy: the big card's button, and the next one coming into the card once that one is marked. */
+.destacado__acciones {
+  margin-top: 18px;
+}
+
+.destacado--llega {
+  animation: destacado-llega 240ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+@keyframes destacado-llega {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+@keyframes destacado-funde {
+  from {
+    opacity: 0;
+  }
+}
+
+/* Each row of the lists, with its quiet tick on the side. */
+.pendiente-con-marca {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  border-bottom: 1px solid var(--borde);
+}
+
+.pendiente-con-marca > .pendiente {
+  flex: 1;
+  min-width: 0;
+  border-bottom: 0;
+}
+
+.pendiente__marcar {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--texto-suave);
+  cursor: pointer;
+  transition: transform 120ms ease, color 150ms ease, background-color 150ms ease;
+}
+
+.pendiente__marcar:active {
+  transform: scale(0.92);
+}
+
+/* What was just marked, in its place, with the way back. */
+.hechas-aviso {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  min-height: 44px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--borde);
+  animation: hechas-aparece 160ms ease-out;
+}
+
+.hechas-aviso__texto {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+/* Above the big card, when the one marked was in it. */
+.hechas-aviso--suelto {
+  margin-bottom: 16px;
+  padding: 8px 8px 8px 16px;
+  border: 0;
+  border-radius: var(--radio-bloque);
+  background: var(--superficie);
+}
+
+.vista-hoy[data-vista='tablero'] .hoy__principal > .hechas-aviso--suelto {
+  grid-column: 1 / -1;
+  margin-bottom: 0;
+}
+
+@keyframes hechas-aparece {
+  from {
+    opacity: 0;
+  }
+}
+
+/* What the student already did, closed at the end of the lists. */
+.hechas summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.hechas summary::before {
+  content: '';
+  width: 0.5em;
+  height: 0.5em;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(-45deg);
+  transition: transform 150ms ease;
+}
+
+.hechas[open] summary::before {
+  transform: rotate(45deg);
+}
+
+.hechas summary::-webkit-details-marker {
+  display: none;
+}
+
+.hechas__cuantas {
+  display: grid;
+  place-items: center;
+  min-width: 1.375rem;
+  min-height: 1.375rem;
+  padding: 0 0.3em;
+  border-radius: 1em;
+  background: var(--superficie-2);
+  font-size: var(--t-chica);
+  font-variant-numeric: lining-nums;
+  line-height: 1.4;
+}
+
+.hechas__lista {
+  display: grid;
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.hechas__lista li {
+  display: flex;
+  align-items: center;
+  gap: 8px 12px;
+  padding: 8px 0;
+  border-top: 1px solid var(--borde);
+}
+
+.hechas__abrir {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 8px 12px;
+  min-width: 0;
+  min-height: 44px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.hechas__texto {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+}
+
+.hechas__titulo {
+  overflow-wrap: anywhere;
+}
+
+.hechas__dato {
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+}
+
+/* The week on Hoy: a day with everything done shows the tick instead of the number. */
+.semana__cantidad[data-hechas] .icono-hecha {
+  width: 16px;
+  height: 16px;
+}
+
+/* The calendar: a date done stays, with its tick and quieter. */
+.cal__chip .icono-hecha {
+  width: 12px;
+  height: 12px;
+  margin-top: 1px;
+}
+
+.cal__chip[data-hecha] .cal__chip-texto,
+.eventos > li[data-hecha] .evento__titulo {
+  color: var(--texto-suave);
+}
+
+.evento__hecha {
+  display: inline-block;
+  margin-right: 4px;
+  vertical-align: -0.2em;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  a.hechas__abrir:hover .hechas__titulo {
+    text-decoration: underline;
+  }
+  .pendiente__marcar:hover {
+    background: var(--superficie-2);
+    color: var(--ok);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .destacado--llega {
+    animation: destacado-funde 180ms ease-out;
+  }
+  .hechas summary::before {
+    transition: none;
+  }
+}

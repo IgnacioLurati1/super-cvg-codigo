@@ -1,0 +1,40 @@
+/* The code's letter and colors, for the lab and for Configuración (its Coloración shows them). A color the student
+   chose goes over these, on <html> (public/ajustes.js). */
+:root {
+  --codigo-letra: ui-monospace, 'Cascadia Mono', 'Cascadia Code', 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
+  --codigo-cuadricula: #dfe8ef;
+  --codigo-margen: #e3a3a3;
+  --codigo-clave: #0b5a9e;
+  --codigo-texto: #1f6b3a;
+  --codigo-numero: #8f4500;
+  --codigo-comentario: #56636e;
+  --codigo-funcion: #7a3e9d;
+  --codigo-tipo: #0c6a73;
+  --codigo-variable: #0072b0;
+  --codigo-linea: rgb(11 90 158 / 0.06);
+  --codigo-seleccion: rgb(11 90 158 / 0.2);
+}
+
+:root[data-tema='oscuro'] {
+  --codigo-cuadricula: #223140;
+  --codigo-margen: #7d4646;
+  --codigo-clave: #8ec5f7;
+  --codigo-texto: #8fdcaa;
+  --codigo-numero: #f2b56b;
+  --codigo-comentario: #a3b2bf;
+  --codigo-funcion: #d4a8f0;
+  --codigo-tipo: #6fd3dc;
+  --codigo-variable: #00aaff;
+  --codigo-linea: rgb(142 197 247 / 0.07);
+  --codigo-seleccion: rgb(142 197 247 / 0.28);
+}
+
+:root[data-contraste='alto'] {
+  --codigo-cuadricula: #c9d6e0;
+  --codigo-comentario: #3e4b56;
+}
+
+:root[data-tema='oscuro'][data-contraste='alto'] {
+  --codigo-cuadricula: #2c3e4e;
+  --codigo-comentario: #cfdbe5;
+}

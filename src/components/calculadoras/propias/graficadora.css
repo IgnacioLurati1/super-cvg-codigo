@@ -1,0 +1,425 @@
+/* The graphers (propias/graficadora.jsx and graficadora-3d.jsx). On the board, one line per thing to draw, each with
+   its own way out, and chalk buttons to add another. On the sheet, each thing in its own pen: a color and a stroke of
+   its own, so color is never the only clue. */
+
+/* ---------- The board ---------- */
+.gr-trazos {
+  display: grid;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.gr-trazo {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 44px;
+  gap: 6px;
+  align-items: start;
+}
+
+.gr-trazo__campos {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+
+.gr-trazo__rotulo {
+  flex: none;
+  color: var(--pizarron-tiza-suave);
+  font-size: var(--t-chica);
+  font-weight: 700;
+}
+
+.gr-trazo__casilla {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  justify-self: start;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.gr-trazo__casilla input {
+  width: 22px;
+  height: 22px;
+  margin: 0;
+  accent-color: var(--pizarron-amarillo);
+}
+
+.gr-trazo__borrar {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--pizarron-tiza-suave);
+  cursor: pointer;
+  transition: background-color 120ms ease, color 120ms ease, transform 100ms ease;
+}
+
+.gr-trazo__borrar svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+}
+
+.gr-trazo__borrar:active {
+  transform: scale(0.94);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .gr-trazo__borrar:hover {
+    background: color-mix(in srgb, var(--pizarron-tiza) 12%, transparent);
+    color: var(--pizarron-tiza);
+  }
+}
+
+.gr-sumar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+}
+
+.gr-sumar .ejemplos__boton[aria-disabled='true'] {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* With a mistake on the board, the sheet keeps what it had, dimmed: it is not what the board says now. */
+.gr-espera {
+  opacity: 0.45;
+}
+
+/* ---------- The sheet ---------- */
+.gr-lamina {
+  margin: 0 0 20px;
+}
+
+.gr-serie {
+  fill: none;
+  stroke: var(--foco);
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.gr-serie--1 {
+  stroke: var(--materia-1);
+  stroke-dasharray: 10 6;
+}
+
+.gr-serie--2 {
+  stroke: var(--materia-2);
+  stroke-dasharray: 1 6;
+  stroke-width: 3;
+}
+
+.gr-serie--3 {
+  stroke: var(--materia-3);
+  stroke-dasharray: 12 5 2 5;
+}
+
+.gr-serie--4 {
+  stroke: var(--texto);
+  stroke-dasharray: 6 5;
+  stroke-width: 2;
+}
+
+.gr-serie--5 {
+  stroke: var(--foco);
+  stroke-dasharray: 16 5 1 5 1 5;
+}
+
+/* The region of an area, with the highlighter. */
+.gr-area {
+  fill: color-mix(in srgb, var(--resaltador) 55%, transparent);
+  stroke: none;
+}
+
+/* What takes the pointer: dragging moves the window. On a phone only sideways, so the page still scrolls. */
+.gr-toque {
+  fill: transparent;
+  cursor: grab;
+  touch-action: pan-y;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.gr-toque:active {
+  cursor: grabbing;
+}
+
+.gr-pie {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px 16px;
+}
+
+.gr-leyenda {
+  flex: 1 1 14rem;
+  min-width: 0;
+  margin: 6px 0 0;
+}
+
+/* A long formula breaks where it has to instead of pushing the sheet wider. */
+.gr-leyenda li {
+  min-width: 0;
+}
+
+.gr-leyenda li > span:last-child {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.gr-leyenda__numero {
+  flex: none;
+  color: var(--texto);
+  font-variant-numeric: lining-nums;
+}
+
+.gr-lamina__nota {
+  margin: 8px 0 0;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+}
+
+.gr-mandos {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.gr-mando {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1.5px solid var(--borde-control);
+  border-radius: 50%;
+  background: var(--superficie);
+  color: var(--texto);
+  font: inherit;
+  cursor: pointer;
+  transition: background-color 120ms ease, transform 100ms ease;
+}
+
+.gr-mando svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.gr-mando--texto {
+  width: auto;
+  padding: 0 16px;
+  border-radius: 999px;
+  font-size: var(--t-chica);
+  font-weight: 600;
+}
+
+.gr-mando:active {
+  transform: scale(0.96);
+}
+
+.gr-mando:focus-visible {
+  outline: 3px solid var(--foco);
+  outline-offset: 2px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .gr-mando:hover {
+    background: var(--superficie-2);
+  }
+}
+
+.gr-mando[aria-disabled='true'] {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.gr-mando[aria-disabled='true']:active {
+  transform: none;
+}
+
+/* ---------- The 3D scene ---------- */
+/* The box that turns, drawn on the sheet itself. Dragging turns it; on a phone a drag that starts up or down still
+   scrolls the page. */
+.gr-escena {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 0.64;
+  max-height: 540px;
+  border-radius: 8px;
+  cursor: grab;
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.gr-escena[data-arrastrando] {
+  cursor: grabbing;
+}
+
+.gr-escena:focus-visible {
+  outline: 3px solid var(--foco);
+  outline-offset: 2px;
+}
+
+.gr-escena__lienzo {
+  display: block;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  transition: opacity 220ms ease-out;
+}
+
+.gr-escena--lista .gr-escena__lienzo {
+  opacity: 1;
+}
+
+/* Back after a mistake on the board: at once. */
+.gr-escena--rapida .gr-escena__lienzo {
+  transition: none;
+}
+
+/* While three.js arrives: a block with the shape of what comes. It fades out over the scene that fades in. */
+.gr-escena__esqueleto {
+  position: absolute;
+  inset: 9% 16%;
+  border-radius: 12px;
+  background: var(--superficie-2);
+  pointer-events: none;
+  transition: opacity 220ms ease-out;
+}
+
+.gr-escena--lista .gr-escena__esqueleto {
+  opacity: 0;
+  animation: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .gr-escena__esqueleto {
+    animation: calc-brillo 1.4s ease-in-out infinite;
+  }
+}
+
+:root[data-movimiento='reducido'] .gr-escena__esqueleto,
+:root[data-movimiento='ninguno'] .gr-escena__esqueleto {
+  animation: none;
+}
+
+:root[data-movimiento='reducido'] .gr-escena__lienzo,
+:root[data-movimiento='ninguno'] .gr-escena__lienzo,
+:root[data-movimiento='reducido'] .gr-escena__esqueleto,
+:root[data-movimiento='ninguno'] .gr-escena__esqueleto {
+  transition: none;
+}
+
+.gr-escena__aviso {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 16px;
+  margin: 0 0 12px;
+  color: var(--texto-suave);
+}
+
+.gr-escena__aviso p {
+  margin: 0;
+}
+
+/* What each thing of the scene looks like, in the legend. */
+.gr-muestra {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  background: var(--foco);
+}
+
+.gr-muestra--1 {
+  background: var(--materia-1);
+}
+
+.gr-muestra--2 {
+  background: var(--materia-2);
+}
+
+.gr-muestra--3 {
+  background: var(--materia-3);
+}
+
+.gr-muestra--4,
+.gr-muestra--nivel {
+  background: var(--texto);
+}
+
+.gr-muestra--linea {
+  width: 26px;
+  height: 4px;
+  border-radius: 2px;
+}
+
+.gr-muestra--punto {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.gr-muestra--plano {
+  border: 1px solid var(--texto);
+  background: var(--resaltador);
+}
+
+/* Where the gradient points, on the map of level curves. */
+.gr-flecha line {
+  stroke: var(--texto);
+  stroke-width: 2.2;
+  stroke-linecap: round;
+}
+
+.gr-flecha path {
+  fill: var(--texto);
+}
+
+@media (max-width: 560px) {
+  .gr-escena {
+    aspect-ratio: 1 / 0.96;
+  }
+
+  /* The six round ones in one line of a phone; the long one, under them. */
+  .gr-mandos {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 6px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gr-mando:active,
+  .gr-trazo__borrar:active {
+    transform: none;
+  }
+
+  .gr-escena__lienzo,
+  .gr-escena__esqueleto {
+    transition: none;
+  }
+}

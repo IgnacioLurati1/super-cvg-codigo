@@ -1,0 +1,726 @@
+/* «Tu carrera»: the plan at a glance on top, like the printed one, and a band per year with a card per subject. Each
+   state has its own look (a fill, stripes, a dashed outline), not just a color, and a word that says it. */
+.carrera-pagina {
+  --c-aprobada: var(--ok);
+  --c-regular: var(--accion-hover);
+  --c-cursando: var(--materia-3);
+  --c-cursar: var(--materia-5);
+  --c-falta: var(--borde-control);
+  --c-pendiente: var(--borde);
+}
+
+.carrera-pagina__bajada {
+  max-width: 60ch;
+  margin: 0 0 24px;
+  color: var(--texto-suave);
+}
+
+.carrera-aviso {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  margin-bottom: 20px;
+  padding: 10px 10px 10px 16px;
+  border-radius: var(--radio-bloque);
+  background: var(--fondo-aviso);
+}
+
+.carrera-aviso p {
+  flex: 1 1 24rem;
+  margin: 0;
+}
+
+.carrera-estado {
+  max-width: 36rem;
+  padding: 24px;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-bloque);
+  background: var(--superficie);
+}
+
+.carrera-estado__titulo {
+  margin: 0 0 8px;
+  font-size: var(--t-h3);
+}
+
+.carrera-estado__texto {
+  margin: 0 0 16px;
+}
+
+/* Each state's swatch: the plan's squares, the dots of a year and the legend. */
+.carrera-punto--aprobada { --c: var(--c-aprobada); background: var(--c-aprobada); }
+.carrera-punto--regular { --c: var(--c-regular); background: var(--c-regular); }
+.carrera-punto--cursando {
+  --c: var(--c-cursando);
+  background: repeating-linear-gradient(135deg, var(--c-cursando) 0 3px, color-mix(in srgb, var(--c-cursando) 45%, var(--superficie)) 3px 6px);
+}
+.carrera-punto--cursar {
+  --c: var(--c-cursar);
+  background: color-mix(in srgb, var(--c-cursar) 22%, var(--superficie));
+  box-shadow: inset 0 0 0 2px var(--c-cursar);
+}
+.carrera-punto--falta {
+  --c: var(--c-falta);
+  background: var(--superficie);
+  box-shadow: inset 0 0 0 1.5px var(--c-falta);
+}
+.carrera-punto--pendiente {
+  --c: var(--c-pendiente);
+  background: transparent;
+  outline: 1.5px dashed var(--c-pendiente);
+  outline-offset: -1.5px;
+}
+
+/* The summary: the count and its legend, and next to it the plan. */
+.carrera-resumen {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px 40px;
+  margin-bottom: 32px;
+  padding: 24px 28px;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-bloque);
+  background: var(--superficie);
+}
+
+.carrera-resumen__texto {
+  flex: 1 1 18rem;
+}
+
+.carrera-resumen__titulo {
+  margin: 0 0 16px;
+  font-size: var(--t-h3);
+  font-weight: 600;
+  font-variant-numeric: lining-nums;
+}
+
+.carrera-resumen__cifra {
+  display: block;
+  margin-bottom: 2px;
+  font-size: clamp(3.5rem, 9vw, 5rem);
+  font-weight: 700;
+  line-height: 0.95;
+  letter-spacing: -0.02em;
+}
+
+.carrera-leyenda {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--t-chica);
+}
+
+.carrera-leyenda__item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.carrera-leyenda__item::before {
+  content: '';
+  flex: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+}
+
+.carrera-leyenda__item--aprobada::before { background: var(--c-aprobada); }
+.carrera-leyenda__item--regular::before { background: var(--c-regular); }
+.carrera-leyenda__item--cursando::before {
+  background: repeating-linear-gradient(135deg, var(--c-cursando) 0 3px, color-mix(in srgb, var(--c-cursando) 45%, var(--superficie)) 3px 6px);
+}
+.carrera-leyenda__item--cursar::before {
+  background: color-mix(in srgb, var(--c-cursar) 22%, var(--superficie));
+  box-shadow: inset 0 0 0 2px var(--c-cursar);
+}
+.carrera-leyenda__item--falta::before { box-shadow: inset 0 0 0 1.5px var(--c-falta); }
+.carrera-leyenda__item--pendiente::before { outline: 1.5px dashed var(--c-pendiente); outline-offset: -1.5px; }
+
+.carrera-leyenda strong {
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+.carrera-resumen__nota {
+  margin: 12px 0 0;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+}
+
+/* The plan: a column per year, a square per subject; the passed ones carry their grade. */
+.carrera-plano {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.carrera-plano__columna {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+
+.carrera-plano__cuadro {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 5px;
+  color: var(--superficie);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  font-variant-numeric: lining-nums tabular-nums;
+  animation: carrera-cuadro 0.4s cubic-bezier(0.23, 1, 0.32, 1) both;
+  animation-delay: calc(var(--i) * 35ms + 80ms);
+}
+
+.carrera-plano__cuadro--elegida {
+  outline: 2px solid var(--texto);
+  outline-offset: 2px;
+}
+
+.carrera-plano__anio {
+  order: -1;
+  margin-bottom: 2px;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+  font-weight: 600;
+  font-variant-numeric: lining-nums;
+}
+
+@keyframes carrera-cuadro {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.9);
+  }
+}
+
+/* What holds back the most: a card each, with a padlock per subject it keeps closed. */
+.carrera-frenos {
+  margin-bottom: 28px;
+}
+
+.carrera-frenos__titulo {
+  margin: 0 0 10px;
+  font-size: var(--t-h3);
+}
+
+.carrera-frenos__lista {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.carrera-freno {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 14px 16px;
+  border: 1px solid var(--borde);
+  border-top: 4px solid var(--aviso);
+  border-radius: var(--radio-control);
+  background: var(--superficie);
+}
+
+.carrera-freno__nombre {
+  text-align: left;
+  font-weight: 600;
+}
+
+.carrera-frenos__cuenta {
+  color: var(--texto-suave);
+}
+
+.carrera-freno__pie {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: auto;
+  font-size: var(--t-chica);
+}
+
+.carrera-freno__candados {
+  display: flex;
+  gap: 4px;
+}
+
+.carrera-freno__candados span {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  box-shadow: inset 0 0 0 1.5px var(--c-falta);
+}
+
+/* A subject's name that opens it. */
+.carrera-enlace {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.carrera-enlace:active {
+  color: var(--accion-hover);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .carrera-enlace:hover {
+    color: var(--accion-hover);
+  }
+}
+
+.carrera-filtros {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 20px;
+  margin-bottom: 8px;
+}
+
+.carrera-supuesto:not(:empty) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  margin: 12px 0 0;
+  padding: 10px 10px 10px 16px;
+  border: 2px dashed var(--c-cursar);
+  border-radius: var(--radio-bloque);
+  background: color-mix(in srgb, var(--c-cursar) 8%, transparent);
+}
+
+.carrera-supuesto p {
+  flex: 1 1 20rem;
+  margin: 0;
+}
+
+/* A band per year: its number big and quiet, the name, a dot per subject and the count. */
+.carrera-anio {
+  padding: 28px 0 8px;
+}
+
+.carrera-anio + .carrera-anio {
+  border-top: 1px solid var(--borde);
+}
+
+.carrera-anio__cabeza {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 14px;
+  margin-bottom: 14px;
+}
+
+.carrera-anio__numero {
+  font-size: 2.75rem;
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: lining-nums;
+  color: color-mix(in srgb, var(--texto) 22%, transparent);
+}
+
+.carrera-anio--completo .carrera-anio__numero {
+  color: var(--c-aprobada);
+}
+
+.carrera-anio__titulo {
+  margin: 0;
+  font-size: var(--t-h3);
+  /* Even, like the number beside it: centered against it, it stays on a whole pixel. */
+  line-height: round(up, 1.15em, 2px);
+}
+
+html:is([data-estilo='hoja'], [data-estilo='pizarron']) .carrera-anio__titulo {
+  line-height: round(up, 1.35em, 2px);
+}
+
+.carrera-anio__barra {
+  display: flex;
+  flex: 1 1 8rem;
+  gap: 4px;
+  min-width: 0;
+}
+
+
+.carrera-anio__barra span {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+}
+
+.carrera-anio__cuenta {
+  margin: 0;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+  font-variant-numeric: lining-nums;
+}
+
+.carrera-anio--completo .carrera-anio__cuenta {
+  color: var(--texto);
+  font-weight: 600;
+}
+
+.carrera-fichas {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(12.5rem, 1fr));
+  gap: 10px;
+  margin: 0 0 12px;
+  padding: 0;
+  list-style: none;
+}
+
+.carrera-ficha__item {
+  display: flex;
+}
+
+/* A card. Passed: filled with green and its grade. Regular: a blue edge. In progress: purple stripes. Open to take:
+   a teal frame. Something missing: on the page's ground, quieter. */
+.carrera-ficha {
+  --c: var(--c-pendiente);
+  position: relative;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  min-height: 80px;
+  padding: 11px 14px 11px 16px;
+  border: 1px solid var(--borde);
+  border-radius: 8px;
+  background: var(--superficie);
+  color: var(--texto);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.12s ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .carrera-ficha:hover {
+    border-color: var(--c);
+    box-shadow: 0 3px 10px color-mix(in srgb, var(--texto) 10%, transparent);
+  }
+}
+
+.carrera-ficha:active {
+  transform: scale(0.97);
+}
+
+.carrera-ficha__nombre {
+  text-wrap: balance;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.carrera-ficha__estado {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: auto;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+  font-variant-numeric: lining-nums;
+}
+
+.carrera-ficha--aprobada {
+  --c: var(--c-aprobada);
+  padding-right: 52px;
+  border-color: color-mix(in srgb, var(--c-aprobada) 30%, var(--borde));
+  background: color-mix(in srgb, var(--c-aprobada) 9%, var(--superficie));
+}
+
+.carrera-ficha__nota {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: grid;
+  place-items: center;
+  min-width: 32px;
+  height: 32px;
+  padding: 0 4px;
+  border-radius: 50%;
+  background: var(--c-aprobada);
+  color: var(--superficie);
+  font-size: 1rem;
+  font-weight: 700;
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+.carrera-ficha--regular {
+  --c: var(--c-regular);
+  box-shadow: inset 4px 0 0 var(--c-regular);
+}
+
+.carrera-ficha--rinde .carrera-ficha__estado,
+.carrera-ficha--cursar .carrera-ficha__estado {
+  color: var(--texto);
+  font-weight: 600;
+}
+
+.carrera-ficha--rinde .carrera-ficha__estado::before,
+.carrera-ficha--cursar .carrera-ficha__estado::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--c);
+}
+
+.carrera-ficha--cursando {
+  --c: var(--c-cursando);
+  background:
+    linear-gradient(to right, var(--c-cursando) 0 4px, transparent 4px),
+    repeating-linear-gradient(135deg, color-mix(in srgb, var(--c-cursando) 9%, var(--superficie)) 0 10px, var(--superficie) 10px 20px);
+}
+
+.carrera-ficha--cursar {
+  --c: var(--c-cursar);
+  border: 2px solid var(--c-cursar);
+  padding: 10px 13px 10px 15px;
+  background: color-mix(in srgb, var(--c-cursar) 7%, var(--superficie));
+}
+
+.carrera-ficha--falta {
+  --c: var(--c-falta);
+  border-style: dashed;
+  border-color: var(--borde-control);
+  background: transparent;
+}
+
+.carrera-ficha--pendiente {
+  border-style: dashed;
+  background: transparent;
+}
+
+.carrera-ficha__marca {
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--superficie-2);
+  font-size: var(--t-chica);
+  font-weight: 600;
+}
+
+/* The chosen one, and around it what it lacks and what it frees. */
+.carrera-ficha[aria-expanded='true'] {
+  outline: 2px solid var(--texto);
+  outline-offset: 2px;
+}
+
+.carrera-ficha--rel-falta,
+.carrera-ficha--rel-destraba {
+  border-color: var(--texto-suave);
+  border-style: solid;
+}
+
+.carrera-ficha__marca--relacion {
+  background: var(--fondo-aviso);
+}
+
+/* What a supposition opens: one beat when it shows, then it stays marked. */
+.carrera-ficha--abre {
+  border: 2px solid var(--c-cursar);
+  padding: 10px 13px 10px 15px;
+  animation: carrera-se-abre 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.carrera-ficha--aprobada.carrera-ficha--abre {
+  padding-right: 51px;
+}
+
+.carrera-ficha__marca--abre {
+  background: var(--c-cursar);
+  color: var(--superficie);
+}
+
+.carrera-ficha--supuesta {
+  border: 2px dashed var(--c-cursar);
+  padding: 10px 13px 10px 15px;
+}
+
+@keyframes carrera-se-abre {
+  from {
+    transform: scale(0.96);
+    box-shadow: 0 0 0 6px color-mix(in srgb, var(--c-cursar) 35%, transparent);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .carrera-ficha,
+  .carrera-ficha--abre {
+    transition: none;
+    animation: none;
+  }
+
+  .carrera-plano__cuadro {
+    animation-name: carrera-cuadro-suave;
+  }
+}
+
+@keyframes carrera-cuadro-suave {
+  from {
+    opacity: 0;
+  }
+}
+
+/* What is open about one subject, right under its year, with the color of where it stands on top. */
+.carrera-detalle {
+  --c: var(--c-pendiente);
+  margin: 4px 0 16px;
+  padding: 18px 22px 22px;
+  border: 1px solid var(--borde);
+  border-top: 4px solid var(--c);
+  border-radius: var(--radio-bloque);
+  background: var(--superficie);
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--texto) 8%, transparent);
+  animation: carrera-detalle 0.22s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.carrera-detalle--aprobada { --c: var(--c-aprobada); }
+.carrera-detalle--regular { --c: var(--c-regular); }
+.carrera-detalle--cursando { --c: var(--c-cursando); }
+.carrera-detalle--cursar { --c: var(--c-cursar); }
+.carrera-detalle--falta { --c: var(--c-falta); }
+
+@keyframes carrera-detalle {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .carrera-detalle {
+    animation-name: carrera-cuadro-suave;
+  }
+}
+
+.carrera-detalle:focus-visible {
+  outline: 2px solid var(--foco);
+  outline-offset: 2px;
+}
+
+.carrera-detalle__cabeza {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.carrera-detalle__titulo {
+  margin: 0;
+  font-size: var(--t-h3);
+}
+
+.carrera-detalle__estado {
+  margin: 2px 0 0;
+  color: var(--texto-suave);
+}
+
+.carrera-detalle__grupo {
+  margin-top: 16px;
+}
+
+.carrera-detalle__subtitulo {
+  margin: 0 0 4px;
+  font-size: var(--t-ui);
+}
+
+.carrera-detalle__lista {
+  margin: 0;
+  padding-left: 1.2em;
+}
+
+.carrera-detalle__lista li {
+  padding: 2px 0;
+}
+
+.carrera-detalle__suponer {
+  margin-top: 16px;
+}
+
+.carrera-detalle__suponer[aria-pressed='true'] {
+  background: var(--c-cursar);
+  border-color: var(--c-cursar);
+}
+
+.carrera-vacio {
+  margin: 20px 0;
+  color: var(--texto-suave);
+}
+
+@media (max-width: 520px) {
+  .carrera-resumen {
+    padding: 18px;
+  }
+
+  .carrera-plano {
+    justify-content: space-between;
+    width: 100%;
+    gap: 4px;
+  }
+
+  .carrera-plano__cuadro {
+    width: 26px;
+    height: 26px;
+    font-size: 0.75rem;
+  }
+
+  .carrera-anio__numero {
+    font-size: 2.25rem;
+  }
+
+  .carrera-anio__barra {
+    order: 4;
+    flex-basis: 100%;
+  }
+
+  .carrera-fichas {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .carrera-ficha {
+    min-height: 72px;
+    padding: 9px 10px 9px 12px;
+  }
+
+  .carrera-ficha--aprobada {
+    padding-right: 44px;
+  }
+
+  .carrera-ficha__nota {
+    top: 8px;
+    right: 8px;
+    min-width: 28px;
+    height: 28px;
+    font-size: 0.875rem;
+  }
+
+  .carrera-ficha--cursar,
+  .carrera-ficha--abre,
+  .carrera-ficha--supuesta {
+    padding: 8px 9px 8px 11px;
+  }
+
+  .carrera-detalle {
+    padding: 14px 16px 16px;
+  }
+}

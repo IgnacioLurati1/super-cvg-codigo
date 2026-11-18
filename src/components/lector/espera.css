@@ -1,0 +1,146 @@
+/* The frame of the PDF reader and its skeleton. Loaded with the sheet that opens a file, before the reader itself
+   (lector.css), so what shows while the PDF comes already has the reader's shape. */
+
+.lector {
+  --hoja: var(--papel);
+  --mesa: var(--superficie-2);
+  --alto-barra: 48px;
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  background: var(--mesa);
+  color: var(--texto);
+}
+
+.lector__barra {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 4px;
+  min-height: var(--alto-barra);
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--borde);
+  background: var(--superficie);
+}
+
+.lector__marco {
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  background: var(--mesa);
+}
+
+/* Grey blocks with a soft shine: the bar's buttons, and the lines of a page. */
+.lector__barra--esqueleto i,
+.lector__hoja-esperando i {
+  display: block;
+  border-radius: 4px;
+  background:
+    linear-gradient(90deg, transparent 0%, color-mix(in srgb, var(--texto) 7%, transparent) 50%, transparent 100%) 0 0 / 200% 100% no-repeat,
+    color-mix(in srgb, var(--texto) 9%, transparent);
+  animation: lector-brillo 1.4s linear infinite;
+}
+
+.lector__barra--esqueleto i {
+  width: 36px;
+  height: 28px;
+}
+
+.lector__barra--esqueleto i:nth-child(2) {
+  width: 120px;
+  margin-inline: auto;
+}
+
+/* On a page that is still drawing, the lines have the paper under them. */
+.lector__hoja-esperando {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2.2%;
+  padding: 11% 10%;
+  background: var(--hoja);
+  pointer-events: none;
+}
+
+.lector__hoja-esperando i {
+  height: 1.4%;
+  min-height: 6px;
+  background:
+    linear-gradient(90deg, transparent 0%, rgb(23 50 77 / 0.06) 50%, transparent 100%) 0 0 / 200% 100% no-repeat,
+    rgb(23 50 77 / 0.08);
+}
+
+.lector__hoja-esperando i:first-child {
+  width: 46%;
+  height: 2.6%;
+  margin-bottom: 2%;
+}
+
+.lector__hoja-esperando i:nth-child(3n) {
+  width: 82%;
+}
+
+.lector__hoja-esperando i:nth-child(4n) {
+  width: 64%;
+}
+
+/* Alone, before the reader is there. Its margins are a share of its own width, like on a page: a plain percentage
+   would be a share of the whole frame, and on a wide screen the lines end up squeezed in the middle. */
+.lector__hoja-esperando--sola {
+  --ancho-hoja: min(640px, calc(100% - 32px));
+  position: relative;
+  inset: auto;
+  width: var(--ancho-hoja);
+  aspect-ratio: 595 / 842;
+  margin: 16px auto;
+  padding: calc(var(--ancho-hoja) * 0.11) calc(var(--ancho-hoja) * 0.1);
+  box-shadow: 0 1px 2px rgb(23 50 77 / 0.16), 0 6px 18px rgb(23 50 77 / 0.08);
+}
+
+:root[data-tema='oscuro'] .lector__hoja-esperando--sola {
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.5), 0 6px 18px rgb(0 0 0 / 0.3);
+}
+
+/* The paper the student chose for the pages (dark, sepia or as the theme), from the first moment: the same filters and
+   the same edge as a page of the reader (lector.css, `.lector__pagina`). A page that is still drawing has its lines
+   inside it, so those already turn with it. */
+:root[data-pdf='oscuro'] .lector__hoja-esperando--sola,
+:root[data-pdf='tema'][data-tema='oscuro'] .lector__hoja-esperando--sola {
+  filter: var(--pdf-oscuras);
+  box-shadow: 0 0 0 1px rgb(203 203 203);
+}
+
+:root[data-pdf='sepia'] .lector__hoja-esperando--sola,
+:root[data-pdf='tema'][data-tema='claro'][data-pdf-claro='sepia'] .lector__hoja-esperando--sola {
+  filter: var(--pdf-sepia);
+}
+
+@keyframes lector-brillo {
+  from {
+    background-position: 100% 0, 0 0;
+  }
+  to {
+    background-position: -100% 0, 0 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lector__barra--esqueleto i,
+  .lector__hoja-esperando i {
+    animation: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .lector__hoja-esperando i,
+  .lector__barra--esqueleto i {
+    border: 1px solid CanvasText;
+  }
+}

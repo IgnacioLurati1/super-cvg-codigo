@@ -1,0 +1,215 @@
+/* Classroom inside a course (a card on the right in a campus course, a section in one of your own), and the button
+   that connects it */
+section.classroom {
+  margin-top: 8px;
+}
+
+/* The card on the right: its title is a block in the color of the bar on top, easy to find. */
+.panel.classroom > summary {
+  border-radius: var(--radio-control);
+  background: var(--accion);
+  color: var(--accion-texto);
+}
+
+.panel.classroom[open] > summary {
+  margin-bottom: 12px;
+  border-radius: var(--radio-control) var(--radio-control) 0 0;
+}
+
+/* A card dragged from the left over this one goes back to Classroom. */
+.panel.classroom[data-soltar] {
+  outline: 2px dashed var(--accion);
+  outline-offset: 2px;
+}
+
+.panel.classroom .classroom__bajada {
+  margin: 0;
+}
+
+/* The stream and each topic: closed unless they have something new, so the card does not push the rest down. */
+.classroom__grupo > summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  cursor: pointer;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.classroom__grupo > .lista {
+  margin-bottom: 8px;
+}
+
+.classroom__cuantos {
+  margin-left: auto;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: var(--fondo);
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.classroom__tablon[open] .classroom__cuantos,
+.classroom__tablon .classroom__cuantos {
+  color: var(--texto);
+}
+
+.classroom__novedades {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+
+.classroom__novedades p {
+  margin: 0;
+  font-weight: 600;
+}
+
+.panel.classroom .classroom__elegir {
+  margin-bottom: 0;
+}
+
+.panel.classroom .classroom__tema h3 {
+  margin: 8px 0 0;
+  font-size: 1rem;
+}
+
+.classroom__bajada {
+  max-width: 60ch;
+  margin: 4px 0 12px;
+  color: var(--texto-suave);
+}
+
+.classroom__botones,
+.classroom__conectar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.classroom__cuenta {
+  margin-bottom: 12px;
+}
+
+.classroom__como {
+  flex-basis: 100%;
+  margin: 0;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+  overflow-wrap: anywhere;
+}
+
+.classroom__como strong {
+  color: var(--texto);
+  font-weight: 600;
+}
+
+.classroom__unir > .campo {
+  align-self: stretch;
+  margin: 0 0 4px;
+}
+
+.classroom__conectar .mensaje {
+  flex-basis: 100%;
+  margin: 4px 0 0;
+}
+
+.classroom__espera {
+  margin: 0;
+  font-weight: 600;
+}
+
+.classroom__elegir {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 8px 20px;
+  margin-bottom: 8px;
+}
+
+.classroom__elegir .campo {
+  flex: 1 1 16.25rem;
+  max-width: 26.25rem;
+  margin: 0;
+}
+
+.classroom__abrir {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-weight: 600;
+}
+
+.classroom__curso {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 16px;
+  margin: 0 0 4px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+/* In the editor of a course of one's own, before connecting: a field that is not there yet. */
+.classroom__unir {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.classroom__unir .classroom__bajada {
+  margin: 0 0 4px;
+}
+
+.classroom__tema h3 {
+  margin: 20px 0 2px;
+  font-size: var(--t-h3);
+  overflow-wrap: anywhere;
+}
+
+a.fila__principal {
+  text-decoration: none;
+}
+
+/* The sheet to pick from Classroom: its parts change with the connection, so it stacks instead of fixed rows. */
+.classroom__caja {
+  display: flex;
+  flex-direction: column;
+}
+
+.classroom__caja > .elegir__lista {
+  flex: 1 1 auto;
+}
+
+.classroom__caja > .elegir__pie {
+  margin-top: auto;
+}
+
+/* Reached from the index of the page: a little room under the bar on top. */
+.classroom__grupo > summary {
+  scroll-margin-top: 16px;
+}
+
+/* An attachment right under its message in the stream: a step in, tied to it by a line. */
+.classroom__tablon .fila[data-adjunto] {
+  position: relative;
+  padding-left: 28px;
+}
+
+.classroom__tablon .fila[data-adjunto]::before {
+  position: absolute;
+  top: 0;
+  left: 10px;
+  width: 12px;
+  height: 32px;
+  border-bottom: 2px solid var(--borde-control);
+  border-left: 2px solid var(--borde-control);
+  border-bottom-left-radius: 6px;
+  content: '';
+}

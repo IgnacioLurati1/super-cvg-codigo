@@ -1,0 +1,128 @@
+/* The dependency diagram (propias/_log-dependencias.jsx), shared by Claves candidatas and Normalización. */
+.dep-lugar {
+  min-width: 0;
+}
+
+.dep-caja__borde {
+  fill: var(--superficie);
+  stroke: var(--texto-suave);
+  stroke-width: 1.2;
+}
+
+.dep-caja__nombre {
+  fill: var(--texto);
+  font-weight: 600;
+}
+
+.dep-caja__subrayado {
+  stroke: var(--texto);
+  stroke-width: 1.5;
+}
+
+/* The closure being asked for, with the highlighter. */
+.dep-caja[data-marcada] .dep-caja__borde {
+  fill: var(--resaltador);
+  stroke: var(--resaltador-texto);
+}
+
+.dep-caja[data-marcada] .dep-caja__nombre {
+  fill: var(--resaltador-texto);
+}
+
+.dep-caja[data-marcada] .dep-caja__subrayado {
+  stroke: var(--resaltador-texto);
+}
+
+.dep-df line {
+  fill: none;
+  stroke: var(--tinta-hoja);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+}
+
+.dep-df__punto,
+.dep-df__punta {
+  fill: var(--tinta-hoja);
+}
+
+/* Partial, in dashes and the error ink. Transitive, dotted and in the focus ink. The line says it without the color. */
+.dep-df[data-tipo='parcial'] line {
+  stroke: var(--error);
+  stroke-width: 2;
+  stroke-dasharray: 7 3;
+  stroke-linecap: butt;
+}
+
+.dep-df[data-tipo='parcial'] .dep-df__punto,
+.dep-df[data-tipo='parcial'] .dep-df__punta {
+  fill: var(--error);
+}
+
+.dep-df[data-tipo='transitiva'] line {
+  stroke: var(--foco);
+  stroke-width: 2;
+  stroke-dasharray: 2 3;
+}
+
+.dep-df[data-tipo='transitiva'] .dep-df__punto,
+.dep-df[data-tipo='transitiva'] .dep-df__punta {
+  fill: var(--foco);
+}
+
+/* The legend under the diagram: a short piece of each line, as drawn above. */
+.dep-leyenda {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin: 0 0 8px;
+  padding: 0;
+  list-style: none;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+}
+
+.dep-leyenda__uno {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dep-leyenda__muestra {
+  width: 26px;
+  height: 0;
+  border-top: 2px solid var(--tinta-hoja);
+}
+
+.dep-leyenda__muestra[data-tipo='parcial'] {
+  border-top-style: dashed;
+  border-top-color: var(--error);
+}
+
+.dep-leyenda__muestra[data-tipo='transitiva'] {
+  border-top-style: dotted;
+  border-top-color: var(--foco);
+}
+
+/* Sets of attributes are long: they wrap inside the cell instead of widening the table. */
+.dep-tabla td,
+.dep-tabla th {
+  min-width: 5.5rem;
+  max-width: 16rem;
+  padding-block: 4px;
+  text-align: left;
+  white-space: normal;
+}
+
+.dep-tabla tr[data-clave] td:first-child {
+  font-weight: 700;
+}
+
+.dep-lineas {
+  display: grid;
+  gap: 6px;
+  margin: 0 0 10px;
+}
+
+.dep-lineas p {
+  margin: 0;
+}

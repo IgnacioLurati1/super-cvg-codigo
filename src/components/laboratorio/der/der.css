@@ -1,0 +1,1166 @@
+/* The DER of the lab: ink on the squared sheet, as the course's sheets are drawn (rectangle, diamond, oval with the
+   key underlined, `min:max` next to each entity), what is chosen marked with the highlighter, and its card beside the
+   sheet (a sheet under the drawing, on a phone). */
+
+.der {
+  --der-tinta: var(--texto);
+  --der-papel: var(--superficie);
+  --der-trazo: 1.5px;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  container: der / inline-size;
+  background: var(--superficie);
+}
+
+.der--roto {
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px;
+}
+
+.der--roto p {
+  margin: 0;
+}
+
+/* --- The bar: what to add (drawn as in the notation), the history, and the way to the tables and the SQL. */
+
+.der-barra {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 14px;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--borde);
+}
+
+.der-barra__grupo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+}
+
+.der-barra__fin {
+  gap: 8px;
+  margin-left: auto;
+}
+
+.der-barra .boton {
+  white-space: nowrap;
+}
+
+.der-boton {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 0 10px;
+  border: 1px solid transparent;
+  border-radius: var(--radio-control);
+  background: none;
+  color: var(--texto);
+  font: inherit;
+  font-size: var(--t-chica);
+  cursor: pointer;
+  transition: background-color 120ms ease, transform 120ms ease;
+}
+
+/* The shapes of the bar are also dragged down onto the sheet: a sideways swipe still scrolls the bar. */
+.der-barra__piezas .der-boton {
+  touch-action: pan-x;
+  user-select: none;
+}
+
+.der-fantasma {
+  position: fixed;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  z-index: 1000;
+  overflow: visible;
+  pointer-events: none;
+  opacity: 0.85;
+  fill: var(--superficie);
+  stroke: var(--texto);
+  stroke-width: 1.6;
+  filter: drop-shadow(0 6px 14px color-mix(in srgb, var(--texto) 22%, transparent));
+}
+
+.der-fantasma[data-fuera] {
+  opacity: 0.4;
+}
+
+.der-fantasma__caja {
+  fill: none;
+}
+
+.der-boton:disabled {
+  color: var(--texto-suave);
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.der-boton:not(:disabled):active {
+  transform: scale(0.97);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .der-boton:not(:disabled):hover {
+    background: var(--superficie-2);
+  }
+}
+
+.der-boton:focus-visible,
+.der-mas:focus-visible,
+.der-lista__item:focus-visible {
+  outline: 3px solid var(--foco);
+  outline-offset: 1px;
+}
+
+.der-boton svg {
+  inline-size: 18px;
+  block-size: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linejoin: round;
+}
+
+.der-boton--icono {
+  justify-content: center;
+  inline-size: 32px;
+  padding: 0;
+}
+
+/* Undo and redo say their name; on a phone, their arrow. */
+.der-boton__icono {
+  display: none;
+}
+
+.der-falta {
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+}
+
+.der-falta--boton {
+  min-block-size: 32px;
+  padding: 0 4px;
+  border: 0;
+  border-radius: var(--radio-control);
+  background: none;
+  font-family: inherit;
+  text-decoration: underline dotted;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.der-falta--boton:focus-visible {
+  outline: 3px solid var(--foco);
+  outline-offset: 1px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .der-falta--boton:hover {
+    color: var(--texto);
+  }
+}
+
+.der-faltan {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 6px 12px 8px 30px;
+  border-bottom: 1px solid var(--borde);
+  font-size: var(--t-chica);
+}
+
+.der-faltan[hidden] {
+  display: none;
+}
+
+/* --- The body: the sheet and its card side by side; on a narrow one, the card is a sheet under the drawing. */
+
+.der-cuerpo {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  outline: none;
+}
+
+.der-diagrama {
+  display: grid;
+  flex: 1;
+  grid-template-columns: minmax(0, 1fr) minmax(17rem, 22rem);
+  min-width: 0;
+  min-height: 0;
+}
+
+.der-diagrama[hidden] {
+  display: none;
+}
+
+.der-hoja {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+}
+
+.der-ficha {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 0;
+  padding: 12px 14px 16px;
+  overflow: auto;
+  border-left: 1px solid var(--borde);
+  background: var(--fondo);
+  outline: none;
+}
+
+/* The title of the list of everything, on a phone: it opens and closes it. */
+.der-ficha__plegar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  inline-size: 100%;
+  min-block-size: 44px;
+  margin: -6px 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.der-ficha__plegar svg {
+  inline-size: 20px;
+  block-size: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+}
+
+.der-ficha__plegar:focus-visible {
+  outline: 3px solid var(--foco);
+  outline-offset: 2px;
+}
+
+.der-lista[hidden] {
+  display: none;
+}
+
+/* On a phone the lab (not at a live table) is a screen too short for a DER: with one open, the page grows so the tabs
+   and the DER fill the screen under the header (Der.jsx brings them into view), and the panel comes after them. */
+.lab[data-angosta]:not([data-vivo]):has(.lab-centro__hoja > .der) {
+  height: auto;
+}
+
+.lab[data-angosta]:not([data-vivo]):has(.lab-centro__hoja > .der) .lab-cuerpo {
+  grid-template-rows: calc(100dvh - var(--alto-cabecera)) minmax(12rem, 40dvh);
+}
+
+.lab[data-angosta][data-sin-panel]:not([data-vivo]):has(.lab-centro__hoja > .der) .lab-cuerpo {
+  grid-template-rows: calc(100dvh - var(--alto-cabecera)) auto;
+}
+
+.der-zoom {
+  position: absolute;
+  inset-block-end: 10px;
+  inset-inline-start: 10px;
+  z-index: 5;
+  display: flex;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-control);
+  background: var(--superficie);
+}
+
+/* --- React Flow, in the site's colors. */
+
+.der .react-flow {
+  --xy-background-color: var(--der-papel);
+  --xy-background-pattern-color: var(--codigo-cuadricula, var(--borde));
+  --xy-edge-stroke: var(--der-tinta);
+  --xy-connectionline-stroke: var(--foco);
+  --xy-connectionline-stroke-width: 1.6;
+  --xy-handle-background-color: var(--der-papel);
+  --xy-handle-border-color: var(--der-tinta);
+  --xy-selection-background-color: color-mix(in srgb, var(--foco) 10%, transparent);
+  --xy-selection-border: 1px dashed var(--foco);
+  color: var(--der-tinta);
+  font-family: var(--fuente-ui);
+}
+
+/* The site caps every svg at its box (base.css); React Flow's lines live in an svg of no size. */
+.der .react-flow__edges svg,
+.der .react-flow__connectionline {
+  max-width: none;
+}
+
+.der .react-flow__node {
+  border-radius: 2px;
+}
+
+.der .react-flow__node:focus-visible {
+  outline: 3px solid var(--foco);
+  outline-offset: 4px;
+}
+
+.der .react-flow__handle {
+  inline-size: 9px;
+  block-size: 9px;
+  border-width: 1.5px;
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+
+.der .react-flow__node:hover .react-flow__handle,
+.der .react-flow__node.selected .react-flow__handle,
+.der .react-flow__node:focus-visible .react-flow__handle,
+.der .react-flow.connecting .react-flow__handle {
+  opacity: 1;
+}
+
+@media (pointer: coarse) {
+  .der .react-flow__node.selected .react-flow__handle {
+    inline-size: 16px;
+    block-size: 16px;
+  }
+}
+
+.der .react-flow__handle.connectingto,
+.der .react-flow__handle.valid {
+  background: var(--resaltador);
+}
+
+/* --- A live table: what another chose, in their color, and their pointer. */
+
+.der .react-flow__node.der-de-otro > * {
+  outline: 2px solid var(--color-otro);
+  outline-offset: 4px;
+}
+
+.der-puntero {
+  position: absolute;
+  transform-origin: 0 0;
+  z-index: 10;
+  display: flex;
+  align-items: flex-start;
+  gap: 2px;
+  color: var(--color-otro);
+  pointer-events: none;
+  transition: transform 300ms linear;
+}
+
+.der-puntero svg {
+  inline-size: 16px;
+  block-size: 16px;
+  fill: var(--color-otro);
+  stroke: var(--superficie);
+  stroke-width: 1.2;
+}
+
+.der-puntero span {
+  margin-block-start: 12px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: var(--color-otro);
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .der-puntero {
+    transition: none;
+  }
+}
+
+/* --- The shapes. */
+
+.der-nombre {
+  position: relative;
+  font-size: 0.95rem;
+  white-space: nowrap;
+}
+
+.der-entidad {
+  display: grid;
+  place-items: center;
+  min-inline-size: 112px;
+  min-block-size: 44px;
+  padding: 6px 18px;
+  border: var(--der-trazo) solid var(--der-tinta);
+  background: var(--der-papel);
+}
+
+.der-entidad[data-debil] {
+  box-shadow: inset 0 0 0 3px var(--der-papel), inset 0 0 0 4.5px var(--der-tinta);
+}
+
+.der-vinculo {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-inline-size: 120px;
+  block-size: 52px;
+  padding: 0 34px;
+}
+
+.der-vinculo[data-chico] {
+  min-inline-size: 0;
+  inline-size: 46px;
+  block-size: 46px;
+  padding: 0;
+}
+
+.der-rombo {
+  position: absolute;
+  inset: 0;
+  inline-size: 100%;
+  block-size: 100%;
+  overflow: visible;
+  fill: var(--der-papel);
+  stroke: var(--der-tinta);
+  stroke-width: var(--der-trazo);
+}
+
+.der-rombo--dentro {
+  inset: 5px 10px;
+  inline-size: auto;
+  block-size: auto;
+  max-width: none;
+  width: calc(100% - 20px);
+  height: calc(100% - 10px);
+}
+
+.der-vinculo[data-chico] .der-rombo--dentro {
+  inset: 7px;
+  width: calc(100% - 14px);
+  height: calc(100% - 14px);
+}
+
+.der-jerarquia {
+  display: grid;
+  place-items: center;
+  inline-size: 30px;
+  block-size: 30px;
+  border: var(--der-trazo) solid var(--der-tinta);
+  border-radius: 50%;
+  background: var(--der-papel);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.der-agregacion {
+  position: relative;
+  inline-size: 100%;
+  block-size: 100%;
+  border: var(--der-trazo) solid var(--der-tinta);
+}
+
+/* What is chosen, with the highlighter behind the shape's name. */
+.der .react-flow__node.selected .der-entidad,
+.der .react-flow__node.selected .der-jerarquia {
+  background: color-mix(in srgb, var(--resaltador) 30%, var(--der-papel));
+}
+
+.der .react-flow__node.selected .der-rombo {
+  fill: color-mix(in srgb, var(--resaltador) 30%, var(--der-papel));
+}
+
+.der .react-flow__node.selected .der-agregacion {
+  border-style: dashed;
+  background: color-mix(in srgb, var(--resaltador) 8%, transparent);
+}
+
+/* The oval with the attributes, over its shape and joined to it by a short line. */
+.der-ovalo {
+  position: absolute;
+  inset-block-end: calc(100% + 12px);
+  inset-inline-start: 50%;
+  margin: 0;
+  padding: 10px 20px 11px;
+  border: var(--der-trazo) solid var(--der-tinta);
+  border-radius: 50%;
+  background: var(--der-papel);
+  font-size: 0.72rem;
+  line-height: 1.25;
+  list-style: none;
+  text-align: center;
+  white-space: nowrap;
+  transform: translateX(-50%);
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+/* Moved: its middle at `dx, dy` from the shape's middle (the transform comes from the .der), joined by its own line. */
+.der-ovalo__lista {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Also over a vínculo's own place above its rhombus: with both edges set, the oval was squashed. */
+.der-ovalo[data-libre],
+.der-vinculo .der-ovalo[data-libre] {
+  inset-block: 50% auto;
+}
+
+.der-ovalo[data-libre]::after {
+  display: none;
+}
+
+.der-ovalo[data-moviendo] {
+  cursor: grabbing;
+}
+
+.der-ovalo:focus-visible {
+  outline: 3px solid var(--foco);
+  outline-offset: 3px;
+}
+
+.der-ovalo-linea {
+  position: absolute;
+  inset: 0;
+  inline-size: 100%;
+  block-size: 100%;
+  overflow: visible;
+  fill: none;
+  stroke: var(--der-tinta);
+  stroke-width: var(--der-trazo);
+  pointer-events: none;
+}
+
+.der-ovalo::after {
+  position: absolute;
+  inset-block-start: 100%;
+  inset-inline-start: 50%;
+  block-size: 12px;
+  border-inline-start: var(--der-trazo) solid var(--der-tinta);
+  content: '';
+}
+
+.der-vinculo .der-ovalo {
+  inset-block-end: calc(100% + 10px);
+}
+
+.der-vinculo .der-ovalo::after {
+  block-size: 10px;
+}
+
+.der-ovalo [data-clave] {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* --- The lines: straight, double for total participation, with `min:max` beside the entity. */
+
+.der-linea,
+.der .react-flow__edge-path.der-linea {
+  fill: none;
+  stroke: var(--der-tinta);
+  stroke-width: var(--der-trazo);
+}
+
+.der-linea--doble {
+  stroke-width: 5px;
+}
+
+.der-linea--hueco {
+  fill: none;
+  stroke: var(--der-papel);
+  stroke-width: 2px;
+}
+
+.der .react-flow__edge-path.der-linea--toque {
+  stroke: transparent;
+}
+
+.der-card {
+  position: absolute;
+  display: grid;
+  justify-items: center;
+  padding: 0 3px;
+  background: var(--der-papel);
+  font-size: 0.75rem;
+  font-variant-numeric: lining-nums;
+  line-height: 1.2;
+  pointer-events: none;
+}
+
+.der-rol {
+  color: var(--texto-suave);
+  font-size: 0.7rem;
+}
+
+/* --- The card of what is chosen. */
+
+.der-ficha__titulo {
+  margin: 0;
+  font-size: var(--t-ui);
+}
+
+.der-ficha__pie {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: auto;
+  padding-top: 4px;
+}
+
+.der-peligro {
+  color: var(--error);
+}
+
+.der-campo {
+  display: grid;
+  gap: 3px;
+  font-size: var(--t-chica);
+}
+
+.der-campo .campo__control,
+.der-atributo__nombre {
+  inline-size: 100%;
+  min-width: 0;
+}
+
+.der-grupo {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.der-grupo > legend {
+  margin-bottom: 6px;
+  padding: 0;
+  font-size: var(--t-chica);
+  font-weight: 600;
+}
+
+.der-grupo > .boton {
+  justify-self: start;
+}
+
+.der-en-linea {
+  grid-auto-flow: column;
+  justify-content: start;
+  gap: 16px;
+}
+
+.der-marca {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 28px;
+  font-size: var(--t-chica);
+}
+
+.der-marca input {
+  inline-size: 16px;
+  block-size: 16px;
+  margin: 0;
+  accent-color: var(--accion);
+}
+
+.der-nota {
+  margin: 0;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+}
+
+.der-atributos,
+.der-puntas,
+.der-opciones,
+.der-lista,
+.der-decisiones,
+.der-decididas,
+.der-avisos,
+.der-lista-tablas {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.der-atributos--partes {
+  margin: 6px 0 0 18px;
+  padding-left: 10px;
+  border-left: 1px solid var(--borde);
+}
+
+.der-atributo__fila {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.der-atributo__nombre[data-clave] {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.der-mas {
+  display: grid;
+  place-items: center;
+  inline-size: 28px;
+  block-size: 28px;
+  padding: 0;
+  border: 1px solid var(--borde-control);
+  border-radius: var(--radio-control);
+  background: var(--superficie);
+  color: var(--texto);
+  cursor: pointer;
+}
+
+.der-mas svg {
+  inline-size: 16px;
+  block-size: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+}
+
+.der-atributo__mas {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 14px;
+  margin-top: 6px;
+}
+
+.der-atributo__mas[hidden] {
+  display: none;
+}
+
+.der-atributo__botones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.der-unir {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+}
+
+.der-punta {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 6px 10px;
+  padding: 8px 0;
+  border-top: 1px solid var(--borde);
+}
+
+.der-punta__lee,
+.der-punta__rol,
+.der-punta__quitar {
+  grid-column: 1 / -1;
+}
+
+.der-punta__quitar {
+  justify-self: start;
+}
+
+.der-card-campo {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.der-card-campo > legend {
+  margin-bottom: 3px;
+  padding: 0;
+  font-size: var(--t-chica);
+}
+
+.der-card-campo__controles {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.der-card-campo .campo__control {
+  inline-size: 3.6rem;
+  font-variant-numeric: lining-nums;
+}
+
+.der-lista__item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  inline-size: 100%;
+  min-height: 32px;
+  padding: 4px 8px;
+  border: 0;
+  border-radius: var(--radio-control);
+  background: none;
+  color: var(--texto);
+  font: inherit;
+  font-size: var(--t-chica);
+  text-align: start;
+  cursor: pointer;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .der-lista__item:hover {
+    background: var(--superficie-2);
+  }
+}
+
+.der-lista--quieta li {
+  font-size: var(--t-chica);
+}
+
+.der-lista__tipo {
+  flex: none;
+  inline-size: 14px;
+  block-size: 10px;
+  border: 1.5px solid currentColor;
+}
+
+.der-lista__tipo[data-tipo='vinculo'] {
+  inline-size: 10px;
+  block-size: 10px;
+  margin-inline: 2px;
+  transform: rotate(45deg) scale(0.85);
+}
+
+.der-lista__tipo[data-tipo='jerarquia'] {
+  inline-size: 12px;
+  block-size: 12px;
+  margin-inline: 1px;
+  border-radius: 50%;
+}
+
+.der-lista__tipo[data-tipo='agregacion'] {
+  border-style: dashed;
+}
+
+/* --- The tables. */
+
+.der-tablas {
+  display: grid;
+  flex: 1;
+  align-content: start;
+  gap: 18px;
+  min-height: 0;
+  padding: 14px;
+  overflow: auto;
+  background-color: var(--superficie);
+  background-image: linear-gradient(var(--codigo-cuadricula, var(--borde)) 1px, transparent 1px), linear-gradient(90deg, var(--codigo-cuadricula, var(--borde)) 1px, transparent 1px);
+  background-size: 24px 24px;
+  background-position: -1px -1px;
+}
+
+.der-bloque {
+  display: grid;
+  gap: 10px;
+  max-inline-size: 64rem;
+  padding: 12px 14px;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-bloque);
+  background: var(--superficie);
+}
+
+.der-bloque[data-pendiente] {
+  border-color: color-mix(in srgb, var(--aviso) 60%, var(--borde));
+  background: var(--fondo-aviso, var(--superficie));
+}
+
+.der-bloque__titulo {
+  margin: 0;
+  font-size: var(--t-ui);
+}
+
+.der-decisiones {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 16rem), 1fr));
+  gap: 12px;
+}
+
+.der-decision {
+  display: grid;
+  gap: 8px;
+  align-content: start;
+  block-size: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-control);
+  background: var(--superficie);
+}
+
+.der-decision fieldset {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.der-decision legend {
+  padding: 0;
+  font-family: var(--codigo-letra);
+  font-size: var(--t-chica);
+  font-weight: 600;
+}
+
+.der-decision .der-marca {
+  font-family: var(--codigo-letra);
+}
+
+.der-decision .boton {
+  justify-self: start;
+}
+
+.der-decididas li,
+.der-avisos li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px 12px;
+  font-size: var(--t-chica);
+}
+
+.der-decididas li span {
+  font-family: var(--codigo-letra);
+}
+
+.der-lista-tablas {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 22rem), 1fr));
+  align-items: start;
+  gap: 14px;
+}
+
+.der-tabla {
+  min-width: 0;
+  border: 1px solid var(--borde-control);
+  border-radius: var(--radio-control);
+  background: var(--superficie);
+}
+
+.der-tabla[data-pendiente] {
+  border-style: dashed;
+}
+
+.der-tabla__pasaje {
+  margin: 0;
+  padding: 8px 10px;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--borde);
+  background: var(--superficie-2);
+  font-family: var(--codigo-letra);
+  font-size: var(--t-chica);
+  line-height: 1.45;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.der-tabla__falta {
+  margin: 0;
+  padding: 6px 10px 0;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+}
+
+.der-tabla__tipos {
+  inline-size: 100%;
+  border-collapse: collapse;
+  font-size: var(--t-chica);
+}
+
+.der-tabla__tipos thead th {
+  padding: 6px 10px 2px;
+  color: var(--texto-suave);
+  font-weight: 400;
+  text-align: start;
+}
+
+.der-tabla__tipos tbody th {
+  padding: 3px 10px;
+  font-family: var(--codigo-letra);
+  font-weight: 400;
+  text-align: start;
+  overflow-wrap: anywhere;
+}
+
+.der-tabla__tipos tbody th[data-clave] {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* The name takes what it needs; the type keeps room for «INT AUTO_INCREMENT». */
+.der-tabla__tipos td {
+  padding: 3px 10px 3px 0;
+  min-inline-size: 20ch;
+}
+
+.der-tipo {
+  display: grid;
+  gap: 2px;
+}
+
+.der-tipo .campo__control {
+  inline-size: 100%;
+  min-height: 30px;
+  padding-block: 2px;
+  font-family: var(--codigo-letra);
+  font-size: var(--t-chica);
+}
+
+.der-tipo__mal {
+  color: var(--error);
+  font-size: 0.75rem;
+}
+
+.der-tipo__usar {
+  justify-self: start;
+}
+
+.der-tablas__vacio {
+  padding: 8px 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .der-boton,
+  .der .react-flow__handle {
+    transition: none;
+  }
+}
+
+/* On a phone (Der.jsx, ANGOSTA_REM): the drawing on top and, under it, the card of what is chosen as a sheet with its
+   own scroll and its buttons always at hand, so both are seen together. The bar takes two rows: what to add (it slides
+   sideways if it doesn't fit), then undo, redo, «Pasar a tablas» and «Crear SQL», always in view. Everything that is
+   touched is 44px. */
+@container der (max-width: 44rem) {
+  .der-cuerpo {
+    overflow: hidden;
+  }
+
+  .der-diagrama {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) auto;
+  }
+
+  .der-ficha {
+    gap: 10px;
+    max-block-size: min(40dvh, 24rem);
+    padding-block-end: 0;
+    overflow: auto;
+    overscroll-behavior: contain;
+    scroll-padding-block-end: 76px;
+    border-left: 0;
+    border-top: 1px solid var(--borde);
+    border-radius: 12px 12px 0 0;
+    box-shadow: 0 -8px 18px color-mix(in srgb, var(--texto) 10%, transparent);
+  }
+
+  .der-ficha__pie {
+    position: sticky;
+    inset-block-end: 0;
+    z-index: 1;
+    margin-inline: -14px;
+    padding: 8px 14px 12px;
+    border-top: 1px solid var(--borde);
+    background: var(--fondo);
+  }
+
+  .der-barra {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      'piezas piezas'
+      'fin historial';
+    gap: 4px 8px;
+  }
+
+  .der-barra__piezas {
+    grid-area: piezas;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .der-barra__piezas .der-boton {
+    flex: none;
+  }
+
+  /* Second row: the way to the tables and the SQL first (what is missing under them), undo and redo at the end. */
+  .der-barra__fin {
+    grid-area: fin;
+    flex-wrap: wrap;
+    margin-left: 0;
+  }
+
+  .der-barra__fin > .boton {
+    flex: none;
+    padding-inline: 12px;
+  }
+
+  .der-barra__historial {
+    grid-area: historial;
+    align-self: start;
+  }
+
+  .der-falta {
+    flex: 1 1 100%;
+  }
+
+  .der-boton,
+  .der-barra .boton,
+  .der-ficha .boton,
+  .der-tablas .boton,
+  .der-falta--boton {
+    min-block-size: 44px;
+  }
+
+  .der-boton--icono {
+    inline-size: 44px;
+  }
+
+  .der-boton--historial {
+    justify-content: center;
+    inline-size: 44px;
+    padding: 0;
+  }
+
+  .der-boton__icono {
+    display: block;
+  }
+
+  .der-boton__texto {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .der-mas {
+    inline-size: 44px;
+    block-size: 44px;
+  }
+
+  .der-marca,
+  .der-lista__item,
+  .der-tipo .campo__control {
+    min-block-size: 44px;
+  }
+
+  .der-marca input {
+    inline-size: 20px;
+    block-size: 20px;
+  }
+}

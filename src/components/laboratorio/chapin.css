@@ -1,0 +1,78 @@
+/* «Chapin» (Chapin.jsx): the diagrams as El Santo Resumen draws them, in the ink of the site. */
+.chapin {
+  display: grid;
+  gap: 12px;
+  justify-items: start;
+  background: var(--superficie);
+}
+
+.chapin__barra {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  justify-self: stretch;
+}
+
+.chapin__aviso {
+  margin: 0;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+}
+
+.chapin__aviso:empty {
+  display: none;
+}
+
+.chapin__figura {
+  margin: 0;
+}
+
+.chapin__svg {
+  display: block;
+  max-width: none;
+  height: auto;
+}
+
+.chapin__cajas rect {
+  fill: var(--superficie);
+  stroke: var(--texto);
+  stroke-width: 1.6;
+}
+
+.chapin__lineas {
+  fill: none;
+  stroke: var(--texto);
+  stroke-width: 1.5;
+}
+
+.chapin__codigo,
+.chapin__suelto,
+.chapin__decl,
+.chapin__titulo {
+  font-family: var(--codigo-letra, monospace);
+  font-size: 13px;
+  white-space: pre;
+  fill: var(--texto);
+}
+
+.chapin__suelto,
+.chapin__decl {
+  fill: var(--texto-suave);
+}
+
+.chapin__decl {
+  font-size: 12.5px;
+}
+
+.chapin__titulo {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.chapin__vf {
+  font-family: var(--fuente-ui);
+  font-size: 13px;
+  font-weight: 600;
+  fill: var(--texto-suave);
+}

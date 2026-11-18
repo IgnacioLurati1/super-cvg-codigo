@@ -1,0 +1,83 @@
+/* Normalization (propias/normalizacion.jsx). The diagram is in _log-dependencias. */
+
+/* Form by form: the name, sí or no, and the dependency that makes it hold or fail. */
+.nor-formas {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.nor-forma {
+  display: grid;
+  grid-template-columns: 3.5rem auto;
+  gap: 2px 10px;
+  align-items: baseline;
+}
+
+.nor-forma__nombre {
+  font-weight: 700;
+}
+
+.nor-forma .trz-sino {
+  justify-self: start;
+}
+
+.nor-forma__por {
+  grid-column: 1 / -1;
+  color: var(--texto-suave);
+}
+
+@container pagina (min-width: 40rem) {
+  .nor-forma {
+    grid-template-columns: 3.5rem 3rem minmax(0, 1fr);
+  }
+
+  .nor-forma__por {
+    grid-column: auto;
+  }
+}
+
+.nor-pasos {
+  display: grid;
+  gap: 8px;
+  margin: 0 0 14px;
+  padding-left: 1.4em;
+}
+
+/* The dependency each step takes, with the line of the diagram under it. */
+.nor-pasos__df {
+  display: block;
+  width: fit-content;
+  margin-bottom: 2px;
+  font-weight: 700;
+  text-decoration: underline 2px dashed var(--error);
+  text-underline-offset: 4px;
+}
+
+.nor-pasos__df[data-tipo='transitiva'] {
+  text-decoration: underline 2px dotted var(--foco);
+}
+
+/* Each table as written in the pasaje: its name and attributes, and indented the CP and the CF. */
+.nor-tabla {
+  margin: 0 0 12px;
+  padding-left: 10px;
+  border-left: 3px solid var(--borde-control);
+}
+
+.nor-tabla__renglon {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.nor-tabla__renglon--dentro {
+  padding-left: 1.25em;
+  color: var(--texto-suave);
+}
+
+.nor-tabla u {
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 3px;
+}

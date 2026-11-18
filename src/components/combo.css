@@ -1,0 +1,168 @@
+/* A field to pick one of many by typing (Combo.jsx). The list opens at once, with no animation: it is used all the
+   time, and with the keyboard. */
+.combo {
+  position: relative;
+}
+
+.combo__caja {
+  position: relative;
+}
+
+/* Room on the right for «clear» and the arrow. A long name ends in dots while it is not being edited. */
+.combo__campo {
+  padding-right: 72px;
+  text-overflow: ellipsis;
+}
+
+.combo__flecha,
+.combo__limpiar svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.combo__flecha {
+  position: absolute;
+  top: 50%;
+  right: 14px;
+  translate: 0 -50%;
+  color: var(--texto-suave);
+  pointer-events: none;
+}
+
+.combo__limpiar {
+  position: absolute;
+  top: 50%;
+  right: 38px;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  color: var(--texto-suave);
+  translate: 0 -50%;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.combo__limpiar:active {
+  background: var(--superficie-2);
+}
+
+.combo__limpiar:focus-visible {
+  outline: 3px solid var(--foco);
+  outline-offset: -2px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .combo__limpiar:hover {
+    background: var(--superficie-2);
+    color: var(--texto);
+  }
+}
+
+/* Under the field, as wide as the longest name that fits, never past the edge of the screen. */
+.combo__desplegable {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 4px);
+  left: 0;
+  width: max-content;
+  min-width: 100%;
+  max-width: min(26rem, calc(100vw - 2 * var(--margen)));
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-control);
+  background: var(--superficie);
+  color: var(--texto);
+  box-shadow: 0 12px 32px rgb(0 0 0 / 0.18);
+  overflow: hidden;
+}
+
+.combo__desplegable[hidden] {
+  display: none;
+}
+
+.combo__lista {
+  max-height: min(20rem, 45vh);
+  max-height: min(20rem, 45dvh);
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.combo__opcion {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: calc(var(--radio-control) - 2px);
+  overflow-wrap: anywhere;
+  cursor: pointer;
+}
+
+/* The first one (every option at once) apart from the rest. */
+.combo__opcion--todas {
+  margin-bottom: 4px;
+  box-shadow: 0 5px 0 -4px var(--borde);
+}
+
+/* The real focus stays in the field: the box shows which one Enter takes, also without color. */
+.combo__opcion[aria-selected='true'] {
+  background: var(--superficie-2);
+  outline: 2px solid var(--foco);
+  outline-offset: -2px;
+}
+
+.combo__opcion mark {
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--aviso) 28%, transparent);
+  color: inherit;
+}
+
+/* The one chosen now. */
+.combo__tilde {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: var(--foco);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  visibility: hidden;
+}
+
+.combo__opcion[data-elegida] .combo__tilde {
+  visibility: visible;
+}
+
+.combo__nota {
+  margin: 0;
+  padding: 10px 14px;
+  border-top: 1px solid var(--borde);
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+}
+
+@media (forced-colors: active) {
+  .combo__opcion[aria-selected='true'] {
+    outline-color: Highlight;
+  }
+
+  .combo__opcion mark {
+    background: Mark;
+    color: MarkText;
+  }
+}

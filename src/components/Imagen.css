@@ -1,0 +1,135 @@
+/* Imagen (Imagen.jsx): el marco guarda el lugar de la foto. Mientras baja, el fondo con un brillo lento que
+   se apaga si está la miniatura. Con «reducir movimiento» queda quieto. */
+
+.imagen {
+  --imagen-brillo: rgb(255 255 255 / 0.2);
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  isolation: isolate;
+  background-color: var(--imagen-fondo, var(--superficie-2));
+}
+
+.imagen--proporcion {
+  height: auto;
+  aspect-ratio: var(--imagen-proporcion);
+}
+
+.imagen__foto {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  object-fit: cover;
+  transition: opacity 0.6s ease;
+}
+
+.imagen--entera .imagen__foto {
+  object-fit: contain;
+}
+
+/* Mientras baja, la foto no se ve; al estar lista aparece de a poco. Si ya estaba, de una. */
+.imagen:is([data-estado='cargando'], [data-estado='error'], [data-estado='vacia']) > .imagen__foto {
+  opacity: 0;
+}
+
+.imagen[data-estado='al-toque'] > .imagen__foto {
+  transition: none;
+}
+
+.imagen[data-estado='error'] > .imagen__foto {
+  visibility: hidden;
+}
+
+/* La miniatura (previa): borrosa y apenas agrandada, así el borde del desenfoque no deja ver el fondo.
+   Aparece apenas llega; la foto grande se funde encima y, terminado el fundido, la miniatura se va. */
+.imagen__previa {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  object-fit: cover;
+  filter: blur(12px);
+  scale: 1.08;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+.imagen--entera .imagen__previa {
+  object-fit: contain;
+}
+
+.imagen[data-previa] > .imagen__previa {
+  opacity: 1;
+}
+
+.imagen:is([data-estado='lista'], [data-estado='al-toque']) > .imagen__previa {
+  opacity: 0;
+  transition: opacity 0s linear 0.6s;
+}
+
+.imagen[data-estado='error'] > .imagen__previa {
+  visibility: hidden;
+}
+
+/* El brillo: una franja de luz que cruza despacio. Arranca tarde, así una foto que llega rápido no lo
+   llega a mostrar, y se apaga cuando la foto está. */
+.imagen::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(105deg, transparent 30%, var(--imagen-brillo) 50%, transparent 70%) no-repeat;
+  background-size: 260% 100%;
+  background-position: 130% 0;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s ease;
+}
+
+.imagen[data-estado='cargando']::after {
+  opacity: 1;
+  animation: imagen-brillo 2.6s cubic-bezier(0.45, 0, 0.35, 1) 0.45s infinite;
+}
+
+/* Con la miniatura a la vista ya se ve qué viene: sin brillo. */
+.imagen[data-estado='cargando'][data-previa]::after {
+  opacity: 0;
+  animation: none;
+}
+
+@keyframes imagen-brillo {
+  from {
+    background-position: 130% 0;
+  }
+  to {
+    background-position: -30% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .imagen[data-estado='cargando']::after {
+    animation: none;
+    opacity: 0;
+  }
+}
+
+/* Sin foto o si no se pudo cargar: el respaldo en el lugar de la foto. */
+.imagen__respaldo {
+  position: absolute;
+  inset: 0;
+  display: none;
+  place-items: center;
+  color: var(--texto-suave);
+}
+
+.imagen:is([data-estado='error'], [data-estado='vacia']) > .imagen__respaldo {
+  display: grid;
+}
+

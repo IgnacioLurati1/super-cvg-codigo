@@ -1,0 +1,197 @@
+/* Paleta de búsqueda. Es una acción de teclado: aparece de una, sin animación. */
+.paleta {
+  width: min(40rem, calc(100vw - 16px));
+  max-width: none;
+  max-height: none;
+  margin: 12vh auto auto;
+  padding: 0;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-bloque);
+  background: var(--superficie);
+  color: var(--texto);
+  box-shadow: 0 16px 48px rgb(0 0 0 / 0.28);
+}
+
+.paleta::backdrop {
+  background: rgb(0 0 0 / 0.45);
+}
+
+.paleta__caja {
+  display: flex;
+  flex-direction: column;
+  max-height: 72vh;
+  max-height: 72dvh;
+}
+
+.paleta__cabeza {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 8px;
+  padding-inline-end: 8px;
+  border-bottom: 1px solid var(--borde);
+}
+
+.paleta__campo {
+  flex: 1;
+  min-width: 0;
+  min-height: 52px;
+  padding: 12px 16px;
+  border: 0;
+  border-radius: var(--radio-bloque) var(--radio-bloque) 0 0;
+  background: transparent;
+  color: var(--texto);
+  font-size: max(1.0625rem, 16px);
+}
+
+.paleta__cabeza:focus-within {
+  box-shadow: inset 0 -2px 0 var(--foco, var(--accion));
+}
+
+/* El foco del campo es la línea de abajo y el cursor, para no sumar un recuadro al de la fila elegida. */
+.paleta__campo:focus-visible {
+  outline: none;
+}
+
+@media (forced-colors: active) {
+  .paleta__campo:focus-visible {
+    outline: 2px solid CanvasText;
+    outline-offset: -2px;
+  }
+}
+
+.paleta__campo::placeholder {
+  color: var(--texto-suave);
+  opacity: 1;
+}
+
+.paleta__cerrar {
+  display: none;
+  flex: none;
+}
+
+.paleta__lista {
+  flex: 1 1 auto;
+  min-height: 0;
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.paleta__lista[hidden] {
+  display: none;
+}
+
+.paleta__opcion {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 48px;
+  margin: 0;
+  padding: 6px 10px;
+  border-radius: var(--radio-control);
+  cursor: pointer;
+}
+
+.paleta__opcion:active {
+  background: var(--superficie-2);
+}
+
+/* El foco real queda en el campo: el recuadro muestra a qué fila va a ir Enter, también sin color. */
+.paleta__opcion[aria-selected='true'] {
+  background: var(--superficie-2);
+  outline: 2px solid var(--foco, var(--accion));
+  outline-offset: -2px;
+}
+
+.paleta__opcion .simbolo--fila {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+}
+
+.paleta__texto {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+}
+
+.paleta__nombre {
+  overflow-wrap: anywhere;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.paleta__dato {
+  overflow: hidden;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.paleta__estado,
+.paleta__ayuda {
+  flex: none;
+  margin: 0;
+  padding: 10px 16px;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+}
+
+.paleta__ayuda {
+  border-top: 1px solid var(--borde);
+}
+
+/* Sin Esc a mano: un botón para cerrar y nada de hablar de flechas. */
+@media (hover: none) {
+  .paleta {
+    margin-top: 8px;
+  }
+
+  .paleta__caja {
+    max-height: calc(100vh - 16px);
+    max-height: calc(100dvh - 16px);
+  }
+
+  .paleta__cerrar {
+    display: inline-flex;
+    min-height: 44px;
+  }
+
+  .paleta__ayuda {
+    display: none;
+  }
+
+  .paleta__opcion {
+    min-height: 52px;
+  }
+}
+
+/* The same where the palette takes almost the whole width at that letter size (40rem, 640px with the normal one). */
+@container pagina (max-width: 40rem) {
+  .paleta {
+    margin-top: 8px;
+  }
+
+  .paleta__caja {
+    max-height: calc(100vh - 16px);
+    max-height: calc(100dvh - 16px);
+  }
+
+  .paleta__cerrar {
+    display: inline-flex;
+    min-height: 44px;
+  }
+
+  .paleta__ayuda {
+    display: none;
+  }
+
+  .paleta__opcion {
+    min-height: 52px;
+  }
+}

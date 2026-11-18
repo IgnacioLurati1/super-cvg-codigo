@@ -1,0 +1,3 @@
+graphify-out/graph.json merge=graphify
+# Real dumps for the MySQL importer tests (mysql.test.js): byte by byte, with the CRLF mysqldump writes on Windows.
+src/lib/laboratorio/volcados/*.sql -text

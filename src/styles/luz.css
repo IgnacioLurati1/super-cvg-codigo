@@ -1,0 +1,85 @@
+/* «Sensible a la luz» (ajustes.luz), for photosensitivity: public/ajustes.js writes `data-luz='si'` and, with it,
+   `data-movimiento='ninguno'`, so everything that «Sin animaciones» stops stops here too (pages/ajustes.css). What
+   follows is what that doesn't cover. Its own fades override that stop on purpose, with !important: they are what keeps
+   the brightness from jumping. Only opacity, never anything that moves. The softer whites are in tokens.css. */
+
+/* ---------- No jumps of brightness ---------- */
+
+/* Light to dark and back (the theme, a style, the contrast, or this mode itself) fades over half a second: the browser
+   crossfades the page as it was and as it is while public/ajustes.js holds `data-fundido`. */
+html[data-fundido]::view-transition-group(root),
+html[data-fundido]::view-transition-old(root),
+html[data-fundido]::view-transition-new(root) {
+  animation-duration: 500ms;
+  animation-timing-function: ease-in-out;
+}
+
+@keyframes luz-aparece {
+  from {
+    opacity: 0;
+  }
+}
+
+/* In the dark theme, white paper comes up from the dark instead of showing all at once: a PDF with light or sepia pages
+   (its waiting sheet, each page and the thumbnails), a summary of El Santo Resumen once its frame is in sight, a page
+   of Drive, an image of a course. Over the dark table behind them, so they brighten bit by bit. */
+html[data-luz='si'][data-tema='oscuro']:is([data-pdf='claro'], [data-pdf='sepia']) :is(.lector__pagina, .lector__hoja-esperando--sola, .lector__miniaturas canvas),
+html[data-luz='si'][data-tema='oscuro'] :is(.visor__marco:not(.visor__marco--esperando), .previa__marco, .previa__imagen) {
+  animation: luz-aparece 900ms ease-in-out backwards !important;
+}
+
+/* Following someone in a live session, the tab they open fades in: one can be white and the other dark. */
+html[data-luz='si'] .envivo-mesa[data-guiado] .envivo-mesa__una:not([hidden]) {
+  animation: luz-aparece 400ms ease-in-out backwards !important;
+}
+
+/* The cards of Resúmenes: the photo of a white page fades in over its cover, and the sheet under it with it. */
+html[data-luz='si'] .hoja {
+  transition:
+    background-color 600ms ease-in-out,
+    filter 600ms ease-in-out !important;
+}
+
+html[data-luz='si'] .hoja__foto {
+  transition: opacity 600ms ease-in-out !important;
+}
+
+/* ---------- Softer whites ---------- */
+
+/* What comes white from outside can't take a color: a PDF's light pages, a summary, a page of Drive and the photos of
+   the cards are dimmed as much as `--papel` (#ebebeb, tokens.css), 0.92 of white. Sepia and dark pages are no white. */
+html[data-luz='si']:is([data-pdf='claro'], [data-pdf='tema'][data-tema='claro'][data-pdf-claro='claro']) :is(.lector__lienzo, .lector__miniaturas canvas),
+html[data-luz='si'] :is(.visor__marco, .previa__marco),
+html[data-luz='si'][data-tema='claro'] .hoja[data-forma='foto'] {
+  filter: brightness(0.92);
+}
+
+/* ---------- Nothing that blinks or pulses ---------- */
+
+/* The caret of every field and of the code editor (CodeMirror draws its own) stays lit. */
+html[data-luz='si'],
+html[data-luz='si'] * {
+  caret-animation: manual;
+}
+
+html[data-luz='si'] .cm-cursorLayer {
+  animation: none !important;
+}
+
+/* The point that says someone's question is being answered, in a live session. */
+html[data-luz='si'] .envivo-barra__punto {
+  animation: none !important;
+}
+
+/* ---------- Estudiar en vivo ---------- */
+
+/* What someone else draws on the Pizarra (`data-ajeno`, Pizarra.jsx), the table's highlights, and the notices of who
+   came in: they fade in instead of popping up. */
+html[data-luz='si'] .vpiz-svg [data-ajeno],
+html[data-luz='si'] .apunte-vivo__resaltado {
+  animation: luz-aparece 400ms ease-out backwards !important;
+}
+
+html[data-luz='si'] :is(.envivo-aviso, .envivo-globo) {
+  animation: luz-aparece 300ms ease-out backwards !important;
+}

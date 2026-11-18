@@ -1,0 +1,314 @@
+/* The previews of Configuración, Pantallas (VistaPrevia.jsx): a small copy of each screen. Everything from the tokens,
+   so it takes the style, theme and contrast chosen. */
+
+.vista-previa {
+  min-width: 0;
+}
+
+.vista-previa__titulo {
+  margin: 0 0 8px;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+  font-weight: 600;
+}
+
+.vista-previa__marco {
+  /* How much of the window's height it may take (VistaPrevia.jsx): none on a wide screen. */
+  --tope: 0;
+  overflow: hidden;
+  padding: 14px;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-bloque);
+  background: var(--fondo);
+}
+
+/* Drawn smaller from its top corner when it doesn't fit (useEncoger). */
+.vista-previa__dentro {
+  transform-origin: top left;
+}
+
+/* On a phone it stays under the tabs while the choices go by, a third of the window at most. */
+@media (max-width: 759px) {
+  .vista-previa {
+    position: sticky;
+    top: calc(var(--alto-cabecera) + 44px);
+    z-index: 2;
+    margin-inline: -4px;
+    padding: 8px 4px;
+    background: var(--fondo);
+    box-shadow: 0 8px 12px -12px rgb(0 0 0 / 0.5);
+  }
+
+  .vista-previa__marco {
+    --tope: 0.3;
+    padding: 10px;
+  }
+}
+
+/* The calendar's drawing, as big as the frame. */
+.vista-previa__marco > .dibujo-vista {
+  height: auto;
+  min-height: 150px;
+  aspect-ratio: 4 / 3;
+  border: 0;
+  padding: 0;
+}
+
+.miniatura {
+  display: grid;
+  gap: 8px;
+  color: var(--texto);
+  font-size: 11px;
+  line-height: 1.3;
+}
+
+.miniatura__titulo {
+  font-family: var(--fuente-titulos);
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.miniatura__semana {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 3px;
+}
+
+.miniatura__semana > span {
+  height: 16px;
+  border-radius: 3px;
+  background: var(--superficie);
+}
+
+.miniatura__semana > span:first-child {
+  background: var(--resaltador);
+}
+
+.miniatura__hoy {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+  align-items: start;
+  gap: 8px;
+}
+
+.miniatura__principal,
+.miniatura__costado {
+  display: grid;
+  align-content: start;
+  gap: 6px;
+  min-width: 0;
+}
+
+.miniatura__bloque {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  padding: 7px;
+  border-radius: 5px;
+  background: var(--superficie);
+}
+
+/* Nothing in it today: Hoy leaves it out (hoyVacios.js). */
+.miniatura__bloque[data-vacio] {
+  border: 1px dashed var(--borde);
+  background: none;
+  color: var(--texto-suave);
+}
+
+.miniatura__nombre {
+  overflow: hidden;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.miniatura__linea {
+  display: block;
+  height: 5px;
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--texto) 18%, transparent);
+}
+
+.miniatura__linea:nth-of-type(2n) {
+  width: 70%;
+}
+
+.miniatura__destacado {
+  height: 12px;
+  width: 80%;
+  border-radius: 2px;
+  background: var(--resaltador);
+}
+
+.miniatura__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+}
+
+.miniatura__chip {
+  padding: 0 5px;
+  border: 1px solid var(--borde);
+  border-radius: 999px;
+  font-size: 10px;
+}
+
+.miniatura__nota {
+  color: var(--texto-suave);
+  font-size: 10px;
+}
+
+.miniatura__nada {
+  padding: 16px 0;
+  text-align: center;
+}
+
+.miniatura__plegado {
+  height: 5px;
+  width: 40%;
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--texto) 18%, transparent);
+}
+
+.miniatura__tarea {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.miniatura__tarea .miniatura__linea {
+  flex: 1;
+}
+
+.miniatura__casilla {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+}
+
+/* Tablero: one column; the main blocks as tiles, the side ones in columns under them. */
+.miniatura--hoy[data-vista='tablero'] .miniatura__hoy {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.miniatura--hoy[data-vista='tablero'] .miniatura__principal,
+.miniatura--hoy[data-vista='tablero'] .miniatura__costado {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+}
+
+.miniatura--hoy[data-vista='tablero'] .miniatura__bloque {
+  border: 1px solid var(--borde);
+}
+
+/* Compacta: one column, everything closer. */
+.miniatura--hoy[data-vista='compacta'] {
+  gap: 5px;
+}
+
+.miniatura--hoy[data-vista='compacta'] .miniatura__hoy {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 4px;
+}
+
+.miniatura--hoy[data-vista='compacta'] .miniatura__principal,
+.miniatura--hoy[data-vista='compacta'] .miniatura__costado {
+  gap: 3px;
+}
+
+.miniatura--hoy[data-vista='compacta'] .miniatura__bloque {
+  padding: 4px 6px;
+}
+
+.miniatura--hoy[data-vista='compacta'] .miniatura__semana > span {
+  height: 10px;
+}
+
+/* On a phone Hoy is one column: so is its preview. */
+@media (max-width: 759px) {
+  .miniatura__hoy {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Materias: the real cards, smaller around them. */
+.miniatura--materias .materias {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+/* A course inside, under the list of courses: its rows at their size, so each look shows as it is. */
+.miniatura--materia {
+  margin-top: 12px;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.miniatura--materia .bloque {
+  margin: 0;
+}
+
+.miniatura__seccion {
+  margin: 0 0 8px;
+  font-weight: 700;
+}
+
+.miniatura--materia .materia[data-vista='tarjetas']:not([data-contenido='mosaico'], [data-contenido='notas']) .lista {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+/* «Tabla» keeps its two columns, shared by the frame: the page's 15em for the date would leave the name a letter wide. */
+.miniatura--materia .materia[data-vista='tabla'] .fila__texto {
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+}
+
+/* The bell. */
+.miniatura__campana {
+  position: relative;
+  justify-self: start;
+  width: 22px;
+  height: 22px;
+}
+
+.miniatura__campana .simbolo {
+  width: 22px;
+  height: 22px;
+  background: none;
+}
+
+.miniatura__numero {
+  position: absolute;
+  top: -5px;
+  right: -8px;
+  min-width: 15px;
+  padding: 0 3px;
+  border-radius: 999px;
+  background: var(--resaltador);
+  color: var(--resaltador-texto);
+  font-size: 10px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.miniatura__avisos {
+  display: grid;
+  border-top: 1px solid var(--borde);
+}
+
+.miniatura__aviso {
+  display: grid;
+  gap: 1px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--borde);
+}
+
+.miniatura__aviso-texto {
+  font-weight: 600;
+}
+
+.miniatura__aviso-tipo {
+  color: var(--texto-suave);
+  font-size: 10px;
+}

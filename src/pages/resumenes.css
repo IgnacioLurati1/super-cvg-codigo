@@ -1,0 +1,1000 @@
+/* Resúmenes: what the student has in El Santo Resumen, in two lists lined up with the header, like Notas. The text
+   column is narrowed inside: the page container comes in another stylesheet, in any order. */
+.resumenes__bajada,
+.resumenes__hueco,
+.resumenes__nada p,
+.resumenes > .mensaje,
+.resumenes__aviso > .mensaje {
+  max-width: 44em;
+}
+
+.resumenes > .mensaje,
+.resumenes__aviso > .mensaje {
+  margin-bottom: 24px;
+}
+
+.resumenes__bajada {
+  margin: 0 0 28px;
+  color: var(--texto-suave);
+}
+
+.resumenes__bajada strong {
+  color: var(--texto);
+  overflow-wrap: anywhere;
+}
+
+.resumenes__seccion + .resumenes__seccion {
+  margin-top: 40px;
+}
+
+.resumenes__seccion h2,
+.resumenes__hueco h2 {
+  margin: 0 0 10px;
+  font-size: var(--t-h3);
+}
+
+/* Headings that take the focus after taking one out: no box after a click, a soft ring from the keyboard. */
+.resumenes h2:focus:not(:focus-visible) {
+  outline: none;
+}
+
+.resumenes h2:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--foco) 55%, transparent);
+  outline-offset: 4px;
+}
+
+/* Each summary is a card, like a folder: its sheet sits inside, peeking out above the pocket, where the title, the data
+   and the buttons are. The pocket is opaque: whatever the sheet says, what is read is always on --superficie. Three
+   columns when they fit, one on a phone. */
+.resumenes__lista {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 17rem), 1fr));
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* The inside of the folder and the paper of the sheet, from the tokens. A list can bring hundreds: the cards out of
+   view are not laid out. */
+.resumen {
+  --mesa: color-mix(in srgb, var(--superficie-2) 72%, var(--fondo));
+  --papel: var(--superficie);
+  --tinta: var(--texto-suave);
+  --sombra: color-mix(in srgb, var(--texto) 50%, transparent);
+  --asoma: 7rem;
+  /* How the sheet fell in the folder: a little different from its neighbors, like a real pile. */
+  --corre: -47%;
+  --giro: -2deg;
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  grid-template-rows: var(--asoma) minmax(0, 1fr);
+  overflow: clip;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-bloque);
+  background: var(--mesa);
+  content-visibility: auto;
+  contain-intrinsic-size: auto 15rem;
+}
+
+:root[data-tema='oscuro'] .resumen {
+  --mesa: var(--fondo);
+  --papel: var(--superficie-2);
+  --sombra: color-mix(in srgb, var(--fondo) 92%, transparent);
+}
+
+.resumen:nth-child(3n + 2) {
+  --corre: -52%;
+  --giro: -0.8deg;
+}
+
+.resumen:nth-child(3n) {
+  --corre: -44%;
+  --giro: -2.8deg;
+}
+
+/* The sheet: a printed page, a little crooked, that goes on under the pocket. It is behind everything of the card. */
+.hoja {
+  position: absolute;
+  z-index: -1;
+  top: 14px;
+  left: 50%;
+  display: block;
+  width: min(80%, 15.5rem);
+  aspect-ratio: 1 / 1.414;
+  /* It ends behind the pocket, short of the card's foot: there the rounded edge, scaled when touched or arriving, let a
+     pixel of the photo through. The tilt lifts a corner up to 6px. */
+  max-height: calc(100% - 14px - 12px);
+  padding: 11px 13px;
+  overflow: hidden;
+  border: 1px solid var(--borde);
+  border-radius: 3px;
+  background: var(--papel);
+  color: var(--tinta);
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--sombra) 25%, transparent), 0 8px 16px -10px color-mix(in srgb, var(--sombra) 60%, transparent);
+  translate: var(--corre) 0;
+  rotate: var(--giro);
+  transition: translate 260ms cubic-bezier(0.23, 1, 0.32, 1), rotate 260ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+/* The cover, with the exam, the title, a stroke of highlighter and the subject: what shows until the photo arrives, or
+   when there is none. */
+.hoja__caratula {
+  display: grid;
+  justify-items: start;
+  gap: 4px;
+}
+
+.hoja__instancia,
+.hoja__materia {
+  font-size: 0.4375rem;
+  line-height: 1.3;
+}
+
+.hoja__titulo {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--texto);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.hoja__caratula::after {
+  content: '';
+  display: block;
+  order: 2;
+  width: 26px;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--resaltador);
+}
+
+.hoja__instancia {
+  order: 0;
+}
+
+.hoja__titulo {
+  order: 1;
+}
+
+.hoja__materia {
+  order: 3;
+}
+
+/* The photo of the first page, full width from the top: a longer page is cut at the foot, a wider one leaves paper under
+   it. It is of a white page, so the sheet turns white under it, a bit dimmer at night. */
+.hoja__foto {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: block;
+  width: 100%;
+  height: auto;
+  opacity: 0;
+  transition: opacity 200ms ease-out;
+}
+
+.hoja[data-forma='foto'] {
+  background: #ffffff;
+}
+
+.hoja[data-forma='foto'] .hoja__caratula {
+  visibility: hidden;
+}
+
+.hoja[data-forma='foto'] .hoja__foto {
+  opacity: 1;
+}
+
+:root[data-tema='oscuro'] .hoja[data-forma='foto'] {
+  filter: brightness(0.86);
+}
+
+/* The page in its own dark theme: neither white paper nor dimmer. */
+.hoja[data-forma='foto'][data-foto='oscura'] {
+  background: #161b20;
+  filter: none;
+}
+
+/* The pocket: opaque, with its edge casting a little shadow on the sheet. The symbol, the text, and at the bottom the
+   mark and the buttons. */
+.resumen__cuerpo {
+  grid-row: 2;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: auto 1fr;
+  grid-template-areas:
+    'icono texto'
+    'pie pie';
+  padding: 14px 16px 16px;
+  border-top: 1px solid var(--borde);
+  background: var(--superficie);
+  box-shadow: 0 -12px 18px -16px var(--sombra);
+}
+
+.resumen__cuerpo > :first-child {
+  grid-area: icono;
+  margin-right: 12px;
+}
+
+.resumen__texto {
+  grid-area: texto;
+  display: grid;
+  align-content: start;
+  gap: 2px;
+  min-width: 0;
+}
+
+.resumen__titulo {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+/* Published: underlined, and the whole card is the button that opens it. «Quitar» and «me gusta» stay above. */
+button.resumen__titulo {
+  justify-self: start;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-weight: 600;
+  text-align: start;
+  text-decoration: underline;
+  cursor: pointer;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+button.resumen__titulo::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+
+/* The focus ring goes around the whole card, which is what the button opens. */
+button.resumen__titulo:focus-visible {
+  outline: none;
+}
+
+button.resumen__titulo:focus-visible::after {
+  outline: 3px solid var(--foco);
+  outline-offset: -3px;
+  border-radius: var(--radio-bloque);
+}
+
+/* A touch on the card answers at once. Not when the touch is on «Quitar» or the heart. */
+.resumen:has(button.resumen__titulo) {
+  transition: scale 140ms ease-out;
+}
+
+.resumen:has(button.resumen__titulo:active) {
+  scale: 0.985;
+}
+
+/* With a mouse, the sheet comes a little out of the pocket: the card is what opens. */
+@media (hover: hover) and (pointer: fine) {
+  /* Its own layer: the tilted letters come out gray and clean, and the sheet moves without drawing the card again. */
+  .hoja {
+    will-change: translate;
+  }
+
+  .resumen:hover button.resumen__titulo {
+    text-decoration-thickness: 2px;
+  }
+
+  .resumen:has(button.resumen__titulo):hover .hoja {
+    translate: var(--corre) -6px;
+    rotate: calc(var(--giro) + 1deg);
+  }
+}
+
+.resumen__dato {
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+  overflow-wrap: anywhere;
+}
+
+/* The bottom of the card: the mark on the left, the button on the right. Nothing, no room. */
+.resumen__pie {
+  grid-area: pie;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  align-self: end;
+  gap: 8px 12px;
+  margin-top: 14px;
+}
+
+.resumen__pie:empty {
+  display: none;
+}
+
+.resumen__pie .megusta,
+.resumen__quitar {
+  position: relative;
+  z-index: 1;
+  margin-left: auto;
+}
+
+.resumen__marca {
+  padding: 1px 8px;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+  font-weight: 600;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+
+.resumen__marca[data-estado='pendiente'] {
+  color: var(--aviso);
+}
+
+/* Forced colors: the system paints the card, the pocket and the sheet; the sheet keeps only its outline. */
+@media (forced-colors: active) {
+  .hoja {
+    border-color: CanvasText;
+    box-shadow: none;
+  }
+
+  .hoja__caratula::after {
+    background: CanvasText;
+  }
+
+  .resumen__cuerpo {
+    border-top-color: CanvasText;
+  }
+
+  button.resumen__titulo:focus-visible::after {
+    outline-color: Highlight;
+  }
+}
+
+/* Less motion: the sheet stays put and the card does not shrink; what comes still fades. */
+@media (prefers-reduced-motion: reduce) {
+  .hoja,
+  .resumen:has(button.resumen__titulo) {
+    transition: none;
+  }
+
+  .resumen:has(button.resumen__titulo):hover .hoja {
+    translate: var(--corre) 0;
+    rotate: var(--giro);
+  }
+
+  .resumen:has(button.resumen__titulo:active) {
+    scale: none;
+  }
+
+  .hoja__foto {
+    transition: none;
+  }
+}
+
+:root[data-movimiento='reducido'] .resumen:has(button.resumen__titulo):hover .hoja,
+:root[data-movimiento='ninguno'] .resumen:has(button.resumen__titulo):hover .hoja {
+  translate: var(--corre) 0;
+  rotate: var(--giro);
+}
+
+:root[data-movimiento='reducido'] .resumen:has(button.resumen__titulo:active),
+:root[data-movimiento='ninguno'] .resumen:has(button.resumen__titulo:active) {
+  scale: none;
+}
+
+/* The cards while they come: the same size, with the place of the sheet on top. */
+.resumenes .cargando--tarjetas .esqueleto {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 17rem), 1fr));
+  gap: 16px;
+}
+
+.resumenes .cargando--tarjetas .esqueleto__pieza {
+  grid-template-columns: 32px minmax(0, 1fr);
+  column-gap: 12px;
+  row-gap: 8px;
+  min-height: 12rem;
+  padding: calc(7rem + 14px) 16px 16px;
+  border: 1px solid var(--borde);
+  background: linear-gradient(var(--superficie-2), var(--superficie-2)) 0 0 / 100% 7rem no-repeat, var(--superficie);
+}
+
+.resumenes .cargando--tarjetas .esqueleto__pieza i:first-child {
+  grid-row: span 2;
+  width: 32px;
+  height: 32px;
+  margin-bottom: 0;
+  border-radius: 8px;
+}
+
+/* Empty: the slot where the cards go, saying how to fill it. */
+.resumenes__nada {
+  padding: 16px 18px;
+  border: 1px dashed var(--borde-control);
+  border-radius: var(--radio-bloque);
+  color: var(--texto-suave);
+}
+
+.resumenes__nada p {
+  margin: 0;
+}
+
+.resumenes__nada a {
+  color: var(--texto);
+}
+
+/* Not linked, or nothing yet in either list: the empty slot where the summaries go, saying how to fill it. */
+.resumenes__hueco {
+  display: grid;
+  justify-items: start;
+  gap: 14px;
+  padding: clamp(18px, 3vw, 28px);
+  border: 1px dashed var(--borde-control);
+  border-radius: var(--radio-bloque);
+}
+
+.resumenes__hueco h2,
+.resumenes__hueco p {
+  margin: 0;
+}
+
+.resumenes__hueco .boton {
+  margin-top: 4px;
+}
+
+/* Under the lists, quiet: it is not the point of the page. */
+.resumenes__desvincular {
+  display: grid;
+  justify-items: start;
+  gap: 12px;
+  margin-top: 40px;
+  padding-top: 20px;
+  border-top: 1px solid var(--borde);
+  color: var(--texto-suave);
+}
+
+/* The bank: a subject and a search, then the rows. Its own section, below what the student has. */
+.resumenes__banco {
+  margin-top: 48px;
+}
+
+.resumenes__banco .resumenes__bajada {
+  margin-bottom: 16px;
+}
+
+.resumenes__filtros {
+  display: grid;
+  grid-template-columns: minmax(0, 16em) minmax(0, 1fr);
+  /* The two boxes on one line, though only «Buscar» carries a help text. */
+  align-items: end;
+  gap: 12px 16px;
+  max-width: 44em;
+  margin-bottom: 16px;
+}
+
+@container pagina (max-width: 37.5rem) {
+  .resumenes__filtros {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* What was found, with the words marked. */
+.resumen__trozo {
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+  overflow-wrap: anywhere;
+}
+
+.resumen__trozo mark {
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--aviso) 28%, transparent);
+  color: var(--texto);
+}
+
+.resumenes__mas {
+  margin-top: 16px;
+}
+
+/* Another subject or search on its way: the list before stays, faded, until the new one comes. */
+.resumenes__resultados {
+  transition: opacity 150ms ease-out;
+}
+
+.resumenes__resultados--viejos {
+  opacity: 0.55;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .resumenes__resultados {
+    transition: none;
+  }
+}
+
+/* «Me gusta»: the heart and how many. Pressed, the heart fills with red; the number keeps the color of the text. */
+.megusta {
+  grid-area: quitar;
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  margin-left: 12px;
+  padding: 4px 12px 4px 10px;
+  border: 1px solid var(--borde-control);
+  border-radius: 999px;
+  background: var(--superficie);
+  color: var(--texto);
+  font: inherit;
+  font-size: var(--t-chica);
+  font-weight: 600;
+  font-variant-numeric: lining-nums tabular-nums;
+  white-space: nowrap;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.megusta .simbolo {
+  color: var(--texto-suave);
+}
+
+button.megusta {
+  cursor: pointer;
+  transition: transform 140ms ease-out, border-color 140ms ease-out;
+}
+
+button.megusta:active {
+  transform: scale(0.96);
+}
+
+/* Until it is known which ones are yours, the heart does nothing, so it does not look pressed either. */
+button.megusta[aria-disabled='true'] {
+  cursor: default;
+}
+
+button.megusta[aria-disabled='true']:active {
+  transform: none;
+}
+
+button.megusta[aria-pressed='true'] {
+  border-color: var(--materia-1);
+}
+
+button.megusta[aria-pressed='true'] .simbolo {
+  color: var(--materia-1);
+}
+
+button.megusta[aria-pressed='true'] svg {
+  fill: currentColor;
+}
+
+.megusta--quieto {
+  padding-inline: 4px;
+  border-color: transparent;
+  background: none;
+  color: var(--texto-suave);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  button.megusta:hover {
+    border-color: var(--texto-suave);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  button.megusta {
+    transition: none;
+  }
+
+  button.megusta:active {
+    transform: none;
+  }
+}
+
+/* The viewer: the summary on the whole screen, with its name and what to do with it on top. */
+.visor {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  max-width: 100vw;
+  height: 100dvh;
+  max-height: 100dvh;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  /* Nothing scrolls the sheet itself: the summary and Consultron scroll inside their own boxes. */
+  overflow: hidden;
+  overflow: clip;
+  background: var(--fondo);
+  color: var(--texto);
+  overscroll-behavior: contain;
+  opacity: 1;
+  transform: none;
+  transition: opacity 200ms ease-out, transform 240ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+@starting-style {
+  .visor[open] {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+}
+
+.visor::backdrop {
+  background: var(--fondo);
+}
+
+html:has(.visor[open]) {
+  overflow: hidden;
+}
+
+/* One column that never grows past the sheet: the pages of a PDF have their width in pixels, and with Consultron beside
+   them they would push it off the screen. */
+.visor__caja {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr);
+  height: 100%;
+}
+
+/* Wide: the name, what to do with it and «Cerrar» in one line. Narrow: «Cerrar» stays next to the name, always at
+   hand, and the rest goes below. */
+.visor__cabeza {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  grid-template-areas: 'nombre acciones cerrar';
+  align-items: center;
+  gap: 10px 8px;
+  padding: 12px var(--margen);
+  border-bottom: 1px solid var(--borde);
+}
+
+.visor__nombre {
+  grid-area: nombre;
+  min-width: 0;
+  margin-right: 12px;
+}
+
+.visor__cerrar {
+  grid-area: cerrar;
+}
+
+@container pagina (max-width: 47.5rem) {
+  .visor__cabeza {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      'nombre cerrar'
+      'acciones acciones';
+  }
+
+  .visor__cerrar {
+    align-self: start;
+  }
+}
+
+.visor__nombre h2 {
+  margin: 0;
+  font-size: var(--t-h3);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.visor__dato {
+  margin: 2px 0 0;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+}
+
+.visor__acciones {
+  grid-area: acciones;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.visor__acciones .megusta {
+  margin-left: 0;
+}
+
+/* The summary and, beside it, Consultron (consultron/EnVisor.jsx): on the right where it's wide, over it where not. */
+.visor__fila {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+}
+
+.visor__fila > .visor__cuerpo {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.visor__marco--esperando {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.visor__consultron {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.visor__consultron svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+@media (max-width: 62.49rem) {
+  .visor .lector__consultron {
+    position: absolute;
+    z-index: 2;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: min(380px, calc(100% - 48px));
+    box-shadow: -8px 0 28px rgb(23 50 77 / 0.2);
+    transition: transform 220ms cubic-bezier(0.32, 0.72, 0, 1);
+  }
+
+  @starting-style {
+    .visor .lector__consultron {
+      transform: translateX(100%);
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .visor .lector__consultron {
+    transition: opacity 180ms ease-out;
+  }
+
+  @starting-style {
+    .visor .lector__consultron {
+      transform: none;
+      opacity: 0;
+    }
+  }
+}
+
+.visor__cuerpo {
+  min-height: 0;
+  overflow: auto;
+  padding: 20px var(--margen) 40px;
+}
+
+/* An HTML fills the space under the header: it scrolls inside its own frame. */
+.visor[data-forma='html'] .visor__cuerpo {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 0;
+}
+
+.visor[data-forma='html'] .visor__cuerpo > * {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.visor[data-forma='html'] .visor__nota--arriba {
+  flex: none;
+}
+
+/* «Preguntar» over what is selected in an HTML summary (VisorResumen.jsx): the bar of the PDF reader with that button
+   alone. Its look is here too, since lector.css comes only with the PDF reader. */
+.visor[data-forma='html'] .visor__cuerpo {
+  position: relative;
+}
+
+.visor__barra {
+  display: contents;
+}
+
+.visor__barra .lector__barra-sel {
+  position: absolute;
+  z-index: 8;
+  display: flex;
+  padding: 4px;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-bloque);
+  background: var(--superficie);
+  color: var(--texto);
+  box-shadow: 0 8px 28px rgb(23 50 77 / 0.22);
+  transform-origin: top left;
+  transition: opacity 150ms ease-out, transform 150ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+:root[data-tema='oscuro'] .visor__barra .lector__barra-sel {
+  box-shadow: 0 8px 28px rgb(0 0 0 / 0.5);
+}
+
+@starting-style {
+  .visor__barra .lector__barra-sel {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
+
+.visor__barra .lector__barra-nota {
+  min-height: 32px;
+  margin: 0;
+  padding: 4px 12px;
+  border: 0;
+  border-radius: var(--radio-control);
+  background: transparent;
+  color: var(--texto);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+@media (pointer: coarse) {
+  .visor__barra .lector__barra-nota {
+    min-height: 40px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .visor__barra .lector__barra-sel {
+    transition: opacity 150ms ease;
+  }
+
+  @starting-style {
+    .visor__barra .lector__barra-sel {
+      transform: none;
+    }
+  }
+}
+
+/* A PDF opens in the reader, which takes the space under the header and scrolls inside itself. */
+.visor[data-forma='pdf'] .visor__cuerpo {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 0;
+}
+
+.visor[data-forma='pdf'] .visor__pdf {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  width: 100%;
+  max-width: none;
+  min-height: 0;
+}
+
+.visor[data-forma='pdf'] .visor__cuerpo > .mensaje {
+  flex: none;
+  width: min(57.5rem, calc(100% - 2 * var(--margen)));
+  margin-block: 20px;
+}
+
+/* A message in place of an HTML takes only its own height, away from the edges. */
+.visor[data-forma='html'] .visor__cuerpo > .mensaje {
+  flex: none;
+  width: min(57.5rem, calc(100% - 2 * var(--margen)));
+  margin-block: 20px;
+}
+
+.mensaje .visor__salidas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+/* The summary is a page as its author made it, as in El Santo Resumen: white below, and the theme of the page reaches
+   it (color-scheme), so one with its own night mode follows Super CVG's, as it follows El Santo Resumen's there. */
+.visor__marco {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: #ffffff;
+}
+
+.visor__pdf,
+.visor__vista,
+.visor__afuera,
+.visor__espera,
+.visor__cuerpo > .mensaje {
+  max-width: 57.5rem;
+  margin-inline: auto;
+}
+
+.visor__hoja {
+  padding: clamp(18px, 4vw, 40px);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-control);
+  background: var(--superficie);
+  line-height: 1.65;
+}
+
+.visor__hoja p {
+  max-width: 44em;
+  margin: 0 0 1em;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+.visor__hoja p:last-child {
+  margin-bottom: 0;
+}
+
+.visor__nota {
+  margin: 12px 0 0;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+}
+
+.visor__nota--arriba {
+  margin: 0;
+  padding: 8px var(--margen);
+  border-bottom: 1px solid var(--borde);
+}
+
+.visor__afuera {
+  display: grid;
+  justify-items: start;
+  gap: 14px;
+  padding: clamp(18px, 3vw, 28px);
+  border: 1px dashed var(--borde-control);
+  border-radius: var(--radio-bloque);
+}
+
+.visor__afuera p {
+  margin: 0;
+}
+
+/* While it comes: a page of the shape of what is coming, with the soft shine of the other skeletons. */
+.visor__espera i {
+  display: block;
+  aspect-ratio: 1 / 1.3;
+  border-radius: var(--radio-control);
+  background: linear-gradient(90deg, transparent 0%, color-mix(in srgb, var(--texto) 6%, transparent) 50%, transparent 100%)
+    0 0 / 200% 100% no-repeat, color-mix(in srgb, var(--texto) 8%, transparent);
+  animation: esqueleto-brillo 1.4s linear infinite;
+}
+
+.visor__espera--html {
+  height: 100%;
+  max-width: none;
+}
+
+.visor__espera--html i {
+  height: 100%;
+  aspect-ratio: auto;
+  border-radius: 0;
+}
+
+.visor__espera--vista i {
+  aspect-ratio: 1 / 0.9;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .visor {
+    transition: none;
+  }
+
+  .visor__espera i {
+    animation: none;
+  }
+}

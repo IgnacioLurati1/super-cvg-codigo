@@ -1,0 +1,511 @@
+/* Enrolling in a course (Inscripcion.jsx). */
+.inscripcion h1 {
+  margin-bottom: 20px;
+}
+
+/* The search, big: it is how most find their course. The magnifier sits inside the box, at its left. */
+.inscripcion__buscador {
+  position: relative;
+  max-width: 48rem;
+  margin-bottom: 28px;
+}
+
+.inscripcion__buscador .campo__control {
+  min-height: 3.5rem;
+  padding-left: 3rem;
+  border-color: var(--borde-control);
+  font-size: max(1.125rem, 16px);
+}
+
+.inscripcion__lupa {
+  position: absolute;
+  bottom: 1rem;
+  left: 0.875rem;
+  width: 1.5rem;
+  height: 1.5rem;
+  fill: none;
+  stroke: var(--texto-suave);
+  stroke-linecap: round;
+  stroke-width: 2;
+  pointer-events: none;
+}
+
+/* The departments, as tiles with the color of the course symbols: the way the campus files its courses. */
+.inscripcion__areas {
+  min-width: 0;
+  margin: 0 0 16px;
+  padding: 0;
+  border: 0;
+}
+
+.inscripcion__leyenda {
+  margin: 0 0 10px;
+  padding: 0;
+  font-weight: 700;
+}
+
+.inscripcion__tejas {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(7.5rem, 1fr));
+  gap: 10px;
+}
+
+.area {
+  --tono: var(--accion);
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-content: start;
+  gap: 2px 4px;
+  min-height: 6.75rem;
+  padding: 12px 12px 12px 14px;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-bloque);
+  background: var(--superficie);
+  cursor: pointer;
+  transition: border-color 150ms ease-out, background-color 150ms ease-out, transform 120ms ease-out;
+}
+
+.area[data-tono='0'] { --tono: var(--materia-0); }
+.area[data-tono='1'] { --tono: var(--materia-1); }
+.area[data-tono='2'] { --tono: var(--materia-2); }
+.area[data-tono='3'] { --tono: var(--materia-3); }
+.area[data-tono='4'] { --tono: var(--materia-4); }
+.area[data-tono='5'] { --tono: var(--materia-5); }
+
+/* The symbol of the department carries its color, with the check across from it once chosen. */
+.area__icono {
+  grid-row: 1;
+  grid-column: 1;
+  margin-bottom: 6px;
+}
+
+.area__icono .simbolo {
+  background: color-mix(in srgb, var(--tono) 14%, var(--superficie));
+  color: var(--tono);
+  transition: background-color 150ms ease-out, color 150ms ease-out;
+}
+
+.area:has(:checked) .area__icono .simbolo {
+  background: var(--tono);
+  color: var(--superficie);
+}
+
+/* The radio stays for the keyboard and screen readers: the whole tile is what one sees and touches. */
+.area__radio {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  opacity: 0;
+}
+
+.area__nombre {
+  grid-row: 2;
+  grid-column: 1 / -1;
+  font-family: var(--fuente-titulos);
+  font-size: var(--t-h3);
+  font-weight: 700;
+  line-height: 1.15;
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+
+.area__detalle {
+  grid-row: 3;
+  grid-column: 1 / -1;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+/* Chosen: tinted with its color, a thicker edge and a check, so it does not hang on the color alone. */
+.area__marca {
+  display: none;
+  grid-row: 1;
+  grid-column: 2;
+  align-self: start;
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: var(--tono);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 3;
+}
+
+.area:has(:checked) {
+  border-color: var(--tono);
+  background: color-mix(in srgb, var(--tono) 10%, var(--superficie));
+  box-shadow: inset 0 0 0 1px var(--tono);
+}
+
+.area:has(:checked) .area__marca {
+  display: block;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .area:has(:checked) .area__marca {
+    animation: area-marca 200ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+}
+
+@keyframes area-marca {
+  from {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+}
+
+.area:has(:focus-visible) {
+  outline: 3px solid var(--foco);
+  outline-offset: 2px;
+}
+
+.area:active {
+  transform: scale(0.98);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .area:hover {
+    border-color: var(--borde-control);
+  }
+
+  .area:has(:checked):hover {
+    border-color: var(--tono);
+  }
+}
+
+/* While the campus answers: the tiles, grey, with their size. */
+.area--esqueleto {
+  border-color: transparent;
+  background: var(--superficie-2);
+  cursor: default;
+}
+
+
+/* The rest of the campus, the part inside an area and the past years, in one line under the tiles. */
+.inscripcion__filtros {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 12px 24px;
+  margin-bottom: 28px;
+}
+
+.inscripcion__filtros .campo {
+  flex: 1 1 15rem;
+  max-width: 22rem;
+}
+
+.inscripcion__viejas {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  cursor: pointer;
+}
+
+.inscripcion__viejas input {
+  flex: none;
+  width: 1.25rem;
+  height: 1.25rem;
+  margin: 0;
+  accent-color: var(--accion);
+}
+
+.inscripcion__inicio {
+  max-width: 45rem;
+  margin: 0;
+  color: var(--texto-suave);
+}
+
+.inscripcion__nada {
+  margin: 0 0 12px;
+  padding: 16px;
+  border-radius: var(--radio-bloque);
+  background: var(--superficie);
+}
+
+/* A whole area, by letter: the letter big in a column on the left, staying in view while its courses go by. */
+.inscripcion__grupo {
+  display: grid;
+  grid-template-columns: 3rem minmax(0, 1fr);
+  column-gap: 12px;
+}
+
+.inscripcion__letra {
+  position: sticky;
+  top: calc(var(--alto-cabecera) + 12px);
+  align-self: start;
+  margin: 0;
+  padding-top: 12px;
+  color: var(--texto-suave);
+  font-family: var(--fuente-titulos);
+  font-size: var(--t-h2);
+  font-variant-numeric: lining-nums;
+  line-height: 1;
+}
+
+.inscripcion__grupo + .inscripcion__grupo .inscripcion__lista {
+  border-top: 0;
+}
+
+@container pagina (max-width: 37.4375rem) {
+  .inscripcion__tejas {
+    grid-template-columns: repeat(auto-fill, minmax(6.5rem, 1fr));
+    gap: 8px;
+  }
+
+  .area {
+    column-gap: 2px;
+    min-height: 6.25rem;
+    padding: 10px 8px 10px 10px;
+  }
+
+  .area__nombre {
+    font-size: 1.0625rem;
+  }
+
+  .inscripcion__grupo {
+    grid-template-columns: 2rem minmax(0, 1fr);
+    column-gap: 8px;
+  }
+
+  .inscripcion__letra {
+    font-size: var(--t-h3);
+  }
+}
+
+/* Other words or another career on their way: the list before stays, faded, until the new one comes. */
+.inscripcion__resultados {
+  transition: opacity 150ms ease-out;
+}
+
+.inscripcion__resultados--viejos {
+  opacity: 0.55;
+}
+
+.inscripcion__lista {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--borde);
+  animation: llega 180ms ease-out;
+}
+
+/* Symbol, name with career and year, and what can be done, in one line. The key field opens under the name. */
+.inscripcion__fila {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas: 'simbolo texto accion';
+  align-items: center;
+  column-gap: 12px;
+  row-gap: 10px;
+  min-height: 56px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--borde);
+}
+
+.inscripcion__fila > .simbolo {
+  grid-area: simbolo;
+  align-self: start;
+}
+
+.inscripcion__fila:has(.inscripcion__clave) {
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-areas: 'simbolo texto' '. accion';
+}
+
+.inscripcion__texto {
+  display: grid;
+  grid-area: texto;
+  gap: 2px;
+  min-width: 0;
+}
+
+.inscripcion__nombre {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.inscripcion__nombre mark {
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--aviso) 28%, transparent);
+  color: inherit;
+}
+
+.inscripcion__lugar {
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+  overflow-wrap: anywhere;
+}
+
+.inscripcion__accion {
+  display: flex;
+  flex-wrap: wrap;
+  grid-area: accion;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px 12px;
+  max-width: 21rem;
+}
+
+.inscripcion__estado {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  color: var(--ok);
+  font-size: var(--t-chica);
+  font-weight: 700;
+}
+
+.inscripcion__estado svg {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.inscripcion__nota {
+  margin: 0;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+  text-align: right;
+}
+
+.inscripcion__nota:focus {
+  outline: none;
+}
+
+.inscripcion__error {
+  flex-basis: 100%;
+  margin: 0;
+  color: var(--error);
+  font-size: var(--t-chica);
+  font-weight: 700;
+  text-align: right;
+}
+
+.inscripcion__clave {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  justify-content: start;
+  justify-items: start;
+  gap: 10px;
+  width: 100%;
+  max-width: 26rem;
+}
+
+.inscripcion__clave .campo {
+  width: 100%;
+}
+
+.inscripcion__clave .inscripcion__error {
+  text-align: left;
+}
+
+.inscripcion__botones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.inscripcion__mas {
+  margin-top: 16px;
+}
+
+/* On a phone what can be done goes under the name, so the name keeps the whole width. */
+@container pagina (max-width: 37.4375rem) {
+  .inscripcion__fila {
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-areas: 'simbolo texto' '. accion';
+  }
+
+  .inscripcion__accion {
+    justify-content: flex-start;
+    max-width: none;
+  }
+
+  .inscripcion__nota,
+  .inscripcion__error {
+    text-align: left;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .inscripcion__resultados {
+    transition: none;
+  }
+
+  .inscripcion__lista {
+    animation: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .inscripcion__nombre mark {
+    background: Mark;
+    color: MarkText;
+  }
+}
+
+/* The year a course name says, apart from the name: past ones, quieter. */
+.inscripcion__anio {
+  display: inline-block;
+  padding: 0 6px;
+  border: 1px solid var(--borde-control);
+  border-radius: 4px;
+  font-size: var(--t-chica);
+  font-variant-numeric: lining-nums tabular-nums;
+  font-weight: 600;
+  line-height: 1.4;
+  vertical-align: 0.1em;
+  white-space: nowrap;
+}
+
+.inscripcion__anio--viejo {
+  border-style: dashed;
+  color: var(--texto-suave);
+  font-weight: 400;
+}
+
+.inscripcion__docentes {
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+  overflow-wrap: anywhere;
+}
+
+/* Already in it: a band of the page's color behind, so it stands out in a long list. */
+.inscripcion__fila--mia {
+  margin-inline: -12px;
+  padding-inline: 12px;
+  border-radius: var(--radio-control);
+  background: var(--superficie);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .area {
+    transition: none;
+  }
+
+  .area:active {
+    transform: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .area:has(:checked) {
+    border: 3px solid Highlight;
+  }
+
+  .area::before {
+    background: CanvasText;
+  }
+}

@@ -1,0 +1,90 @@
+/* Reemplazo de páginas (propias/reemplazo-paginas.jsx). The practice's table on the sheet: a column per reference and a
+   row per frame, the page just loaded with the highlighter, the faults with an F circled in red pen, the bit R small
+   and the clock's hand as a line under its frame. */
+
+.rp-marcos-campo {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.rp-marcos-campo > legend {
+  margin-bottom: 6px;
+}
+
+.rp-marcos th,
+.rp-marcos td {
+  min-width: 2.25rem;
+  padding: 0 6px;
+  text-align: center;
+}
+
+.rp-marcos th.so-izq {
+  padding-right: 12px;
+  text-align: left;
+}
+
+.rp-marcos thead .rp-marcos__ref {
+  color: var(--texto);
+  font-size: 1rem;
+}
+
+.rp-marcos td {
+  position: relative;
+  border-left: 1px solid var(--borde);
+}
+
+.rp-marcos td[data-nueva] {
+  background: var(--resaltador);
+  color: var(--resaltador-texto);
+  font-weight: 700;
+}
+
+.rp-marcos td[data-mano]::after {
+  content: '';
+  position: absolute;
+  left: 20%;
+  right: 20%;
+  bottom: 2px;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--foco);
+}
+
+.rp-bit {
+  margin-left: 1px;
+  color: var(--texto-suave);
+  font-size: 0.7em;
+  font-weight: 600;
+}
+
+td[data-nueva] .rp-bit {
+  color: inherit;
+}
+
+.rp-marcos__fallos th,
+.rp-marcos__fallos td {
+  border-bottom: 0;
+}
+
+/* The F of a fault, circled in red pen. */
+.rp-f {
+  display: inline-grid;
+  place-items: center;
+  width: 1.5em;
+  height: 1.5em;
+  border: 1.5px solid var(--error);
+  border-radius: 50%;
+  color: var(--error);
+  font-size: 0.875rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.rp-sale {
+  color: var(--error);
+  font-weight: 700;
+  text-decoration: line-through;
+  text-decoration-thickness: 2px;
+}

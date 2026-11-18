@@ -1,0 +1,832 @@
+.materia__cuerpo {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 20rem);
+  grid-template-areas: 'contenido lateral';
+  align-items: start;
+  gap: 40px;
+}
+
+.materia__lateral {
+  display: grid;
+  grid-area: lateral;
+  gap: 10px;
+  min-width: 0;
+}
+
+.materia__lateral:focus {
+  outline: none;
+}
+
+.materia__a-lo-tuyo {
+  display: none;
+  margin-bottom: 16px;
+}
+
+.materia__contenido {
+  grid-area: contenido;
+  min-width: 0;
+}
+
+.avance__texto {
+  margin: 0 0 4px;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+}
+
+.avance__barra {
+  display: block;
+  width: 100%;
+  height: 8px;
+  overflow: hidden;
+  border: 0;
+  border-radius: 4px;
+  background: var(--superficie-2);
+  accent-color: var(--accion);
+}
+
+.avance__barra::-webkit-progress-bar {
+  background: var(--superficie-2);
+}
+
+.avance__barra::-webkit-progress-value {
+  background: var(--accion);
+}
+
+.avance__barra::-moz-progress-bar {
+  background: var(--accion);
+}
+
+.panel {
+  border-radius: var(--radio-control);
+  background: var(--superficie);
+}
+
+.panel > summary {
+  display: flex;
+  align-items: center;
+  min-height: 48px;
+  padding: 8px 14px;
+  cursor: pointer;
+  font-weight: 600;
+  list-style-position: inside;
+}
+
+.panel__cuerpo {
+  display: grid;
+  gap: 12px;
+  padding: 2px 14px 14px;
+}
+
+.tareas {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tarea {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 6px 0;
+}
+
+.tarea__marca {
+  display: flex;
+  flex: 1;
+  align-items: flex-start;
+  gap: 10px;
+  min-width: 0;
+  min-height: 44px;
+  cursor: pointer;
+}
+
+.tarea__marca input {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  margin: 2px 0 0;
+  accent-color: var(--accion);
+}
+
+.tarea__texto {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.tarea__fecha {
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+}
+
+.tarea[data-hecha] .tarea__texto {
+  color: var(--texto-suave);
+  text-decoration: line-through;
+}
+
+.tareas__nueva {
+  display: grid;
+  justify-items: start;
+  gap: 10px;
+}
+
+.tareas__nueva .campo {
+  width: 100%;
+  margin: 0;
+}
+
+.anotaciones .campo {
+  margin: 0;
+}
+
+.anotaciones textarea {
+  min-height: 140px;
+  resize: vertical;
+}
+
+.anotaciones__estado {
+  min-height: 1.4em;
+  margin: 4px 0 0;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+}
+
+.cambios {
+  margin-bottom: 28px;
+  padding: 14px 16px;
+  border-left: 5px solid var(--resaltador);
+  border-radius: var(--radio-control);
+  background: var(--superficie);
+}
+
+.cambios__borrados {
+  margin: 10px 0 0;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+}
+
+.fila__linea {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.fila__linea .fila__principal {
+  flex: 1;
+  min-width: 0;
+}
+
+.fila__visto,
+.fila__opciones {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: var(--radio-control);
+  background: none;
+  color: var(--texto-suave);
+  cursor: pointer;
+  transition: transform 120ms ease;
+}
+
+.fila__visto svg,
+.fila__opciones svg {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2.2;
+}
+
+.fila__opciones svg circle {
+  fill: currentColor;
+  stroke: none;
+}
+
+.fila__visto[aria-pressed='true'] {
+  background: var(--accion);
+  color: var(--accion-texto);
+}
+
+.fila__opciones[aria-expanded='true'] {
+  background: var(--superficie-2);
+  color: var(--texto);
+}
+
+.fila__visto:active,
+.fila__opciones:active {
+  transform: scale(0.94);
+}
+
+.fila[data-visto] .fila__nombre {
+  color: var(--texto-suave);
+  font-weight: 500;
+}
+
+/* A highlighter stroke under each line of the name, only as long as the text. A background on the whole name painted
+   the last lines of a long one solid, edge to edge, with the light text of the dark theme on top. */
+.fila[data-marca] .fila__nombre {
+  text-decoration-line: underline;
+  text-decoration-color: var(--resaltador);
+  text-decoration-thickness: 0.4em;
+  text-underline-offset: -0.15em;
+  text-decoration-skip-ink: none;
+}
+
+.fila--editable[draggable='true'] .simbolo--tipo {
+  cursor: grab;
+}
+
+.fila__panel {
+  padding: 2px 0 12px;
+}
+
+.fila__botones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.fila__renombrar {
+  display: grid;
+  gap: 8px;
+}
+
+.fila__renombrar .campo {
+  margin: 0;
+}
+
+.materias__texto {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.materias__dato {
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+  font-weight: 400;
+}
+
+/* Today, board */
+.vista-hoy[data-vista='tablero'] .hoy {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.vista-hoy[data-vista='tablero'] .hoy__principal {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 16.25rem), 1fr));
+  align-items: start;
+  gap: 20px;
+}
+
+.vista-hoy[data-vista='tablero'] .hoy__principal > .destacado,
+.vista-hoy[data-vista='tablero'] .hoy__principal > .mensaje,
+.vista-hoy[data-vista='tablero'] .hoy__principal > .cargando {
+  grid-column: 1 / -1;
+  margin-bottom: 0;
+}
+
+.vista-hoy[data-vista='tablero'] .hoy__principal > .bloque {
+  margin: 0;
+  padding: 14px;
+  border-radius: var(--radio-bloque);
+  background: var(--superficie);
+}
+
+.vista-hoy[data-vista='tablero'] .pendiente__texto {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.vista-hoy[data-vista='tablero'] .pendiente__cuando {
+  grid-row: auto;
+}
+
+/* In columns that fill downwards: in a grid, a short block left a hole under it as tall as the longest of its row. */
+.vista-hoy[data-vista='tablero'] .hoy__lateral {
+  columns: 20rem;
+  column-gap: 24px;
+}
+
+.vista-hoy[data-vista='tablero'] .hoy__lateral > * {
+  margin-top: 0;
+  margin-bottom: 24px;
+  break-inside: avoid;
+}
+
+/* Today, compact */
+.vista-hoy[data-vista='compacta'] .hoy {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+}
+
+.vista-hoy[data-vista='compacta'] .semana {
+  margin-bottom: 16px;
+}
+
+.vista-hoy[data-vista='compacta'] .semana__dia {
+  padding: 4px 2px;
+}
+
+.vista-hoy[data-vista='compacta'] .semana__cantidad {
+  height: 1.125rem;
+}
+
+.vista-hoy[data-vista='compacta'] .destacado {
+  margin-bottom: 16px;
+  padding: 12px 16px;
+}
+
+.vista-hoy[data-vista='compacta'] .destacado__titulo {
+  font-size: var(--t-h3);
+}
+
+.vista-hoy[data-vista='compacta'] .simbolo {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+}
+
+.vista-hoy[data-vista='compacta'] .pendiente,
+.vista-hoy[data-vista='compacta'] .notificacion,
+.vista-hoy[data-vista='compacta'] .evento,
+.vista-hoy[data-vista='compacta'] .fila__principal {
+  padding-block: 6px;
+}
+
+.vista-hoy[data-vista='compacta'] .evento-con-google {
+  --evento-sangria: calc(12px + 28px + 12px);
+}
+
+.vista-hoy[data-vista='compacta'] .evento-con-google > .evento {
+  padding-bottom: 0;
+}
+
+.vista-hoy[data-vista='compacta'] .bloque {
+  margin-bottom: 20px;
+}
+
+/* A course, cards */
+.materia[data-vista='tarjetas'] .lista {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr));
+  gap: 8px;
+  border-top: 0;
+}
+
+.materia[data-vista='tarjetas'] .fila {
+  padding: 4px 8px;
+  border-bottom: 0;
+  border-radius: var(--radio-control);
+  background: var(--superficie);
+}
+
+.materia[data-vista='tarjetas'] .seccion__cabeza {
+  margin-bottom: 10px;
+}
+
+/* A course, table */
+.materia[data-vista='tabla'] .bloque {
+  margin-bottom: 20px;
+}
+
+.materia[data-vista='tabla'] .fila__principal {
+  min-height: 36px;
+  padding-block: 2px;
+}
+
+.materia[data-vista='tabla'] .fila__texto {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 15em);
+  align-items: baseline;
+  gap: 16px;
+}
+
+.materia[data-vista='tabla'] .simbolo--tipo {
+  width: 24px;
+  height: 24px;
+  background: none;
+}
+
+.materia[data-vista='tabla'] .fila__nombre {
+  font-size: var(--t-chica);
+}
+
+/* A course inside (ajustes.contenido), with any view: the icon in its square as it came, a stripe of each kind's color,
+   the whole row of its color, or one line with a small icon. The color comes on the row (data-tono, panel.css). */
+.materia[data-contenido='franja'] .fila .simbolo--tipo {
+  display: none;
+}
+
+.materia[data-contenido='franja'] .fila__principal {
+  position: relative;
+  padding-left: 14px;
+}
+
+.materia[data-contenido='franja'] .fila__principal::before {
+  content: '';
+  position: absolute;
+  top: 8px;
+  bottom: 8px;
+  left: 0;
+  width: 4px;
+  border-radius: 2px;
+  background: var(--color-tono, var(--borde));
+}
+
+.materia[data-contenido='tenida'] .lista {
+  gap: 6px;
+  border-top: 0;
+}
+
+.materia {
+  /* How much of its kind's color a tinted row takes: ajustes.test.js checks the text reads on it with every palette. */
+  --tinte-fila: 14%;
+}
+
+.materia[data-contenido='tenida'] .fila {
+  padding-inline: 8px;
+  border-bottom: 0;
+  border-radius: var(--radio-control);
+}
+
+/* Over what a style does to the cards of a course (Hoja leaves them on the paper, estilos.css): it was chosen. */
+html:root .materia[data-contenido='tenida'][data-vista] .fila {
+  background-color: color-mix(in srgb, var(--color-tono, var(--texto)) var(--tinte-fila), var(--superficie));
+}
+
+.materia[data-contenido='tenida'] .fila .simbolo--tipo {
+  background: var(--superficie);
+}
+
+.materia[data-contenido='linea'] .fila__principal {
+  gap: 8px;
+  min-height: 36px;
+  padding-block: 4px;
+}
+
+.materia[data-contenido='linea'] .fila .simbolo--tipo {
+  width: 20px;
+  height: 20px;
+  background: none;
+}
+
+.materia[data-contenido='linea'] .fila__texto {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 10px;
+}
+
+.materia[data-contenido='linea'] .fila__nombre {
+  font-size: var(--t-chica);
+}
+
+.materia[data-contenido='linea'] .fila__dato {
+  font-size: 0.8125rem;
+}
+
+/* Two to try. «Mosaico»: tiles with a big icon, like a folder of files. «Notas»: slips of paper in each kind's color, a
+   little crooked, that straighten under the pointer or the keyboard. A text in the page and a row with its options open
+   take the whole width. */
+.materia:is([data-contenido='mosaico'], [data-contenido='notas']) .lista {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 9.5rem), 1fr));
+  gap: 10px;
+  border-top: 0;
+}
+
+.materia:is([data-contenido='mosaico'], [data-contenido='notas']) .fila {
+  position: relative;
+  border-bottom: 0;
+  border-radius: var(--radio-control);
+}
+
+.materia:is([data-contenido='mosaico'], [data-contenido='notas']) .fila:is([data-en-linea], :has(.fila__opciones[aria-expanded='true'])) {
+  grid-column: 1 / -1;
+}
+
+.materia:is([data-contenido='mosaico'], [data-contenido='notas']) .fila:not([data-en-linea]) .fila__linea {
+  display: block;
+}
+
+.materia:is([data-contenido='mosaico'], [data-contenido='notas']) .fila__principal {
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 8px;
+  height: 100%;
+  min-height: 9rem;
+  padding: 16px 12px 12px;
+  text-align: center;
+}
+
+.materia:is([data-contenido='mosaico'], [data-contenido='notas']) .fila__texto {
+  display: grid;
+  flex: none;
+  justify-items: center;
+  width: 100%;
+}
+
+.materia:is([data-contenido='mosaico'], [data-contenido='notas']) .fila__nombre {
+  font-size: var(--t-chica);
+}
+
+/* Seen and the options, in the top corners of the tile. */
+.materia:is([data-contenido='mosaico'], [data-contenido='notas']) .fila:not([data-en-linea]) :is(.fila__visto, .fila__opciones) {
+  position: absolute;
+  top: 2px;
+  width: 36px;
+  height: 36px;
+}
+
+.materia:is([data-contenido='mosaico'], [data-contenido='notas']) .fila:not([data-en-linea]) .fila__visto {
+  left: 2px;
+}
+
+.materia:is([data-contenido='mosaico'], [data-contenido='notas']) .fila:not([data-en-linea]) .fila__opciones {
+  right: 2px;
+}
+
+.materia[data-contenido='mosaico'] .fila {
+  border: 1px solid var(--borde);
+  background: var(--superficie);
+}
+
+.materia[data-contenido='mosaico'] .fila .simbolo--tipo {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+}
+
+.materia[data-contenido='notas'] {
+  /* How much of its kind's color a slip takes: ajustes.test.js checks the text reads on it with every palette. */
+  --tinte-nota: 18%;
+}
+
+html:root .materia[data-contenido='notas'][data-vista] .fila {
+  background-color: color-mix(in srgb, var(--color-tono, var(--texto)) var(--tinte-nota), var(--superficie));
+  box-shadow: 0 6px 14px -10px rgb(0 0 0 / 0.6);
+  rotate: -1.2deg;
+}
+
+html:root .materia[data-contenido='notas'][data-vista] .fila:nth-child(3n + 2) {
+  rotate: 0.8deg;
+}
+
+html:root .materia[data-contenido='notas'][data-vista] .fila:nth-child(3n) {
+  rotate: -0.4deg;
+}
+
+html:root .materia[data-contenido='notas'][data-vista] .fila:is(:hover, :focus-within, [data-en-linea], :has(.fila__opciones[aria-expanded='true'])) {
+  rotate: 0deg;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html:not([data-movimiento='reducido'], [data-movimiento='ninguno']) .materia[data-contenido='notas'] .fila {
+    transition: rotate 200ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+}
+
+.materia[data-contenido='notas'] .fila .simbolo--tipo {
+  background: var(--superficie);
+}
+
+/* A strip of tape at the top of each slip. */
+.materia[data-contenido='notas'] .fila:not([data-en-linea])::before {
+  content: '';
+  position: absolute;
+  top: -6px;
+  left: 50%;
+  width: 3rem;
+  height: 12px;
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--texto) 18%, transparent);
+  translate: -50% 0;
+  pointer-events: none;
+}
+
+/* Courses */
+.vista-materias[data-vista='lista'] .materias {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0;
+  border-top: 1px solid var(--borde);
+}
+
+.vista-materias[data-vista='lista'] .materias__enlace {
+  padding: 8px 0;
+  border-bottom: 1px solid var(--borde);
+  border-radius: 0;
+  background: none;
+}
+
+.vista-materias[data-vista='lista'] .simbolo--grande {
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+}
+
+.vista-materias[data-vista='grandes'] .materias {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr));
+}
+
+.vista-materias[data-vista='grandes'] .materias__enlace {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 18px;
+  padding: 22px;
+  font-size: var(--t-h3);
+}
+
+.vista-materias[data-vista='grandes'] .simbolo--grande {
+  width: 84px;
+  height: 84px;
+  border-radius: 20px;
+}
+
+/* Calendar, week */
+.cal-semana {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cal-semana__dia {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  min-height: 260px;
+  padding: 6px;
+  border-radius: var(--radio-control);
+  background: var(--superficie);
+}
+
+.cal-semana__dia[data-elegido] {
+  box-shadow: inset 0 0 0 2px var(--accion);
+}
+
+.cal-semana__cabeza {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 44px;
+  padding: 0 6px;
+  border: 0;
+  background: none;
+  color: var(--texto);
+  cursor: pointer;
+  font: inherit;
+}
+
+.cal-semana__cabeza .cal__numero {
+  align-self: center;
+}
+
+.cal-semana__dia[data-hoy] .cal__numero {
+  background: var(--resaltador);
+  font-weight: 700;
+}
+
+.cal-semana .evento {
+  flex-wrap: wrap;
+  row-gap: 4px;
+  padding: 6px 6px 6px 10px;
+  background: var(--fondo);
+}
+
+.cal-semana .evento .simbolo {
+  display: none;
+}
+
+/* Seven narrow columns: the time never splits from its «a. m.», a long word breaks with a hyphen instead of anywhere,
+   and «Cambiar» goes under the text so it doesn't squeeze the title. */
+.cal-semana .evento__hora {
+  white-space: nowrap;
+}
+
+/* Its column is as wide as the card, not as its longest word, so that word wraps inside. */
+.cal-semana .evento__texto {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.cal-semana .evento__titulo {
+  font-size: 0.8125rem;
+  line-height: 1.3;
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+
+.cal-semana .evento__cambiar {
+  flex-basis: 100%;
+  align-self: flex-start;
+}
+
+/* In seven narrow columns the symbol hides, so the link lines up with the card's edge and may take two lines. */
+.cal-semana .evento-con-google {
+  --evento-sangria: 6px;
+  background: var(--fondo);
+}
+
+.cal-semana .evento-con-google > .evento {
+  padding-bottom: 0;
+  background: transparent;
+}
+
+.cal-semana .evento__google {
+  margin-right: 6px;
+}
+
+.cal-agenda {
+  max-width: 45rem;
+}
+
+@container pagina (max-width: 60rem) {
+  .materia__cuerpo {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: 'contenido' 'lateral';
+    gap: 24px;
+  }
+
+  .materia__a-lo-tuyo {
+    display: block;
+  }
+
+  .materia__lateral {
+    scroll-margin-top: 80px;
+  }
+
+  .cal-semana {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .cal-semana__dia {
+    min-height: 0;
+  }
+
+  .cal-semana .evento .simbolo {
+    display: inline-grid;
+  }
+
+  .cal-semana .evento {
+    flex-wrap: nowrap;
+  }
+
+  .cal-semana .evento__titulo {
+    font-size: inherit;
+    line-height: inherit;
+  }
+
+  .cal-semana .evento__cambiar {
+    flex-basis: auto;
+    align-self: center;
+  }
+
+  .cal-semana .evento-con-google {
+    --evento-sangria: calc(6px + 40px + 12px);
+  }
+}
+
+@container pagina (max-width: 38.75rem) {
+  .materia[data-vista='tabla'] .fila__texto {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  }
+}
+
+/* A section a dragged card is over: it goes there. */
+.bloque[data-soltar] {
+  outline: 2px dashed var(--accion);
+  outline-offset: 6px;
+  border-radius: var(--radio-control);
+}
+
+/* Passing a card to another section without dragging. */
+.fila__pasar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.fila__pasar .campo {
+  flex: 1 1 12.5rem;
+  min-width: 0;
+}
+
+@media (pointer: coarse) {
+  .fila__pasar .boton--chico {
+    min-height: 44px;
+  }
+}
+
+.materia:is([data-contenido='mosaico'], [data-contenido='notas']) .fila:has(.fila__opciones[aria-expanded='true']) .fila__principal {
+  min-height: 0;
+}

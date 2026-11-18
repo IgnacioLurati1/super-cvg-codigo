@@ -1,0 +1,19 @@
+/* Tiro oblicuo (propias/tiro-oblicuo.jsx): the ground and the legend of the velocity and its components. */
+.tiro-suelo {
+  stroke: var(--tinta-hoja);
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+
+.tiro-ley {
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.tiro-ley--v {
+  stroke: var(--materia-1);
+}
+
+.tiro-ley--comp {
+  stroke: var(--materia-2);
+}

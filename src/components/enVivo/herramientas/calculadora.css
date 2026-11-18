@@ -1,0 +1,50 @@
+/* The Calculadora of a live session's table: which one on top, and the calculator as on its own page, in a sheet that
+   scrolls on its own (the view everyone follows). */
+.ev-calc {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+  min-width: 0;
+}
+
+.ev-calc__elegir {
+  display: grid;
+  gap: 6px;
+  max-width: 34rem;
+}
+
+.ev-calc__bajada {
+  margin: 0;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+}
+
+.ev-calc__hoja {
+  display: grid;
+  gap: 24px;
+  min-width: 0;
+  max-height: min(75vh, 52rem);
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding: 2px 2px 16px;
+}
+
+.ev-calc__hoja:focus-visible {
+  outline: 2px solid var(--foco);
+  outline-offset: 2px;
+}
+
+.ev-calc__vacia {
+  margin: 0;
+  padding: 24px 16px;
+  border: 1px dashed var(--borde-control);
+  border-radius: var(--radio-bloque);
+  color: var(--texto-suave);
+}
+
+.ev-calc__roto {
+  display: grid;
+  justify-items: start;
+  gap: 8px;
+}

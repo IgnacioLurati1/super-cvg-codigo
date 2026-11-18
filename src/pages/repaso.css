@@ -1,0 +1,474 @@
+/* Repaso: index cards on paper, ruled in blue with the red line on top, like the ones you buy at the bookshop. */
+.repaso-pagina__bajada {
+  max-width: 60ch;
+  margin: 0 0 28px;
+  color: var(--texto-suave);
+}
+
+/* Today: the pile with how many there are, what to do, and the week ahead. */
+.repaso-hoy {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 28px 40px;
+  margin-bottom: 40px;
+  padding: 28px 32px;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-bloque);
+  background: var(--superficie);
+}
+
+.repaso-pila {
+  position: relative;
+  flex: none;
+  width: 200px;
+  height: 128px;
+  margin: 0 10px 10px 0;
+}
+
+/* The count, written on the top card. */
+.repaso-pila__cifra {
+  position: absolute;
+  inset: 26px 0 0;
+  display: grid;
+  place-items: center;
+  font-size: 3.25rem;
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: lining-nums;
+  transform: translate(calc(var(--i) * 4px), calc(var(--i) * 4px));
+}
+
+.repaso-hoy__texto {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.repaso-hoy__titulo {
+  margin: 0;
+  font-size: var(--t-h2);
+  font-variant-numeric: lining-nums;
+}
+
+.repaso-hoy__proxima {
+  margin: 0;
+  color: var(--texto-suave);
+}
+
+.repaso-hoy__botones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* The week: a column a day, its height says how many come. */
+.repaso-semana {
+  flex: 1 1 15rem;
+  min-width: 0;
+}
+
+.repaso-semana__titulo {
+  margin: 0 0 10px;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+  font-weight: 600;
+}
+
+.repaso-semana__dias {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.repaso-semana__dia {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.repaso-semana__cuantas {
+  min-height: 1.5em;
+  line-height: 1.5;
+  font-size: var(--t-chica);
+  font-weight: 600;
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+.repaso-semana__barra {
+  position: relative;
+  width: 100%;
+  max-width: 28px;
+  height: 56px;
+  overflow: hidden;
+  border-radius: 4px;
+  background: var(--superficie-2);
+}
+
+.repaso-semana__barra::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 0;
+  height: calc(var(--h) * 100%);
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--foco) 55%, var(--superficie));
+  transform-origin: bottom;
+  animation: repaso-barra 0.5s cubic-bezier(0.23, 1, 0.32, 1) both;
+}
+
+.repaso-semana__dia--hoy .repaso-semana__barra::after {
+  background: var(--accion);
+}
+
+.repaso-semana__nombre {
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+}
+
+.repaso-semana__dia--hoy .repaso-semana__nombre {
+  color: var(--texto);
+  font-weight: 700;
+}
+
+@keyframes repaso-barra {
+  from {
+    transform: scaleY(0);
+  }
+}
+
+/* A new card: the course on top, then its two faces side by side, written on ruled paper. */
+.repaso-nueva {
+  margin-bottom: 40px;
+}
+
+.repaso-nueva__intro {
+  max-width: 60ch;
+  margin: -4px 0 16px;
+  color: var(--texto-suave);
+}
+
+.repaso-form {
+  display: grid;
+  gap: 16px;
+}
+
+.repaso-form__materia {
+  max-width: 24rem;
+}
+
+.repaso-form__caras {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+  gap: 16px 20px;
+}
+
+.repaso-form__cara {
+  display: flex;
+  min-width: 0;
+}
+
+.repaso-form__cara > .campo {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+}
+
+/* A textarea ruled like the cards: the red line on top and a blue line under each line of text. */
+.repaso-form .repaso-renglones {
+  flex: 1;
+  min-height: calc(var(--alto-renglon) * 4 + 30px);
+  padding: 22px 16px 8px;
+  border-radius: 4px;
+  background:
+    linear-gradient(var(--margen-rojo), var(--margen-rojo)) 0 12px / 100% 2px no-repeat,
+    repeating-linear-gradient(to bottom, transparent 0 calc(var(--alto-renglon) - 1px), var(--renglon) calc(var(--alto-renglon) - 1px) var(--alto-renglon)) 0 22px / 100% 100% no-repeat,
+    var(--papel);
+  background-attachment: local;
+  font-size: 1.0625rem;
+  line-height: var(--alto-renglon);
+  resize: vertical;
+}
+
+.repaso-form__botones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.repaso-nueva__aviso {
+  min-height: 1.5em;
+  margin: 8px 0 0;
+  color: var(--texto-suave);
+}
+
+/* The student's cards, by course. */
+.repaso-grupo {
+  --m: var(--borde-control);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 8px 16px;
+  margin-bottom: 8px;
+  padding: 2px 16px 2px 20px;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-control);
+  background: linear-gradient(to right, var(--m) 0 6px, var(--superficie) 6px);
+}
+
+.repaso-grupo__detalles {
+  flex: 1 1 24rem;
+  min-width: 0;
+}
+
+.repaso-grupo__titulo {
+  padding: 12px 0;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.repaso-grupo__cuenta {
+  margin-left: 6px;
+  color: var(--texto-suave);
+  font-weight: 400;
+  font-size: var(--t-chica);
+  font-variant-numeric: lining-nums;
+}
+
+.repaso-grupo--hoy .repaso-grupo__cuenta {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--m) 16%, var(--superficie));
+  color: var(--texto);
+  font-weight: 600;
+}
+
+.repaso-grupo__repasar {
+  margin-top: 8px;
+}
+
+.repaso-filas {
+  margin: 0 0 12px;
+  padding: 0;
+  list-style: none;
+}
+
+.repaso-fila {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  padding: 10px 0;
+  border-top: 1px solid var(--superficie-2);
+}
+
+.repaso-fila--editando {
+  display: block;
+  padding: 16px 0;
+}
+
+.repaso-fila__texto {
+  flex: 1 1 18rem;
+  min-width: 0;
+}
+
+.repaso-fila__frente {
+  display: -webkit-box;
+  margin: 0;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  white-space: pre-line;
+}
+
+.repaso-fila__cuando {
+  margin: 2px 0 0;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+}
+
+.repaso-fila__botones {
+  display: flex;
+  gap: 8px;
+}
+
+/* A round. */
+.repaso-ronda {
+  max-width: 44rem;
+  margin: 0 auto;
+}
+
+.repaso-ronda__cabeza {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 16px;
+}
+
+.repaso-ronda__titulo {
+  margin: 0;
+  font-size: var(--t-h2);
+}
+
+.repaso-ronda__cuenta {
+  flex: 1;
+  margin: 0;
+  color: var(--texto-suave);
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+.repaso-ronda__progreso {
+  height: 4px;
+  margin: 12px 0 24px;
+  overflow: hidden;
+  border-radius: 2px;
+  background: var(--superficie-2);
+}
+
+.repaso-ronda__progreso span {
+  display: block;
+  height: 100%;
+  background: var(--ok);
+  transform-origin: left;
+  transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .repaso-ronda__progreso span {
+    transition: none;
+  }
+
+  .repaso-semana__barra::after {
+    animation: none;
+  }
+}
+
+.repaso-ver {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.repaso-ver__ayuda {
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+}
+
+/* How it went: four buttons, from worst to best, each with where it sends the card. */
+.repaso-respuestas__pregunta {
+  margin: 20px 0 8px;
+  color: var(--texto-suave);
+}
+
+.repaso-respuestas {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.repaso-respuestas--dos {
+  grid-template-columns: repeat(2, minmax(0, 14rem));
+}
+
+.repaso-respuesta {
+  --c: var(--borde-control);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-height: 64px;
+  padding: 10px 12px;
+  border: 1px solid var(--borde);
+  border-top: 4px solid var(--c);
+  border-radius: var(--radio-control);
+  background: var(--superficie);
+  color: var(--texto);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s, transform 0.12s;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .repaso-respuesta:hover {
+    border-color: var(--c);
+  }
+}
+
+.repaso-respuesta:active {
+  transform: scale(0.97);
+}
+
+.repaso-respuesta--otra { --c: var(--error); }
+.repaso-respuesta--dificil { --c: var(--aviso); }
+.repaso-respuesta--bien { --c: var(--ok); }
+.repaso-respuesta--facil { --c: var(--foco); }
+
+.repaso-respuesta__texto {
+  font-weight: 600;
+}
+
+.repaso-respuesta__cuando {
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+}
+
+.repaso-respuesta__tecla {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  color: var(--texto-suave);
+  font: inherit;
+  font-size: var(--t-chica);
+  font-variant-numeric: lining-nums;
+}
+
+@media (max-width: 560px) {
+  .repaso-hoy {
+    padding: 20px;
+  }
+
+  .repaso-pila {
+    width: 150px;
+    height: 100px;
+  }
+
+  .repaso-pila__cifra {
+    font-size: 2.5rem;
+  }
+
+  .repaso-semana {
+    flex-basis: 100%;
+  }
+
+  .repaso-ronda__cabeza {
+    justify-content: space-between;
+  }
+
+  .repaso-ronda__cuenta {
+    flex-basis: 100%;
+    order: 3;
+  }
+
+  .repaso-respuestas {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .repaso-respuesta__tecla {
+    display: none;
+  }
+}
+
+@media (pointer: coarse) {
+  .repaso-respuesta__tecla,
+  .repaso-ver__ayuda {
+    display: none;
+  }
+}

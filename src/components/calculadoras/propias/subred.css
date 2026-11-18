@@ -1,0 +1,110 @@
+/* Subredes (propias/subred.jsx). The mask on the sheet, bit by bit in the squares of the notebook: the network bits in
+   ink, the subnet bits with the highlighter and the host bits in pencil, each octet with its decimal below. The octet
+   where the salto goes, underlined in pen. */
+
+.sr-mascara {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+  margin: 4px 0 10px;
+}
+
+.sr-octeto {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+}
+
+.sr-octeto__bits {
+  display: flex;
+}
+
+.sr-bit {
+  display: grid;
+  place-items: center;
+  width: var(--lado-cuadro);
+  height: var(--lado-cuadro);
+  border: 1px solid var(--tinta-hoja);
+  font-weight: 700;
+  line-height: 1;
+}
+
+.sr-bit + .sr-bit {
+  border-left-width: 0;
+}
+
+.sr-bit[data-tipo='red'] {
+  color: var(--texto);
+}
+
+.sr-bit[data-tipo='subred'] {
+  background: var(--resaltador);
+  color: var(--resaltador-texto);
+}
+
+.sr-bit[data-tipo='host'] {
+  color: var(--texto-suave);
+  font-weight: 500;
+}
+
+.sr-octeto__decimal {
+  min-width: 3ch;
+  padding: 0 4px;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.sr-octeto[data-salto] .sr-octeto__decimal {
+  border-bottom: 2px solid var(--foco);
+}
+
+/* The legend: a square of each kind and how many bits. */
+.sr-leyenda {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 18px;
+  margin: 0;
+  padding: 0;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+  list-style: none;
+}
+
+.sr-leyenda li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sr-leyenda li::before {
+  content: '';
+  width: 0.9em;
+  height: 0.9em;
+  border: 1px solid var(--tinta-hoja);
+}
+
+.sr-leyenda li[data-tipo='subred']::before {
+  background: var(--resaltador);
+}
+
+.sr-leyenda li[data-tipo='red']::before {
+  background: var(--texto);
+}
+
+.sr-and {
+  max-width: 24rem;
+}
+
+.sr-lista td {
+  text-align: left;
+}
+
+.sr-lista__salto td {
+  color: var(--texto-suave);
+  text-align: left;
+}
+
+.sr-lista thead th {
+  text-align: left;
+}

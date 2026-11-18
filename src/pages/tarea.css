@@ -1,0 +1,331 @@
+/* A campus task (Tarea.jsx): its state on the side, the instructions and the submission in the middle. On the phone the
+   state goes first, as it comes in the page. */
+.tarea-campus__cabeza {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.tarea-campus__cabeza h1 {
+  min-width: 0;
+  margin: 0;
+  font-size: clamp(2rem, 5vw, 3.25rem);
+  line-height: 1.1;
+  overflow-wrap: anywhere;
+}
+
+.tarea-campus__cuerpo {
+  display: grid;
+  gap: 32px;
+}
+
+@container pagina (min-width: 56.25rem) {
+  .tarea-campus__cuerpo {
+    grid-template-columns: minmax(0, 1fr) 20rem;
+    align-items: start;
+    gap: 40px;
+  }
+
+  .tarea-campus__lateral {
+    position: sticky;
+    top: calc(var(--alto-cabecera) + 16px);
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .tarea-campus__principal {
+    grid-column: 1;
+    grid-row: 1;
+  }
+}
+
+.tarea-campus__principal {
+  min-width: 0;
+}
+
+/* The card of the state: the word, then the grade or how long is left, highlighted like the next one in Hoy. */
+.tarea-campus__estado {
+  display: grid;
+  justify-items: start;
+  gap: 14px;
+  padding: 20px;
+  border-radius: var(--radio-bloque);
+  background: var(--superficie);
+}
+
+.tarea-campus__estado-titulo {
+  margin: 0;
+  font-size: var(--t-ui);
+}
+
+.tarea-campus__grande {
+  margin: 0;
+  font-size: clamp(1.6rem, 4vw, 2rem);
+  font-weight: 800;
+  line-height: 1.15;
+  font-variant-numeric: lining-nums;
+}
+
+.tarea-campus__estado[data-vencida] .tarea-campus__grande {
+  color: var(--error);
+}
+
+.tarea-campus__estado[data-estado='entregada'] .tarea-campus__grande {
+  color: var(--ok);
+}
+
+.tarea-campus__grande-etiqueta {
+  display: block;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+  font-weight: 700;
+}
+
+.tarea-campus__marcado {
+  padding: 0 0.15em;
+  border-radius: 3px;
+  background: var(--resaltador);
+  color: var(--resaltador-texto);
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+.tarea-campus__fechas {
+  display: grid;
+  gap: 10px;
+  width: 100%;
+  margin: 0;
+  padding-top: 14px;
+  border-top: 1px solid var(--borde);
+}
+
+.tarea-campus__fechas div {
+  display: grid;
+  gap: 2px;
+}
+
+.tarea-campus__fechas dt {
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+  font-weight: 700;
+}
+
+.tarea-campus__fechas dd {
+  margin: 0;
+  font-variant-numeric: lining-nums;
+}
+
+.tarea-campus__seccion h2 {
+  margin-bottom: 12px;
+}
+
+.tarea-campus__seccion h2:focus {
+  outline: none;
+}
+
+.tarea-campus__seccion h2:focus-visible {
+  outline: 2px solid var(--foco);
+  outline-offset: 4px;
+}
+
+.tarea-campus__subtitulo {
+  margin: 24px 0 6px;
+  font-size: var(--t-ui);
+}
+
+.tarea-campus__motivo {
+  margin: 16px 0 0;
+  color: var(--texto-suave);
+}
+
+/* What was written, the student's or the teacher's, on a sheet of its own. */
+.tarea-campus__hoja {
+  padding: 16px 18px;
+  border-radius: var(--radio-control);
+  background: var(--superficie);
+}
+
+.tarea-campus__hoja--docente {
+  border-left: 4px solid var(--accion);
+}
+
+/* The form to hand it in. */
+.entrega {
+  display: grid;
+  gap: 22px;
+  padding: 20px;
+  border-radius: var(--radio-bloque);
+  background: var(--superficie);
+}
+
+.entrega--enviar {
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.entrega .campo__control {
+  background: var(--fondo);
+}
+
+.entrega__texto {
+  min-height: 200px;
+  line-height: 1.5;
+}
+
+.entrega__campo {
+  display: grid;
+  gap: 8px;
+}
+
+.entrega__nota,
+.entrega__tarde {
+  margin: 0;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+}
+
+.entrega__tarde {
+  padding: 10px 14px;
+  border-radius: var(--radio-control);
+  background: var(--fondo-aviso);
+  color: var(--texto);
+  font-size: var(--t-ui);
+}
+
+.entrega__archivos {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  margin: 0;
+  padding: 14px;
+  border: 1px dashed var(--borde-control);
+  border-radius: var(--radio-control);
+}
+
+.entrega__archivos[data-encima] {
+  border-style: solid;
+  border-color: var(--foco);
+  background: var(--superficie-2);
+}
+
+.entrega__archivos legend {
+  padding: 0 6px;
+}
+
+.entrega__lista {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--borde);
+}
+
+.entrega__archivo {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--borde);
+}
+
+.entrega__archivo-texto {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.entrega__archivo-nombre {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.entrega__archivo-dato {
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+}
+
+.entrega__elegir {
+  justify-self: start;
+}
+
+.entrega__general {
+  margin: -8px 0 0;
+}
+
+.entrega__declaracion {
+  display: grid;
+  gap: 10px;
+  padding: 14px 16px;
+  border-left: 4px solid var(--borde-control);
+  background: var(--superficie-2);
+  border-radius: var(--radio-control);
+}
+
+.entrega__declaracion-texto {
+  margin: 0;
+  font-style: italic;
+}
+
+.entrega__acepto {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.entrega__acepto input {
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  accent-color: var(--accion);
+}
+
+.entrega__fallo {
+  display: grid;
+  gap: 8px;
+  justify-items: start;
+}
+
+.entrega__fallo:focus {
+  outline: none;
+}
+
+.entrega__fallo:focus-visible {
+  outline: 2px solid var(--foco);
+  outline-offset: 2px;
+}
+
+.entrega__detalle {
+  font-size: var(--t-chica);
+}
+
+.entrega__avance {
+  align-self: center;
+  margin: 0;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+}
+
+.entrega__botones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.tarea-campus__seccion > .entrega__botones {
+  margin-top: 16px;
+}
+
+@container pagina (max-width: 30rem) {
+  .entrega {
+    padding: 16px;
+  }
+
+  .entrega__botones .boton {
+    flex: 1 1 100%;
+  }
+}

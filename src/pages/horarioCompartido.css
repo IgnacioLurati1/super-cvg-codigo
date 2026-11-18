@@ -1,0 +1,406 @@
+/* Horario compartido (HorarioCompartido.jsx): the two weeks in one. On a computer each day has two lanes, the
+   student's on the left and the classmate's on the right, with what they take together across both and the gaps free
+   for both striped. On a phone, one list per day in the order of the day. Color says who, and so does the text. */
+.juntos {
+  --color-vos: var(--materia-0);
+  --color-suya: var(--materia-1);
+  --color-juntos: var(--materia-2);
+  --color-hueco: var(--ok);
+}
+
+.juntos [data-quien='vos'] {
+  --c: var(--color-vos);
+}
+
+.juntos [data-quien='suya'] {
+  --c: var(--color-suya);
+}
+
+.juntos [data-quien='juntos'] {
+  --c: var(--color-juntos);
+}
+
+.juntos__intro,
+.juntos__sin-link p {
+  max-width: 48rem;
+  margin: 0 0 16px;
+}
+
+/* What each color is, next to the cuatrimestre. */
+.juntos__leyenda {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  margin: 0;
+  padding: 0 0 10px;
+  list-style: none;
+  font-size: var(--t-chica);
+}
+
+.juntos__leyenda li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.juntos__muestra {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  border-left: 4px solid var(--c);
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--c) 18%, var(--superficie));
+}
+
+.juntos__muestra[data-quien='hueco'] {
+  border: 1px dashed var(--color-hueco);
+  background: repeating-linear-gradient(135deg, color-mix(in srgb, var(--color-hueco) 28%, transparent) 0 3px, transparent 3px 6px);
+}
+
+/* ---------- The week ---------- */
+.juntos__semana {
+  --quienes: 1.25rem;
+  gap: 0 10px;
+}
+
+.juntos__semana .horario__horas {
+  margin-top: calc(var(--cabeza-dia) + var(--quienes));
+}
+
+.juntos__quienes {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px;
+  height: var(--quienes);
+  margin: 0;
+  color: var(--texto-suave);
+  font-size: 0.75rem;
+  line-height: var(--quienes);
+}
+
+.juntos__quienes span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.juntos__clases {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: repeat(var(--filas), var(--paso));
+  column-gap: 4px;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid var(--borde);
+  /* The hours as faint lines, as in Tu horario, and a fainter one between the two lanes. */
+  background-image:
+    repeating-linear-gradient(to bottom, transparent 0, transparent calc(12 * var(--paso) - 1px), var(--borde) calc(12 * var(--paso) - 1px), var(--borde) calc(12 * var(--paso))),
+    linear-gradient(to right, transparent calc(50% - 0.5px), color-mix(in srgb, var(--borde) 60%, transparent) calc(50% - 0.5px), color-mix(in srgb, var(--borde) 60%, transparent) calc(50% + 0.5px), transparent calc(50% + 0.5px));
+  list-style: none;
+}
+
+.horario__dia[data-hoy] .juntos__clases {
+  border-top-color: var(--accion);
+  background-color: color-mix(in srgb, var(--accion) 5%, transparent);
+}
+
+/* Over the line between the lanes, so it reads whole. */
+.juntos__sin-clases {
+  grid-column: 1 / -1;
+  align-self: start;
+  justify-self: start;
+  padding-inline-end: 6px;
+  background: var(--fondo);
+}
+
+.juntos__bloque {
+  --ancho-carril: calc((100% - (var(--carriles, 1) - 1) * 4px) / var(--carriles, 1));
+  z-index: 1;
+  grid-row: var(--desde) / var(--hasta);
+  grid-column: var(--columna, 1) / span var(--ancho, 1);
+  /* Side by side with the classes of the same lane it overlaps. */
+  width: var(--ancho-carril);
+  min-height: 0;
+  margin-left: calc(var(--carril, 0) * (var(--ancho-carril) + 4px));
+  padding: 2px 0;
+}
+
+.juntos__clase {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  height: 100%;
+  padding: 5px 6px;
+  overflow: hidden;
+  border-left: 4px solid var(--c);
+  border-radius: var(--radio-control);
+  background: color-mix(in srgb, var(--c) 14%, var(--superficie));
+}
+
+/* Together: a little stronger, as it's the two of them. */
+.juntos__bloque[data-quien='juntos'] .juntos__clase {
+  background: color-mix(in srgb, var(--c) 24%, var(--superficie));
+}
+
+.juntos__bloque[data-amano] .juntos__clase {
+  border-left-style: dashed;
+}
+
+/* Who it is: the lane says it on a computer, and a reader hears it; on a phone it shows. */
+.juntos__quien {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.juntos__hora,
+.juntos__aula {
+  color: var(--texto-suave);
+  font-size: 0.75rem;
+  font-variant-numeric: lining-nums tabular-nums;
+  line-height: 1.2;
+}
+
+.juntos__materia {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  font-size: var(--t-chica);
+  font-weight: 600;
+  line-height: 1.2;
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+
+/* Side by side with another class of the same lane, on a computer: only its name, smaller. The hours and the classroom
+   stay for a reader. */
+@container pagina (min-width: 48rem) {
+  .juntos__bloque[data-estrecho] .juntos__clase {
+    padding: 4px 3px 4px 4px;
+  }
+
+  .juntos__bloque[data-estrecho] :is(.juntos__hora, .juntos__aula) {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  .juntos__bloque[data-estrecho] .juntos__materia {
+    font-size: 0.75rem;
+    -webkit-line-clamp: 6;
+  }
+}
+
+/* Free for both: across the two lanes, striped. */
+.juntos__hueco {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  grid-row: var(--desde) / var(--hasta);
+  grid-column: 1 / -1;
+  min-height: 0;
+  margin: 3px 0;
+  overflow: hidden;
+  border: 1px dashed color-mix(in srgb, var(--color-hueco) 70%, transparent);
+  border-radius: var(--radio-control);
+  background: repeating-linear-gradient(135deg, color-mix(in srgb, var(--color-hueco) 12%, transparent) 0 6px, transparent 6px 12px);
+  color: var(--color-hueco);
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.2;
+  text-align: center;
+}
+
+.juntos__hueco-hora {
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+/* A short one keeps its words: the hours are in «Libres los dos», under the week. */
+.juntos__hueco[data-corto] .juntos__hueco-hora {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* ---------- Under the week ---------- */
+.juntos__libres,
+.juntos__materias {
+  max-width: 48rem;
+}
+
+.juntos__lista {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-variant-numeric: lining-nums;
+}
+
+.juntos__ayuda {
+  margin: 0 0 12px;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+}
+
+.juntos__mat-lista {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.juntos__mat {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  padding: 10px 12px;
+  border-left: 4px solid var(--c);
+  border-radius: var(--radio-control);
+  background: var(--superficie);
+}
+
+.juntos__mat-nombre {
+  display: flex;
+  flex: 1 1 16rem;
+  flex-direction: column;
+  min-width: 0;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.juntos__mat-dato {
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+  font-weight: 400;
+  font-variant-numeric: lining-nums;
+}
+
+.juntos__pie {
+  margin: 16px 0 24px;
+}
+
+/* On a phone, each day as one list in the order of the day: who goes as a tag under the hours. */
+@container pagina (max-width: 47.9375rem) {
+  .juntos__quienes {
+    display: none;
+  }
+
+  .juntos__clases {
+    display: grid;
+    grid-template-columns: none;
+    grid-template-rows: none;
+    gap: 6px;
+    border-top: 0;
+    background: none;
+  }
+
+  .horario__dia[data-hoy] .juntos__clases {
+    background: none;
+  }
+
+  .juntos__bloque,
+  .juntos__hueco {
+    grid-row: auto;
+    grid-column: auto;
+    width: auto;
+    margin: 0;
+    padding: 0;
+  }
+
+  .juntos__clase {
+    display: grid;
+    grid-template-columns: 7.5rem minmax(0, 1fr);
+    grid-template-areas: 'hora materia' 'quien aula';
+    align-items: baseline;
+    gap: 4px 12px;
+    height: auto;
+    min-height: 44px;
+    padding: 10px 12px;
+  }
+
+  .juntos__hora {
+    grid-area: hora;
+    font-size: var(--t-chica);
+  }
+
+  .juntos__materia {
+    grid-area: materia;
+    font-size: var(--t-ui);
+  }
+
+  .juntos__aula {
+    grid-area: aula;
+    font-size: var(--t-chica);
+  }
+
+  .juntos__quien {
+    position: static;
+    grid-area: quien;
+    justify-self: start;
+    width: auto;
+    height: auto;
+    padding: 1px 8px;
+    overflow: visible;
+    clip: auto;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--c) 22%, var(--superficie));
+    color: var(--texto);
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+
+  .juntos__hueco {
+    display: grid;
+    grid-template-columns: 7.5rem minmax(0, 1fr);
+    align-items: baseline;
+    gap: 2px 12px;
+    min-height: 44px;
+    padding: 10px 12px;
+    font-size: var(--t-chica);
+    text-align: left;
+  }
+
+  .juntos__hueco-hora,
+  .juntos__hueco[data-corto] .juntos__hueco-hora {
+    position: static;
+    grid-row: 1;
+    grid-column: 1;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip: auto;
+  }
+
+  .juntos__hueco-texto {
+    grid-row: 1;
+    grid-column: 2;
+  }
+}
+
+@media (forced-colors: active) {
+  .juntos__clase,
+  .juntos__mat {
+    border: 1px solid CanvasText;
+    border-left-width: 4px;
+  }
+
+  .juntos__hueco {
+    border-color: CanvasText;
+  }
+}

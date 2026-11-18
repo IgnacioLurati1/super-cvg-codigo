@@ -1,0 +1,1539 @@
+/* Estudiar en vivo: the entry, and the table of a session. Each person brings their color in --persona; the one being
+   followed, in --guia, frames the whole table. */
+
+.envivo-entrada__bajada {
+  max-width: 60ch;
+  font-size: 1.125rem;
+  color: var(--texto-suave);
+}
+.envivo-entrada__invitacion {
+  max-width: 60ch;
+  padding: 0.75rem 1rem;
+  border-left: 4px solid var(--foco);
+  background: var(--superficie);
+  border-radius: var(--radio-control);
+}
+.envivo-entrada__opciones {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr));
+  gap: 1.25rem;
+  margin-block: 1.5rem;
+}
+.envivo-entrada__opcion {
+  padding: 1.25rem;
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-bloque);
+}
+.envivo-entrada__opcion h2 {
+  margin-top: 0;
+  font-size: var(--t-h3);
+}
+.envivo-entrada__opcion form {
+  display: grid;
+  gap: 0.75rem;
+  justify-items: start;
+}
+.envivo-entrada__opcion .campo {
+  width: 100%;
+}
+.envivo-entrada__campo {
+  font-size: 1.375rem;
+  letter-spacing: 0.08em;
+  font-variant-numeric: lining-nums tabular-nums;
+}
+.envivo-entrada__nota {
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+}
+
+/* --- The table: like a call. The tool takes the whole screen; the rest lives in the toolbar at the bottom. Each person
+   brings their color in --persona; whoever leads, in --guia, frames the table. */
+
+/* While the table is on, the page is the table: no header, no footer, no scroll of the page. The tools scroll inside. */
+html[data-mesa-en-vivo],
+html[data-mesa-en-vivo] body {
+  overflow: hidden;
+}
+html[data-mesa-en-vivo] .sitio {
+  height: 100dvh;
+  min-height: 0;
+  overflow: clip;
+}
+html[data-mesa-en-vivo] .cabecera,
+html[data-mesa-en-vivo] .pie,
+html[data-mesa-en-vivo] .saltar,
+html[data-mesa-en-vivo] :is(.flotante, .flotante__boton):not([data-en-mesa]) {
+  display: none;
+}
+/* Consultron only in its box (Configuración, «Aparición»): its button and its box, over the table. */
+:is(.flotante, .flotante__boton)[data-en-mesa] {
+  z-index: 61;
+}
+
+.envivo-mesa {
+  --barra: 4.25rem;
+  --guia: transparent;
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  overflow: clip;
+  background: var(--fondo);
+  color: var(--texto);
+}
+.envivo-mesa[data-tactil] {
+  grid-template-rows: auto minmax(0, 1fr) auto;
+}
+/* Following someone (or presenting), the table takes their color: whatever moves is theirs. */
+.envivo-mesa[data-siguiendo]::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 15;
+  border: 3px solid var(--guia);
+  pointer-events: none;
+}
+
+.envivo-mesa__herramienta {
+  position: relative;
+  min-height: 0;
+  padding: 0.5rem;
+}
+.envivo-mesa__una {
+  /* The drawing, writing and reading tools take this height (comun.css); the rest scroll here. */
+  --en-vivo-alto: 100%;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: auto;
+  overscroll-behavior: contain;
+  scroll-padding-bottom: calc(var(--barra) + 1rem);
+}
+.envivo-mesa__una[hidden] {
+  display: none;
+}
+.envivo-mesa__una > * {
+  flex: none;
+}
+/* A summary: its line on top, the paper below to the end. */
+.envivo-mesa__una > .resumen-vivo {
+  height: 100%;
+  grid-template-rows: auto minmax(0, 1fr);
+}
+/* A calculator: as wide as on its own page, at its whole height; the tab scrolls, at the screen's right edge (that is
+   the view others follow). */
+.envivo-mesa__una > .ev-calc {
+  width: 100%;
+  max-width: var(--ancho);
+  margin-inline: auto;
+}
+.envivo-mesa__una .ev-calc__hoja {
+  max-height: none;
+  overflow: visible;
+  padding-bottom: calc(var(--barra) + 1.5rem);
+}
+.envivo-mesa__cargando,
+.envivo-mesa__vacia {
+  height: 100%;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 1rem;
+  text-align: center;
+  color: var(--texto-suave);
+}
+.envivo-mesa__vacia p {
+  margin: 0;
+}
+/* While the table arrives from the others (just in, or after a reload): the shape of a tab and of a page, never «vacía». */
+.envivo-mesa__esqueleto {
+  height: 100%;
+  display: grid;
+  align-content: start;
+  gap: 0.875rem;
+  width: min(100%, 40rem);
+  margin-inline: auto;
+  padding: 2.5rem 1.5rem;
+}
+.envivo-mesa__esqueleto i,
+.envivo-tira--esqueleto i {
+  display: block;
+  height: 1rem;
+  border-radius: 6px;
+  background: var(--superficie-2);
+}
+.envivo-mesa__esqueleto i:first-of-type {
+  width: 45%;
+  height: 1.75rem;
+}
+.envivo-mesa__esqueleto i:last-of-type {
+  width: 70%;
+}
+.envivo-tira--esqueleto {
+  height: 2.375rem;
+  padding: 0 0.75rem;
+}
+.envivo-tira--esqueleto i {
+  width: 100%;
+  height: 0.75rem;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .envivo-mesa__esqueleto i,
+  .envivo-tira--esqueleto i {
+    animation: envivo-esqueleto 1.4s ease-in-out infinite;
+  }
+}
+:root[data-movimiento='reducido'] .envivo-mesa__esqueleto i,
+:root[data-movimiento='ninguno'] .envivo-mesa__esqueleto i,
+:root[data-movimiento='reducido'] .envivo-tira--esqueleto i,
+:root[data-movimiento='ninguno'] .envivo-tira--esqueleto i {
+  animation: none;
+}
+@keyframes envivo-esqueleto {
+  50% {
+    opacity: 0.55;
+  }
+}
+.envivo-mesa__vacia > p:first-child {
+  color: var(--texto);
+  font-size: var(--t-h3);
+  font-weight: 600;
+}
+.envivo-mesa__atajos {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+}
+.envivo-mesa__solo {
+  max-width: 34ch;
+}
+
+.envivo-saltar {
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  z-index: 70;
+  transform: translateY(-200%);
+}
+.envivo-saltar:focus {
+  transform: none;
+}
+
+/* --- The toolbar */
+.envivo-barra {
+  position: absolute;
+  left: 50%;
+  bottom: max(0.75rem, env(safe-area-inset-bottom));
+  z-index: 30;
+  display: flex;
+  align-items: stretch;
+  gap: 2px;
+  max-width: calc(100% - 1rem);
+  padding: 4px;
+  color: var(--accion-texto);
+  background: var(--accion);
+  border-radius: 18px;
+  box-shadow: 0 10px 30px rgb(0 0 0 / 0.28);
+  transform: translateX(-50%);
+  transition: opacity 200ms ease-out, transform 240ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+.envivo-barra[data-oculta] {
+  opacity: 0;
+  transform: translate(-50%, calc(100% + 1rem));
+  pointer-events: none;
+  transition-duration: 160ms;
+}
+/* Where the bar comes back from over a frame, which swallows the mouse. */
+.envivo-mesa__borde {
+  position: absolute;
+  inset: auto 0 0;
+  z-index: 29;
+  height: 1.25rem;
+}
+/* No hover on a touch screen: the bar stays, under the table. */
+.envivo-mesa[data-tactil] .envivo-barra {
+  position: static;
+  justify-content: space-around;
+  max-width: none;
+  padding: 4px 4px max(4px, env(safe-area-inset-bottom));
+  border-radius: 0;
+  box-shadow: none;
+  transform: none;
+}
+.envivo-barra__boton {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 3px;
+  min-width: 4.5rem;
+  min-height: 3.25rem;
+  padding: 6px 10px;
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.2;
+  color: inherit;
+  background: transparent;
+  border: 0;
+  border-radius: 14px;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  transition: background-color 150ms ease, transform 120ms ease-out;
+}
+.envivo-mesa[data-tactil] .envivo-barra__boton {
+  flex: 1 1 0;
+  min-width: 0;
+  padding-inline: 2px;
+}
+.envivo-barra__boton:active {
+  transform: scale(0.97);
+}
+.envivo-barra__boton:focus-visible {
+  outline: 2px solid var(--accion-texto);
+  outline-offset: -3px;
+}
+.envivo-barra__boton[aria-expanded='true'],
+.envivo-barra__boton[aria-pressed='true'] {
+  background: color-mix(in srgb, var(--accion-texto) 18%, transparent);
+}
+@media (hover: hover) and (pointer: fine) {
+  .envivo-barra__boton:hover {
+    background: color-mix(in srgb, var(--accion-texto) 12%, transparent);
+  }
+}
+.envivo-barra__boton[data-peligro] {
+  margin-left: 4px;
+  color: var(--error-texto);
+  background: var(--error);
+}
+.envivo-barra__texto {
+  max-width: 9rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.envivo-mesa[data-tactil] .envivo-barra__texto {
+  max-width: 100%;
+}
+.envivo-barra__icono {
+  position: relative;
+  display: grid;
+  place-items: center;
+}
+.envivo-barra svg,
+.envivo-panel svg,
+.envivo-aviso svg,
+.envivo-globo svg {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+}
+.envivo-barra__numero {
+  position: absolute;
+  top: -6px;
+  right: -12px;
+  min-width: 1.125rem;
+  height: 1.125rem;
+  padding: 0 4px;
+  font-size: 0.6875rem;
+  line-height: 1.125rem;
+  font-variant-numeric: lining-nums;
+  text-align: center;
+  color: var(--error-texto);
+  background: var(--error);
+  border-radius: 999px;
+  box-shadow: 0 0 0 2px var(--accion);
+}
+/* Someone's question is being answered. */
+.envivo-barra__punto {
+  position: absolute;
+  top: -2px;
+  right: -5px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--ok);
+  box-shadow: 0 0 0 2px var(--accion);
+  animation: envivo-late 1.4s ease-in-out infinite;
+}
+@keyframes envivo-late {
+  50% {
+    opacity: 0.35;
+  }
+}
+.envivo-barra__separador {
+  flex: none;
+  width: 1px;
+  margin: 10px 4px;
+  background: color-mix(in srgb, var(--accion-texto) 25%, transparent);
+}
+
+/* --- What the toolbar opens: over the table, out of the bar. */
+.envivo-panel {
+  position: absolute;
+  left: 50%;
+  bottom: calc(var(--barra) + 1.5rem);
+  z-index: 35;
+  width: min(22rem, calc(100% - 1.5rem));
+  max-height: calc(100% - var(--barra) - 3rem);
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding: 0.75rem;
+  color: var(--texto);
+  background: var(--fondo);
+  border: 1px solid var(--borde);
+  border-radius: 16px;
+  box-shadow: 0 18px 48px rgb(0 0 0 / 0.25);
+  transform: translateX(-50%);
+  transform-origin: bottom center;
+  animation: envivo-abre 180ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+.envivo-mesa[data-tactil] .envivo-panel {
+  bottom: 0.5rem;
+  max-height: calc(100% - 1rem);
+}
+.envivo-panel:focus {
+  outline: none;
+}
+@keyframes envivo-abre {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(8px) scale(0.97);
+  }
+}
+.envivo-panel--ancho {
+  width: min(32rem, calc(100% - 1.5rem));
+}
+/* The chat: at the side, as in a call; on a narrow screen, from the bottom. */
+.envivo-panel--lado {
+  left: auto;
+  right: 0.75rem;
+  top: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  max-height: none;
+  overflow: hidden;
+  transform: none;
+  transform-origin: bottom right;
+  animation-name: envivo-abre-lado;
+}
+@keyframes envivo-abre-lado {
+  from {
+    opacity: 0;
+    transform: translateX(12px);
+  }
+}
+.envivo-mesa[data-tactil] .envivo-panel--lado {
+  top: auto;
+  height: min(70%, 32rem);
+}
+@media (max-width: 47.99rem) {
+  .envivo-panel--lado {
+    left: 0.5rem;
+    right: 0.5rem;
+    top: auto;
+    width: auto;
+    height: min(70%, 32rem);
+  }
+}
+.envivo-panel__cabeza {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+.envivo-panel__titulo {
+  margin: 0;
+  font-size: var(--t-ui);
+}
+.envivo-panel__cerrar {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: 0;
+  color: var(--texto-suave);
+  background: none;
+  border: 0;
+  border-radius: 10px;
+  cursor: pointer;
+}
+.envivo-panel__cerrar--suelto {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  z-index: 1;
+}
+.envivo-panel__cerrar svg {
+  width: 18px;
+  height: 18px;
+}
+@media (hover: hover) and (pointer: fine) {
+  .envivo-panel__cerrar:hover {
+    color: var(--texto);
+    background: var(--superficie-2);
+  }
+}
+.envivo-panel__sub {
+  margin: 0.75rem 0 0.25rem;
+  font-size: var(--t-chica);
+  font-weight: 600;
+  color: var(--texto-suave);
+}
+.envivo-panel__nota {
+  margin: 0.25rem 0 0.5rem;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+}
+.envivo-panel__botones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.envivo-panel__ancho {
+  width: 100%;
+  margin-top: 0.5rem;
+}
+
+.envivo-lista {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.envivo-lista__fila {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: 10px;
+}
+.envivo-lista__fila[data-activa] {
+  background: var(--superficie-2);
+}
+.envivo-lista__elegir {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: 0.5rem;
+  flex: 1;
+  min-width: 0;
+  min-height: 2.75rem;
+  padding: 0.375rem 0.625rem;
+  font: inherit;
+  text-align: left;
+  color: inherit;
+  background: none;
+  border: 0;
+  border-radius: 10px;
+  cursor: pointer;
+}
+.envivo-lista__titulo {
+  min-width: 0;
+  overflow: hidden;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.envivo-lista__dato {
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+  font-weight: 400;
+}
+.envivo-lista__elegir .envivo-lista__dato {
+  grid-column: 1;
+}
+.envivo-lista__gente {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  display: inline-flex;
+  gap: 2px;
+}
+.envivo-lista__gente .envivo-punto {
+  width: 0.5rem;
+  height: 0.5rem;
+}
+.envivo-lista__cerrar {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 2.5rem;
+  height: 2.5rem;
+  color: var(--texto-suave);
+  background: none;
+  border: 0;
+  border-radius: 10px;
+  cursor: pointer;
+}
+.envivo-lista__cerrar svg {
+  width: 16px;
+  height: 16px;
+}
+.envivo-lista__persona {
+  min-height: 2.75rem;
+  padding: 0.25rem 0.25rem 0.25rem 0.625rem;
+}
+.envivo-lista__persona .envivo-lista__titulo {
+  flex: 1;
+  white-space: normal;
+}
+.envivo-punto,
+.envivo-chip__punto {
+  flex: none;
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 50%;
+  background: var(--persona);
+}
+.envivo-seguir {
+  flex: none;
+  min-height: 2.25rem;
+  padding: 0.25rem 0.875rem;
+  font: inherit;
+  font-size: var(--t-chica);
+  font-weight: 600;
+  color: var(--texto);
+  background: var(--superficie-2);
+  border: 1px solid transparent;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: transform 120ms ease-out, background-color 150ms ease;
+}
+.envivo-seguir[data-activo] {
+  border-color: var(--persona);
+}
+
+.envivo-abrir {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.envivo-mas {
+  display: grid;
+  gap: 2px;
+}
+.envivo-abrir__opcion {
+  display: block;
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0.5rem 0.75rem;
+  font: inherit;
+  text-align: left;
+  color: var(--texto);
+  background: none;
+  border: 0;
+  border-radius: 10px;
+  cursor: pointer;
+}
+.envivo-abrir__opcion[aria-pressed='true'] {
+  font-weight: 600;
+}
+.envivo-abrir__opcion--peligro {
+  color: var(--error);
+  font-weight: 600;
+}
+.envivo-abrir__opcion:focus-visible,
+.envivo-abrir__opcion:active,
+.envivo-lista__elegir:active {
+  background: var(--superficie-2);
+}
+@media (hover: hover) and (pointer: fine) {
+  .envivo-abrir__opcion:hover,
+  .envivo-lista__elegir:hover,
+  .envivo-lista__cerrar:hover {
+    background: var(--superficie-2);
+  }
+}
+
+.envivo-invitar__etiqueta {
+  margin: 0;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+}
+.envivo-invitar__clave {
+  margin: 0.125rem 0 0.75rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  font-variant-numeric: lining-nums tabular-nums;
+  user-select: all;
+}
+
+/* --- Who leads, and a bad connection: small, over the toolbar. */
+.envivo-chips {
+  position: absolute;
+  bottom: calc(var(--barra) + 1.25rem);
+  left: 50%;
+  z-index: 25;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+  width: max-content;
+  max-width: calc(100% - 1.5rem);
+  pointer-events: none;
+  transform: translateX(-50%);
+}
+.envivo-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.25rem;
+  margin: 0;
+  padding: 0.25rem 0.25rem 0.25rem 0.75rem;
+  font-size: var(--t-chica);
+  font-weight: 600;
+  background: var(--fondo);
+  border: 2px solid var(--persona);
+  border-radius: 999px;
+  box-shadow: 0 4px 14px rgb(0 0 0 / 0.15);
+  pointer-events: auto;
+}
+.envivo-chip--mal {
+  --persona: var(--aviso);
+  padding-right: 0.875rem;
+}
+.envivo-chip__boton {
+  min-height: 1.75rem;
+  padding: 0 0.75rem;
+  font: inherit;
+  font-weight: 700;
+  color: var(--texto);
+  background: var(--superficie-2);
+  border: 0;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+/* --- Notices of the chat */
+.envivo-avisos {
+  position: absolute;
+  top: 3.25rem;
+  right: 0.75rem;
+  z-index: 40;
+  display: grid;
+  gap: 0.5rem;
+  width: min(20rem, calc(100% - 1.5rem));
+}
+@media (max-width: 47.99rem) {
+  .envivo-avisos {
+    top: 3rem;
+    right: 0.5rem;
+    width: calc(100% - 1rem);
+  }
+}
+.envivo-aviso {
+  padding: 0.625rem 0.5rem 0.5rem 0.875rem;
+  background: var(--fondo);
+  border: 1px solid var(--borde);
+  border-left: 4px solid var(--persona);
+  border-radius: 12px;
+  box-shadow: 0 12px 32px rgb(0 0 0 / 0.22);
+  animation: envivo-aviso 220ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+@keyframes envivo-aviso {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+}
+.envivo-aviso__quien {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  margin: 0;
+  font-weight: 700;
+}
+.envivo-aviso__quien svg {
+  width: 16px;
+  height: 16px;
+  color: var(--texto-suave);
+}
+.envivo-aviso__mas {
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+  font-weight: 400;
+}
+.envivo-aviso__texto {
+  display: -webkit-box;
+  margin: 0.125rem 0 0.5rem;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+.envivo-aviso__botones {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.envivo-aviso__cerrar {
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  color: var(--texto-suave);
+  background: none;
+  border: 0;
+  border-radius: 10px;
+  cursor: pointer;
+}
+.envivo-aviso__cerrar svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* --- Consultron's answer, a bubble in the middle of the table, pointing down to its button. */
+.envivo-globo {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  width: min(34rem, calc(100% - 2rem));
+  max-height: min(70%, 34rem);
+  background: var(--fondo);
+  border: 1px solid var(--borde);
+  border-radius: 18px;
+  box-shadow: 0 18px 48px rgb(0 0 0 / 0.28);
+  transform: translate(-50%, -50%);
+  transform-origin: bottom center;
+  animation: envivo-globo 240ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+.envivo-globo::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -9px;
+  width: 16px;
+  height: 16px;
+  background: var(--fondo);
+  border-right: 1px solid var(--borde);
+  border-bottom: 1px solid var(--borde);
+  transform: translateX(-50%) rotate(45deg);
+}
+@keyframes envivo-globo {
+  from {
+    opacity: 0;
+    transform: translate(-50%, calc(-50% + 14px)) scale(0.96);
+  }
+}
+.envivo-globo__cabeza {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.375rem 0.375rem 0.375rem 0.875rem;
+  color: var(--accion-texto);
+  background: var(--accion);
+  border-radius: 17px 17px 0 0;
+}
+.envivo-globo__titulo {
+  flex: 1;
+  margin: 0;
+  font-size: var(--t-ui);
+}
+.envivo-globo__cerrar {
+  display: grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  color: inherit;
+  background: none;
+  border: 0;
+  border-radius: 10px;
+  cursor: pointer;
+}
+.envivo-globo__cerrar svg {
+  width: 18px;
+  height: 18px;
+}
+@media (hover: hover) and (pointer: fine) {
+  .envivo-globo__cerrar:hover {
+    background: color-mix(in srgb, var(--accion-texto) 14%, transparent);
+  }
+}
+.envivo-globo__cuerpo {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding: 0.875rem 1rem;
+}
+.envivo-globo__cuerpo:focus-visible {
+  outline: 2px solid var(--foco);
+  outline-offset: -2px;
+}
+.envivo-globo__pie {
+  display: flex;
+  flex: none;
+  justify-content: flex-end;
+  padding: 0.5rem 0.75rem 0.625rem;
+  border-top: 1px solid var(--borde);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .envivo-barra,
+  .envivo-barra[data-oculta] {
+    transform: translateX(-50%);
+    transition-property: opacity;
+  }
+  .envivo-mesa[data-tactil] .envivo-barra {
+    transform: none;
+  }
+  .envivo-panel,
+  .envivo-panel--lado,
+  .envivo-aviso,
+  .envivo-globo {
+    animation-name: envivo-funde;
+  }
+  .envivo-barra__punto {
+    animation: none;
+  }
+  @keyframes envivo-funde {
+    from {
+      opacity: 0;
+    }
+  }
+}
+
+/* Full screen: the same table, without the browser around. */
+.envivo-mesa:fullscreen {
+  width: 100%;
+  height: 100%;
+}
+
+/* Touch: no double-tap zoom or grey flash, a press that answers. */
+.envivo-lista__elegir,
+.envivo-lista__cerrar,
+.envivo-seguir,
+.envivo-chip__boton,
+.envivo-abrir__opcion,
+.envivo-volver {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+.envivo-lista__elegir:active,
+.envivo-lista__cerrar:active,
+.envivo-seguir:active,
+.envivo-chip__boton:active,
+.envivo-volver:active {
+  transform: scale(0.97);
+}
+.envivo-chat__lista {
+  overscroll-behavior: contain;
+}
+
+/* --- Chat */
+.envivo-chat {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: 0.5rem;
+  flex: 1;
+  min-height: 0;
+}
+.envivo-chat__titulo {
+  margin: 0;
+  padding-right: 2.75rem;
+  font-size: var(--t-h3);
+}
+.envivo-chat__lista {
+  min-height: 8rem;
+  margin: 0;
+  padding: 0.5rem;
+  overflow-y: auto;
+  list-style: none;
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-bloque);
+}
+.envivo-chat__vacio {
+  color: var(--texto-suave);
+  padding: 0.5rem;
+}
+.envivo-chat__mensaje {
+  padding: 0.125rem 0.5rem;
+  border-left: 3px solid var(--persona);
+}
+.envivo-chat__mensaje + .envivo-chat__mensaje {
+  margin-top: 0.25rem;
+}
+.envivo-chat__quien {
+  margin: 0.375rem 0 0;
+  font-size: var(--t-chica);
+  color: var(--texto-suave);
+}
+.envivo-chat__nombre {
+  font-weight: 700;
+  color: var(--texto);
+}
+.envivo-chat__texto {
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.envivo-chat__form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.5rem;
+  align-items: end;
+}
+/* Consultron's button floats down on the right, over the side panel: «Mandar» stays clear of it. */
+html:not([data-consultron-lado='izquierda']) .envivo-chat__form {
+  padding-right: 72px;
+}
+textarea.envivo-chat__campo {
+  resize: vertical;
+  min-height: 2.75rem;
+  height: 4.5rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .envivo-abrir__menu,
+  .envivo-mesa__cuerpo[data-chat] .envivo-mesa__chat {
+    animation-name: envivo-funde;
+  }
+  @keyframes envivo-funde {
+    from {
+      opacity: 0;
+    }
+  }
+}
+
+
+/* The way back to the table, from anywhere on the site. */
+.envivo-volver {
+  position: fixed;
+  left: var(--margen);
+  bottom: calc(1rem + env(safe-area-inset-bottom));
+  z-index: 40;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.75rem;
+  padding: 0.5rem 1rem;
+  font-weight: 600;
+  color: var(--accion-texto);
+  background: var(--accion);
+  border-radius: 999px;
+  text-decoration: none;
+  box-shadow: 0 6px 18px rgb(0 0 0 / 0.22);
+}
+.envivo-volver__vivo {
+  width: 0.625rem;
+  height: 0.625rem;
+  border-radius: 50%;
+  background: var(--ok);
+  box-shadow: 0 0 0 2px var(--accion-texto);
+}
+
+/* Saving a tab in one of the student's courses. */
+.envivo-guardar {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0;
+}
+.envivo-guardar__titulo {
+  margin: 0;
+  font-size: var(--t-h3);
+}
+.envivo-guardar__form {
+  display: grid;
+  gap: 0.75rem;
+  max-width: 32rem;
+}
+.envivo-guardar__que {
+  margin: 0;
+  color: var(--texto-suave);
+}
+.envivo-guardar__botones {
+  display: flex;
+  gap: 0.5rem;
+}
+
+
+/* The site's notices, above the toolbar. */
+html[data-mesa-en-vivo] .avisos {
+  bottom: calc(6rem + env(safe-area-inset-bottom));
+}
+
+/* The tabs, at the top like a browser's: always at hand. */
+.envivo-tiras {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.25rem;
+  min-width: 0;
+  padding: 0.375rem 0.5rem 0;
+  background: var(--superficie);
+  border-bottom: 1px solid var(--borde);
+}
+.envivo-tiras__lista {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  min-width: 0;
+  overflow-x: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+.envivo-tira {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 0 1 13rem;
+  min-width: 7rem;
+  border-radius: 10px 10px 0 0;
+}
+.envivo-tira[data-activa] {
+  background: var(--fondo);
+  box-shadow: inset 0 2px 0 var(--accion);
+}
+.envivo-tira__boton {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+  flex: 1;
+  height: 2.375rem;
+  padding: 0 1.75rem 0 0.625rem;
+  font: inherit;
+  font-size: var(--t-chica);
+  color: var(--texto-suave);
+  background: none;
+  border: 0;
+  border-radius: inherit;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+.envivo-tira[data-activa] .envivo-tira__boton {
+  color: var(--texto);
+  font-weight: 600;
+}
+.envivo-tira__icono {
+  display: grid;
+  flex: none;
+}
+.envivo-tira__icono svg,
+.envivo-tiras__nueva svg,
+.envivo-abrir__icono svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+}
+.envivo-tira__titulo {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.envivo-tira__gente {
+  display: flex;
+  flex: none;
+  gap: 2px;
+}
+.envivo-tira__cerrar {
+  position: absolute;
+  right: 0.25rem;
+  display: grid;
+  place-items: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  padding: 0;
+  color: var(--texto-suave);
+  background: none;
+  border: 0;
+  border-radius: 6px;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.envivo-tira__cerrar svg {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+}
+.envivo-tiras__nueva {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  margin-bottom: 0.0625rem;
+  padding: 0;
+  color: var(--texto);
+  background: none;
+  border: 0;
+  border-radius: 10px;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.envivo-tiras__nueva[aria-expanded='true'],
+.envivo-tira__cerrar:active,
+.envivo-tiras__nueva:active {
+  background: var(--superficie-2);
+}
+.envivo-tira__boton:focus-visible,
+.envivo-tiras__nueva:focus-visible,
+.envivo-abrir__herramienta:focus-visible {
+  outline: 2px solid var(--foco);
+  outline-offset: -2px;
+}
+@media (hover: hover) and (pointer: fine) {
+  .envivo-tira:not([data-activa]):hover {
+    background: var(--superficie-2);
+  }
+  .envivo-tira:not([data-activa]):not(:hover) .envivo-tira__cerrar {
+    opacity: 0;
+  }
+  .envivo-tira__cerrar:hover,
+  .envivo-tiras__nueva:hover {
+    background: var(--superficie-2);
+    color: var(--texto);
+  }
+}
+
+/* «Abrir»: the tools as a grid, each with its drawing. */
+.envivo-abrir {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.375rem;
+}
+.envivo-abrir__herramienta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.4rem;
+  width: 100%;
+  height: 100%;
+  min-height: 5rem;
+  padding: 0.75rem 0.375rem 0.625rem;
+  font: inherit;
+  font-size: var(--t-chica);
+  font-weight: 600;
+  line-height: 1.2;
+  text-align: center;
+  text-wrap: balance;
+  color: var(--texto);
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: 12px;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  transition: transform 120ms ease-out;
+}
+.envivo-abrir__icono {
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  color: var(--accion);
+  background: var(--fondo);
+  border-radius: 50%;
+}
+.envivo-abrir__icono svg {
+  width: 20px;
+  height: 20px;
+}
+.envivo-abrir__herramienta:active {
+  transform: scale(0.97);
+  background: var(--superficie-2);
+}
+@media (hover: hover) and (pointer: fine) {
+  .envivo-abrir__herramienta:hover {
+    background: var(--superficie-2);
+    border-color: var(--accion);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .envivo-abrir__herramienta {
+    transition: none;
+  }
+}
+
+/* Opened from the «+» of the tabs, it hangs from there. */
+.envivo-panel--arriba {
+  top: 3.25rem;
+  bottom: auto;
+  max-height: calc(100% - 3.25rem - var(--barra) - 2rem);
+  transform-origin: top center;
+}
+.envivo-mesa[data-tactil] .envivo-panel--arriba {
+  bottom: auto;
+  max-height: calc(100% - 4rem);
+}
+
+/* --- At the side: the chat or Consultron, one at a time, as the site's readers open Consultron. On a wide screen the
+   table makes room for it, and what floats over the table centers on what is left (--ancho-lado); on a narrow one it
+   comes up from the bottom, over the table. */
+.envivo-mesa {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+.envivo-tiras {
+  grid-row: 1;
+  grid-column: 1;
+}
+.envivo-mesa__herramienta {
+  grid-row: 2;
+  grid-column: 1;
+}
+.envivo-mesa[data-tactil] .envivo-barra {
+  grid-row: 3;
+  grid-column: 1 / -1;
+}
+.envivo-mesa[data-lado='chat'] {
+  --ancho-lado: 22rem;
+}
+.envivo-lado {
+  position: relative;
+  grid-row: 1 / span 2;
+  grid-column: 2;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  color: var(--texto);
+  background: var(--fondo);
+  border-left: 1px solid var(--borde);
+}
+.envivo-lado--chat {
+  width: 22rem;
+  padding: 0.75rem;
+}
+.envivo-lado svg {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+}
+.envivo-lado .flotante__accion svg,
+.envivo-lado .envivo-panel__cerrar svg {
+  width: 18px;
+  height: 18px;
+}
+.envivo-lado__guardar {
+  flex: none;
+  max-height: 55%;
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding: 0.75rem;
+  border-bottom: 1px solid var(--borde);
+}
+.envivo-barra,
+.envivo-chips,
+.envivo-panel {
+  left: calc((100% - var(--ancho-lado, 0px)) / 2);
+}
+.envivo-avisos {
+  right: calc(var(--ancho-lado, 0px) + 0.75rem);
+}
+@media (max-width: 47.99rem) {
+  .envivo-mesa .envivo-lado {
+    position: absolute;
+    /* Placed in no cell of the grid, it measures against the whole table. */
+    grid-row: auto;
+    grid-column: auto;
+    left: 0.5rem;
+    right: 0.5rem;
+    bottom: 0.5rem;
+    z-index: 36;
+    width: auto;
+    height: min(75%, 34rem);
+    overflow: hidden;
+    border: 1px solid var(--borde);
+    border-radius: 16px;
+    box-shadow: 0 18px 48px rgb(0 0 0 / 0.25);
+    animation: envivo-sube 240ms cubic-bezier(0.32, 0.72, 0, 1);
+  }
+}
+@keyframes envivo-sube {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .envivo-mesa .envivo-lado {
+    animation-name: envivo-funde;
+  }
+}
+
+/* --- The second step of «Abrir»: something of the student's courses or of El Santo Resumen. */
+.envivo-paso {
+  display: grid;
+  gap: 0.5rem;
+}
+.envivo-paso__cabeza {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+.envivo-paso__volver {
+  flex: none;
+  min-height: 2.25rem;
+  padding: 0 0.875rem;
+  font: inherit;
+  font-size: var(--t-chica);
+  font-weight: 600;
+  color: var(--texto);
+  background: var(--superficie-2);
+  border: 0;
+  border-radius: 999px;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: transform 120ms ease-out;
+}
+.envivo-paso__volver:active {
+  transform: scale(0.97);
+}
+.envivo-paso__titulo {
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  font-size: var(--t-ui);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.envivo-paso__filtros {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+@media (max-width: 30rem) {
+  .envivo-paso__filtros {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.envivo-paso__lista {
+  min-height: 6rem;
+}
+.envivo-paso__lista .envivo-panel__sub {
+  margin-top: 0.5rem;
+}
+.envivo-paso__opciones {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.envivo-paso__archivo {
+  display: grid;
+  gap: 1px;
+}
+.envivo-paso__archivo[aria-disabled='true'] {
+  cursor: progress;
+}
+.envivo-paso__nombre {
+  overflow-wrap: anywhere;
+}
+.envivo-paso__entera {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  background: var(--superficie-2);
+}
+.envivo-paso__entera svg {
+  flex: none;
+  width: 20px;
+  height: 20px;
+}
+
+/* Following someone, their change of tab fades in instead of jumping. */
+@keyframes envivo-aparece {
+  from {
+    opacity: 0;
+  }
+}
+.envivo-mesa[data-guiado] .envivo-mesa__una:not([hidden]) {
+  animation: envivo-aparece 180ms ease-out;
+}
+
+/* The Laboratorio: the whole tab down to the bottom, as an editor on a computer. The bar floats over its panel: only
+   inside what scrolls there is room at the end, so the last line (Medir, the console's input) can go above the bar.
+   Never padding on a box that doesn't scroll: that leaves a dead band. */
+.envivo-mesa__una > .ev-lab {
+  height: 100%;
+}
+.envivo-mesa:not([data-tactil]) .ev-lab .lab .consola,
+.envivo-mesa:not([data-tactil]) .ev-lab .lab-panel__hoja:not(.lab-panel__hoja--consola) {
+  padding-bottom: calc(var(--barra) + 12px);
+}
+
+/* Settings, at the far end of the tabs' row. */
+.envivo-tiras__ajustes {
+  margin-left: auto;
+}
+
+/* A long name without spaces breaks inside its chip, notice or message instead of pushing out. */
+.envivo-chip,
+.envivo-aviso__quien,
+.envivo-chat__quien {
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+/* The kept sessions, to come back to. */
+.envivo-guardadas {
+  margin-block: 0 1.5rem;
+}
+.envivo-guardadas h2 {
+  font-size: var(--t-h3);
+}
+.envivo-guardadas__lista {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.envivo-guardadas__sesion {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1rem;
+  padding: 0.75rem 1rem;
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-control);
+}
+.envivo-guardadas__texto {
+  display: grid;
+  gap: 0.125rem;
+  min-width: 0;
+}
+.envivo-guardadas__nombre {
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+.envivo-guardadas__cuando {
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+}
+.envivo-guardadas__acciones {
+  display: flex;
+  gap: 0.5rem;
+}

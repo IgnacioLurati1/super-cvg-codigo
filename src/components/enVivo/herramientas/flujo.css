@@ -1,0 +1,262 @@
+/* Diagrama de flujo: the shapes of a flowchart drawn in ink on the squared paper of the Diagrama de bloques (whose
+   React Flow colors it takes, diagrama.css), the text written right inside each one. Sizes match MEDIDA in
+   flujoDibujo.js, which draws the image that is kept. Its style comes in variables (Flujo.jsx): --vflu-c the color,
+   --vflu-l the kind of line, --vflu-g its width and --vflu-guion its dashes for the SVG. */
+.vflu-forma {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-inline-size: 140px;
+  max-inline-size: 240px;
+  min-block-size: 52px;
+  padding: 8px 12px;
+  border: var(--vflu-g, 1.6px) var(--vflu-l, solid) var(--vflu-c, var(--texto));
+  background: var(--superficie);
+  color: var(--texto);
+  font-size: 0.95rem;
+  font-weight: 500;
+  line-height: 1.3;
+  text-align: center;
+  font-variant-numeric: lining-nums;
+}
+
+.vflu-forma--terminal {
+  min-inline-size: 120px;
+  min-block-size: 44px;
+  padding-inline: 18px;
+  border-radius: 999px;
+}
+
+.vflu-forma--subproceso {
+  min-inline-size: 150px;
+  padding-inline: 22px;
+}
+
+.vflu-forma--subproceso::before,
+.vflu-forma--subproceso::after {
+  content: '';
+  position: absolute;
+  inset-block: 0;
+  inline-size: 0;
+  border-inline-start: var(--vflu-g, 1.6px) var(--vflu-l, solid) var(--vflu-c, var(--texto));
+}
+
+.vflu-forma--subproceso::before {
+  inset-inline-start: 8.4px;
+}
+
+.vflu-forma--subproceso::after {
+  inset-inline-end: 8.4px;
+}
+
+/* Input or output: the box leans, the text does not. Leaning around its middle, the points of its sides stay on them. */
+.vflu-forma--datos {
+  min-inline-size: 150px;
+  padding-inline: 20px;
+  border: 0;
+  background: none;
+}
+
+.vflu-forma--datos::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border: var(--vflu-g, 1.6px) var(--vflu-l, solid) var(--vflu-c, var(--texto));
+  background: var(--superficie);
+  transform: skewX(-16deg);
+}
+
+/* A decision: a diamond, its text in the middle half. */
+.vflu-forma--decision {
+  min-inline-size: 150px;
+  max-inline-size: 280px;
+  min-block-size: 92px;
+  padding: 18px 25%;
+  border: 0;
+  background: none;
+}
+
+.vflu-rombo {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  inline-size: 100%;
+  block-size: 100%;
+  max-width: none;
+  fill: var(--superficie);
+  stroke: var(--vflu-c, var(--texto));
+  stroke-width: var(--vflu-g, 1.6px);
+  stroke-dasharray: var(--vflu-guion, none);
+}
+
+.vflu-forma[data-linea='2'] .vflu-rombo {
+  stroke-linecap: round;
+}
+
+.vflu-forma--conector {
+  min-inline-size: 40px;
+  inline-size: 40px;
+  min-block-size: 40px;
+  block-size: 40px;
+  padding: 2px;
+  border-radius: 50%;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.vflu-texto {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.vflu-vacio {
+  color: var(--texto-suave);
+  font-weight: 400;
+}
+
+/* Written right inside the shape: the field takes the text's place and size. */
+.vflu-escribir {
+  inline-size: 100%;
+  min-inline-size: 6ch;
+  field-sizing: content;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  line-height: inherit;
+  text-align: center;
+  resize: none;
+  outline: none;
+  overflow: hidden;
+}
+
+.vflu-forma:has(.vflu-escribir) {
+  outline: 2px solid var(--foco);
+  outline-offset: 3px;
+}
+
+.vflu-forma--decision:has(.vflu-escribir),
+.vflu-forma--datos:has(.vflu-escribir) {
+  outline-offset: 6px;
+}
+
+/* Filled: a tint of its color over the paper (TINTE in flujoDibujo.js). */
+.vflu-forma[data-relleno] {
+  background: color-mix(in srgb, var(--vflu-c, var(--texto)) 14%, var(--superficie));
+}
+
+.vflu-forma--datos[data-relleno],
+.vflu-forma--decision[data-relleno] {
+  background: none;
+}
+
+.vflu-forma--datos[data-relleno]::before {
+  background: color-mix(in srgb, var(--vflu-c, var(--texto)) 14%, var(--superficie));
+}
+
+.vflu-forma--decision[data-relleno] .vflu-rombo {
+  fill: color-mix(in srgb, var(--vflu-c, var(--texto)) 14%, var(--superficie));
+}
+
+/* Chosen here: the highlighter behind it. Chosen by someone else: a ring of their color. */
+.vflu-forma.es-elegido {
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--resaltador) 75%, transparent);
+}
+
+/* A diamond or a parallelogram is highlighted inside its own shape, not in the box around it. */
+.vflu-forma--decision.es-elegido,
+.vflu-forma--datos.es-elegido {
+  box-shadow: none;
+}
+.vflu-forma--decision.es-elegido .vflu-rombo {
+  fill: color-mix(in srgb, var(--resaltador) 45%, var(--superficie));
+}
+.vflu-forma--datos.es-elegido::before {
+  background: color-mix(in srgb, var(--resaltador) 45%, var(--superficie));
+}
+
+[data-marcado].vflu-forma {
+  outline: 2px dashed var(--color-otro);
+  outline-offset: 5px;
+}
+
+/* An arrow: its style, and its head (drawn by Flujo.jsx, as in the image) whole and of its color. */
+.vflu .react-flow__edge-path {
+  stroke: var(--vflu-c, var(--texto));
+  stroke-width: var(--vflu-g, 1.6px);
+  stroke-dasharray: var(--vflu-guion, none);
+}
+
+.vflu .react-flow__edge-path.vflu-puntos {
+  stroke-linecap: round;
+}
+
+.vflu-punta {
+  fill: var(--vflu-c, var(--texto));
+  stroke: var(--vflu-c, var(--texto));
+  stroke-width: 1.44;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+
+.vflu .react-flow__edge.selected .vflu-punta,
+.vflu .react-flow__edge:focus-visible .vflu-punta {
+  fill: var(--accion-hover);
+  stroke: var(--accion-hover);
+}
+
+/* The style of what is chosen, in its box. */
+.vflu-colores {
+  display: flex;
+  flex-wrap: wrap;
+  align-self: center;
+  gap: 2px;
+}
+
+.vflu-relleno.vdia-signo-campo {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-block-size: 44px;
+}
+
+.vh-globo .vflu-relleno input {
+  inline-size: 18px;
+  block-size: 18px;
+  margin: 0;
+}
+
+/* A shape of the bar is dragged by the finger too: the bar is not scrolled from it. */
+.vflu-pieza {
+  touch-action: none;
+}
+
+/* Its ghost, under the pointer while it is dragged; fainter out of the sheet, where it does not land. */
+.vflu-fantasma {
+  position: fixed;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  z-index: 1000;
+  pointer-events: none;
+  opacity: 0.85;
+  filter: drop-shadow(0 6px 14px color-mix(in srgb, var(--texto) 22%, transparent));
+}
+
+.vflu-fantasma[data-fuera] {
+  opacity: 0.4;
+}
+
+/* An arrow's label, next to where it leaves. */
+.vflu-etiqueta {
+  position: absolute;
+  padding: 0 3px;
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--superficie) 85%, transparent);
+  color: var(--texto);
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: pre;
+  pointer-events: none;
+}

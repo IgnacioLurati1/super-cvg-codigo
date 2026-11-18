@@ -1,0 +1,367 @@
+/* A PDF opens in the reader, and the reader takes the sheet: wider, the whole height, the file's details in a short
+   header and its buttons in one row under the pages. */
+
+.previa.previa--pdf {
+  width: min(76rem, 100vw);
+}
+
+.previa--pdf .previa__caja {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  height: 100%;
+  min-height: 0;
+  padding: 12px var(--margen) 12px;
+}
+
+.previa--pdf .previa__caja > * {
+  flex: none;
+}
+
+.previa--pdf .previa__cabeza {
+  align-items: center;
+}
+
+.previa--pdf .previa__cabeza h2 {
+  font-size: var(--t-h3);
+  line-height: 1.2;
+}
+
+.previa--pdf .previa__dato {
+  overflow: hidden;
+  font-size: var(--t-chica);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.previa--pdf .previa__descripcion {
+  display: -webkit-box;
+  overflow: hidden;
+  margin: 0;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.previa--pdf .previa__caja > .previa__vista {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+  margin-top: 4px;
+  overflow: hidden;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-bloque);
+}
+
+.previa--pdf .previa__acciones {
+  flex: none;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  margin-top: 2px;
+  padding-bottom: env(safe-area-inset-bottom);
+  scrollbar-width: none;
+}
+
+.previa--pdf .previa__acciones .boton {
+  flex: none;
+  min-height: 36px;
+  padding: 6px 14px;
+  font-size: var(--t-chica);
+}
+
+@media (pointer: coarse) {
+  .previa--pdf .previa__acciones .boton {
+    min-height: 44px;
+  }
+}
+
+@media (max-width: 40rem) {
+  .previa--pdf .previa__caja {
+    padding-inline: 8px;
+  }
+  .previa--pdf .previa__cabeza,
+  .previa--pdf .previa__dato,
+  .previa--pdf .previa__descripcion,
+  .previa--pdf .previa__acciones {
+    padding-inline: 8px;
+  }
+  /* On a phone the buttons don't fit in one row: a second row, never a hidden one off the edge. */
+  .previa--pdf .previa__acciones {
+    flex-wrap: wrap;
+    overflow-x: visible;
+  }
+  .previa--pdf .previa__caja > .previa__vista {
+    border-inline: 0;
+    border-radius: 0;
+    margin-inline: -8px;
+  }
+  /* The pages take the screen: the name and «Cerrar» in a short row above, the file's details and its buttons under
+     the pages. */
+  .previa--pdf .previa__caja {
+    gap: 4px;
+    padding-block: 6px 8px;
+  }
+  .previa--pdf .previa__cabeza h2 {
+    display: -webkit-box;
+    overflow: hidden;
+    font-size: 1.0625rem;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+  }
+  .previa--pdf .previa__caja > .previa__vista {
+    order: 1;
+    margin-top: 2px;
+  }
+  .previa--pdf .previa__caja > :is(.previa__dato, .previa__descripcion) {
+    order: 2;
+    line-height: 1.3;
+  }
+  .previa--pdf .previa__acciones .boton {
+    padding-inline: 10px;
+  }
+  .previa--pdf .previa__caja > .previa__vista ~ * {
+    order: 3;
+  }
+  /* Reading (Previa.jsx, data-leyendo) they go away; a button reached with the keyboard brings its row back. */
+  .previa--pdf .previa__caja > :is(.previa__dato, .previa__descripcion)[data-leyendo] {
+    display: none;
+  }
+  .previa--pdf .previa__caja > .previa__vista ~ [data-leyendo]:not(:focus-within) {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+
+/* A narrow phone: the buttons share each row in equal parts, two per row, and an odd last one takes the whole row, as
+   every row of buttons on a phone does. */
+@media (max-width: 30rem) {
+  .previa--pdf .previa__acciones .boton {
+    flex: 1 1 40%;
+    min-width: 0;
+    padding-inline: 12px;
+    line-height: 1.2;
+    text-align: center;
+  }
+}
+
+/* ---------- An image, and the whole screen (PantallaCompleta.jsx) ---------- */
+.previa__imagen-caja {
+  position: relative;
+}
+
+.previa__pantalla {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-control);
+  background: var(--superficie);
+  color: var(--texto);
+  cursor: pointer;
+  transition: background-color 120ms ease;
+}
+
+.previa__pantalla svg {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.previa__pantalla:active {
+  transform: scale(0.97);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .previa__pantalla:hover {
+    background: var(--superficie-2);
+  }
+}
+
+@media (pointer: coarse) {
+  .previa__pantalla {
+    width: 44px;
+    height: 44px;
+  }
+}
+
+/* With «Sensible a la luz», an animated image shows still: this lets it move, beside full screen. */
+.previa__mover {
+  position: absolute;
+  top: 8px;
+  right: 56px;
+  min-height: 40px;
+  padding: 0 14px;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-control);
+  background: var(--superficie);
+  color: var(--texto);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.previa__mover:active {
+  transform: scale(0.97);
+}
+
+.previa__mover:focus-visible {
+  outline: 2px solid var(--foco);
+  outline-offset: 2px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .previa__mover:hover {
+    background: var(--superficie-2);
+  }
+}
+
+@media (pointer: coarse) {
+  .previa__mover {
+    right: 60px;
+    min-height: 44px;
+  }
+}
+
+.previa__imagen-caja:fullscreen .previa__mover,
+.previa__imagen-caja[data-pantalla='css'] .previa__mover {
+  top: max(12px, env(safe-area-inset-top));
+  right: calc(max(12px, env(safe-area-inset-right)) + 48px);
+}
+
+/* The browser's full screen, or where there is none (an iPhone) the image covers the screen with CSS: the sheet drops
+   its slide so the image is fixed to the screen and not to the sheet. */
+.previa__imagen-caja:fullscreen,
+.previa__imagen-caja[data-pantalla='css'] {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  background: #0b0f14;
+}
+
+.previa__imagen-caja[data-pantalla='css'] {
+  position: fixed;
+  z-index: 20;
+  inset: 0;
+  height: 100dvh;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
+dialog:has(.previa__imagen-caja[data-pantalla='css']) {
+  transform: none;
+}
+
+.previa__imagen-caja:fullscreen .previa__imagen,
+.previa__imagen-caja[data-pantalla='css'] .previa__imagen {
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  object-fit: contain;
+}
+
+.previa__imagen-caja:fullscreen .previa__pantalla,
+.previa__imagen-caja[data-pantalla='css'] .previa__pantalla {
+  top: max(12px, env(safe-area-inset-top));
+  right: max(12px, env(safe-area-inset-right));
+}
+
+/* A file of a Drive folder (VistaDeDrive.jsx): an HTML in a frame that runs nothing, or a PowerPoint's text. */
+.previa__marco {
+  flex: 1 1 auto;
+  width: 100%;
+  min-height: 60vh;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-control);
+  background: #ffffff;
+}
+
+.previa__diapositivas {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.previa__diapositiva {
+  margin: 0 0 12px;
+  padding: 16px clamp(14px, 3vw, 28px);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-control);
+  background: var(--superficie);
+  line-height: 1.6;
+}
+
+.previa__diapositiva h3 {
+  margin: 0 0 8px;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+  font-variant-numeric: lining-nums;
+}
+
+.previa__diapositiva p {
+  max-width: 44em;
+  margin: 0 0 0.5em;
+  overflow-wrap: anywhere;
+}
+
+.previa__nota {
+  margin: 8px 0 0;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+}
+
+/* Over Google's own view, when Google stops the downloads: inside the frame of the sheet. */
+.previa__vista > .previa__nota {
+  margin: 0;
+  padding: 8px 12px;
+}
+
+/* «Mandar a una materia» (MandarAMateria.jsx), under the file. */
+.previa__mandar {
+  margin-top: 8px;
+}
+
+.mandar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 8px 12px;
+}
+
+.mandar .campo {
+  flex: 1 1 14rem;
+  margin: 0;
+}
+
+.mandar__botones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.mandar__error {
+  flex-basis: 100%;
+  margin: 0;
+  color: var(--error);
+  font-size: var(--t-chica);
+}
+
+.mandar__hecho {
+  margin: 8px 0 0;
+  font-size: var(--t-chica);
+}

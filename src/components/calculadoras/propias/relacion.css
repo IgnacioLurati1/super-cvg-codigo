@@ -1,0 +1,185 @@
+/* Relations (propias/relacion.jsx). The digraph is drawn with _log-trazos. */
+.rel-conjuntos {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+
+/* The matrix of 0 and 1, between brackets as in the notes, each element naming its row and column. */
+.rel-matriz {
+  position: relative;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin: 2px 0 6px;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+.rel-matriz__nombre {
+  caption-side: top;
+  padding-bottom: 2px;
+  font-weight: 700;
+  text-align: left;
+}
+
+.rel-matriz th,
+.rel-matriz td {
+  min-width: 2rem;
+  height: calc(var(--lado-cuadro) * 1.25);
+  padding: 0 6px;
+  text-align: center;
+}
+
+.rel-matriz th {
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+  font-weight: 700;
+}
+
+.rel-matriz tbody td {
+  color: var(--texto-suave);
+}
+
+/* The bracket of the matrix: the first and last column of numbers carry it. */
+.rel-matriz tbody td:nth-child(2) {
+  border-left: 2px solid var(--texto);
+}
+
+.rel-matriz tbody td:last-child {
+  border-right: 2px solid var(--texto);
+}
+
+.rel-matriz tbody tr:first-child td:nth-child(2),
+.rel-matriz tbody tr:first-child td:last-child {
+  border-top: 2px solid var(--texto);
+}
+
+.rel-matriz tbody tr:last-child td:nth-child(2),
+.rel-matriz tbody tr:last-child td:last-child {
+  border-bottom: 2px solid var(--texto);
+}
+
+.rel-matriz tbody tr:first-child td:nth-child(2) {
+  border-top-left-radius: 6px;
+}
+
+.rel-matriz tbody tr:last-child td:nth-child(2) {
+  border-bottom-left-radius: 6px;
+}
+
+.rel-matriz tbody tr:first-child td:last-child {
+  border-top-right-radius: 6px;
+}
+
+.rel-matriz tbody tr:last-child td:last-child {
+  border-bottom-right-radius: 6px;
+}
+
+.rel-matriz td[data-uno] {
+  color: var(--texto);
+  font-weight: 800;
+}
+
+/* A pair of R² that is not in R: with the highlighter. */
+.rel-matriz td[data-marca] {
+  background: var(--resaltador);
+  color: var(--resaltador-texto);
+}
+
+/* The pairs of R², one touch each to see its path. */
+.rel-pares {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 4px 0 8px;
+}
+
+.rel-par {
+  min-width: 44px;
+  min-height: 40px;
+  padding: 0 10px;
+  border: 1px solid var(--borde-control);
+  border-radius: var(--radio-control);
+  background: var(--superficie);
+  color: var(--texto);
+  font: inherit;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums lining-nums;
+  cursor: pointer;
+  transition: background-color 120ms ease, border-color 120ms ease;
+}
+
+.rel-par:active {
+  transform: scale(0.97);
+}
+
+.rel-par[aria-pressed='true'] {
+  border-color: var(--foco);
+  background: var(--foco);
+  color: var(--superficie);
+}
+
+.rel-par[data-fuera] {
+  border-style: dashed;
+  border-width: 2px;
+}
+
+.rel-par:focus-visible {
+  outline: 3px solid var(--foco);
+  outline-offset: 2px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .rel-par:not([aria-pressed='true']):hover {
+    background: var(--superficie-2);
+  }
+}
+
+.rel-camino {
+  margin: 0 0 10px;
+}
+
+/* Each property on its line: the name, sí or no, and the pairs that prove it. */
+.rel-propiedades {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rel-propiedad {
+  display: grid;
+  grid-template-columns: 7.5rem auto;
+  gap: 2px 10px;
+  align-items: baseline;
+}
+
+.rel-propiedad__nombre {
+  font-weight: 700;
+}
+
+.rel-propiedad .trz-sino {
+  justify-self: start;
+}
+
+.rel-propiedad__por {
+  grid-column: 1 / -1;
+  color: var(--texto-suave);
+  overflow-wrap: anywhere;
+}
+
+@container pagina (min-width: 40rem) {
+  .rel-propiedad {
+    grid-template-columns: 7.5rem 3rem minmax(0, 1fr);
+  }
+
+  .rel-propiedad__por {
+    grid-column: auto;
+  }
+}
+
+.rel-clases {
+  margin: 0 0 6px;
+  padding: 0;
+  list-style: none;
+}

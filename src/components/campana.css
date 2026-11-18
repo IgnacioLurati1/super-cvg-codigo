@@ -1,0 +1,363 @@
+/* The bell of the header (Campana.jsx). Not positioned: its panel hangs from the header row, which is. */
+.campana {
+  display: flex;
+  align-self: stretch;
+  align-items: center;
+}
+
+.campana__boton {
+  display: inline-grid;
+  place-items: center;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radio-control);
+  background: none;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  transition: transform 120ms ease-out, background-color 150ms ease;
+}
+
+.campana__boton:active {
+  transform: scale(0.97);
+}
+
+/* Folded, a button like the magnifier and «Menú» next to it. */
+.cabecera[data-compacta] .campana__boton {
+  border: 1px solid currentColor;
+}
+
+.campana__boton[aria-expanded='true'] {
+  background: rgb(255 255 255 / 0.16);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .campana__boton:hover {
+    background: rgb(255 255 255 / 0.12);
+  }
+}
+
+.campana__dibujo {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+}
+
+.campana__boton svg {
+  width: 24px;
+  height: 24px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.6;
+  /* It rings from its top (Campana.jsx), when something new comes in. */
+  transform-origin: 50% 3px;
+}
+
+/* The new ones, in the highlighter's yellow with a ring of the header, like the envelope. */
+.campana__numero {
+  position: absolute;
+  top: -7px;
+  left: 13px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: var(--resaltador);
+  box-shadow: 0 0 0 2px var(--accion);
+  color: var(--resaltador-texto);
+  font-size: 0.75rem;
+  font-variant-numeric: lining-nums tabular-nums;
+  font-weight: 700;
+  line-height: 18px;
+  text-align: center;
+}
+
+/* Under the bell, from its right edge (Campana.jsx sets `left`), or as wide as the header where it doesn't fit. */
+.campana__panel {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  width: 25rem;
+  max-height: min(34rem, calc(100vh - var(--alto-cabecera) - 24px));
+  max-height: min(34rem, calc(100dvh - var(--alto-cabecera) - 24px));
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-bloque);
+  background: var(--superficie);
+  box-shadow: 0 12px 32px rgb(0 0 0 / 0.18);
+  color: var(--texto);
+  font-size: var(--t-ui);
+  font-weight: 400;
+  text-align: left;
+  white-space: normal;
+  transform-origin: var(--desde-x, 100%) 0;
+}
+
+.campana__panel[data-hoja] {
+  top: 100%;
+  right: 0;
+  width: auto;
+  max-height: calc(100vh - var(--alto-cabecera));
+  max-height: calc(100dvh - var(--alto-cabecera));
+  padding-inline: calc(var(--margen) - 16px);
+  border-width: 0 0 1px;
+  border-radius: 0;
+  transform-origin: 50% 0;
+}
+
+.campana__panel[data-saliendo] {
+  pointer-events: none;
+}
+
+.campana__panel:focus {
+  outline: none;
+}
+
+.cabecera .campana__panel :focus-visible {
+  outline-color: var(--foco);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .campana__numero {
+    transition: transform 200ms cubic-bezier(0.23, 1, 0.32, 1), opacity 200ms ease-out;
+  }
+
+  @starting-style {
+    .campana__numero {
+      opacity: 0;
+      transform: scale(0.6);
+    }
+  }
+
+  /* It grows from the bell, and leaves faster than it came. */
+  .campana__panel {
+    transition: opacity 200ms cubic-bezier(0.23, 1, 0.32, 1), transform 200ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  @starting-style {
+    .campana__panel {
+      opacity: 0;
+      transform: translateY(-4px) scale(0.96);
+    }
+
+    .campana__panel[data-hoja] {
+      transform: translateY(-8px);
+    }
+  }
+
+  .campana__panel[data-saliendo] {
+    opacity: 0;
+    transform: translateY(-2px) scale(0.98);
+    transition-duration: 120ms;
+    transition-timing-function: ease-out;
+  }
+
+  .campana__panel[data-hoja][data-saliendo] {
+    transform: translateY(-4px);
+  }
+}
+
+/* With less motion, only the fade. */
+@media (prefers-reduced-motion: reduce) {
+  .campana__panel {
+    transition: opacity 150ms ease-out;
+  }
+
+  @starting-style {
+    .campana__panel {
+      opacity: 0;
+    }
+  }
+
+  .campana__panel[data-saliendo] {
+    opacity: 0;
+    transition-duration: 100ms;
+  }
+}
+
+/* The title, and «Sacar todas» at its right. */
+.campana__cabeza {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 14px 16px 4px;
+}
+
+.campana__encabezado {
+  margin: 0;
+  font-size: var(--t-h3);
+  line-height: 1.2;
+}
+
+.campana__sacar-todas {
+  min-height: 44px;
+  margin: -12px -8px -12px 0;
+  padding: 0 8px;
+  border: 0;
+  background: none;
+  color: var(--foco);
+  font: inherit;
+  font-size: var(--t-chica);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.campana__sacar-todas:active {
+  transform: scale(0.97);
+}
+
+.campana__cuerpo {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 0 16px 8px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.campana__cuerpo .cargando {
+  margin: 8px 0 0;
+}
+
+.campana__fecha {
+  margin: 14px 0 0;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--borde);
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.campana__dia:first-child .campana__fecha {
+  margin-top: 8px;
+}
+
+.campana__lista {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.campana__fila {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--borde);
+  text-decoration: none;
+  transition: transform 120ms ease;
+}
+
+.campana__lista li:last-child .campana__fila,
+.campana__lista > li:last-child {
+  border-bottom: 0;
+}
+
+a.campana__fila:active {
+  transform: scale(0.99);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  a.campana__fila:hover .campana__titulo {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+}
+
+.campana__texto {
+  display: grid;
+  flex: 1;
+  gap: 2px;
+  min-width: 0;
+}
+
+.campana__titulo {
+  font-weight: 600;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.campana__fila[data-nueva] .campana__titulo {
+  font-weight: 700;
+}
+
+/* Two lines at most: the rest is in the campus. */
+.campana__resumen {
+  display: -webkit-box;
+  overflow: hidden;
+  font-size: var(--t-chica);
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.campana__dato {
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+  overflow-wrap: anywhere;
+}
+
+/* «hace 25 min» in one piece. */
+.campana__dato time {
+  white-space: nowrap;
+}
+
+.campana__campus {
+  color: var(--foco);
+  font-size: var(--t-chica);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.campana__vacia {
+  margin: 12px 0 8px;
+  color: var(--texto-suave);
+}
+
+.campana__todas {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0 16px;
+  border-top: 1px solid var(--borde);
+  font-size: var(--t-chica);
+  font-weight: 600;
+  text-underline-offset: 3px;
+}
+
+/* «Sacaste todas»: alone in the list, without a line under it. */
+.campana__cuerpo > .sacada:only-child {
+  border-bottom: 0;
+}
+
+/* Choosing which kinds show, and all of them in the campus: side by side under the list. */
+.campana__pie {
+  display: flex;
+  flex: none;
+  border-top: 1px solid var(--borde);
+}
+
+.campana__pie .campana__todas {
+  flex: 1 1 0;
+  border-top: 0;
+  text-align: center;
+}
+
+.campana__pie .campana__todas + .campana__todas {
+  border-left: 1px solid var(--borde);
+}

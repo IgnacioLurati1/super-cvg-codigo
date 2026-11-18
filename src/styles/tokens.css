@@ -1,0 +1,442 @@
+/* Identidad: la agenda de un alumno, tinta azul sobre papel y resaltador amarillo. Los componentes usan solo estos nombres.
+   Los atributos de <html> y los colores propios los escribe solo public/ajustes.js. */
+:root {
+  color-scheme: light;
+  --fondo: #eef2f6;
+  --superficie: #ffffff;
+  --superficie-2: #e2e9ef;
+  /* The paper of what is read as it came: a PDF's page, a summary, the live Documento. White, in any theme. */
+  --papel: #ffffff;
+  --texto: #17324d;
+  --texto-suave: #48596a;
+  --borde: #c3cfd9;
+  --accion: #17324d;
+  --accion-hover: #0b5a9e;
+  --accion-texto: #ffffff;
+  --foco: #0b5a9e;
+  --error: #a3271c;
+  --error-texto: #ffffff;
+  --ok: #1f6b3a;
+  --aviso: #7a5600;
+  --fondo-aviso: #f5efdc;
+
+  --fuente-titulos: Barlow, system-ui, sans-serif;
+  --fuente-ui: Barlow, system-ui, sans-serif;
+
+  --t-chica: 0.875rem;
+  --t-ui: 1rem;
+  --t-h3: 1.25rem;
+  --t-h2: 1.75rem;
+  --t-h1: clamp(2.25rem, 6vw, 4rem);
+
+  --radio-control: 6px;
+  --radio-bloque: 10px;
+  --resaltador: #ffe14d;
+  --resaltador-texto: #17324d;
+  --borde-control: #7d8d9a;
+  --materia-0: #0b5a9e;
+  --materia-1: #b3401f;
+  --materia-2: #1f7a4d;
+  --materia-3: #7a3e9d;
+  --materia-4: #a86b00;
+  --materia-5: #0f7f8a;
+  /* More subjects than six: each one of the student's gets its own (colores.js). */
+  --materia-6: #d63b99;
+  --materia-7: #574e0e;
+  --materia-8: #5e70fe;
+  --materia-9: #833404;
+  /* Kinds of date in the calendar. They lean on colors each theme and palette already adjusts. */
+  --tipo-parcial: var(--error);
+  --tipo-final: var(--foco);
+  --tipo-entrega: var(--aviso);
+  /* El pizarrón del ejercicio en las calculadoras: verde de aula, tiza y marco de madera con su bandeja. Es el mismo en
+     los dos temas, apenas más apagado en el oscuro. --pizarron-polvo es el polvo de tiza, blanco sobre transparente. */
+  --pizarron: #23382f;
+  --pizarron-tiza: #f2f0e8;
+  --pizarron-tiza-suave: #bccabf;
+  --pizarron-amarillo: #f2d873;
+  --pizarron-rojo: #f6a59c;
+  --pizarron-marco: #8f6c47;
+  --pizarron-bandeja: #6f5236;
+  --pizarron-polvo: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='p'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .5 -.24'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23p)'/%3E%3C/svg%3E");
+  /* In rem, so the page widens with the letter size (html[data-letra]): the same words per line, as far as the screen
+     allows. 67.5rem is 1080px with the normal letter. */
+  --ancho: 67.5rem;
+  --margen: clamp(16px, 4vw, 32px);
+  --alto-cabecera: 64px;
+}
+
+:root[data-tema='oscuro'] {
+  color-scheme: dark;
+  --fondo: #0f1923;
+  --superficie: #18242f;
+  --superficie-2: #233240;
+  --texto: #e6edf3;
+  --texto-suave: #a9b8c5;
+  --borde: #344656;
+  --borde-control: #7f93a5;
+  --accion: #3578bd;
+  --accion-hover: #2b659f;
+  --accion-texto: #ffffff;
+  --foco: #8ec5f7;
+  --error: #ff9d8f;
+  --error-texto: #2a0a06;
+  --ok: #6fd39a;
+  --aviso: #e3bb55;
+  --fondo-aviso: #2f2a17;
+  --materia-0: #6bb3f2;
+  --materia-1: #f2916f;
+  --materia-2: #5fcf96;
+  --materia-3: #c79bea;
+  --materia-4: #e0ac45;
+  --materia-5: #4dc9d4;
+  --materia-6: #eb4b9f;
+  --materia-7: #b5d23c;
+  --materia-8: #7369fb;
+  --materia-9: #9c7947;
+  --pizarron: #1f3128;
+  --pizarron-tiza: #e9e7df;
+  --pizarron-marco: #6b5238;
+  --pizarron-bandeja: #54402b;
+}
+
+/* Estilos (ajustes.estilo): cambian cómo se ve, nunca dónde está cada cosa. Van antes del contraste alto, que les gana.
+   Hoja: una hoja de carpeta rayada, tinta de birome azul, margen rojo y títulos a mano. Lo que no es color, en
+   estilos.css. */
+:root[data-estilo='hoja'] {
+  --fondo: #fcfdfe;
+  --superficie: #ffffff;
+  --superficie-2: #e9f0f7;
+  --texto: #1b2a5c;
+  --texto-suave: #4a5678;
+  --borde: #bfd0e2;
+  --borde-control: #7f8fa8;
+  --accion: #1f3b9b;
+  --accion-hover: #2b4fc4;
+  --foco: #1f5fd1;
+  --fuente-titulos: Kalam, 'Segoe Print', 'Comic Sans MS', cursive;
+  --radio-bloque: 4px;
+  --renglon: #d0e2f2;
+  --fondo-aviso: #fdf5c4;
+  --renglon-alto: 1.75rem;
+  --margen-rojo: #e2808a;
+}
+
+:root[data-estilo='hoja'][data-tema='oscuro'] {
+  --fondo: #171c27;
+  --superficie: #1d2331;
+  --superficie-2: #273042;
+  --texto: #e4e9f5;
+  --texto-suave: #a9b3c9;
+  --borde: #36405a;
+  --borde-control: #7d8aa6;
+  --accion: #3d5fc4;
+  --accion-hover: #3352ad;
+  --foco: #9db4ff;
+  --renglon: #243149;
+  --fondo-aviso: #2e2a16;
+  --margen-rojo: #8f4a56;
+}
+
+/* Profesional: degradados en lugar de colores planos. Claro, papel frío y tinta de noche; oscuro, azul de noche. Los
+   dos bloques ponen las mismas variables, así el claro no pisa nada del tema oscuro. */
+:root[data-estilo='profesional'] {
+  --fondo: #eef1f7;
+  --superficie: #ffffff;
+  --superficie-2: #e6ebf4;
+  --texto: #121a2e;
+  --texto-suave: #4a5570;
+  --borde: #d3dae7;
+  --borde-control: #7a869e;
+  --accion: #3a63d6;
+  --accion-hover: #2a4fb8;
+  --accion-fin: #17758a;
+  --foco: #2a4fb8;
+  --resaltador: #f2c94c;
+  --fondo-aviso: #f5efdc;
+  --luz-1: rgb(58 99 214 / 0.14);
+  --luz-1-donde: 10% -10%;
+  --luz-2: rgb(23 117 138 / 0.12);
+  --cielo: #e2e9f6;
+  --cabecera-1: #ffffff;
+  --cabecera-2: #f1f4fa;
+  --brillo: 58 99 214;
+  --titulo-fin: #2f5bd0;
+  --luz-tarjeta: rgb(58 99 214 / 0.05);
+  --sombra: rgb(18 26 46 / 0.3);
+}
+
+:root[data-estilo='profesional'][data-tema='oscuro'] {
+  --fondo: #0b1120;
+  --superficie: #131b2e;
+  --superficie-2: #1c2640;
+  --texto: #e9eef8;
+  --texto-suave: #a3b0c8;
+  --borde: #2a3654;
+  --borde-control: #7d8bab;
+  --accion: #3a63d6;
+  --accion-hover: #2a4fb8;
+  --accion-fin: #17758a;
+  --foco: #8fb1ff;
+  --resaltador: #f2c94c;
+  --fondo-aviso: #2c2614;
+  /* The lights of the background, the header and the end of the big title (estilos.css). --brillo is an rgb() triplet. */
+  --luz-1: rgb(58 99 214 / 0.22);
+  --luz-1-donde: 10% -10%;
+  --luz-2: rgb(23 117 138 / 0.18);
+  --cielo: #0e1529;
+  --cabecera-1: #16223f;
+  --cabecera-2: #101930;
+  --brillo: 143 177 255;
+  --titulo-fin: #9fbaff;
+  --luz-tarjeta: rgb(255 255 255 / 0.07);
+  --sombra: rgb(0 0 0 / 0.9);
+}
+
+/* Batman: the professional one in black and yellow, with the beam of a signal over the page. Always dark. */
+:root[data-estilo='batman'] {
+  --fondo: #0c0d10;
+  --superficie: #16181d;
+  --superficie-2: #21242b;
+  --texto: #eeeeee;
+  --texto-suave: #a9adb5;
+  --borde: #2d3139;
+  --borde-control: #80858f;
+  --accion: #f5c518;
+  --accion-hover: #ffd84a;
+  --accion-fin: #e09a00;
+  --accion-texto: #111317;
+  --foco: #f5c518;
+  --resaltador: #f5c518;
+  --resaltador-texto: #111317;
+  --fondo-aviso: #2b2410;
+  --luz-1: rgb(245 197 24 / 0.13);
+  --luz-1-donde: 50% -12%;
+  --luz-2: rgb(120 126 140 / 0.1);
+  --cielo: #121317;
+  --cabecera-1: #1b1d22;
+  --cabecera-2: #0f1013;
+  --brillo: 245 197 24;
+  --titulo-fin: #f5c518;
+  /* Its own cut: square corners and a yellow edge on top of each card. */
+  --radio-bloque: 3px;
+  --radio-control: 3px;
+  --filo: 245 197 24;
+  --filo-fuerza: 0.45;
+}
+
+/* Plano: un plano de ingeniería, azul con su cuadrícula y tinta blanca. Siempre oscuro, con las superficies más hondas
+   que la hoja por las paletas de daltonismo. */
+:root[data-estilo='plano'] {
+  --fondo: #0d3360;
+  --superficie: #07213e;
+  --superficie-2: #143c69;
+  --texto: #f2f7ff;
+  --texto-suave: #bfd3ea;
+  --borde: #3b6593;
+  --borde-control: #9fbde0;
+  --accion: #f2f7ff;
+  --accion-hover: #d3e3f6;
+  --accion-texto: #0b2d52;
+  --foco: #ffd166;
+  --error: #ffb4a8;
+  --error-texto: #2a0a06;
+  --ok: #9ff0c0;
+  --aviso: #ffe08a;
+  --fondo-aviso: #24426a;
+  --resaltador: #ffd166;
+  --resaltador-texto: #0b2d52;
+  --materia-6: #f592c4;
+  --materia-8: #aaa4ff;
+  --materia-9: #e0b27a;
+  --contorno: rgb(214 230 255 / 0.22);
+  --cuadricula: rgb(214 230 255 / 0.07);
+  --cuadricula-mayor: rgb(214 230 255 / 0.13);
+}
+
+/* Pizarrón: el del aula, el mismo verde, tiza y marco de madera que el de las calculadoras. Siempre oscuro. Las
+   superficies van más oscuras que el pizarrón, como lo recién borrado: así las paletas de daltonismo se siguen viendo. */
+:root[data-estilo='pizarron'] {
+  --fondo: #24392f;
+  --superficie: #172920;
+  --superficie-2: #2d4639;
+  --texto: #f2f0e8;
+  --texto-suave: #c4d1c6;
+  --borde: #4e6b5b;
+  --borde-control: #a9bcad;
+  --accion: #f2f0e8;
+  --accion-hover: #ffffff;
+  --accion-texto: #1d2f27;
+  --foco: #f2d873;
+  --error: #f6a59c;
+  --error-texto: #2a0a06;
+  --ok: #b6e3a4;
+  --aviso: #f2d873;
+  --fondo-aviso: #3a4a2c;
+  --resaltador: #f2d873;
+  --resaltador-texto: #1d2f27;
+  --materia-6: #f592c4;
+  --materia-8: #aaa4ff;
+  --materia-9: #e0b27a;
+  --fuente-titulos: Kalam, 'Segoe Print', 'Comic Sans MS', cursive;
+  --contorno: rgb(242 240 232 / 0.2);
+}
+
+/* Contraste alto: bordes más marcados y texto suave por encima de 7 a 1. */
+:root[data-contraste='alto'] {
+  --texto: #0b2038;
+  --texto-suave: #2e3c4a;
+  --borde: #5f6f7d;
+  --borde-control: #3c4b58;
+  --pizarron: #18291f;
+  --pizarron-tiza-suave: #dde6de;
+}
+
+:root[data-tema='oscuro'][data-contraste='alto'] {
+  --fondo: #0a1118;
+  --superficie: #101a23;
+  --superficie-2: #1b2833;
+  --texto: #ffffff;
+  --texto-suave: #cfdbe5;
+  --borde: #8da0b0;
+  --borde-control: #c0ced9;
+}
+
+/* Daltonismo: cada paleta separa las materias sobre el eje que esa visión sí distingue, azul y amarillo para
+   rojo-verde, rojo y verde para azul-amarillo, más la claridad. src/lib/ajustes.test.js simula cada caso. Esa visión
+   separa seis: de la séptima materia en adelante se repiten los colores, en el mismo orden. */
+:root[data-daltonismo='rojo-verde'] {
+  --materia-0: #003f88;
+  --materia-1: #297ae7;
+  --materia-2: #ad7200;
+  --materia-3: #4a5200;
+  --materia-4: #2e2200;
+  --materia-5: #5f6f82;
+  --materia-6: #003f88;
+  --materia-7: #297ae7;
+  --materia-8: #ad7200;
+  --materia-9: #4a5200;
+  --error: #6e2400;
+  --ok: #0b5fb3;
+  --aviso: #706700;
+}
+
+:root[data-tema='oscuro'][data-daltonismo='rojo-verde'] {
+  --materia-0: #56a3ff;
+  --materia-1: #e6a100;
+  --materia-2: #277fe8;
+  --materia-3: #f5e26b;
+  --materia-4: #b4c4cc;
+  --materia-5: #a87c2a;
+  --materia-6: #56a3ff;
+  --materia-7: #e6a100;
+  --materia-8: #277fe8;
+  --materia-9: #f5e26b;
+  --error: #f0a838;
+  --ok: #7cc0ff;
+  --aviso: #f5e27a;
+}
+
+:root[data-daltonismo='azul-amarillo'] {
+  --materia-0: #a3201a;
+  --materia-1: #00594c;
+  --materia-2: #5a0b45;
+  --materia-3: #d6437c;
+  --materia-4: #232e38;
+  --materia-5: #2c8f3a;
+  --materia-6: #a3201a;
+  --materia-7: #00594c;
+  --materia-8: #5a0b45;
+  --materia-9: #d6437c;
+  --error: #a3271c;
+  --ok: #0f6b4f;
+  --aviso: #5e3a00;
+}
+
+:root[data-tema='oscuro'][data-daltonismo='azul-amarillo'] {
+  --materia-0: #ef8a90;
+  --materia-1: #4fd1a5;
+  --materia-2: #ffb0d4;
+  --materia-3: #e05050;
+  --materia-4: #c4ccd2;
+  --materia-5: #2fa37c;
+  --materia-6: #ef8a90;
+  --materia-7: #4fd1a5;
+  --materia-8: #ffb0d4;
+  --materia-9: #e05050;
+  --error: #ff9d94;
+  --ok: #4fd1a5;
+  --aviso: #d8c8d0;
+}
+
+/* Plano y Pizarrón tienen el fondo azul o verde y más claro que el oscuro de siempre: su paleta va más clara, para que
+   cada materia se siga viendo sobre la página, las tarjetas y lo hundido con esa visión. */
+:root[data-estilo='plano'][data-daltonismo='rojo-verde'] {
+  --materia-0: #55aadd;
+  --materia-1: #ee9900;
+  --materia-2: #5588ff;
+  --materia-3: #eedd66;
+  --materia-4: #aacccc;
+  --materia-5: #779977;
+  --materia-6: #55aadd;
+  --materia-7: #ee9900;
+  --materia-8: #5588ff;
+  --materia-9: #eedd66;
+}
+
+:root[data-estilo='plano'][data-daltonismo='azul-amarillo'] {
+  --materia-3: #ec5e58;
+  --materia-9: #ec5e58;
+}
+
+:root[data-estilo='pizarron'][data-daltonismo='rojo-verde'] {
+  --materia-0: #55aaff;
+  --materia-1: #ddbb44;
+  --materia-2: #6699aa;
+  --materia-3: #eeee77;
+  --materia-4: #bbbbcc;
+  --materia-5: #aa9944;
+  --materia-6: #55aaff;
+  --materia-7: #ddbb44;
+  --materia-8: #6699aa;
+  --materia-9: #eeee77;
+  --error: #f5b54f;
+}
+
+:root[data-estilo='pizarron'][data-daltonismo='azul-amarillo'] {
+  --materia-3: #ee5e57;
+  --materia-9: #ee5e57;
+}
+
+/* Sensible a la luz (ajustes.luz): no pure white. The paper goes light gray in any theme (styles/luz.css dims a PDF's
+   page as much), and the white surfaces of the light themes a light gray, still a step above what's under them. Their
+   backgrounds were already grays, and the dark themes have no white. */
+:root[data-luz='si'] {
+  --papel: #ebebeb;
+}
+
+:root[data-luz='si'][data-tema='claro'] {
+  --superficie: #f3f5f8;
+}
+
+:root[data-estilo='hoja'][data-luz='si'][data-tema='claro'] {
+  --fondo: #f4f6f9;
+  --superficie: #f6f7fa;
+}
+
+:root[data-estilo='profesional'][data-luz='si'][data-tema='claro'] {
+  --superficie: #f3f5f9;
+  --cabecera-1: #f3f5f9;
+}
+
+html[data-letra='grande'] {
+  font-size: 112%;
+}
+
+html[data-letra='mas-grande'] {
+  font-size: 125%;
+}
+
+html[data-letra='enorme'] {
+  font-size: 150%;
+}

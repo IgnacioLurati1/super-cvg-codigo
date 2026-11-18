@@ -1,0 +1,205 @@
+/* The bookmarks of the PDF reader (Senaladores.jsx): the button of the bar, the ribbon on a page and on its small one,
+   and the list in the panel. The rest of the reader is in lector.css. */
+
+/* The bar: the ribbon fills while the page being read has one. */
+.lector__senalar[aria-pressed='true'] svg {
+  fill: currentColor;
+}
+
+/* On the paper, hanging from the top edge. It turns with the page in dark pages, like the highlights, and the text
+   under it can still be selected. */
+.lector__cinta {
+  position: absolute;
+  z-index: 5;
+  top: 0;
+  right: max(12px, 5%);
+  width: clamp(12px, 2.4%, 20px);
+  height: auto;
+  aspect-ratio: 14 / 20;
+  fill: var(--tinta);
+  pointer-events: none;
+}
+
+/* On its small page, at the same corner. */
+.lector__mini-ir {
+  position: relative;
+}
+
+.lector__mini-cinta {
+  position: absolute;
+  top: 4px;
+  right: 12px;
+  width: 12px;
+  height: auto;
+  aspect-ratio: 14 / 20;
+  overflow: visible;
+  fill: var(--tinta);
+  stroke: #fff;
+  stroke-width: 1.5px;
+  paint-order: stroke;
+}
+
+/* The list, first among the notes: each page goes to it, and the cross takes it off. */
+.lector__senaladas {
+  margin-bottom: 20px;
+}
+
+.lector__senaladas ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.lector__senalada {
+  display: inline-flex;
+  max-width: 100%;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-control);
+  background: var(--superficie);
+}
+
+/* With a name: the name, cut with an ellipsis if it is long, and its page, quieter. */
+.lector__senalada-texto {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lector__senalada-pag {
+  flex: none;
+  margin-left: 2px;
+  color: var(--texto-suave);
+  font-weight: 400;
+}
+
+/* Writing its name: the field takes the place of the name, as wide as the panel lets it. */
+.lector__senalada[data-editando] {
+  flex: 1 1 100%;
+  border-color: var(--foco);
+  box-shadow: inset 0 0 0 1px var(--foco);
+}
+
+.lector__senalada-nombre {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 36px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: var(--radio-control) 0 0 var(--radio-control);
+  background: transparent;
+  color: var(--texto);
+  font: inherit;
+  font-size: var(--t-chica);
+  font-weight: 600;
+}
+
+.lector__senalada-nombre:focus-visible {
+  outline: none;
+}
+
+.lector__senalada-nombre::placeholder {
+  color: var(--texto-suave);
+  font-weight: 400;
+}
+
+.lector__senalada:has([aria-current='page']) {
+  border-color: var(--foco);
+  box-shadow: inset 0 0 0 1px var(--foco);
+}
+
+.lector__senalada-ir,
+.lector__senalada-sacar {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  border: 0;
+  background: transparent;
+  color: var(--texto);
+  font: inherit;
+  font-size: var(--t-chica);
+  cursor: pointer;
+  transition: background-color 120ms ease;
+}
+
+.lector__senalada-ir {
+  min-width: 0;
+  gap: 4px;
+  padding: 0 4px 0 6px;
+  border-radius: var(--radio-control) 0 0 var(--radio-control);
+  font-weight: 600;
+  font-variant-numeric: lining-nums;
+}
+
+.lector__senalada-sacar {
+  justify-content: center;
+  min-width: 32px;
+  padding: 0;
+  border-radius: 0 var(--radio-control) var(--radio-control) 0;
+  color: var(--texto-suave);
+}
+
+.lector__senalada svg {
+  flex: none;
+  width: 18px;
+  height: 18px;
+}
+
+.lector__senalada-ir svg {
+  fill: var(--foco);
+}
+
+.lector__senalada-sacar svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.lector__senalada-ir:active,
+.lector__senalada-sacar:active {
+  transform: scale(0.97);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .lector__senalada-ir:hover,
+  .lector__senalada-sacar:hover {
+    background: var(--superficie-2);
+  }
+  .lector__senalada-sacar:hover {
+    color: var(--texto);
+  }
+}
+
+@media (pointer: coarse) {
+  .lector__senalada-ir,
+  .lector__senalada-nombre,
+  .lector__senalada-sacar {
+    min-height: 44px;
+  }
+  .lector__senalada-sacar {
+    min-width: 44px;
+  }
+}
+
+@media (forced-colors: active) {
+  .lector__cinta,
+  .lector__mini-cinta {
+    forced-color-adjust: none;
+  }
+  .lector__senalada {
+    border-color: CanvasText;
+  }
+  .lector__senalada:has([aria-current='page']) {
+    outline: 2px solid Highlight;
+    box-shadow: none;
+  }
+  .lector__senalada-ir svg {
+    fill: currentColor;
+  }
+}

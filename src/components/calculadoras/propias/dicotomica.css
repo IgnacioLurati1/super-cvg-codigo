@@ -1,0 +1,55 @@
+/* Búsqueda dicotómica (propias/dicotomica.jsx). The array in the squares of the notebook, the position small above
+   each one. What is already discarded, crossed out in pencil; the middle, with the highlighter and a ring in pen. */
+
+.dc-arreglo {
+  display: flex;
+  width: max-content;
+  margin: 2px 0 10px;
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+.dc-celda {
+  display: grid;
+  justify-items: stretch;
+  gap: 2px;
+}
+
+.dc-celda__i {
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+  text-align: center;
+}
+
+.dc-celda__v {
+  display: grid;
+  place-items: center;
+  min-width: calc(var(--lado-cuadro) * 1.5);
+  height: calc(var(--lado-cuadro) * 1.5);
+  padding: 0 6px;
+  border: 1px solid var(--tinta-hoja);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.dc-celda + .dc-celda .dc-celda__v {
+  border-left-width: 0;
+}
+
+.dc-celda[data-afuera] .dc-celda__v {
+  color: var(--texto-suave);
+  font-weight: 500;
+  text-decoration: line-through;
+  text-decoration-color: var(--tinta-hoja);
+  background: color-mix(in srgb, var(--tinta-hoja) 10%, transparent);
+}
+
+.dc-celda[data-medio] .dc-celda__v {
+  background: var(--resaltador);
+  color: var(--resaltador-texto);
+  box-shadow: inset 0 0 0 2px var(--foco);
+}
+
+.dc-celda[data-medio] .dc-celda__i {
+  color: var(--texto);
+  font-weight: 700;
+}

@@ -1,0 +1,102 @@
+/* Formal grammars (propias/gramatica.jsx). The syntax tree is drawn with _log-trazos. */
+.grm-dato dd {
+  overflow-wrap: anywhere;
+}
+
+/* Production by production: the production, its type and why, as in Forma por forma of Normalización. */
+.grm-prods {
+  display: grid;
+  gap: 10px;
+  margin: 0 0 10px;
+  padding: 0;
+  list-style: none;
+}
+
+.grm-prod {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 12px;
+  align-items: baseline;
+}
+
+.grm-prod__nombre {
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.grm-prod__tipo {
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+  font-weight: 700;
+}
+
+.grm-prod__por {
+  flex-basis: 100%;
+  color: var(--texto-suave);
+}
+
+/* The production that sets the type of the whole grammar, with the highlighter. */
+.grm-prod[data-peor] .grm-prod__nombre,
+.grm-prod[data-peor] .grm-prod__tipo {
+  padding: 0 0.25em;
+  border-radius: 0.15em 0.45em 0.2em 0.5em;
+  background: var(--resaltador);
+  color: var(--resaltador-texto);
+}
+
+.grm-lineas {
+  display: grid;
+  gap: 6px;
+  margin: 0 0 8px;
+}
+
+.grm-lineas p {
+  margin: 0;
+}
+
+.grm-cadena {
+  overflow-wrap: anywhere;
+}
+
+.grm-cadena__forma {
+  white-space: nowrap;
+}
+
+.grm-cadena__da {
+  color: var(--texto-suave);
+}
+
+/* Each step of the derivation: the form, with what the production put in it highlighted, and the production used. */
+.grm-pasos {
+  display: grid;
+  gap: 4px;
+  margin: 8px 0 10px;
+  padding-left: 1.8em;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+.grm-paso {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 12px;
+}
+
+.grm-paso__forma {
+  font-size: 1.0625rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  overflow-wrap: anywhere;
+}
+
+.grm-paso__con {
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+}
+
+.grm-nuevo {
+  padding: 0 0.1em;
+  border-radius: 0.15em 0.4em 0.2em 0.45em;
+  background: var(--resaltador);
+  color: var(--resaltador-texto);
+}

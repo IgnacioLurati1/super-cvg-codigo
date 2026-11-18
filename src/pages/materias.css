@@ -1,0 +1,441 @@
+/* Materias: the look of each card (tarjetas.js), its options and the groups of pinned and archived courses. The card
+   itself, and the three views, are in panel.css and propio.css; each look here only changes how the color and the
+   symbol sit in it, so it goes with any style of the site, theme, contrast and palette. */
+
+.vista-materias {
+  /* How much of its color a tinted card takes: ajustes.test.js checks the text reads on it with every palette. */
+  --tinte-tarjeta: 18%;
+  /* The cover of «Portada» holds the symbol: the tint of a symbol's box (panel.css), where the color reads as a line. */
+  --tinte-portada: 13%;
+}
+
+.materias__item {
+  position: relative;
+  display: grid;
+  min-width: 0;
+}
+
+.materias__item .materias__enlace {
+  position: relative;
+  overflow: hidden;
+}
+
+.materias__item[data-con-opciones] .materias__enlace {
+  padding-inline-end: 56px;
+}
+
+.materias__nombre {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* Pinned: a pin before the name, so it's still told apart once the group is left behind. */
+.materias__fijada {
+  display: inline-block;
+  width: 0.85em;
+  height: 0.85em;
+  margin-inline-end: 6px;
+  color: var(--texto-suave);
+  vertical-align: -0.05em;
+}
+
+.materias__fijada svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2.2;
+}
+
+/* ---------- The looks ---------- */
+
+/* Teñida: the whole card in the color of its course; the symbol keeps a box of the surface. */
+.materias__item[data-tarjeta='tenida'] .materias__enlace {
+  background-color: color-mix(in srgb, var(--color-materia, var(--texto)) var(--tinte-tarjeta), var(--superficie));
+}
+
+/* A course of one's own without a campus course has no color: the second surface. */
+.materias__item[data-tarjeta='tenida']:not([data-materia]) .materias__enlace {
+  background-color: var(--superficie-2);
+}
+
+.materias__item[data-tarjeta='tenida'] .simbolo {
+  background: var(--superficie);
+}
+
+/* Franja: a stripe of its color on the side, and the name alone. */
+.materias__item[data-tarjeta='franja'] .simbolo,
+.materias__item[data-tarjeta='minima'] .simbolo {
+  display: none;
+}
+
+.materias__item[data-tarjeta='franja'] .materias__enlace {
+  padding-inline-start: 24px;
+}
+
+.materias__item[data-tarjeta='franja'] .materias__enlace::before {
+  content: '';
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  width: 7px;
+  background: var(--color-materia, var(--borde-control));
+}
+
+/* Portada: the symbol on top, over its color, from edge to edge of the card. */
+.materias__item[data-tarjeta='portada'] .materias__enlace {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+  padding-top: 0;
+}
+
+/* The cover goes from edge to edge, under the options too: the name keeps its room below it. */
+.materias__item[data-tarjeta='portada'] .materias__enlace {
+  padding-inline-end: 16px;
+}
+
+.materias__item[data-tarjeta='portada'] .simbolo {
+  width: auto;
+  height: 76px;
+  margin-inline: -16px;
+  border-radius: 0;
+  background: color-mix(in srgb, var(--color-materia, var(--texto)) var(--tinte-portada), var(--superficie));
+}
+
+.materias__item[data-tarjeta='portada'] .simbolo svg {
+  width: 40px;
+  height: 40px;
+}
+
+/* Sello: the symbol big and faint behind the name, like a stamp. Never darker than a tinted card, so the text reads. */
+.materias__item[data-tarjeta='sello'] .simbolo {
+  position: absolute;
+  inset-inline-end: -14px;
+  bottom: -22px;
+  width: 116px;
+  height: 116px;
+  background: none;
+  opacity: var(--tinte-tarjeta);
+}
+
+.materias__item[data-tarjeta='sello'] .simbolo svg {
+  width: 100%;
+  height: 100%;
+  stroke-width: 1.5;
+}
+
+/* Plano and Pizarrón outline the symbols: a stamp has none. */
+html:is([data-estilo='plano'], [data-estilo='pizarron']) .materias__item[data-tarjeta='sello'] .simbolo {
+  box-shadow: none;
+}
+
+.materias__item[data-tarjeta='sello'] .materias__texto {
+  position: relative;
+}
+
+/* ---------- The looks in the list ---------- */
+
+.vista-materias[data-vista='lista'] .materias__item[data-tarjeta='tenida'] .materias__enlace,
+.vista-materias[data-vista='lista'] .materias__item[data-tarjeta='franja'] .materias__enlace {
+  padding-inline-start: 12px;
+}
+
+.vista-materias[data-vista='lista'] .materias__item[data-tarjeta='franja'] .materias__enlace {
+  padding-inline-start: 18px;
+}
+
+.vista-materias[data-vista='lista'] .materias__item[data-tarjeta='franja'] .materias__enlace::before {
+  inset-block: 8px;
+  width: 5px;
+  border-radius: 3px;
+}
+
+.vista-materias[data-vista='lista'] .materias__item[data-tarjeta='portada'] .materias__enlace {
+  flex-direction: row;
+  align-items: center;
+  padding-top: 8px;
+}
+
+.vista-materias[data-vista='lista'] .materias__item[data-tarjeta='portada'][data-con-opciones] .materias__enlace {
+  padding-inline-end: 56px;
+}
+
+.vista-materias[data-vista='lista'] .materias__item[data-tarjeta='portada'] .simbolo {
+  width: 64px;
+  height: 40px;
+  margin: 0;
+  border-radius: 9px;
+}
+
+.vista-materias[data-vista='lista'] .materias__item[data-tarjeta='portada'] .simbolo svg {
+  width: 26px;
+  height: 26px;
+}
+
+/* In a row it stays clear of the options. */
+.vista-materias[data-vista='lista'] .materias__item[data-tarjeta='sello'] .simbolo {
+  top: 50%;
+  bottom: auto;
+  width: 64px;
+  height: 64px;
+  translate: 0 -50%;
+}
+
+.vista-materias[data-vista='lista'] .materias__item[data-tarjeta='sello'][data-con-opciones] .simbolo {
+  inset-inline-end: 48px;
+}
+
+/* ---------- The looks in the big cards ---------- */
+
+.vista-materias[data-vista='grandes'] .materias__item[data-tarjeta='portada'] .materias__enlace {
+  gap: 16px;
+  padding-top: 0;
+  padding-inline-end: 22px;
+}
+
+.vista-materias[data-vista='grandes'] .materias__item[data-tarjeta='portada'] .simbolo {
+  width: auto;
+  height: 132px;
+  margin-inline: -22px;
+  border-radius: 0;
+}
+
+.vista-materias[data-vista='grandes'] .materias__item[data-tarjeta='portada'] .simbolo svg {
+  width: 64px;
+  height: 64px;
+}
+
+.vista-materias[data-vista='grandes'] .materias__item[data-tarjeta='sello'] .simbolo {
+  width: 168px;
+  height: 168px;
+  bottom: -34px;
+}
+
+.vista-materias[data-vista='grandes'] .materias__item[data-tarjeta='sello'] .materias__enlace,
+.vista-materias[data-vista='grandes'] .materias__item[data-tarjeta='minima'] .materias__enlace,
+.vista-materias[data-vista='grandes'] .materias__item[data-tarjeta='franja'] .materias__enlace {
+  justify-content: flex-end;
+  min-height: 9rem;
+}
+
+.vista-materias[data-vista='grandes'] .materias__item[data-tarjeta='franja'] .materias__enlace {
+  padding-inline-start: 30px;
+}
+
+.vista-materias[data-vista='grandes'] .materias__item[data-tarjeta='franja'] .materias__enlace::before {
+  width: 9px;
+}
+
+/* ---------- Options of a card ---------- */
+
+.materias__opciones {
+  position: absolute;
+  z-index: 2;
+  top: 50%;
+  inset-inline-end: 6px;
+  translate: 0 -50%;
+}
+
+/* In a tall card, up in its corner. */
+.vista-materias[data-vista='grandes'] .materias__opciones,
+.vista-materias:not([data-vista='lista']) .materias__item[data-tarjeta='portada'] .materias__opciones {
+  top: 6px;
+  translate: none;
+}
+
+/* Open, its card goes over the next ones. */
+.materias__item:has(> .materias__menu:not([hidden])) {
+  z-index: 6;
+}
+
+.materias__menu {
+  position: absolute;
+  z-index: 5;
+  top: calc(50% + 26px);
+  inset-inline-end: 6px;
+  display: grid;
+  gap: 6px;
+  width: min(18rem, calc(100vw - 32px));
+  padding: 10px;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-bloque);
+  background: var(--superficie);
+  box-shadow: 0 14px 34px -14px rgb(0 0 0 / 0.45);
+  transform-origin: top right;
+}
+
+.vista-materias[data-vista='grandes'] .materias__menu,
+.vista-materias:not([data-vista='lista']) .materias__item[data-tarjeta='portada'] .materias__menu {
+  top: 52px;
+}
+
+.materias__menu[hidden] {
+  display: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .materias__menu {
+    transition: opacity 150ms ease-out, transform 180ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  @starting-style {
+    .materias__menu {
+      opacity: 0;
+      transform: scale(0.96);
+    }
+  }
+}
+
+html:is([data-movimiento='reducido'], [data-movimiento='ninguno']) .materias__menu {
+  transition: none;
+}
+
+.materias__menu .boton {
+  justify-content: flex-start;
+  width: 100%;
+}
+
+.materias__menu .campo {
+  margin: 4px 0 0;
+}
+
+/* ---------- Pinned and archived ---------- */
+
+.materias__archivadas {
+  margin-top: 8px;
+}
+
+.materias__archivadas > summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: fit-content;
+  min-height: 44px;
+  font-size: var(--t-h3);
+  font-weight: 700;
+  cursor: pointer;
+  list-style: none;
+}
+
+.materias__archivadas > summary::-webkit-details-marker {
+  display: none;
+}
+
+.materias__archivadas > summary::before {
+  content: '';
+  width: 0.5em;
+  height: 0.5em;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  rotate: -45deg;
+  transition: rotate 200ms ease-out;
+}
+
+.materias__archivadas[open]:not([data-cerrando]) > summary::before {
+  rotate: 45deg;
+}
+
+.materias__archivadas > .materias {
+  margin-top: 10px;
+}
+
+/* An archived course weighs less, without fading its text. */
+.materias__archivadas .simbolo {
+  filter: grayscale(1);
+}
+
+/* ---------- Drawings of the looks, in Configuración ---------- */
+
+.dibujo-tarjeta {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  max-width: 9rem;
+  height: 2.75rem;
+  margin-top: 6px;
+  padding: 0 8px;
+  overflow: hidden;
+  border-radius: 6px;
+  background: var(--superficie-2);
+  --color-materia: var(--materia-0);
+}
+
+.dibujo-tarjeta__simbolo {
+  flex: none;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 5px;
+  background: color-mix(in srgb, var(--color-materia) 30%, var(--superficie));
+}
+
+.dibujo-tarjeta__lineas {
+  display: grid;
+  flex: 1;
+  gap: 4px;
+}
+
+.dibujo-tarjeta__lineas::before,
+.dibujo-tarjeta__lineas::after {
+  content: '';
+  height: 5px;
+  border-radius: 3px;
+  background: var(--texto);
+}
+
+.dibujo-tarjeta__lineas::after {
+  width: 60%;
+  background: var(--texto-suave);
+}
+
+.dibujo-tarjeta[data-tarjeta='tenida'] {
+  background: color-mix(in srgb, var(--color-materia) 30%, var(--superficie));
+}
+
+.dibujo-tarjeta[data-tarjeta='tenida'] .dibujo-tarjeta__simbolo {
+  background: var(--superficie);
+}
+
+.dibujo-tarjeta[data-tarjeta='franja'] .dibujo-tarjeta__simbolo,
+.dibujo-tarjeta[data-tarjeta='minima'] .dibujo-tarjeta__simbolo {
+  display: none;
+}
+
+.dibujo-tarjeta[data-tarjeta='franja'] {
+  padding-left: 12px;
+  box-shadow: inset 5px 0 0 var(--color-materia);
+}
+
+.dibujo-tarjeta[data-tarjeta='portada'] {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+  padding: 0 8px 5px;
+}
+
+.dibujo-tarjeta[data-tarjeta='portada'] .dibujo-tarjeta__simbolo {
+  width: auto;
+  height: 1.2rem;
+  margin-inline: -8px;
+  border-radius: 0;
+}
+
+.dibujo-tarjeta[data-tarjeta='portada'] .dibujo-tarjeta__lineas::after {
+  display: none;
+}
+
+.dibujo-tarjeta[data-tarjeta='sello'] .dibujo-tarjeta__simbolo {
+  position: absolute;
+  right: -6px;
+  bottom: -8px;
+  width: 2.6rem;
+  height: 2.6rem;
+  border-radius: 50%;
+  background: none;
+  box-shadow: inset 0 0 0 4px color-mix(in srgb, var(--color-materia) 35%, transparent);
+}

@@ -1,0 +1,74 @@
+/* Planificación de la CPU (propias/planificacion.jsx). On the board, the processes as a table written in chalk. On the
+   sheet, the Gantt drawn by hand: each process with its color of the notebook, the idle CPU dashed, the axis in pencil. */
+
+.pl-procesos {
+  display: grid;
+  gap: 10px;
+  justify-items: start;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.pl-procesos > legend {
+  margin-bottom: 6px;
+}
+
+.pl-procesos .so-grilla {
+  --so-celda: minmax(3rem, 5.5rem);
+}
+
+/* ---------- The Gantt ---------- */
+.pl-gantt-caja {
+  min-width: 0;
+}
+
+.pl-gantt {
+  display: block;
+  max-width: none;
+  overflow: visible;
+  font-family: var(--fuente-ui);
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+.pl-gantt__tramo rect {
+  fill: color-mix(in srgb, var(--so-tono) 22%, var(--superficie));
+  stroke: var(--so-tono);
+  stroke-width: 1.5;
+}
+
+.pl-gantt__tramo text {
+  fill: var(--texto);
+  font-weight: 700;
+}
+
+.pl-gantt__tramo[data-ociosa] rect {
+  fill: none;
+  stroke: var(--tinta-hoja);
+  stroke-dasharray: 4 4;
+}
+
+.pl-gantt__eje {
+  stroke: var(--tinta-hoja);
+  stroke-width: 1.5;
+}
+
+.pl-gantt__tiempo {
+  fill: var(--texto);
+}
+
+/* ---------- Who takes the CPU ---------- */
+.pl-turnos th[scope='row'] {
+  text-align: right;
+}
+
+.pl-listos {
+  white-space: normal;
+  min-width: 6rem;
+}
+
+.pl-ociosa {
+  color: var(--texto-suave);
+  font-style: italic;
+}

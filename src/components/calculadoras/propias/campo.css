@@ -1,0 +1,22 @@
+/* Campo vectorial (propias/campo.jsx): the legend of the arrows and a crossed pair that doesn't match. */
+.campo-ley {
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.campo-ley--flecha {
+  stroke: color-mix(in srgb, var(--foco) 75%, var(--superficie));
+}
+
+.campo-ley--punto {
+  stroke: var(--materia-1);
+}
+
+.campo-distinto {
+  color: var(--error);
+  font-weight: 700;
+}
+
+.campo-cruzada + .campo-cruzada {
+  margin-top: 10px;
+}

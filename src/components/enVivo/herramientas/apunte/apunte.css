@@ -1,0 +1,366 @@
+/* The Apunte of a live session's table: the site's reader (lector.css) in a frame of its own height, with where each
+   of the others points on it, in their color. */
+
+.apunte-vivo--lector {
+  display: flex;
+  flex-direction: column;
+}
+
+.apunte-vivo--lector,
+.lector.apunte-vivo {
+  height: var(--en-vivo-alto, min(78vh, 56rem));
+  min-height: 22rem;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-bloque);
+  overflow: hidden;
+}
+
+.lector__barra.apunte-vivo__barra {
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  overflow: visible;
+}
+
+.apunte-vivo__pagina,
+.apunte-vivo__zoom {
+  font-size: var(--t-chica);
+  font-variant-numeric: tabular-nums lining-nums;
+  white-space: nowrap;
+}
+
+.apunte-vivo__pagina {
+  padding-left: 4px;
+}
+
+.apunte-vivo__zoom {
+  min-width: 3.5em;
+  text-align: center;
+}
+
+.lector__boton.apunte-vivo__texto-boton {
+  padding: 0 10px;
+  font: inherit;
+  font-size: var(--t-chica);
+}
+
+.apunte-vivo__texto-boton[aria-pressed='true'],
+.apunte-vivo__texto-boton[aria-expanded='true'] {
+  background: var(--superficie-2);
+  font-weight: 600;
+}
+
+/* Someone's mark: the tip of their highlighter, with their name beside it. */
+.apunte-vivo__dedo {
+  --color: var(--accion-hover);
+  position: absolute;
+  z-index: 6;
+  width: 14px;
+  height: 14px;
+  margin: -7px 0 0 -7px;
+  border: 2px solid var(--superficie);
+  border-radius: 50% 50% 50% 2px;
+  background: var(--color);
+  box-shadow: 0 1px 4px rgb(23 50 77 / 0.35);
+  pointer-events: none;
+  transition: left 180ms cubic-bezier(0.23, 1, 0.32, 1), top 180ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.apunte-vivo__quien {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  padding: 1px 7px 2px;
+  border-radius: var(--radio-control);
+  background: var(--color);
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .apunte-vivo__dedo {
+    transition: none;
+  }
+}
+
+/* The site's image viewer (lector/VistaImagen.jsx): the picture at its size up to the width, as a file of a course
+   opens, with the table's marks in a box of its exact size. */
+.apunte-vivo__marco > .previa__imagen-caja {
+  padding: 16px;
+}
+
+.apunte-vivo__imagen {
+  position: relative;
+  width: fit-content;
+  max-width: 100%;
+  margin: 0 auto;
+}
+
+.apunte-vivo__imagen .previa__imagen {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+/* Waiting for the file, and the tab without one. While it comes, the reader's skeleton already takes the height the
+   reader will have: the whole tab. */
+.apunte-vivo__espera {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  height: var(--en-vivo-alto, min(78vh, 56rem));
+  min-height: 22rem;
+}
+
+.apunte-vivo__espera .lector {
+  flex: 1 1 0;
+  min-height: 0;
+  border-radius: var(--radio-bloque);
+  overflow: hidden;
+}
+
+.apunte-vivo__llegando p {
+  margin: 0 0 6px;
+}
+
+.apunte-vivo__progreso {
+  width: 100%;
+  max-width: 24rem;
+  accent-color: var(--accion-hover);
+}
+
+.apunte-vivo__vacio {
+  display: grid;
+  justify-items: start;
+  gap: 10px;
+  padding: 24px;
+  border: 2px dashed var(--borde);
+  border-radius: var(--radio-bloque);
+}
+
+.apunte-vivo__vacio p {
+  margin: 0;
+}
+
+.apunte-vivo__nota {
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+}
+
+.apunte-vivo__aviso {
+  color: var(--error);
+}
+
+/* The table's marks: a highlighter in the color of whoever made it, darkening the paper and not the ink, and their
+   name on a tab at its first line. No z-index on the layer: the highlight has to blend with the page under it. */
+.apunte-vivo__marcas {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.apunte-vivo__marca {
+  --color: var(--accion-hover);
+}
+
+.apunte-vivo__resaltado {
+  position: absolute;
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--color) 38%, transparent);
+  mix-blend-mode: multiply;
+}
+
+.apunte-vivo__marca[data-abierta] .apunte-vivo__resaltado {
+  outline: 2px solid var(--color);
+  outline-offset: 1px;
+}
+
+.apunte-vivo__autor {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 0 5px;
+  border-radius: 4px 4px 4px 0;
+  background: var(--color);
+  color: #fff;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  line-height: 1.5;
+  white-space: nowrap;
+  transform: translateY(-100%);
+}
+
+.apunte-vivo__autor svg {
+  width: 11px;
+  height: 11px;
+  fill: currentColor;
+}
+
+.apunte-vivo__zona {
+  --color: var(--accion-hover);
+  position: absolute;
+  z-index: 7;
+  border: 2px dashed var(--color);
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--color) 12%, transparent);
+  pointer-events: none;
+}
+
+[data-zona] {
+  cursor: crosshair;
+  user-select: none;
+  touch-action: none;
+}
+
+/* Marking a zone on the reader's pages: a sheet over them takes the drag. */
+.apunte-vivo__capa-zona {
+  position: absolute;
+  z-index: 7;
+  inset: 0;
+  cursor: crosshair;
+  user-select: none;
+  touch-action: none;
+}
+
+.apunte-vivo__globo-quien {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-weight: 600;
+}
+
+.apunte-vivo__globo-texto {
+  max-height: 6em;
+  margin: 0;
+  overflow: auto;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+}
+
+.apunte-vivo__punto {
+  --color: var(--accion-hover);
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--color);
+}
+
+/* The marks in words, under the bar. */
+.apunte-vivo__panel {
+  flex: none;
+  max-height: min(16rem, 40%);
+  overflow-y: auto;
+  border-bottom: 1px solid var(--borde);
+  background: var(--superficie);
+}
+
+.apunte-vivo__lista {
+  margin: 0;
+  padding: 4px 0;
+  list-style: none;
+}
+
+.apunte-vivo__item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 6px 10px;
+  padding: 8px 12px;
+}
+
+.apunte-vivo__item + .apunte-vivo__item {
+  border-top: 1px solid var(--superficie-2);
+}
+
+.apunte-vivo__item .apunte-vivo__punto {
+  margin-top: 6px;
+}
+
+.apunte-vivo__item-texto {
+  display: grid;
+  flex: 1 1 12rem;
+  min-width: 0;
+  gap: 2px;
+  overflow-wrap: anywhere;
+}
+
+.apunte-vivo__item-dato,
+.apunte-vivo__item-nota {
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+}
+
+.apunte-vivo__item-nota {
+  white-space: pre-wrap;
+}
+
+.apunte-vivo__item-botones {
+  display: flex;
+  flex: none;
+  gap: 6px;
+  margin-left: auto;
+}
+
+.apunte-vivo__lista-vacia {
+  margin: 0;
+  padding: 12px;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+}
+
+.apunte-vivo__aviso--barra {
+  flex: none;
+  margin: 0;
+  padding: 6px 12px;
+  background: var(--superficie);
+  font-size: var(--t-chica);
+}
+
+/* A summary of El Santo Resumen on the table: the site's viewer (VisorResumen.jsx, resumenes.css) without its sheet,
+   in a frame of the tab's height. */
+.resumen-vivo {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: var(--en-vivo-alto, min(78vh, 56rem));
+  min-height: 22rem;
+}
+
+.resumen-vivo > .apunte-vivo__aviso {
+  flex: none;
+}
+
+/* The others' pointers over an HTML or Word summary (Resumen.jsx), placed by script, never catching the mouse. */
+.resumen-vivo__dedos {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.visor.visor--mesa {
+  position: relative;
+  inset: auto;
+  flex: 1 1 auto;
+  width: 100%;
+  max-width: none;
+  height: auto;
+  max-height: none;
+  min-height: 0;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-bloque);
+  transition: none;
+}
+
+/* The reader's bar over what is selected, with only its two words: the first one has nothing before it. */
+.apunte-vivo__barra-sel .lector__barra-nota:first-child {
+  margin-left: 0;
+  border-left: 0;
+  border-radius: var(--radio-control) 0 0 var(--radio-control);
+}
