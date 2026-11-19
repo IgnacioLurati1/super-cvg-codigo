@@ -2,7 +2,7 @@
 // keeps (sysacad.js), read as Tu carrera reads them (carrera.js). A question like «¿qué necesito para cursar Gestión
 // Gerencial?» is answered with that, never with the notes nor with what it knows in general. Everything stays in memory.
 import { cargarPerfil } from '../campus.js';
-import { armarCarrera, carreraParaConsultron, loQueDestraba } from '../carrera.js';
+import { armarCarrera, carreraParaConsultron, frenosParaCursar, loQueDestraba } from '../carrera.js';
 import { esDemo } from '../modoDemo.js';
 import { tokenActual } from '../sesion.js';
 import { ESPERA_MS, estadoSysacad, palabrasDe, preguntarSysacad } from '../sysacad.js';
@@ -159,27 +159,21 @@ export function carreraParaLaPregunta(carrera, pregunta, fecha = '', { elegida =
   else if (/\b(cuantas|cuanto)\b/.test(p) && !/\bnota/.test(p)) filas = [['', `Te faltan ${total - aprobadas} materias de ${total}, sin contar electivas.`], ['', `Ya aprobaste ${aprobadas}.`]];
   else if (/\b(nota|notas|promedio|aprobadas|aprobe)\b/.test(p)) filas = [dato('Aprobadas')];
   else if (/\b(frena|conviene|priorizar|primero|enfocarme)\b/.test(p)) {
-    // The advice already made: of what it can sit for (or take), the one other subjects ask for most, first. In words a
-    // small model can't turn around.
-    const consejo = (estado, puede, verbo) => {
-      const lista = carrera.materias
-        .filter((m) => m.estado === estado && puede(m))
-        .map((m) => {
-          const d = loQueDestraba(carrera, m.clave);
-          // Electives don't count: there are many and none is a must.
-          return { m, n: [...d.cursar, ...d.rendir].filter((x) => !x.electiva).length };
-        })
-        .sort((a, b) => b.n - a.n || a.m.nombre.localeCompare(b.m.nombre, 'es'));
+    // The advice already made, with the count of Tu carrera: of what it can sit for (or take), the one that opens the
+    // most right away first, then the one that holds back the most down the chain. In words a small model can't turn
+    // around.
+    const materias = (n) => (n === 1 ? '1 materia' : `${n} materias`);
+    const consejo = (lista, verbo) => {
       if (!lista.length) return [];
       const [primera, ...resto] = lista;
-      const destraba = (n) => (n === 0 ? 'no destraba ninguna otra' : n === 1 ? 'destraba 1 materia' : `destraba ${n} materias`);
+      const destraba = (f) => (f.frena === 0 ? 'no destraba ninguna otra' : `${f.abre ? `te abre ${materias(f.abre)} ya y ` : ''}frena ${materias(f.frena)} contando la cadena`);
       return [
-        [`Te conviene ${verbo} primero`, `${primera.m.nombre}, porque ${destraba(primera.n)}`],
-        ...(resto.length ? [[`Después, para ${verbo}`, resto.map(({ m, n }) => `${m.nombre} (${destraba(n)})`).join('; ')]] : []),
+        [`Te conviene ${verbo} primero`, `${primera.nombre}, porque ${destraba(primera)}`],
+        ...(resto.length ? [[`Después, para ${verbo}`, resto.map((f) => `${f.nombre} (${destraba(f)})`).join('; ')]] : []),
       ];
     };
-    const rendir = consejo('regular', (m) => m.rendir?.puede, 'rendir');
-    const cursar = consejo('cursar', () => true, 'cursar');
+    const rendir = consejo(carrera.paraRendir, 'rendir');
+    const cursar = consejo(frenosParaCursar(carrera.materias, new Set(carrera.materias.filter((m) => m.estado === 'cursar').map((m) => m.clave))), 'cursar');
     filas = /\brend\w*/.test(p) ? rendir : /\bcurs\w*/.test(p) ? cursar : [...rendir, ...cursar];
   }
   else if (/\brend\w*/.test(p)) filas = [dato('Regulares')];

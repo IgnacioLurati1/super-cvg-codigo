@@ -9,7 +9,7 @@ import EntrarConGoogle from '../components/EntrarConGoogle';
 import { Cargando, ErrorConReintento } from '../components/Filas';
 import { useUI } from '../components/ui';
 import { COLORES_DEL_CODIGO, CONTRASTE_MINIMO, contraste, LAB_TAMANO, LETRAS_DE_CODIGO, SIEMPRE_OSCUROS, cambiarAjustes, cambioDeBordes, cambioDeEstilo, colorActual, cuestaLeerSobre, elegirVista, ponerEstiloDeMenu, useAjustes, volverAjustesOriginales } from '../lib/ajustes';
-import { movimientoDe, ponerPosicionDelMenu } from '../lib/ajustes';
+import { movimientoDe, ponerAlineacionDelMenu, ponerAnchoDelMenu, ponerPosicionDelMenu } from '../lib/ajustes';
 import PantallasDelMenu from '../components/PantallasDelMenu';
 import QueAvisosVes from '../components/QueAvisosVes';
 import { AvisosEnMiniatura, HoyEnMiniatura, MateriaEnMiniatura, MateriasEnMiniatura, VistaPrevia } from '../components/VistaPrevia';
@@ -81,13 +81,22 @@ const ESTILOS = [
   { valor: 'hoja', nombre: 'Hoja', texto: 'Una hoja de carpeta, con renglones y margen.', dibujo: <span className="dibujo-tema" data-cual="hoja" aria-hidden="true" /> },
   { valor: 'profesional', nombre: 'Profesional', texto: 'Degradados en lugar de colores planos.', dibujo: <span className="dibujo-tema" data-cual="profesional" aria-hidden="true" /> },
   { valor: 'batman', nombre: 'Batman', texto: 'Oscuro, en negro y amarillo.', dibujo: <span className="dibujo-tema" data-cual="batman" aria-hidden="true" /> },
-  { valor: 'plano', nombre: 'Plano', texto: 'Un plano de ingeniería, azul y con cuadrícula.', dibujo: <span className="dibujo-tema" data-cual="plano" aria-hidden="true" /> },
-  { valor: 'pizarron', nombre: 'Pizarrón', texto: 'El del aula, con tiza y marco de madera.', dibujo: <span className="dibujo-tema" data-cual="pizarron" aria-hidden="true" /> },
+  { valor: 'plano', nombre: 'Plano', texto: 'Un plano de ingeniería, con cuadrícula.', dibujo: <span className="dibujo-tema" data-cual="plano" aria-hidden="true" /> },
+  { valor: 'pizarron', nombre: 'Pizarrón', texto: 'El del aula, de tiza en oscuro y de fibrón en claro.', dibujo: <span className="dibujo-tema" data-cual="pizarron" aria-hidden="true" /> },
 ];
+
+// The themes that are a palette: they apply to every style, also the always-dark ones.
+const PALETAS_DEL_TEMA = ['rosa', 'bosque', 'cafe', 'lavanda', 'infierno', 'glaciar'];
 
 const TEMAS = [
   { valor: 'claro', nombre: 'Claro', dibujo: <span className="dibujo-tema" data-cual="claro" aria-hidden="true" /> },
   { valor: 'oscuro', nombre: 'Oscuro', dibujo: <span className="dibujo-tema" data-cual="oscuro" aria-hidden="true" /> },
+  { valor: 'rosa', nombre: 'Rosa oscuro', dibujo: <span className="dibujo-tema" data-cual="rosa" aria-hidden="true" /> },
+  { valor: 'bosque', nombre: 'Verde bosque', dibujo: <span className="dibujo-tema" data-cual="bosque" aria-hidden="true" /> },
+  { valor: 'cafe', nombre: 'Café', dibujo: <span className="dibujo-tema" data-cual="cafe" aria-hidden="true" /> },
+  { valor: 'lavanda', nombre: 'Lavanda', dibujo: <span className="dibujo-tema" data-cual="lavanda" aria-hidden="true" /> },
+  { valor: 'infierno', nombre: 'Infierno', dibujo: <span className="dibujo-tema" data-cual="infierno" aria-hidden="true" /> },
+  { valor: 'glaciar', nombre: 'Glaciar', dibujo: <span className="dibujo-tema" data-cual="glaciar" aria-hidden="true" /> },
   { valor: 'sistema', nombre: 'Del sistema', texto: 'Sigue a tu dispositivo.', dibujo: <span className="dibujo-tema" data-cual="sistema" aria-hidden="true" /> },
 ];
 
@@ -134,6 +143,17 @@ const ESTILOS_DE_MENU = [
 const POSICIONES_DEL_MENU = [
   { valor: 'arriba', nombre: 'Arriba', dibujo: <span className="muestra-lado" data-lado="arriba" aria-hidden="true"><i /><b /></span> },
   { valor: 'izquierda', nombre: 'A la izquierda', texto: 'En pantallas anchas. En el celular queda arriba.', dibujo: <span className="muestra-lado" data-lado="izquierda" aria-hidden="true"><i /><b /></span> },
+];
+
+// The bar on top: where its screens go along it, and how wide it is.
+const ALINEACIONES_DEL_MENU = [
+  { valor: 'izquierda', nombre: 'A la izquierda', texto: 'Al lado de Super CVG.' },
+  { valor: 'medio', nombre: 'Al medio' },
+  { valor: 'derecha', nombre: 'A la derecha' },
+];
+const ANCHOS_DEL_MENU = [
+  { valor: 'pagina', nombre: 'Como la página' },
+  { valor: 'pantalla', nombre: 'Toda la pantalla', texto: 'Entran más pantallas antes de que se pliegue.' },
 ];
 
 const CONTRASTES = [
@@ -724,7 +744,7 @@ function MuestraDelEditor({ ajustes }) {
 }
 
 /** Coloración: the color of each kind of code, over the theme's (styles/codigo.css), with a word that shows it. */
-const ATRIBUTOS_DEL_TEMA = ['data-tema', 'data-estilo', 'data-contraste', 'data-luz'];
+const ATRIBUTOS_DEL_TEMA = ['data-tema', 'data-paleta', 'data-estilo', 'data-contraste', 'data-luz'];
 const temaDeLaPagina = () => ATRIBUTOS_DEL_TEMA.map((a) => document.documentElement.getAttribute(a)).join(' ');
 const seguirElTema = (avisar) => {
   const observador = new MutationObserver(avisar);
@@ -1060,9 +1080,8 @@ export default function Configuracion() {
             ayuda={siempreOscuro ? `Con el estilo ${ESTILOS.find((e) => e.valor === ajustes.estilo).nombre}, siempre oscuro.` : undefined}
             nombre="tema"
             opciones={TEMAS}
-            valor={siempreOscuro ? 'oscuro' : ajustes.tema}
+            valor={siempreOscuro && !PALETAS_DEL_TEMA.includes(ajustes.tema) ? 'oscuro' : ajustes.tema}
             alElegir={(tema) => poner({ tema })}
-            apagado={siempreOscuro}
           />
         </Seccion>
 
@@ -1180,6 +1199,28 @@ export default function Configuracion() {
               if (!ponerPosicionDelMenu(posicion)) avisar('No se pudo guardar. Vale hasta que cierres esta pestaña.', 'error');
             }}
           />
+          {ajustes.menu.posicion === 'arriba' && (
+            <>
+              <Elecciones
+                titulo="Alineación de la barra"
+                nombre="menu-alineacion"
+                opciones={ALINEACIONES_DEL_MENU}
+                valor={ajustes.menu.alineacion}
+                alElegir={(alineacion) => {
+                  if (!ponerAlineacionDelMenu(alineacion)) avisar('No se pudo guardar. Vale hasta que cierres esta pestaña.', 'error');
+                }}
+              />
+              <Elecciones
+                titulo="Ancho de la barra"
+                nombre="menu-ancho"
+                opciones={ANCHOS_DEL_MENU}
+                valor={ajustes.menu.ancho}
+                alElegir={(ancho) => {
+                  if (!ponerAnchoDelMenu(ancho)) avisar('No se pudo guardar. Vale hasta que cierres esta pestaña.', 'error');
+                }}
+              />
+            </>
+          )}
           <Elecciones
             titulo="Estilo"
             nombre="menu-estilo"

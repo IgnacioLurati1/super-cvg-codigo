@@ -1,5 +1,6 @@
 import { leerCorrelatividad, leerEstado } from './carrera';
 import { normalizar } from './datos';
+import { ordenarFrenos } from './frenos';
 import { esTroncal } from './santoResumen';
 import { ENTRE_LINEAS } from './sysacadPestanas';
 
@@ -137,9 +138,10 @@ const CORTE = 39;
  * («Regularizar Comunicación de Datos»), what holds back the most and how many can. Null without Año, Materia and
  * Correlatividad.
  *
- * `materias`: [{ anio, nombre, electiva, puede, faltan: [texto] }]. `frenos`: [{ nombre, cuantas }], two or more.
+ * `materias`: [{ anio, nombre, electiva, puede, faltan: [texto] }]. `frenos`: [{ nombre, abre, frena }], two or more,
+ * counted only from this copy (frenos.js). `para`: 'cursar' or 'rendir', which copy it is.
  */
-export function leerCorrelativas(bloques) {
+export function leerCorrelativas(bloques, para = 'cursar') {
   const t = tablaCon(bloques, ['ano', 'materia', 'correlatividad']);
   if (!t) return null;
   const [a, m, c] = ['ano', 'materia', 'correlatividad'].map(t.indice);
@@ -165,17 +167,20 @@ export function leerCorrelativas(bloques) {
       ...f.faltan.map((r) => (r.clave === propia ? 'Regularizarla' : `${r.accion} ${r.texto}`)),
       ...f.otros,
     ];
-    return { anio: f.anio, nombre, electiva: esElectiva(nombres[i]), puede: f.puede, faltan, requisitos: f.faltan.filter((r) => r.clave !== propia) };
+    const electiva = esElectiva(nombres[i]);
+    const requisitos = f.faltan.filter((r) => r.clave !== propia);
+    // For the final it opens only once it is regular (it doesn't lack itself).
+    const lado = f.puede ? null : { clave: propia, electiva, para, faltan: requisitos, abre: !f.otros.length && (para !== 'rendir' || requisitos.length === f.faltan.length) };
+    return { anio: f.anio, nombre, electiva, puede: f.puede, faltan, lado };
   });
-  const veces = new Map();
-  for (const x of materias) for (const r of x.requisitos) {
-    const ya = veces.get(r.clave);
-    veces.set(r.clave, { nombre: ya?.nombre ?? r.texto, cuantas: (ya?.cuantas ?? 0) + 1 });
-  }
-  const frenos = [...veces.values()].filter((f) => f.cuantas >= 2).sort((x, y) => y.cuantas - x.cuantas || x.nombre.localeCompare(y.nombre, 'es'));
+  const lados = materias.map((x) => x.lado).filter(Boolean);
+  const nombresDe = new Map();
+  for (const l of lados) if (!l.electiva) for (const r of l.faltan) if (!nombresDe.has(r.clave)) nombresDe.set(r.clave, r.texto);
+  const frenos = ordenarFrenos(lados, [...nombresDe].map(([clave, nombre]) => ({ clave, nombre })), { minimo: 2 })
+    .map(({ nombre, abre, frena }) => ({ nombre, abre, frena }));
   return {
     tabla: t.bloque,
-    materias: materias.map(({ requisitos: _, ...x }) => x),
+    materias: materias.map(({ lado: _, ...x }) => x),
     pueden: materias.filter((x) => x.puede).length,
     total: materias.length,
     frenos,

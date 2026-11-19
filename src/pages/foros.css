@@ -1,0 +1,833 @@
+/* Foros: every discussion of the courses in progress on the left, one of them on the right, read as a conversation.
+   The highlighter marks what is new, like everywhere else on the site. On a narrow box, one or the other. */
+
+.foros {
+  --alto-caja: max(480px, calc(100dvh - var(--alto-cabecera) - 48px));
+  container-type: inline-size;
+  padding-block: 24px;
+}
+
+.foros__caja {
+  display: grid;
+  /* The same list column as Mensajes: switching between the two, nothing moves. */
+  grid-template-columns: minmax(16.875rem, 21.25rem) minmax(0, 1fr);
+  height: var(--alto-caja);
+  overflow: hidden;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-bloque);
+  background: var(--superficie);
+}
+
+.foros h1 {
+  margin: 0;
+  font-size: var(--t-h2);
+  line-height: 1.1;
+}
+
+/* The list. */
+.foros__lista-panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border-right: 1px solid var(--borde);
+}
+
+.foros__lista-cabeza {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  padding: 20px 16px 12px;
+}
+
+.foros__buscar {
+  position: relative;
+  margin: 0 16px 10px;
+}
+
+.foros__buscar svg {
+  position: absolute;
+  top: 50%;
+  left: 12px;
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: var(--texto-suave);
+  stroke-linecap: round;
+  stroke-width: 2;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.foros__buscar input {
+  width: 100%;
+  min-height: 44px;
+  padding: 8px 12px 8px 38px;
+  border: 1px solid var(--borde-control);
+  border-radius: var(--radio-control);
+  background: var(--superficie);
+  color: var(--texto);
+  font: inherit;
+}
+
+/* The courses, as a row that scrolls sideways: one tap filters. */
+.foros__materias {
+  display: flex;
+  touch-action: pan-x pan-y;
+  gap: 6px;
+  margin: 0 0 10px;
+  padding: 2px 16px 4px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.foros__materias button {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 4px 12px;
+  border: 1px solid var(--borde-control);
+  border-radius: 999px;
+  background: var(--superficie);
+  color: var(--texto);
+  font: inherit;
+  font-size: var(--t-chica);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.foros__materias button[aria-pressed='true'] {
+  border-color: var(--accion);
+  background: var(--accion);
+  color: var(--accion-texto);
+}
+
+.foros__filtro-foro {
+  display: flex;
+  overflow-wrap: anywhere;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  margin: 0 16px 10px;
+  font-size: var(--t-chica);
+}
+
+.foros__solo-nuevas {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  margin: 0 16px 8px;
+  font-size: var(--t-chica);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.foros__solo-nuevas + .foros__solo-nuevas {
+  margin-top: -6px;
+}
+
+.foros__solo-nuevas input {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: var(--accion);
+}
+
+.foros__numero {
+  display: inline-grid;
+  place-items: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--resaltador);
+  color: var(--resaltador-texto);
+  font-size: 0.75rem;
+  font-variant-numeric: lining-nums tabular-nums;
+  font-weight: 700;
+}
+
+.foros__aviso {
+  margin: 0 16px 8px;
+  padding: 8px 10px;
+  border-radius: var(--radio-control);
+  background: var(--fondo-aviso);
+  font-size: var(--t-chica);
+}
+
+.foros__reintentar {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accion);
+  font: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.foros__lista {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  border-top: 1px solid var(--borde);
+}
+
+.foros__lista .cargando {
+  padding: 12px 16px;
+}
+
+.foros__filas {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.foros__fila {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 92px;
+}
+
+.foros__fila + .foros__fila {
+  border-top: 1px solid var(--borde);
+}
+
+.foros__fila a {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+  padding: 12px 16px;
+  color: var(--texto);
+  text-decoration: none;
+}
+
+.foros__fila a:active,
+.foros__materias button:active,
+.foros__responde:active {
+  background: var(--superficie-2);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .foros__fila a:hover,
+  .foros__responde:hover {
+    background: var(--superficie-2);
+  }
+
+  .foros__materias button:not([aria-pressed='true']):hover {
+    border-color: var(--accion);
+  }
+}
+
+.foros__fila a:focus-visible {
+  outline: 2px solid var(--foco);
+  outline-offset: -2px;
+}
+
+.foros__fila[data-activa] a {
+  background: var(--superficie-2);
+  box-shadow: inset 3px 0 0 var(--accion);
+}
+
+.foros__fila-texto {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.foros__fila-arriba {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+}
+
+.foros__fila-titulo {
+  display: flex;
+  flex: 1;
+  align-items: baseline;
+  gap: 4px;
+  min-width: 0;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.foros__fila-nombre {
+  display: -webkit-box;
+  overflow-wrap: anywhere;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+/* What's new: the title with the highlighter, like an unread conversation. */
+.foros__fila[data-nueva] .foros__fila-nombre > span {
+  padding: 0 3px;
+  border-radius: 2px;
+  background: var(--resaltador);
+  color: var(--resaltador-texto);
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+.foros__pin {
+  flex: none;
+  align-self: center;
+  width: 15px;
+  height: 15px;
+  fill: none;
+  stroke: var(--texto-suave);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2;
+}
+
+.foros__fila-cuando {
+  flex: none;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+.foros__fila-donde,
+.foros__fila-dato {
+  overflow: hidden;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.foros__fila-dato {
+  color: var(--texto);
+}
+
+.foros__estado {
+  display: grid;
+  justify-items: start;
+  gap: 10px;
+  margin: 0;
+  padding: 20px 16px;
+  color: var(--texto-suave);
+}
+
+.foros__estado p {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+/* One discussion. */
+.foros__hilo-panel {
+  /* What is hidden for screen readers inside stays inside: without it, it stretches the page. */
+  position: relative;
+  min-height: 0;
+  overflow-y: auto;
+  background: var(--fondo);
+  scroll-padding-top: 16px;
+}
+
+.foros__nada {
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 12px;
+  height: 100%;
+  padding: 24px;
+  color: var(--texto-suave);
+  text-align: center;
+}
+
+.foros__nada svg {
+  width: 52px;
+  height: 52px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linejoin: round;
+  stroke-width: 1.4;
+}
+
+.foros__nada p {
+  max-width: 34ch;
+  margin: 0;
+}
+
+.foros__hilo {
+  max-width: 46rem;
+  margin: 0 auto;
+  padding: 24px 28px 48px;
+}
+
+.foros__hilo-cabeza {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.foros__volver {
+  display: none;
+}
+
+.foros__hilo-donde {
+  display: flex;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  margin: 0;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+}
+
+.foros__hilo-donde a {
+  color: var(--texto);
+  font-weight: 600;
+}
+
+.foros__hilo-donde > span:last-child:not(:first-child)::before {
+  content: '/';
+  margin-right: 8px;
+  color: var(--borde-control);
+}
+
+.foros__hilo-cabeza h2 {
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+  font-size: var(--t-h2);
+  line-height: 1.15;
+  text-wrap: balance;
+}
+
+/* It gets the focus only so a screen reader starts on it: nothing to press. */
+.foros__hilo-cabeza h2:focus {
+  outline: none;
+}
+
+.foros__hilo-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.foros__marca {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--superficie-2);
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+  font-weight: 600;
+}
+
+/* The posts: the first one is the paper the discussion is about; the answers hang from a thread on the left. */
+.foros__posts {
+  position: relative;
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.foros__post {
+  position: relative;
+  padding: 14px 16px 16px;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-bloque);
+  background: var(--superficie);
+  scroll-margin-top: 16px;
+}
+
+.foros__post:focus {
+  outline: none;
+}
+
+.foros__post:focus-visible {
+  outline: 2px solid var(--foco);
+  outline-offset: 2px;
+}
+
+.foros__post[data-primero] {
+  padding: 18px 20px 20px;
+  border-top: 4px solid var(--accion);
+}
+
+.foros__post:not([data-primero]) {
+  margin-left: 28px;
+}
+
+/* The thread: a line from the first post down through every answer. */
+.foros__post:not([data-primero])::before {
+  content: '';
+  position: absolute;
+  top: -13px;
+  bottom: -13px;
+  left: -17px;
+  width: 2px;
+  background: var(--borde);
+}
+
+.foros__post:not([data-primero])::after {
+  content: '';
+  position: absolute;
+  top: 24px;
+  left: -17px;
+  width: 16px;
+  height: 2px;
+  background: var(--borde);
+}
+
+.foros__post:not([data-primero]):last-child::before {
+  bottom: auto;
+  height: 39px;
+}
+
+.foros__post[data-nuevo] {
+  border-color: color-mix(in srgb, var(--resaltador) 70%, var(--borde));
+  box-shadow: inset 4px 0 0 var(--resaltador);
+}
+
+.foros__post-cabeza {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+}
+
+.foros__avatar {
+  --tono: var(--materia-0);
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--tono) 22%, var(--superficie));
+  color: var(--texto);
+  font-size: 0.8rem;
+  font-variant-numeric: lining-nums;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.foros__avatar[data-tono='1'] { --tono: var(--materia-1); }
+.foros__avatar[data-tono='2'] { --tono: var(--materia-2); }
+.foros__avatar[data-tono='3'] { --tono: var(--materia-3); }
+.foros__avatar[data-tono='4'] { --tono: var(--materia-4); }
+.foros__avatar[data-tono='5'] { --tono: var(--materia-5); }
+
+.foros__post-autor {
+  min-width: 0;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.foros__post-cuando {
+  margin-left: auto;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+/* Whom an answer answers, when it is not the first post: the start of that one, and a tap takes there. */
+.foros__responde {
+  display: grid;
+  gap: 2px;
+  width: 100%;
+  margin-top: 10px;
+  padding: 6px 10px;
+  border: 0;
+  border-left: 3px solid var(--borde-control);
+  border-radius: 0 var(--radio-control) var(--radio-control) 0;
+  background: var(--superficie-2);
+  color: var(--texto);
+  font: inherit;
+  font-size: var(--t-chica);
+  text-align: left;
+  cursor: pointer;
+}
+
+.foros__responde:focus-visible {
+  outline: 2px solid var(--foco);
+  outline-offset: 2px;
+}
+
+.foros__responde-quien {
+  font-weight: 700;
+}
+
+.foros__responde-cita {
+  overflow: hidden;
+  color: var(--texto-suave);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.foros__post-asunto {
+  margin: 10px 0 0;
+  overflow-wrap: anywhere;
+  font-size: var(--t-ui);
+}
+
+.foros__post-texto {
+  margin-top: 10px;
+  overflow-wrap: anywhere;
+}
+
+.foros__post[data-primero] .foros__post-texto {
+  font-size: 1.0625rem;
+}
+
+.foros__post-texto .texto-propio > :first-child {
+  margin-top: 0;
+}
+
+.foros__post-texto .texto-propio > :last-child {
+  margin-bottom: 0;
+}
+
+.foros__borrado,
+.foros__citaba {
+  margin: 10px 0 0;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+  font-style: italic;
+}
+
+.foros__adjuntos {
+  margin: 12px 0 0;
+}
+
+.foros__cuantas {
+  margin: 8px 0 -2px;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+  font-weight: 700;
+}
+
+/* «Nuevo desde tu última visita»: a stroke of the highlighter across the thread. */
+.foros__corte {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 6px 0 -2px 28px;
+  scroll-margin-top: 16px;
+  color: var(--resaltador-texto);
+  font-size: var(--t-chica);
+  font-weight: 700;
+}
+
+.foros__corte span {
+  padding: 2px 8px;
+  border-radius: 2px;
+  background: var(--resaltador);
+}
+
+.foros__corte::after {
+  content: '';
+  flex: 1;
+  height: 2px;
+  background: var(--resaltador);
+}
+
+.foros__vacio {
+  color: var(--texto-suave);
+}
+
+.foros__hilo .cargando {
+  padding-block: 8px;
+}
+
+/* A narrow box: the list, or the discussion with a way back. */
+@container (max-width: 46rem) {
+  .foros__caja {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .foros__lista-panel {
+    border-right: 0;
+  }
+
+  .foros__caja[data-abierta] .foros__lista-panel,
+  .foros__caja:not([data-abierta]) .foros__hilo-panel {
+    display: none;
+  }
+
+  .foros__hilo {
+    padding: 16px 16px 40px;
+  }
+
+  .foros__volver {
+    display: inline-flex;
+    align-items: center;
+    justify-self: start;
+    min-height: 44px;
+    color: var(--accion);
+    font-weight: 700;
+  }
+
+  .foros__volver::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    margin-right: 8px;
+    border-bottom: 2px solid currentColor;
+    border-left: 2px solid currentColor;
+    transform: rotate(45deg);
+  }
+
+  .foros__post:not([data-primero]) {
+    margin-left: 16px;
+  }
+
+  .foros__post:not([data-primero])::before,
+  .foros__post:not([data-primero])::after {
+    left: -11px;
+  }
+
+  .foros__post:not([data-primero])::after {
+    width: 10px;
+  }
+
+  .foros__corte {
+    margin-left: 16px;
+  }
+}
+
+@media (forced-colors: active) {
+  .foros__fila[data-nueva] .foros__fila-nombre > span,
+  .foros__corte span {
+    outline: 1px solid CanvasText;
+  }
+}
+
+.foros__numero--gris {
+  background: var(--superficie-2);
+  color: var(--texto-suave);
+}
+
+/* Answering: a box at the foot of the discussion that stays in sight while reading, like the one in Mensajes. */
+.foros__hilo:has(.foros__responder) {
+  padding-bottom: 0;
+}
+
+.foros__responder {
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 8px 10px;
+  margin: 24px -28px 0;
+  padding: 12px 28px 16px;
+  border-top: 1px solid var(--borde);
+  background: var(--superficie);
+}
+
+.foros__responder--sin {
+  grid-template-columns: 1fr;
+  justify-items: start;
+}
+
+.foros__responder--sin p {
+  margin: 0;
+  color: var(--texto-suave);
+}
+
+.foros__respondes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 6px 10px;
+  border-left: 3px solid var(--accion);
+  border-radius: 4px;
+  background: var(--superficie-2);
+  font-size: var(--t-chica);
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.foros__respondes-sacar,
+.foros__responder-a {
+  min-height: 32px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 4px;
+  background: none;
+  color: var(--accion);
+  font: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.foros__respondes-sacar {
+  margin-left: auto;
+}
+
+.foros__responder-a {
+  justify-self: start;
+  margin: 4px 0 -6px -8px;
+  font-size: var(--t-chica);
+}
+
+.foros__respondes-sacar:focus-visible,
+.foros__responder-a:focus-visible {
+  outline: 2px solid var(--foco);
+  outline-offset: 2px;
+}
+
+textarea.foros__campo {
+  min-height: 44px;
+  max-height: 40vh;
+  resize: vertical;
+  line-height: 1.4;
+  field-sizing: content;
+}
+
+.foros__publicar {
+  min-width: 96px;
+}
+
+.foros__responder-ayuda {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+}
+
+.foros__responder-ayuda:empty {
+  display: none;
+}
+
+.foros__responder-ayuda [data-pasado],
+.foros__responder-error {
+  color: var(--error);
+  font-weight: 700;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .foros__respondes-sacar:hover,
+  .foros__responder-a:hover {
+    background: var(--superficie-2);
+  }
+}
+
+@container (max-width: 46rem) {
+  .foros__responder {
+    margin-inline: -16px;
+    padding-inline: 16px;
+  }
+}

@@ -1,5 +1,5 @@
 import {
-  ALTO_CONSULTRON, APARIENCIA_CONSULTRON, BRILLO_PDF, CONTENIDOS, EN_EL_MENU, ESTILOS_DE_MENU, LUGARES_EN_EL_MENU, OPCIONES, PANEL_CONSULTRON, PANEL_PDF,
+  ALINEACIONES_DEL_MENU, ALTO_CONSULTRON, ANCHOS_DEL_MENU, APARIENCIA_CONSULTRON, BRILLO_PDF, CONTENIDOS, EN_EL_MENU, ESTILOS_DE_MENU, LUGARES_EN_EL_MENU, OPCIONES, PANEL_CONSULTRON, PANEL_PDF,
   PDF_CLAROS, POSICIONES_DEL_MENU, RINCON_CONSULTRON, VISTAS, normalizar,
 } from './ajustes';
 import { GRUPOS_DE_AVISOS } from './avisos';
@@ -17,9 +17,10 @@ import { VELOCIDADES } from './voz';
 // orders. The three colors go last, six hex digits or «z» without one, and a last character checks the rest, so a typo
 // doesn't pass as someone else's look. The lists only grow at the end; a version goes first, in case that ever changes.
 
-// Version 2 added what a course looks like inside (`contenido`): a code of version 1 still reads, without it.
-const VERSION = '2';
-const VERSIONES = ['1', '2'];
+// Version 2 added what a course looks like inside (`contenido`): a code of version 1 still reads, without it. Version 3
+// added where the screens of the bar on top go and how wide it is.
+const VERSION = '3';
+const VERSIONES = ['1', '2', '3'];
 const PREFIJO = 'CVG';
 const ABC = '0123456789abcdefghjkmnpqrstvwxyz';
 const SIN_COLOR = 'z';
@@ -136,6 +137,8 @@ const CAMPOS = [
   { ancho: 1, de: (_, m) => (m.hoy.dias === null ? 0 : DIAS_DE_HOY.indexOf(m.hoy.dias) + 1), a: (n, c) => { c.hoy.dias = n === 0 ? null : DIAS_DE_HOY[n - 1]; }, tope: DIAS_DE_HOY.length + 1 },
   { ancho: 2, de: (_, m) => bits(AVISOS, (g) => m.avisosOcultos.includes(g)), a: (n, c) => { c.avisosOcultos = deBits(AVISOS, n); }, tope: 2 ** AVISOS.length },
   { ...eleccion('contenido', CONTENIDOS), desde: '2' },
+  { ancho: 1, de: (a) => ALINEACIONES_DEL_MENU.indexOf(a.menu.alineacion), a: (n, c) => { c.ajustes.menu.alineacion = ALINEACIONES_DEL_MENU[n]; }, tope: ALINEACIONES_DEL_MENU.length, desde: '3' },
+  { ancho: 1, de: (a) => ANCHOS_DEL_MENU.indexOf(a.menu.ancho), a: (n, c) => { c.ajustes.menu.ancho = ANCHOS_DEL_MENU[n]; }, tope: ANCHOS_DEL_MENU.length, desde: '3' },
 ];
 
 // Each place weighs differently (all odd), so one wrong character or most swaps change it.

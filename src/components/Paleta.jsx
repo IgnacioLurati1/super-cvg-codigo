@@ -23,6 +23,7 @@ const PANTALLAS = [
   { a: '/sysacad', nombre: 'Sysacad', simbolo: 'carpeta', color: '2' },
   { a: '/carrera', nombre: 'Tu carrera', simbolo: 'bandera', color: '5' },
   { a: '/mensajes', nombre: 'Mensajes', simbolo: 'sobre', color: '9' },
+  { a: '/mensajes/foros', nombre: 'Foros', simbolo: 'burbuja', color: '2' },
   { a: '/configuracion', nombre: 'Configuración', simbolo: 'rombo', color: '0' },
   { a: '/laboratorio', nombre: 'Laboratorio', simbolo: 'codigo', color: '3' },
   { a: '/repaso', nombre: 'Repaso', simbolo: 'marcador', color: '6' },
@@ -264,9 +265,10 @@ export function esAtajo(e) {
   return conAlt || conControl;
 }
 
-export function BotonPaleta() {
+/** The quick menu's button: in the header, and folded, inside «Menú» (`alTocar` closes it). */
+export function BotonPaleta({ alTocar }) {
   return (
-    <button type="button" className="cabecera__rapido" title="Menú rápido (Alt K)" aria-haspopup="dialog" aria-keyshortcuts="Alt+K" onClick={() => pedidos.forEach((f) => f())}>
+    <button type="button" className="cabecera__rapido" title="Menú rápido (Alt K)" aria-haspopup="dialog" aria-keyshortcuts="Alt+K" onClick={() => { alTocar?.(); pedidos.forEach((f) => f()); }}>
       <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="6.5" /><path d="M20 20l-4.4-4.4" /></svg>
       <span className="cabecera__rapido-texto">Menú rápido</span>
       <kbd className="cabecera__atajo" aria-hidden="true">Alt K</kbd>

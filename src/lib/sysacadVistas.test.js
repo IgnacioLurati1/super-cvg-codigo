@@ -112,8 +112,9 @@ describe('leerCorrelativas', () => {
       'Cursar Redes de Datos',
       'Cursar Administración de Sistemas de Información',
     ]);
-    expect(c.frenos[0]).toEqual({ nombre: 'Administración de Sistemas de Información', cuantas: 8 });
-    expect(c.frenos.every((f) => f.cuantas >= 2)).toBe(true);
+    // First what opens right away, then the whole chain, electives apart (frenos.test.js).
+    expect(c.frenos[0]).toEqual({ nombre: 'Simulación', abre: 2, frena: 2 });
+    expect(c.frenos.every((f) => f.frena >= 2)).toBe(true);
   });
   it('leaves a cut name as Sysacad wrote it when two whole names start like it', () => {
     const c = leerCorrelativas([tabla(CORRELATIVIDAD, [
@@ -123,7 +124,7 @@ describe('leerCorrelativas', () => {
     expect(c.materias[0].nombre).toBe('Sistemas de Información Integrados para');
   });
   it('for the final, a subject not regular yet says so, and it never holds back itself', () => {
-    const c = leerCorrelativas([tabla(CORRELATIVIDAD, RENDIR.filter((f) => f.length))]);
+    const c = leerCorrelativas([tabla(CORRELATIVIDAD, RENDIR.filter((f) => f.length))], 'rendir');
     expect(c.materias.find((m) => m.nombre === 'Física II').puede).toBe(true);
     expect(c.materias.find((m) => m.nombre === 'Redes de Datos').faltan).toEqual(['Regularizarla', 'Regularizar Comunicación de Datos']);
     expect(c.frenos.some((f) => f.nombre === 'Proyecto Final')).toBe(false);

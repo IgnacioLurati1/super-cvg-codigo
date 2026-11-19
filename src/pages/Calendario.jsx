@@ -31,6 +31,8 @@ import './panel.css';
 
 // The academic calendar's dates: the same for everyone, made once.
 const DE_LA_FACULTAD = eventosDeLaFacultad();
+// The months of the campus' dates that go in the calendar file, this one included.
+const MESES_A_BAJAR = 4;
 const DIAS = [['Lun', 'Lunes'], ['Mar', 'Martes'], ['Mié', 'Miércoles'], ['Jue', 'Jueves'], ['Vie', 'Viernes'], ['Sáb', 'Sábado'], ['Dom', 'Domingo']];
 const mayuscula = (t) => t.charAt(0).toLocaleUpperCase('es') + t.slice(1);
 const claveValida = (t) => (esClaveDeDia(t) ? t : null);
@@ -295,9 +297,36 @@ export default function Calendario() {
     },
   });
 
-  const bajar = () => {
-    const blob = new Blob([armarIcs(filtrados, ahora)], { type: 'text/calendar;charset=utf-8' });
-    guardarArchivo(blob, `campus-${dia.slice(0, 7)}.ics`);
+  // Everything from today on, not only the month on screen: the campus' dates of the next MESES_A_BAJAR months, and
+  // every date of the student, of Classroom and of the academic calendar. With the filters of the screen.
+  const [bajando, setBajando] = useState(false);
+  const bajar = async () => {
+    if (bajando) return;
+    setBajando(true);
+    try {
+      const hoyEn = fechaDeClave(hoy);
+      const desde = hoyEn.getTime() / 1000;
+      const meses = Array.from({ length: MESES_A_BAJAR }, (_, i) => new Date(hoyEn.getFullYear(), hoyEn.getMonth() + i, 1));
+      // A month that does not come leaves out only its campus dates: the rest still goes, and the student is told.
+      const [resultados, nombres] = await Promise.all([Promise.allSettled(meses.map((d) => cargarMes(d.getFullYear(), d.getMonth() + 1))), cargarNombres()]);
+      const listas = resultados.filter((m) => m.status === 'fulfilled').map((m) => m.value);
+      const faltan = resultados.length - listas.length;
+      const queVienen = [...conHechas([...conCorrecciones(listas.flat(), mio, nombres), ...deClassroom], mio), ...eventosPropios(mio, nombres), ...(conFacultad ? DE_LA_FACULTAD : [])]
+        .filter((e) => e.cuando >= desde && !fuera.has(Number(e.materiaId)) && (!materiaActiva || String(e.materiaId) === materiaActiva) && (!soloVencimientos || e.vencimiento))
+        .sort((a, b) => a.cuando - b.cuando);
+      const unicos = [...new Map(queVienen.map((e) => [e.id, e])).values()];
+      if (!unicos.length) {
+        avisar('No hay fechas de hoy en adelante para bajar.');
+        return;
+      }
+      guardarArchivo(new Blob([armarIcs(unicos, ahora)], { type: 'text/calendar;charset=utf-8' }), `super-cvg-${hoy}.ics`);
+      const cuantas = unicos.length === 1 ? 'Bajaste una fecha.' : `Bajaste ${unicos.length} fechas.`;
+      avisar(faltan ? `${cuantas} Faltan las del campus de ${faltan === 1 ? 'un mes' : `${faltan} meses`}. Probá de nuevo en un rato.` : cuantas, faltan ? 'error' : 'ok');
+    } catch {
+      avisar('No se pudieron traer las fechas del campus. Probá de nuevo en un rato.', 'error');
+    } finally {
+      setBajando(false);
+    }
   };
 
   // Every course the student has, for the form: not only the ones with dates this month.
@@ -361,8 +390,7 @@ export default function Calendario() {
         <h1>Calendario</h1>
         <div className="titular__botones cal-acciones">
           <button ref={botonAgregar} type="button" className="boton boton--chico" aria-expanded={editando === 'nueva'} onClick={() => setEditando('nueva')}>Agregar una fecha</button>
-          {(filtrados.length > 0 || calGoogle.disponible) && (
-            <div
+          <div
               ref={mas}
               className="cal-acciones__resto"
               data-abierto={masAbierto ? '' : undefined}
@@ -381,11 +409,10 @@ export default function Calendario() {
                 <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><circle cx="5" cy="12" r="2" /><circle cx="12" cy="12" r="2" /><circle cx="19" cy="12" r="2" /></svg>
               </button>
               <div id="cal-acciones-menu" className="cal-acciones__menu">
-                {filtrados.length > 0 && <button type="button" className="boton boton--secundario boton--chico" onClick={bajar}>Bajar para tu calendario</button>}
+                <button type="button" className="boton boton--secundario boton--chico" onClick={bajar} aria-disabled={bajando || undefined}>{bajando ? 'Juntando las fechas' : 'Bajar para tu calendario'}</button>
                 <BotonCalendarioGoogle />
               </div>
             </div>
-          )}
         </div>
       </div>
 

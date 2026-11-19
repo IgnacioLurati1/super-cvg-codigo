@@ -16,7 +16,7 @@ const seguirSistema = (avisar) => {
 const sistemaQuieto = () => Boolean(window.matchMedia?.(CONSULTA).matches);
 
 // What changes the colors the scene takes from CSS: theme, contrast, palette and the custom colors (inline style).
-const ATRIBUTOS = ['data-tema', 'data-contraste', 'data-daltonismo', 'style'];
+const ATRIBUTOS = ['data-tema', 'data-paleta', 'data-contraste', 'data-daltonismo', 'style'];
 
 export default function Cuaderno3D() {
   const movimiento = movimientoDe(useAjustes());

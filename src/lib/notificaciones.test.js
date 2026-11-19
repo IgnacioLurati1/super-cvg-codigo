@@ -139,7 +139,7 @@ describe('limpiarNotificacion', () => {
         autor: 'Ana Ejemplo',
         materia: { id: 41, nombre: 'Algoritmos y Estructuras de Datos' },
         leida: false,
-        ruta: null,
+        ruta: '/mensajes/foros/812',
         campus: `${CAMPUS}/mod/forum/discuss.php?d=812#p2044`,
       });
       expect(limpia.cuerpo).not.toMatch(/https?:|baja|contexto|preferencias|->|Foros|Hola/);
@@ -262,7 +262,9 @@ describe('limpiarNotificacion', () => {
     expect(a(`${CAMPUS}/course/view.php?id=43`, { subject: 'Completaste el curso' })).toMatchObject({ ruta: '/materias/43', materia: { id: 43, nombre: 'Física II' } });
     // A course that isn't the student's (1 is the front page of the campus) is no course.
     expect(a(`${CAMPUS}/course/view.php?id=1`)).toMatchObject({ ruta: null, materia: null, campus: `${CAMPUS}/course/view.php?id=1` });
-    expect(a(`${CAMPUS}/mod/forum/discuss.php?d=1`)).toMatchObject({ ruta: null, campus: `${CAMPUS}/mod/forum/discuss.php?d=1` });
+    // A forum post opens its discussion in Foros.
+    expect(a(`${CAMPUS}/mod/forum/discuss.php?d=12#p44`)).toMatchObject({ ruta: '/mensajes/foros/12', campus: `${CAMPUS}/mod/forum/discuss.php?d=12#p44` });
+    expect(a(`${CAMPUS}/mod/forum/discuss.php?d=x`)).toMatchObject({ ruta: null });
   });
 
   it('nada fuera del campus ni que pueda correr: el HTML queda como texto y un link raro, afuera', () => {

@@ -23,6 +23,7 @@ export const SITIO = {
     { ruta: 'privacidad', titulo: 'Tu privacidad | Super CVG', descripcion: 'Qué pasa con tu contraseña y tus datos del campus cuando usás este sitio.' },
     { ruta: 'novedades', titulo: 'Notas del parche | Super CVG', descripcion: 'Qué cambió en Super CVG, fecha por fecha.' },
     { ruta: 'opinar', titulo: 'Opinar | Super CVG', descripcion: 'Contanos qué le falta a Super CVG, qué no anda o qué te gusta.' },
+    { ruta: 'entrada', titulo: 'La facu en 3D | Super CVG', descripcion: 'La entrada de UTN FRRO en 3D, para mirarla desde donde quieras.' },
   ],
   privadas: ['calendario', 'horario', 'horario/compartido', 'materias', 'inscripcion', 'buscar', 'notas', 'sysacad', 'carrera', 'resumenes', 'configuracion', 'mensajes', 'compartido', 'archivo', 'propias', 'laboratorio', 'calculadoras', 'repaso', 'en-vivo', ...CALCULADORAS.map((c) => `calculadoras/${c.slug}`)],
 };

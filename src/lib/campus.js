@@ -4,7 +4,7 @@ import { aplanarContenido, eventosDelMes, normalizarAviso, normalizarEvento, tex
 import { armarAreas, cursoDelCatalogo, estaAbierta, inscripcionPropia, patronDeBusqueda } from './inscripcion';
 import { esDemo } from './modoDemo';
 import { bajarArchivo, enviarEntrega, ErrorCampus, guardarEntrega, inscribirse, leerInscripcion, llamar, subirArchivo } from './moodle';
-import { leerMandado, leerRespuesta, mandarMensaje, marcarLeida, responderEnConversacion } from './moodle';
+import { leerMandado, leerPublicado, leerRespuesta, mandarMensaje, marcarLeida, responderEnConversacion, responderEnForo } from './moodle';
 import { conversaciones, mensaje, mismoTexto, personasHalladas, tandaDeMensajes } from './mensajes';
 import { fijarCursos } from './colores';
 import { fijarUsuario } from './mio';
@@ -38,9 +38,11 @@ const DE_MENSAJES = new Set([
 ]);
 // And with the bell of the notifications (campana.js), asked on every screen too: without them the bell goes away.
 const DE_NOTIFICACIONES = new Set(['message_popup_get_popup_notifications', 'message_popup_get_unread_popup_notification_count']);
+// And with the forums (Foros), all reads.
+const DE_FOROS = new Set(['mod_forum_get_forums_by_courses', 'mod_forum_get_forum_discussions', 'mod_forum_get_discussion_posts', 'mod_forum_add_discussion_post']);
 const sigueViva = (token) => llamar(token, 'core_webservice_get_site_info').then(() => true, () => false);
 const cerradaEnElCampus = async (error, funcion, token) =>
-  error.campus === 'accessexception' && (DE_INSCRIPCION.has(funcion) || DE_TAREAS.has(funcion) || DE_MENSAJES.has(funcion) || DE_NOTIFICACIONES.has(funcion) || DE_CUESTIONARIOS.has(funcion)) && (await sigueViva(token));
+  error.campus === 'accessexception' && (DE_INSCRIPCION.has(funcion) || DE_TAREAS.has(funcion) || DE_MENSAJES.has(funcion) || DE_NOTIFICACIONES.has(funcion) || DE_CUESTIONARIOS.has(funcion) || DE_FOROS.has(funcion)) && (await sigueViva(token));
 
 const pedir = async (funcion, parametros) => {
   const token = tokenActual();
@@ -609,4 +611,104 @@ export async function cargarIntento(materiaId, cmid, intentoId) {
   const revisable = revisionDe(datos.cuestionario, intento, datos.acceso, Date.now() / 1000);
   if (revisable && !revisable.abierta) return { ...datos, intento, cerrada: 'docente', abre: revisable.abre };
   return { ...datos, intento, ...(await cargarRevision(intentoId)) };
+}
+
+// ── Foros ──────────────────────────────────────────────────────────────────────────────────────────────────────
+// Read only. The forums of the courses in progress come in one request, and the discussions of each forum that has any
+// in another, a few at a time. Nothing is asked again until the cache runs out or the student asks.
+const FOROS_A_LA_VEZ = 4;
+// How the campus' answers are read (foros.js) comes only with Foros, not with the first page.
+const lectorDeForos = () => import('./foros');
+
+/** The forums of the courses in progress: { foros } or { cerrado: true } when the campus does not open them. */
+export const cargarForos = ({ fresco = false } = {}) => {
+  if (fresco) olvidar(['foros']);
+  return conCache('foros', 30, async () => {
+    if (!(await ofrece('mod_forum_get_forums_by_courses'))) return { cerrado: true };
+    const { enCurso } = await cargarMaterias();
+    if (!enCurso.length) return { foros: [] };
+    const nombres = Object.fromEntries(enCurso.map((m) => [m.id, m.nombre]));
+    const parametros = Object.fromEntries(enCurso.map((m, i) => [`courseids[${i}]`, m.id]));
+    const { leerForos } = await lectorDeForos();
+    try {
+      return { foros: leerForos(await pedir('mod_forum_get_forums_by_courses', parametros), nombres) };
+    } catch (error) {
+      if (error.codigo === 'sin_permiso') return { cerrado: true };
+      throw error;
+    }
+  });
+};
+
+/** The latest discussions of one forum. */
+export const cargarDiscusiones = (foro, { fresco = false } = {}) => {
+  if (fresco) olvidar([`foros.discusiones.${foro.id}`]);
+  return conCache(`foros.discusiones.${foro.id}`, 10, async () => {
+    const { leerDiscusiones } = await lectorDeForos();
+    return leerDiscusiones(await pedir('mod_forum_get_forum_discussions', { forumid: foro.id, page: 0, perpage: 50 }), foro);
+  });
+};
+
+/** Every forum with its discussions: { foros, discusiones, fallaron } (the forums whose discussions did not come), or
+ * { cerrado: true }. `fresco` asks the campus again. */
+export async function cargarTodosLosForos({ fresco = false } = {}) {
+  const datos = await cargarForos({ fresco });
+  if (datos.cerrado) return datos;
+  const conAlgo = datos.foros.filter((f) => f.discusiones > 0);
+  const discusiones = [];
+  const fallaron = [];
+  for (let i = 0; i < conAlgo.length; i += FOROS_A_LA_VEZ) {
+    const tanda = conAlgo.slice(i, i + FOROS_A_LA_VEZ);
+    const resultados = await Promise.allSettled(tanda.map((f) => cargarDiscusiones(f, { fresco })));
+    resultados.forEach((r, j) => {
+      if (r.status === 'fulfilled') discusiones.push(...r.value);
+      else if (r.reason?.codigo === 'sin_sesion') throw r.reason;
+      else fallaron.push(tanda[j]);
+    });
+  }
+  const { ordenarDiscusiones } = await lectorDeForos();
+  return { foros: datos.foros, discusiones: ordenarDiscusiones(discusiones), fallaron };
+}
+
+/** The posts of one discussion, with its course: { posts, materiaId, materia, foroId }. */
+export const cargarHilo = (discusionId, { fresco = false } = {}) => {
+  if (fresco) olvidar([`foros.hilo.${discusionId}`]);
+  return conCache(`foros.hilo.${discusionId}`, 5, async () => {
+    const [respuesta, nombres, { leerHilo }] = await Promise.all([
+      pedir('mod_forum_get_discussion_posts', { discussionid: discusionId, sortby: 'created', sortdirection: 'ASC' }),
+      cargarNombres(),
+      lectorDeForos(),
+    ]);
+    const materiaId = Number(respuesta?.courseid) || null;
+    const materia = (materiaId && nombres[materiaId]) || '';
+    return { posts: leerHilo(respuesta, { materia, materiaId }), materiaId, materia, foroId: Number(respuesta?.forumid) || null };
+  });
+};
+
+/** Answers a post of a discussion, when the student tapped Publicar: { id } of the new post. Sent once. A clear no
+ * says so; a cut connection or a lost answer is looked up in the discussion before saying it didn't go, so trying again
+ * doesn't publish it twice. */
+export async function publicarEnForo(discusionId, postId, asunto, texto) {
+  const { id: yo } = await cargarPerfil();
+  const token = tokenActual();
+  if (!token) throw new ErrorCampus('Tu sesión terminó.', 'sin_sesion');
+  const desde = Math.floor(Date.now() / 1000) - 120;
+  try {
+    if (import.meta.env.DEV && esDemo(token)) {
+      const { FOROS_DEMO } = await import('./demoForos');
+      return leerPublicado(FOROS_DEMO.publicar(postId, asunto, texto, yo));
+    }
+    return await responderEnForo(token, postId, asunto, texto);
+  } catch (error) {
+    if (await cerradaEnElCampus(error, 'mod_forum_add_discussion_post', token).catch(() => false)) {
+      throw new ErrorCampus('El campus no deja responder en los foros desde Super CVG. Hacelo desde su página.', 'sin_permiso');
+    }
+    if (error.codigo === 'sesion' && tokenActual() === token) cerrarSesion();
+    if (!enDuda(error)) throw error;
+    const hilo = await cargarHilo(discusionId, { fresco: true }).catch(() => null);
+    const llego = hilo?.posts.findLast((p) => p.autorId === yo && p.cuando >= desde && mismoTexto(texto, p.texto));
+    if (llego) return { id: llego.id };
+    throw error;
+  } finally {
+    olvidar([`foros.hilo.${discusionId}`, 'foros.discusiones.']);
+  }
 }

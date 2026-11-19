@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { bajarArchivo, CAMPUS, enviarEntrega, ErrorCampus, ESCRITURA, guardarEntrega, inscribirse, LARGO_MAXIMO, largoEnBytes, LECTURA, llamar, mandarMensaje, marcarLeida, pedirClave, responderEnConversacion, subirArchivo } from './moodle';
+import { bajarArchivo, CAMPUS, enviarEntrega, ErrorCampus, ESCRITURA, guardarEntrega, inscribirse, LARGO_MAXIMO, largoEnBytes, LECTURA, llamar, mandarMensaje, marcarLeida, pedirClave, responderEnConversacion, responderEnForo, subirArchivo, textoAHtml } from './moodle';
 
 const responder = (cuerpo, { status = 200, tipo = 'application/json' } = {}) =>
   vi.fn(async () => new Response(typeof cuerpo === 'string' ? cuerpo : JSON.stringify(cuerpo), { status, headers: { 'content-type': tipo } }));
@@ -213,7 +213,7 @@ describe('notificaciones', () => {
 });
 
 describe('mensajes privados', () => {
-  const ESCRIBEN = ['core_message_send_messages_to_conversation', 'core_message_send_instant_messages', 'core_message_mark_all_conversation_messages_as_read'];
+  const ESCRIBEN = ['core_message_send_messages_to_conversation', 'core_message_send_instant_messages', 'core_message_mark_all_conversation_messages_as_read', 'mod_forum_add_discussion_post'];
   const cuerpoDe = (pedido) => Object.fromEntries(pedido.mock.calls[0][1].body);
 
   it('reads through LECTURA and writes only through ESCRITURA, which llamar never sends', async () => {
@@ -253,6 +253,38 @@ describe('mensajes privados', () => {
     vi.stubGlobal('fetch', pedido);
     expect(await marcarLeida('k', 5, 9)).toBe(true);
     expect(cuerpoDe(pedido)).toEqual({ userid: '5', conversationid: '9', wstoken: 'k', wsfunction: 'core_message_mark_all_conversation_messages_as_read', moodlewsrestformat: 'json' });
+  });
+
+  it('answers a forum post with its one function, the text as escaped HTML, once', async () => {
+    const pedido = responder({ postid: 77, warnings: [] });
+    vi.stubGlobal('fetch', pedido);
+    expect(await responderEnForo('k', 9, 'Re: Parcial', 'Sí <b>entra</b>\nla 3\n\nGracias & chau')).toEqual({ id: 77 });
+    expect(pedido).toHaveBeenCalledTimes(1);
+    expect(cuerpoDe(pedido)).toEqual({
+      postid: '9', subject: 'Re: Parcial', message: '<p>Sí &lt;b&gt;entra&lt;/b&gt;<br>la 3</p><p>Gracias &amp; chau</p>', messageformat: '1',
+      wstoken: 'k', wsfunction: 'mod_forum_add_discussion_post', moodlewsrestformat: 'json',
+    });
+  });
+
+  it('a forum answer: refused before any request when empty, and said in words when the campus says no', async () => {
+    const pedido = responder({ postid: 1 });
+    vi.stubGlobal('fetch', pedido);
+    for (const [id, asunto, texto] of [[9, 'Re: x', '  '], [9, '', 'hola'], ['9', 'Re: x', 'hola'], [9, 'Re: x', 'a'.repeat(20_001)]]) {
+      await expect(responderEnForo('k', id, asunto, texto)).rejects.toMatchObject({ codigo: 'datos_invalidos' });
+    }
+    expect(pedido).not.toHaveBeenCalled();
+    vi.stubGlobal('fetch', responder({ exception: 'moodle_exception', errorcode: 'nopostforum', message: 'interno' }));
+    await expect(responderEnForo('k', 9, 'Re: x', 'hola')).rejects.toMatchObject({ codigo: 'no_responde' });
+    vi.stubGlobal('fetch', responder({ warnings: [] }));
+    await expect(responderEnForo('k', 9, 'Re: x', 'hola')).rejects.toMatchObject({ codigo: 'sin_confirmar' });
+    const cortado = vi.fn(async () => { throw new TypeError('Failed to fetch'); });
+    vi.stubGlobal('fetch', cortado);
+    await expect(responderEnForo('k', 9, 'Re: x', 'hola')).rejects.toThrow(TypeError);
+    expect(cortado).toHaveBeenCalledTimes(1);
+  });
+
+  it('nothing written becomes a tag', () => {
+    expect(textoAHtml('<script>x</script>\r\n"a"')).toBe('<p>&lt;script&gt;x&lt;/script&gt;<br>&quot;a&quot;</p>');
   });
 
   it('never retries, also when the connection or the campus fails', async () => {

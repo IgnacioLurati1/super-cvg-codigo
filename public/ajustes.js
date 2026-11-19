@@ -7,7 +7,7 @@
   var CLAVE = 'cl.ajustes';
   var LISTAS = {
     estilo: ['original', 'hoja', 'profesional', 'batman', 'plano', 'pizarron'],
-    tema: ['sistema', 'claro', 'oscuro'],
+    tema: ['sistema', 'claro', 'oscuro', 'rosa', 'bosque', 'cafe', 'lavanda', 'infierno', 'glaciar'],
     contraste: ['normal', 'alto'],
     daltonismo: ['ninguno', 'rojo-verde', 'azul-amarillo'],
     letra: ['normal', 'grande', 'mas-grande', 'enorme'],
@@ -41,10 +41,24 @@
   var ES_COLOR = /^#[0-9a-f]{6}$/i;
   var BLANCO = '#ffffff';
   var OSCURO = '#0f1c28';
-  var BARRA = { claro: '#17324d', oscuro: '#3578bd' };
-  // The header of these styles doesn't take the action color: the browser's bar takes the header's own.
-  var BARRA_DEL_ESTILO = { hoja: { claro: '#fcfdfe', oscuro: '#171c27' }, profesional: { claro: '#ffffff', oscuro: '#111a30' }, batman: { oscuro: '#141519' }, plano: { oscuro: '#0a2647' }, pizarron: { oscuro: '#7f5f3f' } };
-  var SIEMPRE_OSCUROS = ['batman', 'plano', 'pizarron'];
+  var BARRA = { claro: '#17324d', oscuro: '#3578bd', rosa: '#c2306e', bosque: '#17805a', cafe: '#b8531a', lavanda: '#5b3fb0', 'lavanda-oscuro': '#7456d0', infierno: '#c4320a', glaciar: '#0e7490' };
+  // The palettes of tokens.css: each one is a theme (the one `data-tema` says) with its own colors (`data-paleta`).
+  var PALETAS = { rosa: 'oscuro', bosque: 'oscuro', cafe: 'oscuro', lavanda: 'claro', infierno: 'oscuro', glaciar: 'oscuro' };
+  // The header of these styles doesn't take the theme's action color: the browser's bar takes the header's own. A main
+  // color the student chose paints every header (`data-cabecera`), and the bar with it.
+  var BARRA_DEL_ESTILO = { hoja: { claro: '#fcfdfe', oscuro: '#171c27' }, profesional: { claro: '#ffffff', oscuro: '#111a30' }, batman: { oscuro: '#141519' }, plano: { claro: '#ebe5d1', oscuro: '#0a2647' }, pizarron: { claro: '#c9cfd5', oscuro: '#7f5f3f' } };
+  // The same with a palette, where it paints the header: the page's background (Hoja), the first color of its gradient
+  // (Profesional) and the title block (Plano). Batman and Pizarrón keep theirs. Lavanda in an always-dark style is its dark one.
+  var BARRA_PALETA = {
+    rosa: { hoja: '#1a1022', profesional: '#2d1a3a', plano: '#120a19' },
+    bosque: { hoja: '#0b1510', profesional: '#16291f', plano: '#06100b' },
+    cafe: { hoja: '#1e140e', profesional: '#34231a', plano: '#140c07' },
+    lavanda: { hoja: '#f4f0fb', profesional: '#ffffff', plano: '#ebe5f7', pizarron: '#cfc7e2' },
+    'lavanda-oscuro': { hoja: '#17121f', profesional: '#2a2040' },
+    infierno: { hoja: '#170806', profesional: '#2c120b', plano: '#100403' },
+    glaciar: { hoja: '#07121a', profesional: '#12232f', plano: '#040c11' },
+  };
+  var SIEMPRE_OSCUROS = ['batman'];
   var CAMBIA_AL_PASAR = 0.18;
 
   var canales = function (color) {
@@ -127,8 +141,16 @@
     });
   };
 
+  // The palette the student chose. Every style takes it: the style gives the shape, the palette the colors (tokens.css).
+  var paletaDe = function (datos) {
+    var elegido = entre(LISTAS.tema, datos.tema);
+    return PALETAS[elegido] ? elegido : null;
+  };
+
   var temaDe = function (datos, estilo) {
     var tema = entre(LISTAS.tema, datos.tema);
+    // A palette is the light or the dark theme with other colors: everything that reads `data-tema` keeps working.
+    tema = PALETAS[tema] || tema;
     if (tema === 'sistema') tema = esOscuroElSistema() ? 'oscuro' : 'claro';
     // These styles are dark whatever the theme says.
     return SIEMPRE_OSCUROS.indexOf(estilo) >= 0 ? 'oscuro' : tema;
@@ -138,12 +160,16 @@
     var raiz = document.documentElement;
     var estilo = entre(LISTAS.estilo, datos.estilo);
     var tema = temaDe(datos, estilo);
+    var paleta = paletaDe(datos);
     // «Sensible a la luz» (src/lib/ajustes.js): softer whites and no flashes (styles/luz.css), and everything still, as
     // «Sin animaciones», whatever Movimiento says.
     var luz = datos.luz === true;
     raiz.setAttribute('data-estilo', estilo);
     raiz.setAttribute('data-bordes', datos.bordes === true ? 'si' : 'no');
     raiz.setAttribute('data-tema', tema);
+    // Everything that reads `data-tema` keeps working: a palette is the light or the dark theme with other colors.
+    if (paleta) raiz.setAttribute('data-paleta', paleta);
+    else raiz.removeAttribute('data-paleta');
     raiz.setAttribute('data-contraste', entre(LISTAS.contraste, datos.contraste));
     raiz.setAttribute('data-daltonismo', entre(LISTAS.daltonismo, datos.daltonismo));
     raiz.setAttribute('data-letra', entre(LISTAS.letra, datos.letra));
@@ -167,6 +193,9 @@
       '--resaltador-texto': resaltador && textoSobre(resaltador),
       '--pdf-brillo': String(brilloValido(datos.pdfBrillo)),
     });
+    // A main color the student chose also paints the header of the styles that bring their own (estilos.css).
+    if (accion) raiz.setAttribute('data-cabecera', 'propia');
+    else raiz.removeAttribute('data-cabecera');
 
     Object.keys(CONSULTRON).forEach(function (clave) {
       raiz.setAttribute('data-consultron-' + clave.slice(10).toLowerCase(), entre(CONSULTRON[clave], datos[clave]));
@@ -200,7 +229,10 @@
 
     // index.html has one for the light system and one for the dark: both get the theme the student sees.
     var barras = document.querySelectorAll('meta[name="theme-color"]');
-    var barra = BARRA_DEL_ESTILO[estilo] ? BARRA_DEL_ESTILO[estilo][tema] : accion || BARRA[tema];
+    var clave = paleta === 'lavanda' && tema === 'oscuro' ? 'lavanda-oscuro' : paleta;
+    var propia = BARRA_DEL_ESTILO[estilo] ? BARRA_DEL_ESTILO[estilo][tema] : null;
+    if (clave && BARRA_PALETA[clave][estilo]) propia = BARRA_PALETA[clave][estilo];
+    var barra = accion || propia || BARRA[clave || tema];
     for (var i = 0; i < barras.length; i++) barras[i].setAttribute('content', barra);
   };
 
@@ -216,6 +248,7 @@
     var estilo = entre(LISTAS.estilo, datos.estilo);
     return (
       raiz.getAttribute('data-tema') !== temaDe(datos, estilo) ||
+      (raiz.getAttribute('data-paleta') || null) !== paletaDe(datos) ||
       raiz.getAttribute('data-estilo') !== estilo ||
       raiz.getAttribute('data-contraste') !== entre(LISTAS.contraste, datos.contraste) ||
       antes !== (datos.luz === true)

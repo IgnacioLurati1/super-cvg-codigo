@@ -3012,10 +3012,17 @@ try {
     await pagina.keyboard.press('Alt+Digit7');
     await pagina.waitForURL(/\/carrera$/);
 
-    // Folded, the screens of «Más» go together at the end.
+    // Folded, the screens of «Más» go together at the end, closed until its button is touched. Only the bell and the
+    // envelope stay in the bar; the gear and the quick menu go inside.
     await pagina.setViewportSize({ width: 390, height: 860 });
     await boton('Menú').click();
     const grupo = pagina.getByRole('group', { name: 'Más' });
+    assert.equal(await grupo.count(), 0, '«Más» empieza cerrado en el menú plegado');
+    assert.equal(await pagina.locator('.cabecera__fijos .cabecera__mensajes').count(), 1, 'el sobre queda en la barra');
+    assert.equal(await pagina.locator('#menu .cabecera__mensajes').count(), 0, 'el sobre no se repite en el menú');
+    assert.equal(await pagina.locator('#menu .cabecera__ajustes').count(), 1, 'el engranaje va adentro del menú');
+    assert.equal(await pagina.locator('#menu .cabecera__rapido').count(), 1, 'el menú rápido va adentro del menú');
+    await pagina.locator('#menu .cabecera__grupo-boton').click();
     assert.deepEqual(await grupo.getByRole('link').allInnerTexts(), ['Calendario', 'Horario', 'Sysacad', 'Laboratorio', 'Calculadoras', 'Repaso', 'Consultron', 'En vivo']);
     await fin('menu-plegado-con-mas');
     await pagina.setViewportSize({ width: 1280, height: 860 });
@@ -3431,10 +3438,14 @@ try {
     await pagina.locator('.paleta__campo').fill('materias');
     await pagina.keyboard.press('Enter');
     await pagina.getByRole('heading', { name: 'Materias', exact: true }).waitFor();
+    // In the phone the quick menu is inside the three-line Menú.
     await pagina.setViewportSize({ width: 390, height: 860 });
-    await boton('Menú rápido').click();
+    await pagina.getByRole('button', { name: /^Menú(,|$)/ }).click();
+    await pagina.locator('#menu .cabecera__rapido').click();
     await pagina.locator('.paleta__campo').waitFor();
+    assert.equal(await pagina.locator('#menu').isVisible(), false, 'el menú se cierra al abrir el menú rápido');
     await pagina.keyboard.press('Escape');
+    assert.equal(await pagina.evaluate(() => document.activeElement?.getAttribute('aria-controls')), 'menu', 'el foco vuelve a las tres rayas');
     await pagina.setViewportSize({ width: 1280, height: 860 });
   });
 
@@ -4942,7 +4953,7 @@ try {
     await pestanas.nth(4).click();
     await hoja.locator('.sysacad-cifra__numero', { hasText: '12' }).waitFor();
     await hoja.getByText('de 25 podés cursar').waitFor();
-    assert.equal(await hoja.locator('.sysacad-freno__nombre').first().textContent(), 'Administración de Sistemas de Información');
+    assert.equal(await hoja.locator('.sysacad-freno').first().textContent(), 'Simulaciónabre 2 ya, frena 2');
     assert.equal(await hoja.getByRole('link', { name: 'Tu carrera' }).getAttribute('href'), '/carrera');
     await hoja.locator('.sysacad-linea', { hasText: 'Cursar Redes de Datos' }).waitFor();
     assert.deepEqual(await fallasAxe(), [], 'sysacad correlativas');
@@ -5053,7 +5064,9 @@ try {
     await volver();
     await pagina.getByRole('heading', { name: '12 de 34 materias aprobadas' }).waitFor();
     assert.deepEqual(await pagina.locator('.carrera-anio__titulo').allTextContents(), ['Primer año', 'Segundo año', 'Tercer año', 'Cuarto año', 'Quinto año']);
-    assert.equal(await pagina.locator('.carrera-frenos li').first().textContent(), 'Administración de Sistemas de Información, frena 3');
+    // First what opens right away, then the whole chain. The finals it can sit, by what passing each one holds back.
+    assert.equal(await pagina.locator('.carrera-frenos li').first().textContent(), 'Simulación, abre 2 ya, frena 2');
+    assert.deepEqual(await pagina.getByRole('region', { name: 'Finales para rendir' }).locator('li').allTextContents(), ['Análisis Matemático II, abre 1 ya, frena 4', 'Física II, abre 1 ya, frena 1']);
     assert.equal(await ficha('Análisis Matemático I').locator('.carrera-ficha__estado').textContent(), 'Aprobada con 8');
     assert.equal(await ficha('Sistemas Operativos').locator('.carrera-ficha__estado').textContent(), 'Regular, te falta para rendir');
     assert.equal(await ficha('Legislación').locator('.carrera-ficha__estado').textContent(), 'Podés cursarla');
@@ -5084,11 +5097,11 @@ try {
     await pagina.waitForFunction(() => document.activeElement?.textContent.startsWith('Redes de Datos'));
 
     // 4. Supposing what holds back: what it opens is marked and counted, electives too.
-    await pagina.locator('.carrera-frenos').getByRole('button', { name: 'Comunicación de Datos' }).click();
+    await ficha('Comunicación de Datos').click();
     await detalle.getByRole('button', { name: 'Suponé que la tenés' }).click();
     await pagina.getByText('Suponiendo que tenés Comunicación de Datos: se te abre 1 materia.').waitFor();
     assert.equal(await ficha('Redes de Datos').locator('.carrera-ficha__marca--abre').textContent(), 'Se te abre');
-    await pagina.locator('.carrera-frenos').getByRole('button', { name: 'Administración de Sistemas de Información' }).click();
+    await ficha('Administración de Sistemas de Información').click();
     await detalle.getByRole('button', { name: 'Suponé que la tenés' }).click();
     await pagina.getByText(/^Suponiendo que tenés Comunicación de Datos, Administración de Sistemas de Información: se te abren 2 materias\./).waitFor();
     await ficha('Sistemas de Información Integrados para la Industria (Elec.)').locator('.carrera-ficha__marca--abre').waitFor();
@@ -6045,7 +6058,8 @@ try {
       await filas.first().getByRole('button').click();
       await pagina.getByRole('heading', { name: 'Laura Méndez', level: 2 }).waitFor();
       await pagina.getByText('Sí, de hasta tres personas.').waitFor();
-      await pagina.getByRole('link', { name: 'Mensajes', exact: true }).waitFor();
+      // The envelope of the header says no more unread (the Mensajes / Foros switch has a link of the same name).
+      await pagina.getByRole('link', { name: 'Mensajes', exact: true }).and(pagina.locator('.cabecera__mensajes')).waitFor();
       await pagina.locator('.mensajes__conversacion-fila[data-conversacion="801"]:not([data-sin-leer])').waitFor();
       assert.equal(await pregunta.count(), 0, 'marcarla leída no pregunta');
       assert.deepEqual(valores(delCampus(antesDeAbrir, 'core_message_get_conversation_messages')[0], 'currentuserid', 'convid', 'limitfrom', 'limitnum', 'newest'), [String(usuarioId), '801', '0', '31', '1']);
@@ -6513,7 +6527,7 @@ try {
       assert.equal(dias.length, new Set(DE_LA_CAMPANA.map((n) => new Date(n.timecreated * 1000).toDateString())).size);
       // Where each one leads: a screen of Super CVG, or the campus in another tab.
       assert.deepEqual(await filas.evaluateAll((l) => l.map((f) => [f.getAttribute('href'), f.getAttribute('target')])), [
-        [`${CAMPUS}/mod/forum/discuss.php?d=12#p44`, '_blank'], ['/materias/1/tareas/18', null], [`${CAMPUS}/mod/quiz/view.php?id=15`, '_blank'],
+        ['/mensajes/foros/12', null], ['/materias/1/tareas/18', null], [`${CAMPUS}/mod/quiz/view.php?id=15`, '_blank'],
         ['/materias/2', null], ['/materias/1/tareas/2', null], [`${CAMPUS}/grade/report/user/index.php?id=1`, '_blank'],
       ]);
       assert.equal(await filaDe('Parcial').first().getByText('Abrir en el campus').count(), 1);
@@ -7097,6 +7111,8 @@ try {
     await seccion('Notas de otros años').locator('.seccion__mas').click();
     await seccion('Notas de otros años').getByRole('button', { name: 'Cambiar nombre' }).click();
     await pagina.getByText('En el campus se llama Notas 2023').waitFor();
+    // The filters may sit under the sticky header after the reload: axe takes that as a small target.
+    await pagina.evaluate(() => window.scrollTo(0, 0));
     assert.deepEqual(await fallasAxe(), [], 'renombrar una sección del campus');
     await boton('Volver al nombre del campus').click();
     await seccion('Notas 2023').waitFor();

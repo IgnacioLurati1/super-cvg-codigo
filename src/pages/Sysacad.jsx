@@ -44,7 +44,7 @@ function Copia({ pestana }) {
   const { al, bloques } = useMemo(() => datosDe(pestana), [pestana]);
   const vista = useMemo(() => {
     if (pestana.clave === 'estado') return leerEstadoAcademico(bloques);
-    if (pestana.clave.startsWith('correlativas-')) return leerCorrelativas(bloques);
+    if (pestana.clave.startsWith('correlativas-')) return leerCorrelativas(bloques, pestana.clave === 'correlativas-rendir' ? 'rendir' : 'cursar');
     return null;
   }, [pestana.clave, bloques]);
   // Around the table the view draws, what else the copy brought (the career and the plan, in Estado académico).

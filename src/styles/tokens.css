@@ -225,9 +225,9 @@
   --filo-fuerza: 0.45;
 }
 
-/* Plano: un plano de ingeniería, azul con su cuadrícula y tinta blanca. Siempre oscuro, con las superficies más hondas
-   que la hoja por las paletas de daltonismo. */
-:root[data-estilo='plano'] {
+/* Plano: un plano de ingeniería, azul con su cuadrícula y tinta blanca (tema oscuro), con las superficies más hondas
+   que la hoja por las paletas de daltonismo. En claro, papel: más abajo. */
+:root[data-estilo='plano'][data-tema='oscuro'] {
   --fondo: #0d3360;
   --superficie: #07213e;
   --superficie-2: #143c69;
@@ -249,14 +249,41 @@
   --materia-6: #f592c4;
   --materia-8: #aaa4ff;
   --materia-9: #e0b27a;
-  --contorno: rgb(214 230 255 / 0.22);
-  --cuadricula: rgb(214 230 255 / 0.07);
-  --cuadricula-mayor: rgb(214 230 255 / 0.13);
+  /* The ink of the sheet, the glow behind it and the title block: a palette changes these three. */
+  --tinta: 214 230 255;
+  --plano-luz: #144077;
+  --plano-cabecera: #0a2647;
+  --contorno: rgb(var(--tinta) / 0.22);
+  --cuadricula: rgb(var(--tinta) / 0.07);
+  --cuadricula-mayor: rgb(var(--tinta) / 0.13);
 }
 
-/* Pizarrón: el del aula, el mismo verde, tiza y marco de madera que el de las calculadoras. Siempre oscuro. Las
-   superficies van más oscuras que el pizarrón, como lo recién borrado: así las paletas de daltonismo se siguen viendo. */
-:root[data-estilo='pizarron'] {
+/* Plano en papel (tema claro): papel crema, tinta azul de ingeniería, la misma cuadrícula y cota, y el rótulo como una
+   franja del mismo papel cerrada por su doble línea. */
+:root[data-estilo='plano'][data-tema='claro'] {
+  --fondo: #f5f1e4;
+  --superficie: #fffdf6;
+  --superficie-2: #f3eee0;
+  --texto: #14284d;
+  --texto-suave: #44577a;
+  --borde: #c9c3ac;
+  --borde-control: #7c8290;
+  --accion: #1d4f9f;
+  --accion-hover: #153d7d;
+  --accion-texto: #ffffff;
+  --foco: #1d4f9f;
+  --fondo-aviso: #f2ebc8;
+  --tinta: 29 79 159;
+  --plano-luz: #fffefa;
+  --plano-cabecera: #ebe5d1;
+  --contorno: rgb(var(--tinta) / 0.25);
+  --cuadricula: rgb(var(--tinta) / 0.09);
+  --cuadricula-mayor: rgb(var(--tinta) / 0.18);
+}
+
+/* Pizarrón: el del aula, el mismo verde, tiza y marco de madera que el de las calculadoras (tema oscuro; en claro, una
+   pizarra blanca, más abajo). Las superficies van más oscuras que el pizarrón, como lo recién borrado: así las paletas de daltonismo se siguen viendo. */
+:root[data-estilo='pizarron'][data-tema='oscuro'] {
   --fondo: #24392f;
   --superficie: #172920;
   --superficie-2: #2d4639;
@@ -280,6 +307,382 @@
   --materia-9: #e0b27a;
   --fuente-titulos: Kalam, 'Segoe Print', 'Comic Sans MS', cursive;
   --contorno: rgb(242 240 232 / 0.2);
+  --pizarron-cab-1: #8f6c47;
+  --pizarron-cab-2: #7f5f3f;
+  --pizarron-cab-texto: #fffaf0;
+  --pizarron-sombra: rgb(0 0 0 / 0.5);
+  --pizarron-brillo: rgb(255 255 255 / 0.06);
+  --pizarron-trazo: wavy;
+  --pizarron-sombra-texto: 0 0 1px rgb(242 240 232 / 0.45);
+}
+
+/* Pizarrón claro: una pizarra blanca. Marco y bandeja de aluminio, fibrón en lugar de tiza (azul para lo que se marca, rojo
+   para lo que falla), sin el polvo ni el difuminado. Los --pizarron-* son también los de las calculadoras. */
+:root[data-estilo='pizarron'][data-tema='claro'] {
+  --fondo: #eef1f3;
+  --superficie: #ffffff;
+  --superficie-2: #e8edf0;
+  --texto: #1a2430;
+  --texto-suave: #475563;
+  --borde: #c5ccd3;
+  --borde-control: #7b8794;
+  --accion: #1558c0;
+  --accion-hover: #0f469a;
+  --accion-texto: #ffffff;
+  --foco: #1558c0;
+  --fondo-aviso: #f3efd2;
+  --fuente-titulos: Kalam, 'Segoe Print', 'Comic Sans MS', cursive;
+  --contorno: rgb(26 36 48 / 0.2);
+  --tinta-pizarron: 26 36 48;
+  --pizarron: #f9fbfc;
+  --pizarron-tiza: #1a2430;
+  --pizarron-tiza-suave: #4a5866;
+  --pizarron-amarillo: #1558c0;
+  --pizarron-rojo: #c62828;
+  --pizarron-marco: #aeb5bd;
+  --pizarron-bandeja: #8a929b;
+  --pizarron-polvo: linear-gradient(transparent, transparent);
+  --pizarron-nube-1: 0%;
+  --pizarron-nube-2: 0%;
+  --pizarron-nube-3: 0%;
+  --pizarron-cab-1: #e1e5e9;
+  --pizarron-cab-2: #c9cfd5;
+  --pizarron-cab-texto: #1a2430;
+  --pizarron-sombra: rgb(0 0 0 / 0.22);
+  --pizarron-brillo: rgb(255 255 255 / 0.9);
+  --pizarron-trazo: solid;
+  --pizarron-sombra-texto: none;
+  --pizarron-sombra-calc: none;
+  --pizarron-esquema: light;
+}
+
+/* Paletas (ajustes.tema): cada una tiñe los seis estilos. El estilo pone la forma (letra, renglones, degradados,
+   cuadrícula, tiza, madera) y la paleta los colores, así que van después de los estilos y les ganan. Rosa oscuro, Verde
+   bosque, Café, Infierno y Glaciar son el oscuro con otros colores; Lavanda es el claro, y con un estilo siempre oscuro, su versión oscura.
+   Pisan los tokens base y los colores de forma de los estilos (--brillo, --tinta, renglones, degradados), no las materias
+   ni los estados. Batman conserva su negro: solo toma los acentos. */
+
+:root[data-tema='oscuro'][data-paleta='rosa'] {
+  --fondo: #1a1022;
+  --superficie: #251630;
+  --superficie-2: #33203f;
+  --texto: #f7ecf5;
+  --texto-suave: #d2b8d0;
+  --borde: #4d3259;
+  --borde-control: #9d7ca9;
+  --accion: #c2306e;
+  --accion-hover: #a82860;
+  --accion-fin: #8e2a9c;
+  --accion-texto: #ffffff;
+  --foco: #ff93c8;
+  --fondo-aviso: #33221f;
+  --brillo: 255 147 200;
+  --tinta: 255 205 232;
+  --titulo-fin: #ffb3d9;
+  --cielo: #21132b;
+  --cabecera-1: #2d1a3a;
+  --cabecera-2: #1f1229;
+  --renglon: #2f1d3b;
+  --margen-rojo: #b0467f;
+  --plano-luz: #3a1f4d;
+  --plano-cabecera: #120a19;
+  --luz-1: rgb(var(--brillo) / 0.22);
+  --luz-1-donde: 10% -10%;
+  --luz-2: rgb(var(--tinta) / 0.1);
+  --luz-tarjeta: rgb(255 255 255 / 0.07);
+  --sombra: rgb(0 0 0 / 0.9);
+}
+
+:root[data-tema='oscuro'][data-paleta='bosque'] {
+  --fondo: #0b1510;
+  --superficie: #12211a;
+  --superficie-2: #1b3025;
+  --texto: #e8f3ec;
+  --texto-suave: #b3cbbc;
+  --borde: #2f4a3b;
+  --borde-control: #7fa08c;
+  --accion: #17805a;
+  --accion-hover: #126a49;
+  --accion-fin: #0e6f78;
+  --accion-texto: #ffffff;
+  --foco: #7ee0b0;
+  --fondo-aviso: #2a2a14;
+  --brillo: 126 224 176;
+  --tinta: 205 245 225;
+  --titulo-fin: #a8f0cc;
+  --cielo: #0e1c15;
+  --cabecera-1: #16291f;
+  --cabecera-2: #0e1b14;
+  --renglon: #1d3226;
+  --margen-rojo: #3f9e75;
+  --plano-luz: #1c4a36;
+  --plano-cabecera: #06100b;
+  --luz-1: rgb(var(--brillo) / 0.22);
+  --luz-1-donde: 10% -10%;
+  --luz-2: rgb(var(--tinta) / 0.1);
+  --luz-tarjeta: rgb(255 255 255 / 0.07);
+  --sombra: rgb(0 0 0 / 0.9);
+}
+
+:root[data-tema='oscuro'][data-paleta='cafe'] {
+  --fondo: #1e140e;
+  --superficie: #2a1d14;
+  --superficie-2: #3a2819;
+  --texto: #f5eadf;
+  --texto-suave: #d4bda6;
+  --borde: #5a4030;
+  --borde-control: #a78a70;
+  --accion: #b8531a;
+  --accion-hover: #9a4515;
+  --accion-fin: #9a5a12;
+  --accion-texto: #ffffff;
+  --foco: #ffb870;
+  --fondo-aviso: #3d2a14;
+  --brillo: 255 184 112;
+  --tinta: 255 228 196;
+  --titulo-fin: #ffd2a0;
+  --cielo: #26180f;
+  --cabecera-1: #34231a;
+  --cabecera-2: #24170f;
+  --renglon: #3a281b;
+  --margen-rojo: #c2733a;
+  --plano-luz: #4a2e1a;
+  --plano-cabecera: #140c07;
+  --luz-1: rgb(var(--brillo) / 0.22);
+  --luz-1-donde: 10% -10%;
+  --luz-2: rgb(var(--tinta) / 0.1);
+  --luz-tarjeta: rgb(255 255 255 / 0.07);
+  --sombra: rgb(0 0 0 / 0.9);
+}
+
+:root[data-tema='oscuro'][data-paleta='lavanda'] {
+  --fondo: #17121f;
+  --superficie: #201830;
+  --superficie-2: #2d2342;
+  --texto: #f1ecfb;
+  --texto-suave: #c9bfe0;
+  --borde: #44385e;
+  --borde-control: #8f80b3;
+  --accion: #7456d0;
+  --accion-hover: #5f43b8;
+  --accion-fin: #4f4fc4;
+  --accion-texto: #ffffff;
+  --foco: #c3b0ff;
+  --fondo-aviso: #33261a;
+  --brillo: 195 176 255;
+  --tinta: 226 216 255;
+  --titulo-fin: #d4c8ff;
+  --cielo: #1c1528;
+  --cabecera-1: #2a2040;
+  --cabecera-2: #1b1429;
+  --renglon: #2c2340;
+  --margen-rojo: #9a6fd0;
+  --plano-luz: #33264d;
+  --plano-cabecera: #0f0b16;
+  --luz-1: rgb(var(--brillo) / 0.22);
+  --luz-1-donde: 10% -10%;
+  --luz-2: rgb(var(--tinta) / 0.1);
+  --luz-tarjeta: rgb(255 255 255 / 0.07);
+  --sombra: rgb(0 0 0 / 0.9);
+}
+
+:root[data-tema='oscuro'][data-paleta='infierno'] {
+  --fondo: #170806;
+  --superficie: #22100b;
+  --superficie-2: #321710;
+  --texto: #fff0e0;
+  --texto-suave: #e6c2a8;
+  --borde: #5a2a1c;
+  --borde-control: #b07a5e;
+  --accion: #c4320a;
+  --accion-hover: #a82a08;
+  --accion-fin: #c2410c;
+  --accion-texto: #ffffff;
+  --foco: #ffb020;
+  --fondo-aviso: #3a2410;
+  --brillo: 255 176 32;
+  --tinta: 255 214 150;
+  --titulo-fin: #ffcc4d;
+  --cielo: #1d0a07;
+  --cabecera-1: #2c120b;
+  --cabecera-2: #1c0906;
+  --renglon: #36170f;
+  --margen-rojo: #e0452a;
+  --plano-luz: #4a1a0e;
+  --plano-cabecera: #100403;
+  --luz-1: rgb(var(--brillo) / 0.22);
+  --luz-1-donde: 10% -10%;
+  --luz-2: rgb(222 60 20 / 0.16);
+  --luz-tarjeta: rgb(255 255 255 / 0.07);
+  --sombra: rgb(0 0 0 / 0.9);
+}
+
+:root[data-tema='oscuro'][data-paleta='glaciar'] {
+  --fondo: #07121a;
+  --superficie: #0d1c27;
+  --superficie-2: #152a38;
+  --texto: #e8f6fb;
+  --texto-suave: #b0cad6;
+  --borde: #2a4556;
+  --borde-control: #7a9cad;
+  --accion: #0e7490;
+  --accion-hover: #0b5f77;
+  --accion-fin: #2f5fb3;
+  --accion-texto: #ffffff;
+  --foco: #7fe3ff;
+  --fondo-aviso: #2a2a1a;
+  --brillo: 127 227 255;
+  --tinta: 210 244 255;
+  --titulo-fin: #a5ecff;
+  --cielo: #0a1720;
+  --cabecera-1: #12232f;
+  --cabecera-2: #0a161e;
+  --renglon: #183040;
+  --margen-rojo: #4fa8c8;
+  --plano-luz: #163a4f;
+  --plano-cabecera: #040c11;
+  --luz-1: rgb(var(--brillo) / 0.22);
+  --luz-1-donde: 10% -10%;
+  --luz-2: rgb(var(--tinta) / 0.1);
+  --luz-tarjeta: rgb(255 255 255 / 0.07);
+  --sombra: rgb(0 0 0 / 0.9);
+}
+
+:root[data-tema='claro'][data-paleta='lavanda'] {
+  --fondo: #f4f0fb;
+  --superficie: #ffffff;
+  --superficie-2: #eee8f8;
+  --texto: #2a1a4d;
+  --texto-suave: #5a4d7a;
+  --borde: #d0c4e8;
+  --borde-control: #8070a6;
+  --accion: #5b3fb0;
+  --accion-hover: #4a3092;
+  --accion-fin: #3f4fbf;
+  --accion-texto: #ffffff;
+  --foco: #5b3fb0;
+  --resaltador-texto: #2a1a4d;
+  --brillo: 91 63 176;
+  --titulo-fin: #5b3fb0;
+  --cielo: #ebe5f7;
+  --cabecera-1: #ffffff;
+  --cabecera-2: #f1ecfa;
+  --renglon: #ddd2f0;
+  --margen-rojo: #c79ad8;
+  --sombra: rgb(42 26 77 / 0.3);
+  --luz-tarjeta: rgb(91 63 176 / 0.05);
+  --luz-1: rgb(var(--brillo) / 0.14);
+  --luz-1-donde: 10% -10%;
+  --luz-2: rgb(var(--brillo) / 0.1);
+}
+
+
+:root[data-estilo='batman'][data-paleta='rosa'] {
+  --fondo: #0c0d10;
+  --superficie: #16181d;
+  --superficie-2: #21242b;
+  --texto: #eeeeee;
+  --texto-suave: #a9adb5;
+  --borde: #2d3139;
+  --borde-control: #80858f;
+  --cielo: #121317;
+  --cabecera-1: #1b1d22;
+  --cabecera-2: #0f1013;
+  --filo: var(--brillo);
+}
+
+
+:root[data-estilo='batman'][data-paleta='bosque'] {
+  --fondo: #0c0d10;
+  --superficie: #16181d;
+  --superficie-2: #21242b;
+  --texto: #eeeeee;
+  --texto-suave: #a9adb5;
+  --borde: #2d3139;
+  --borde-control: #80858f;
+  --cielo: #121317;
+  --cabecera-1: #1b1d22;
+  --cabecera-2: #0f1013;
+  --filo: var(--brillo);
+}
+
+
+:root[data-estilo='batman'][data-paleta='cafe'] {
+  --fondo: #0c0d10;
+  --superficie: #16181d;
+  --superficie-2: #21242b;
+  --texto: #eeeeee;
+  --texto-suave: #a9adb5;
+  --borde: #2d3139;
+  --borde-control: #80858f;
+  --cielo: #121317;
+  --cabecera-1: #1b1d22;
+  --cabecera-2: #0f1013;
+  --filo: var(--brillo);
+}
+
+
+:root[data-estilo='batman'][data-paleta='lavanda'] {
+  --fondo: #0c0d10;
+  --superficie: #16181d;
+  --superficie-2: #21242b;
+  --texto: #eeeeee;
+  --texto-suave: #a9adb5;
+  --borde: #2d3139;
+  --borde-control: #80858f;
+  --cielo: #121317;
+  --cabecera-1: #1b1d22;
+  --cabecera-2: #0f1013;
+  --filo: var(--brillo);
+}
+
+:root[data-estilo='batman'][data-paleta='infierno'] {
+  --fondo: #0c0d10;
+  --superficie: #16181d;
+  --superficie-2: #21242b;
+  --texto: #eeeeee;
+  --texto-suave: #a9adb5;
+  --borde: #2d3139;
+  --borde-control: #80858f;
+  --cielo: #121317;
+  --cabecera-1: #1b1d22;
+  --cabecera-2: #0f1013;
+  --filo: var(--brillo);
+}
+
+:root[data-estilo='batman'][data-paleta='glaciar'] {
+  --fondo: #0c0d10;
+  --superficie: #16181d;
+  --superficie-2: #21242b;
+  --texto: #eeeeee;
+  --texto-suave: #a9adb5;
+  --borde: #2d3139;
+  --borde-control: #80858f;
+  --cielo: #121317;
+  --cabecera-1: #1b1d22;
+  --cabecera-2: #0f1013;
+  --filo: var(--brillo);
+}
+
+/* Lavanda en Plano y en Pizarrón: papel y pizarra con tinte lila, tinta violeta y aluminio lila. */
+:root[data-estilo='plano'][data-paleta='lavanda'][data-tema='claro'] {
+  --tinta: 91 63 176;
+  --plano-luz: #ffffff;
+  --plano-cabecera: #ebe5f7;
+}
+
+:root[data-estilo='pizarron'][data-paleta='lavanda'][data-tema='claro'] {
+  --tinta-pizarron: 42 26 77;
+  --pizarron: #f7f4fc;
+  --pizarron-tiza: #2a1a4d;
+  --pizarron-tiza-suave: #54467a;
+  --pizarron-amarillo: #5b3fb0;
+  --pizarron-marco: #b8aed2;
+  --pizarron-bandeja: #8f84b0;
+  --pizarron-cab-1: #e6e0f1;
+  --pizarron-cab-2: #cfc7e2;
+  --pizarron-cab-texto: #2a1a4d;
+  --contorno: rgb(42 26 77 / 0.2);
 }
 
 /* Contraste alto: bordes más marcados y texto suave por encima de 7 a 1. */
@@ -300,6 +703,92 @@
   --texto-suave: #cfdbe5;
   --borde: #8da0b0;
   --borde-control: #c0ced9;
+}
+
+:root[data-estilo='plano'][data-tema='claro'][data-contraste='alto'] {
+  --texto: #0a1b3a;
+  --texto-suave: #2a3c60;
+  --borde: #5c6478;
+  --borde-control: #3f4658;
+}
+
+:root[data-estilo='pizarron'][data-tema='claro'][data-contraste='alto'] {
+  --texto: #0b141d;
+  --texto-suave: #2f3b47;
+  --borde: #5a6672;
+  --borde-control: #3a4651;
+  --pizarron: #ffffff;
+  --pizarron-tiza: #0b141d;
+  --pizarron-tiza-suave: #2f3b47;
+  --pizarron-amarillo: #0f469a;
+  --pizarron-rojo: #a51d1d;
+}
+
+:root[data-tema='oscuro'][data-paleta='rosa'][data-contraste='alto'] {
+  --fondo: #12081a;
+  --superficie: #1a0f24;
+  --superficie-2: #281733;
+  --texto: #ffffff;
+  --texto-suave: #ead8e8;
+  --borde: #b793c4;
+  --borde-control: #d2b5dc;
+}
+
+:root[data-tema='oscuro'][data-paleta='bosque'][data-contraste='alto'] {
+  --fondo: #060d0a;
+  --superficie: #0b160f;
+  --superficie-2: #14261c;
+  --texto: #ffffff;
+  --texto-suave: #d3e6da;
+  --borde: #8fb59f;
+  --borde-control: #bcd6c6;
+}
+
+:root[data-tema='oscuro'][data-paleta='cafe'][data-contraste='alto'] {
+  --fondo: #140c07;
+  --superficie: #1d130c;
+  --superficie-2: #2c1d11;
+  --texto: #ffffff;
+  --texto-suave: #ecd9c6;
+  --borde: #b8987c;
+  --borde-control: #d6bca3;
+}
+
+:root[data-tema='oscuro'][data-paleta='infierno'][data-contraste='alto'] {
+  --fondo: #0f0403;
+  --superficie: #180906;
+  --superficie-2: #27110b;
+  --texto: #ffffff;
+  --texto-suave: #f2dccb;
+  --borde: #c08a6c;
+  --borde-control: #dcb59c;
+}
+
+:root[data-tema='oscuro'][data-paleta='glaciar'][data-contraste='alto'] {
+  --fondo: #030a0f;
+  --superficie: #08141c;
+  --superficie-2: #10212d;
+  --texto: #ffffff;
+  --texto-suave: #d6e8f0;
+  --borde: #8fb3c4;
+  --borde-control: #bcd5e0;
+}
+
+:root[data-tema='claro'][data-paleta='lavanda'][data-contraste='alto'] {
+  --texto: #1a0f33;
+  --texto-suave: #3d3260;
+  --borde: #6a5a96;
+  --borde-control: #4a3d75;
+}
+
+:root[data-tema='oscuro'][data-paleta='lavanda'][data-contraste='alto'] {
+  --fondo: #0e0a14;
+  --superficie: #150f20;
+  --superficie-2: #20172f;
+  --texto: #ffffff;
+  --texto-suave: #e6dcf5;
+  --borde: #a898cc;
+  --borde-control: #c9bde6;
 }
 
 /* Daltonismo: cada paleta separa las materias sobre el eje que esa visión sí distingue, azul y amarillo para
@@ -369,9 +858,9 @@
   --aviso: #d8c8d0;
 }
 
-/* Plano y Pizarrón tienen el fondo azul o verde y más claro que el oscuro de siempre: su paleta va más clara, para que
+/* Plano y Pizarrón oscuros tienen el fondo azul o verde y más claro que el oscuro de siempre: su paleta va más clara, para que
    cada materia se siga viendo sobre la página, las tarjetas y lo hundido con esa visión. */
-:root[data-estilo='plano'][data-daltonismo='rojo-verde'] {
+:root[data-estilo='plano'][data-tema='oscuro'][data-daltonismo='rojo-verde'] {
   --materia-0: #55aadd;
   --materia-1: #ee9900;
   --materia-2: #5588ff;
@@ -384,12 +873,12 @@
   --materia-9: #eedd66;
 }
 
-:root[data-estilo='plano'][data-daltonismo='azul-amarillo'] {
+:root[data-estilo='plano'][data-tema='oscuro'][data-daltonismo='azul-amarillo'] {
   --materia-3: #ec5e58;
   --materia-9: #ec5e58;
 }
 
-:root[data-estilo='pizarron'][data-daltonismo='rojo-verde'] {
+:root[data-estilo='pizarron'][data-tema='oscuro'][data-daltonismo='rojo-verde'] {
   --materia-0: #55aaff;
   --materia-1: #ddbb44;
   --materia-2: #6699aa;
@@ -403,7 +892,7 @@
   --error: #f5b54f;
 }
 
-:root[data-estilo='pizarron'][data-daltonismo='azul-amarillo'] {
+:root[data-estilo='pizarron'][data-tema='oscuro'][data-daltonismo='azul-amarillo'] {
   --materia-3: #ee5e57;
   --materia-9: #ee5e57;
 }
@@ -427,6 +916,25 @@
 :root[data-estilo='profesional'][data-luz='si'][data-tema='claro'] {
   --superficie: #f3f5f9;
   --cabecera-1: #f3f5f9;
+}
+
+/* Plano y Pizarrón claros con la luz: el papel y la pizarra dejan de ser casi blancos. */
+:root[data-estilo='plano'][data-luz='si'][data-tema='claro'] {
+  --fondo: #f1ecdc;
+  --superficie: #f9f5e9;
+}
+
+:root[data-estilo='pizarron'][data-luz='si'][data-tema='claro'] {
+  --fondo: #e9edf0;
+  --superficie: #f4f6f8;
+  --pizarron: #f2f5f7;
+}
+
+/* Lavanda con luz: la superficie sigue lila, y un escalón sobre el fondo. */
+:root[data-tema='claro'][data-paleta='lavanda'][data-luz='si'] {
+  --fondo: #f4f0fb;
+  --superficie: #f9f6fd;
+  --cabecera-1: #f9f6fd;
 }
 
 html[data-letra='grande'] {

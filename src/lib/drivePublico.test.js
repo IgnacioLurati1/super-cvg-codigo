@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { armarMapa, buscarEnMapa, CARRERA, clienteDrivePublico, drivesDe, enlaceDe, indiceDe, leerEnlace, sanearDriveMio, sanearMapa, tipoDe, visorDe, vistaDeGoogle } from './drivePublico';
+import { armarMapa, buscarEnMapa, CARRERA, clienteDrivePublico, contenidoDe, drivesDe, enlaceDe, indiceDe, leerEnlace, sanearDriveMio, sanearMapa, tipoDe, visorDe, vistaDeGoogle } from './drivePublico';
 
 const ID = '1ZgKML44drc8Wq3pcbHsc-ozPINv6xSHQ';
 const CARPETA = 'application/vnd.google-apps.folder';
@@ -90,6 +90,34 @@ describe('el mapa de una carpeta', () => {
     expect(buscarEnMapa(indice, 'programa', { valido: (n) => !n.c && n.id !== 'programa000' })).toEqual([]);
     expect(indice.ruta(indice.porId.get('parcial0000'))).toEqual(['1° AÑO', 'Análisis Matemático I']);
     expect(indice.tipos.get('raiz00000000')).toEqual({ pdf: 2, presentacion: 1 });
+  });
+});
+
+describe('una carpeta de un link, de a un nivel', () => {
+  it('trae solo lo de adentro, primero las carpetas y después por nombre', async () => {
+    const { nodos, grande } = await contenidoDe({ id: 'raiz00000000' }, { cliente: driveFalso(ARBOL) });
+    expect(grande).toBe(false);
+    expect(nodos.length).toBeGreaterThan(1);
+    expect(nodos.every((n) => n.p === 'raiz00000000')).toBe(true);
+    const carpetas = nodos.filter((n) => n.c).length;
+    expect(nodos.slice(0, carpetas).every((n) => n.c)).toBe(true);
+    const archivos = nodos.slice(carpetas).map((n) => n.n);
+    expect(archivos).toEqual([...archivos].sort((x, y) => x.localeCompare(y, 'es', { numeric: true, sensitivity: 'base' })));
+  });
+
+  it('una muy grande no se lista: pide uno más que el tope y avisa', async () => {
+    const hijos = vi.fn(async (id, k, senal, tope) => Array.from({ length: tope }, (_, i) => ({ id: `archivo${String(i).padStart(5, '0')}`, name: `${i}.pdf`, mimeType: 'application/pdf' })));
+    expect(await contenidoDe({ id: 'raiz00000000' }, { cliente: { hijos }, tope: 3 })).toEqual({ nodos: [], grande: true });
+    expect(hijos).toHaveBeenCalledWith('raiz00000000', null, undefined, 4);
+  });
+
+  it('el cliente deja de pedir páginas al llegar al tope', async () => {
+    const pagina = (n) => new Response(JSON.stringify({ files: Array.from({ length: n }, (_, i) => ({ id: `archivo${String(i).padStart(5, '0')}`, name: 'x' })), nextPageToken: 'otra' }));
+    const pedir = vi.fn().mockResolvedValueOnce(pagina(3)).mockResolvedValueOnce(pagina(3));
+    const hijos = await clienteDrivePublico({ clave: 'clave', pedir }).hijos('raiz00000000', null, undefined, 3);
+    expect(hijos).toHaveLength(3);
+    expect(pedir).toHaveBeenCalledTimes(1);
+    expect(new URL(pedir.mock.calls[0][0]).searchParams.get('pageSize')).toBe('3');
   });
 });
 

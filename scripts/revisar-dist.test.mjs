@@ -49,3 +49,12 @@ describe('revisar-dist y el lector de fotos', () => {
     expect(esConocido(Buffer.from(`const k = "${CLAVE}";`))).toBe(false);
   });
 });
+
+describe('valores públicos de las librerías', () => {
+  const AES = '66E94BD4EF8A2C3B884CFA59CA342B2E';
+  it('deja pasar la prueba de AES de la librería de PDF, solo junto a esa prueba', () => {
+    expect(revisarTexto(`t(i.aes128CbcNoPadding(o,o,o))===\`${AES}\`?i:void 0`)).toHaveLength(0);
+    expect(revisarTexto(`const k = "${AES}";`)).toHaveLength(1);
+    expect(revisarTexto(`t(i.aes128CbcNoPadding(o,o,o))===\`${AES.replace('66', '67')}\``)).toHaveLength(1);
+  });
+});

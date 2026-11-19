@@ -24,11 +24,6 @@
   transform: scale(0.97);
 }
 
-/* Folded, a button like the magnifier and «Menú» next to it. */
-.cabecera[data-compacta] .campana__boton {
-  border: 1px solid currentColor;
-}
-
 .campana__boton[aria-expanded='true'] {
   background: rgb(255 255 255 / 0.16);
 }

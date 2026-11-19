@@ -97,7 +97,7 @@ export default function Layout() {
   const navegar = useNavigate();
   const enLaboratorio = Boolean(useMatch('/laboratorio'));
   // How the menu looks and where each screen goes, as the student left it in Configuración.
-  const { estilo, lugares, orden, posicion } = useAjustes().menu;
+  const { estilo, lugares, orden, posicion, alineacion, ancho } = useAjustes().menu;
   const enOrden = orden.map((c) => PANTALLAS_DEL_MENU.find((m) => m.clave === c)).filter(Boolean);
   const aLaVista = enOrden.filter((m) => (lugares[m.clave] ?? 'vista') === 'vista');
   const enMas = enOrden.filter((m) => lugares[m.clave] === 'mas');
@@ -113,8 +113,12 @@ export default function Layout() {
   const compacta = useCabeceraCompacta(fila, Boolean(token) && !lateral, setAbierto, `${estilo} ${JSON.stringify(lugares)} ${orden.join()}`) && !lateral;
   const menuAbierto = abierto && compacta && Boolean(token);
   const sinLeer = useSinLeer(token);
-  // With Mensajes hidden from the menu, nothing in it says there is something unread.
-  const avisaMensajes = sinLeer > 0 && lugares.mensajes !== 'oculta';
+  // Folded, only the bell and the envelope (when in sight) stay in the row; the rest goes in «Menú», the quick menu and
+  // the gear too. «Menú» says something is unread only when Mensajes is inside it, in «Más». With Mensajes hidden from
+  // the menu, nothing says it.
+  const avisaMensajes = sinLeer > 0 && lugares.mensajes === 'mas';
+  const deUsoALaVista = aLaVista.filter((m) => deUso.has(m.clave));
+  const sobreEnLaFila = compacta ? deUsoALaVista.filter((m) => m.clave === 'mensajes') : [];
   useAtajosGlobales(Boolean(token));
   const escritorio = useEscritorio();
   const enVivo = useSesionEnVivo();
@@ -175,26 +179,32 @@ export default function Layout() {
   return (
     <div className="sitio" data-con-menu={token ? true : undefined}>
       <a className="saltar" href="#contenido">Ir al contenido</a>
-      <header className="cabecera" data-compacta={compacta || undefined} data-lateral={lateral || undefined} data-estilo={estilo} onKeyDown={alTeclear}>
+      <header className="cabecera" data-compacta={compacta || undefined} data-lateral={lateral || undefined} data-estilo={estilo} data-alineacion={lateral ? undefined : alineacion} data-ancho={lateral ? undefined : ancho} onKeyDown={alTeclear}>
         <div ref={fila} className="contenedor cabecera__fila">
           <Link ref={marca} to="/" className="cabecera__marca">{SITIO.nombre}</Link>
           {token && (
             <>
-              <BotonPaleta />
+              {!compacta && <BotonPaleta />}
               {/* Out of the menu, so it stays at hand when the header folds. Opening it closes the menu. */}
               <Campana alAbrir={() => setAbierto(false)} />
-              <button ref={botonMenu} type="button" className="cabecera__boton" aria-expanded={menuAbierto} aria-controls="menu" aria-label={avisaMensajes ? 'Menú, tenés mensajes sin leer' : undefined} onClick={() => setAbierto((a) => !a)}>
-                Menú
-                {/* Folded, the envelope is inside: a dot says there is something to read, and the name says it too, since the
+              {sobreEnLaFila.length > 0 && (
+                <div className="cabecera__fijos">
+                  {sobreEnLaFila.map((m) => <Entrada key={m.clave} m={m} estilo="solo-iconos" sinLeer={sinLeer} onIr={() => setAbierto(false)} />)}
+                </div>
+              )}
+              <button ref={botonMenu} type="button" className="cabecera__boton" aria-expanded={menuAbierto} aria-controls="menu" aria-label={avisaMensajes ? 'Menú, tenés mensajes sin leer' : 'Menú'} title="Menú" onClick={() => setAbierto((a) => !a)}>
+                <svg className="cabecera__hamburguesa" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 7h16M4 12h16M4 17h16" /></svg>
+                {/* With Mensajes inside «Más», a dot says there is something to read, and the name says it too, since the
                     envelope is out of reach until the menu opens. */}
                 {avisaMensajes && <span className="cabecera__punto" aria-hidden="true" />}
               </button>
               <nav id="menu" className="cabecera__menu" data-abierto={menuAbierto || undefined} aria-label="Principal">
+                {compacta && <BotonPaleta alTocar={() => { setAbierto(false); botonMenu.current?.focus(); }} />}
                 {aLaVista.filter((m) => !deUso.has(m.clave)).map((m) => <Entrada key={m.clave} m={m} estilo={estilo} sinLeer={sinLeer} onIr={() => setAbierto(false)} />)}
                 {!compacta && <MasDelMenu entradas={enMas} estilo={estilo} sinLeer={sinLeer} lateral={lateral} onIr={() => setAbierto(false)} />}
                 {/* On the left, the envelope, the gear and Salir go to the bottom of the column. */}
                 {lateral && <span className="cabecera__resorte" aria-hidden="true" />}
-                {aLaVista.filter((m) => deUso.has(m.clave)).map((m) => <Entrada key={m.clave} m={m} estilo={estilo} sinLeer={sinLeer} lateral={lateral} onIr={() => setAbierto(false)} />)}
+                {deUsoALaVista.filter((m) => !sobreEnLaFila.includes(m)).map((m) => <Entrada key={m.clave} m={m} estilo={estilo} sinLeer={sinLeer} lateral={lateral} onIr={() => setAbierto(false)} />)}
                 {compacta && <MasDelMenu entradas={enMas} estilo={estilo} sinLeer={sinLeer} compacta onIr={() => setAbierto(false)} />}
                 <button type="button" className="cabecera__salir" onClick={salir}>Salir</button>
               </nav>

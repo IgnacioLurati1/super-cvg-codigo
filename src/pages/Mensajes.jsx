@@ -2,6 +2,7 @@ import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { ArchivoElegido, ArchivoSaliendo, ConectarDrive, TarjetaAdjunto } from '../components/Adjunto';
 import Campo from '../components/Campo';
+import MensajesOForos from '../components/MensajesOForos';
 import { Cargando, ErrorConReintento } from '../components/Filas';
 import { Bloques } from '../components/TextoConFormato';
 import { clienteDeAdjuntos, descartarAdjunto, largoDelAdjunto, PIDE_CONECTAR, prepararAdjunto, problemaDeArchivo, sanearNombre, textoConAdjunto } from '../lib/adjuntos';
@@ -151,6 +152,7 @@ function Lista({ lista, ahora, consulta, onConsulta, activa, onAbrir, onNuevo, o
         <h1 id={idTitulo} ref={titulo} tabIndex={-1}>Mensajes</h1>
         <button type="button" className="boton boton--chico mensajes__nuevo" onClick={onNuevo}>Mensaje nuevo</button>
       </div>
+      <MensajesOForos actual="mensajes" />
       {(lista.conversaciones.length > 0 || conConsulta) && (
         <div className="mensajes__filtro">
           <label htmlFor={idFiltro} className="solo-lectores">Buscar en tus conversaciones</label>

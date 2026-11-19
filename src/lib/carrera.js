@@ -1,4 +1,5 @@
 import { normalizar } from './datos';
+import { ordenarFrenos } from './frenos';
 import { esTroncal } from './santoResumen';
 import { ENTRE_LINEAS } from './sysacadPestanas';
 
@@ -116,7 +117,8 @@ function filasDeEstado(pestana) {
  * `estado`: 'aprobada', 'regular' (can sit the final once `rendir.puede`), 'cursando', 'cursar' (can start it),
  * 'falta' (something missing to start it) or 'pendiente' (nothing else known).
  * `cursar` / `rendir`: { puede, faltan: [{ accion, texto, clave }], otros: [texto] } or null when that tab is missing.
- * Also: `tiene` (which tabs it used), `fecha` (the oldest copy used), `anios`, `frenos` (what holds back the most).
+ * Also: `tiene` (which tabs it used), `fecha` (the oldest copy used), `anios`, `frenos` (what holds back the most for
+ * starting others) and `paraRendir` (the finals it can sit, the one that holds back the most first).
  */
 export function armarCarrera(pestanas, finales = null) {
   const de = (clave) => pestanas?.find((p) => p.clave === clave) ?? null;
@@ -197,7 +199,8 @@ export function armarCarrera(pestanas, finales = null) {
   return {
     materias: lista,
     anios,
-    frenos: frenosDe(lista),
+    frenos: frenosParaCursar(lista),
+    paraRendir: paraRendirDe(lista),
     tiene: { estado: Boolean(estado), cursar: Boolean(cursar), rendir: Boolean(rendir) },
     fecha: usadas.length ? Math.min(...usadas.map((p) => p.fecha)) : null,
     aprobadasSinMapa: estado ? 0 : (finales ?? []).filter((f) => !buscar(normalizar(f.nombre))).length,
@@ -213,19 +216,33 @@ function estadoDe(m) {
   return 'pendiente';
 }
 
-/** The subjects that hold back the most others (for starting them), with how many. Only ones that hold back two or more.
- * Electives don't count: there are many and none is a must. */
-function frenosDe(materias) {
-  const cuenta = new Map();
-  for (const m of materias) {
-    if (m.estado !== 'falta' || m.electiva) continue;
-    for (const clave of new Set(m.cursar.faltan.map((r) => r.clave))) cuenta.set(clave, (cuenta.get(clave) ?? 0) + 1);
-  }
+// The sides still waiting, for frenos.js. A side opens with what it lacks when nothing else is missing, the same rule as
+// conSupuestas.
+const ladoCursar = (m) => ({ clave: m.clave, electiva: m.electiva, para: 'cursar', faltan: m.cursar.faltan, abre: !m.cursar.otros.length });
+const ladoRendir = (m) => ({ clave: m.clave, electiva: m.electiva, para: 'rendir', faltan: m.rendir.faltan, abre: m.estado === 'regular' && !m.rendir.otros.length });
+
+/**
+ * How much each of these subjects holds back as a requirement for starting others: [{ clave, nombre, abre, frena,
+ * enMapa }], the one that opens the most right away first (frenos.js). By default, every subject some other lacks, only
+ * the ones that hold back two or more. Electives don't count: there are many and none is a must.
+ */
+export function frenosParaCursar(materias, claves = null) {
+  const lados = materias.filter((m) => m.estado === 'falta').map(ladoCursar);
   const porClave = new Map(materias.map((m) => [m.clave, m]));
-  return [...cuenta]
-    .filter(([, n]) => n >= 2)
-    .map(([clave, n]) => ({ clave, nombre: porClave.get(clave)?.nombre ?? clave, cuenta: n, enMapa: porClave.has(clave) }))
-    .sort((a, b) => b.cuenta - a.cuenta || a.nombre.localeCompare(b.nombre, 'es'));
+  const de = claves ?? new Set(lados.filter((l) => !l.electiva).flatMap((l) => l.faltan.map((r) => r.clave)));
+  const candidatos = [...de].map((clave) => ({ clave, nombre: porClave.get(clave)?.nombre ?? clave, enMapa: porClave.has(clave) }));
+  return ordenarFrenos(lados, candidatos, { minimo: claves ? 0 : 2 });
+}
+
+/** The regular subjects whose final it can sit, by what passing it opens: only what asks for it passed counts, to start
+ * a subject or to sit its final, and down the chain from those. [{ clave, nombre, abre, frena }] */
+function paraRendirDe(materias) {
+  const lados = [
+    ...materias.filter((m) => m.estado === 'falta').map(ladoCursar),
+    ...materias.filter((m) => m.rendir && m.estado !== 'aprobada').map(ladoRendir),
+  ];
+  const candidatos = materias.filter((m) => m.estado === 'regular' && m.rendir?.puede).map((m) => ({ clave: m.clave, nombre: m.nombre }));
+  return ordenarFrenos(lados, candidatos, { soloAprobada: true });
 }
 
 /** The subjects that name this one among what they lack to start them (or, regular ones, to sit the final). */
@@ -297,7 +314,11 @@ export function carreraParaConsultron(carrera, { supuestas = new Set(), abren = 
   ].filter(([, v]) => v);
 
   const resultado = [];
-  if (carrera.frenos.length) resultado.push(['Lo que más te frena', carrera.frenos.slice(0, 5).map((f) => `${f.nombre} (frena ${f.cuenta} materias)`).join('; ')]);
+  // How many open right away with it, and how many it holds back down the whole chain, electives apart.
+  const materias = (n) => (n === 1 ? '1 materia' : `${n} materias`);
+  const cuenta = (f) => (f.frena === 0 ? 'no frena ninguna' : `${f.abre ? `te abre ${materias(f.abre)} ya, ` : ''}frena ${materias(f.frena)} contando la cadena`);
+  if (carrera.frenos.length) resultado.push(['Lo que más te frena para cursar', carrera.frenos.slice(0, 5).map((f) => `${f.nombre} (${cuenta(f)})`).join('; ')]);
+  if (carrera.paraRendir.length) resultado.push(['Qué final rendir primero, contando solo las que la piden aprobada', carrera.paraRendir.map((f) => `${f.nombre} (${cuenta(f)})`).join('; ')]);
   const m = elegida ? porClave.get(elegida) : null;
   if (m) {
     const d = loQueDestraba(carrera, m.clave);

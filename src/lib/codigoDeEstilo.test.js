@@ -21,6 +21,8 @@ const MIOS = normalizar({
   menu: {
     estilo: 'pastillas',
     posicion: 'izquierda',
+    alineacion: 'medio',
+    ancho: 'pantalla',
     orden: ['repaso', 'hoy', 'mensajes'],
     lugares: { calculadoras: 'vista', buscar: 'mas', resumenes: 'oculta' },
   },
@@ -74,6 +76,20 @@ describe('pasar tu estilo con un código', () => {
     expect([ajustes.daltonismo, ajustes.movimiento]).toEqual(['azul-amarillo', 'reducido']);
   });
 
+  it.each(['rosa', 'bosque', 'cafe', 'lavanda', 'infierno', 'glaciar'])('una paleta viaja en el código: Hoja con %s se lee de vuelta', (tema) => {
+    const mios = normalizar({ estilo: 'hoja', tema });
+    const codigo = codigoDeEstilo(mios, MIO);
+    const { ajustes } = aplicar(leerCodigoDeEstilo(codigo, TUYOS));
+    expect([ajustes.estilo, ajustes.tema]).toEqual(['hoja', tema]);
+    expect(codigoDeEstilo(ajustes, MIO)).toBe(codigo);
+  });
+
+  it('un código de antes de las paletas sigue entrando igual', () => {
+    // Made with Hoja, Oscuro and a big letter, when «Oscuro» was the last theme: the lists only grew at the end.
+    const { ajustes } = aplicar(leerCodigoDeEstilo('CVG-21201-00C01-00011-00101-W01W0-B8050-00000-00000-00006-T4HR0-00000-000G0-000ZZ-Z6', TUYOS));
+    expect([ajustes.estilo, ajustes.tema, ajustes.letra]).toEqual(['hoja', 'oscuro', 'grande']);
+  });
+
   it('no pisa el daltonismo, el movimiento ni las materias de cada uno', () => {
     const { ajustes, mio } = aplicar(leerCodigoDeEstilo(codigoDeEstilo(MIOS, MIO), TUYOS));
     expect(ajustes.daltonismo).toBe('azul-amarillo');
@@ -121,6 +137,15 @@ describe('pasar tu estilo con un código', () => {
     const { ajustes } = aplicar(leerCodigoDeEstilo(viejo, normalizar({ contenido: 'linea' })), normalizar({ contenido: 'linea' }));
     expect([ajustes.estilo, ajustes.tarjeta, ajustes.vistas.materia, ajustes.accion]).toEqual(['plano', 'franja', 'tabla', '#7a3fb0']);
     expect(ajustes.contenido).toBe('linea');
+  });
+
+  // Made on 19/11, before the alignment and the width of the bar on top (version 2): they stay as the other one had them.
+  it('un código de la versión 2 se sigue leyendo, sin tocar la alineación ni el ancho de la barra', () => {
+    const viejo = 'CVG-24213-21712-22100-22303-H0BW1-06001-22213-1YHDA-1H006-MQQT1-C9G00-GM093-1127A-3FB0Z-0F9D5-8J';
+    const tuyos = normalizar({ menu: { alineacion: 'izquierda', ancho: 'pantalla' } });
+    const { ajustes } = aplicar(leerCodigoDeEstilo(viejo, tuyos), tuyos);
+    expect(ajustes.menu).toMatchObject({ estilo: 'pastillas', posicion: 'izquierda', alineacion: 'izquierda', ancho: 'pantalla' });
+    expect(ajustes.accion).toBe('#7a3fb0');
   });
 
   it('un error de tipeo o algo que no es un código no pasa', () => {

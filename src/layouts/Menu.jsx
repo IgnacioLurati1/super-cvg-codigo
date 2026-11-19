@@ -139,7 +139,7 @@ export function Entrada({ m, estilo, sinLeer = 0, enLista = false, lateral = fal
 /**
  * «Más»: the screens the student keeps out of sight, one touch away. A button that opens their list under it (closed
  * by Esc, a touch outside, leaving it with the keyboard or going somewhere). In the folded menu, the same screens under
- * a «Más» of their own. `punto`: Mensajes is in it and has something unread.
+ * a «Más» of their own, closed until it is touched. `punto`: Mensajes is in it and has something unread.
  * In the column on the left (`lateral`) the list opens under its button, in the column: it stays open until «Más» is
  * touched again, also going from one of its screens to another.
  */
@@ -162,13 +162,13 @@ export function MasDelMenu({ entradas, estilo, sinLeer, compacta, lateral = fals
   const nombre = ['Más', actual && `estás en ${actual.texto}`, punto && 'tenés mensajes sin leer'].filter(Boolean).join(', ');
 
   useEffect(() => {
-    if (!abierto || lateral) return undefined;
+    if (!abierto || lateral || compacta) return undefined;
     const fuera = (e) => {
       if (!lugar.current?.contains(e.target)) setAbierto(false);
     };
     document.addEventListener('pointerdown', fuera);
     return () => document.removeEventListener('pointerdown', fuera);
-  }, [abierto, lateral]);
+  }, [abierto, lateral, compacta]);
 
   if (!entradas.length) return null;
   // The list goes away with the focus in it: back to «Más», also when the screen chosen is the one on view. In the
@@ -179,12 +179,28 @@ export function MasDelMenu({ entradas, estilo, sinLeer, compacta, lateral = fals
     boton.current?.focus();
     onIr?.();
   };
-  // Folded, under a «Más» of their own, like the rest of the folded menu.
+  // Folded, under a «Más» of their own that opens them in the folded menu itself. It starts closed.
   if (compacta) {
     return (
-      <div className="cabecera__grupo-mas" role="group" aria-labelledby={`${id}-titulo`}>
-        <p id={`${id}-titulo`} className="cabecera__grupo-titulo">Más</p>
-        {entradas.map((m) => <Entrada key={m.clave} m={m} estilo={estilo} sinLeer={sinLeer} onIr={ir} />)}
+      <div className="cabecera__grupo-mas">
+        <button
+          type="button"
+          className="cabecera__mas-boton cabecera__grupo-boton"
+          aria-expanded={abierto}
+          aria-controls={abierto ? id : undefined}
+          aria-label={nombre !== 'Más' ? nombre : undefined}
+          data-actual={actual ? true : undefined}
+          onClick={() => setAbierto(!abierto)}
+        >
+          Más
+          <svg className="cabecera__mas-flecha" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 9l6 6 6-6" /></svg>
+          {punto && <span className="cabecera__punto" aria-hidden="true" />}
+        </button>
+        {abierto && (
+          <div id={id} className="cabecera__grupo-lista" role="group" aria-label="Más">
+            {entradas.map((m) => <Entrada key={m.clave} m={m} estilo={estilo} sinLeer={sinLeer} onIr={onIr} />)}
+          </div>
+        )}
       </div>
     );
   }

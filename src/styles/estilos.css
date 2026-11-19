@@ -224,23 +224,23 @@ html[data-estilo='plano'] body {
     linear-gradient(90deg, var(--cuadricula-mayor) 1px, transparent 1px) 0 0 / 120px 120px,
     linear-gradient(var(--cuadricula) 1px, transparent 1px) 0 0 / 24px 24px,
     linear-gradient(90deg, var(--cuadricula) 1px, transparent 1px) 0 0 / 24px 24px,
-    radial-gradient(ellipse at 50% 0%, #144077, transparent 70%),
+    radial-gradient(ellipse at 50% 0%, var(--plano-luz), transparent 70%),
     var(--fondo);
   background-attachment: fixed;
 }
 
 /* The header is the title block of the sheet: a darker strip, closed by a double line. */
 html[data-estilo='plano'] .cabecera {
-  background: #0a2647;
+  background: var(--plano-cabecera);
   color: var(--texto);
   box-shadow:
-    0 1px 0 rgb(214 230 255 / 0.55),
-    0 4px 0 #0a2647,
-    0 5px 0 rgb(214 230 255 / 0.3);
+    0 1px 0 rgb(var(--tinta) / 0.55),
+    0 4px 0 var(--plano-cabecera),
+    0 5px 0 rgb(var(--tinta) / 0.3);
 }
 
 html[data-estilo='plano'] .cabecera[data-compacta] .cabecera__menu {
-  background: #0a2647;
+  background: var(--plano-cabecera);
 }
 
 /* The page's title carries its dimension line, apart from the letters: a thin rule with a slanted tick near each end,
@@ -259,7 +259,7 @@ html[data-estilo='plano'] main h1 {
 }
 
 html[data-estilo='plano'] {
-  --recuadro: rgb(214 230 255 / 0.45);
+  --recuadro: rgb(var(--tinta) / 0.45);
 }
 
 html[data-estilo='plano'] .cabecera :focus-visible {
@@ -276,42 +276,42 @@ html[data-estilo='plano'] {
 html[data-estilo='pizarron'] body {
   background:
     var(--pizarron-polvo),
-    radial-gradient(ellipse 80% 60% at 30% 0%, rgb(255 255 255 / 0.06), transparent 70%),
+    radial-gradient(ellipse 80% 60% at 30% 0%, var(--pizarron-brillo), transparent 70%),
     var(--fondo);
   background-attachment: fixed;
 }
 
 /* The header is the wooden frame, with the chalk tray under it. */
 html[data-estilo='pizarron'] .cabecera {
-  background: linear-gradient(180deg, #8f6c47, #7f5f3f);
-  color: #fffaf0;
+  background: linear-gradient(180deg, var(--pizarron-cab-1), var(--pizarron-cab-2));
+  color: var(--pizarron-cab-texto);
   box-shadow:
     0 3px 0 var(--pizarron-bandeja),
-    0 5px 8px -2px rgb(0 0 0 / 0.5);
+    0 5px 8px -2px var(--pizarron-sombra);
 }
 
 html[data-estilo='pizarron'] .cabecera[data-compacta] .cabecera__menu {
-  background: #7f5f3f;
+  background: var(--pizarron-cab-2);
 }
 
 html[data-estilo='pizarron'] .cabecera :focus-visible {
-  outline-color: #fffaf0;
+  outline-color: var(--pizarron-cab-texto);
 }
 
 /* Chalk: a slight smudge around the titles, and the page's one underlined in yellow chalk. */
 html[data-estilo='pizarron'] :is(h1, h2) {
   letter-spacing: 0;
-  text-shadow: 0 0 1px rgb(242 240 232 / 0.45);
+  text-shadow: var(--pizarron-sombra-texto);
 }
 
 html[data-estilo='pizarron'] :is(main h1, .lab-barra__titulo) {
-  text-decoration: underline wavy 2px var(--pizarron-amarillo);
+  text-decoration: underline var(--pizarron-trazo) 2px var(--pizarron-amarillo);
   text-underline-offset: 0.2em;
   text-decoration-skip-ink: none;
 }
 
 html[data-estilo='pizarron'] {
-  --recuadro: rgb(242 240 232 / 0.4);
+  --recuadro: rgb(var(--tinta-pizarron, 242 240 232) / 0.4);
 }
 
 /* Cards keep an outline even without Bordes: ink on the blueprint, chalk on the board. */
@@ -420,4 +420,26 @@ html[data-bordes='si'] :where(.bloque) > :where(h2:first-child) {
     background: none;
     color: CanvasText;
   }
+}
+
+/* A main color the student chose (Configuración, Color principal) paints the header in every style, over the style's own:
+   the style keeps its shape (the red lines of Hoja, the double line of Plano, the chalk tray of Pizarrón). */
+html[data-estilo][data-cabecera='propia'] .cabecera {
+  background: var(--accion);
+  color: var(--accion-texto);
+}
+
+html[data-estilo][data-cabecera='propia'] .cabecera[data-compacta] .cabecera__menu {
+  background: var(--accion);
+}
+
+html[data-estilo][data-cabecera='propia'] .cabecera :focus-visible {
+  outline-color: var(--accion-texto);
+}
+
+html[data-estilo='plano'][data-cabecera='propia'] .cabecera {
+  box-shadow:
+    0 1px 0 rgb(var(--tinta) / 0.55),
+    0 4px 0 var(--accion),
+    0 5px 0 rgb(var(--tinta) / 0.3);
 }

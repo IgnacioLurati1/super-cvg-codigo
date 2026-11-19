@@ -38,6 +38,10 @@ export default function Privacidad() {
       <p>Mientras tenés Super CVG abierto, cada dos minutos le pregunta al campus cuántas notificaciones tenés sin leer. Las últimas las trae cuando cambia ese número o cuando abrís la campana. Quedan en la memoria de la pestaña.</p>
       <p>No las marca como leídas en el campus. Para saber cuáles ya viste, ese navegador guarda para tu usuario solo la hora de la última. De las que sacás guarda solo su número. Las dos cosas quedan aunque toques Salir.</p>
       <p>Los tipos de aviso que elegís no ver se guardan con lo que agregás vos.</p>
+      <h2>Los foros</h2>
+      <p>Los foros de tus materias los trae del campus cuando abrís Foros o tocás Actualizar. Quedan en la memoria de la pestaña.</p>
+      <p>Cuando respondés en un foro, Super CVG manda tu respuesta directo al campus, que la publica como si la escribieras ahí. Lo que escribís antes de publicar queda solo en la pestaña.</p>
+      <p>Para marcarte lo nuevo, ese navegador guarda para tu usuario solo el número de cada discusión que abriste y hasta cuándo la viste. Queda aunque toques Salir.</p>
       <h2>Lo que agregás vos</h2>
       <p>Tus anotaciones, tareas, nombres nuevos, fechas que sumaste, lo que marcaste como visto, lo que ocultaste y tu horario (comisiones, aulas, materias que sumaste y horarios que cambiaste a mano) quedan en ese navegador, sin cifrar. No los recibimos.</p>
       <p>Lo mismo pasa con lo que resaltás o señalás en un PDF. Se guarda dónde está cada resaltado, su color, tu nota, qué páginas señalaste y la página donde lo dejaste, nunca el texto del archivo.</p>
@@ -54,7 +58,7 @@ export default function Privacidad() {
       <p>Si buscás fechas en los documentos, buscás adentro de los PDF o bajás una materia en un ZIP, tu navegador baja esos archivos del campus. Se leen y se arman en tu dispositivo. No se mandan a nadie.</p>
       <p>De los PDF que se leen queda solo el texto en ese navegador, para tu usuario. Salir lo borra.</p>
       <h2>Carpetas de Drive</h2>
-      <p>La pestaña Drive de Buscar lee carpetas compartidas con cualquiera que tenga el link, como el Drive de la carrera. Tu navegador se las pide directo a Google con una clave de Super CVG, sin tu cuenta. Lo mismo pasa al abrir un link a un archivo de Drive, para mostrarlo acá. Si Google frena las descargas, el archivo se ve con el visor de Google, que se carga desde Google.</p>
+      <p>La pestaña Drive de Buscar lee carpetas compartidas con cualquiera que tenga el link, como el Drive de la carrera. Tu navegador se las pide directo a Google con una clave de Super CVG, sin tu cuenta. Lo mismo pasa al abrir un link a un archivo o a una carpeta de Drive, para mostrarlo acá. Lo de una carpeta queda en la memoria de la pestaña. Si Google frena las descargas, el archivo se ve con el visor de Google, que se carga desde Google.</p>
       <p>Las carpetas que sumás y lo que escondés quedan en ese navegador{CLIENTE_GOOGLE ? ', y en tu Google Drive si lo prendés' : ''}. El mapa de cada carpeta queda en ese navegador y Salir lo borra. No recibimos nada de eso.</p>
       <p>Consultron lee los archivos de Drive solo con tu computadora, nunca con Gemini.</p>
       <h2>Leer en voz alta</h2>

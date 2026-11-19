@@ -1,0 +1,51 @@
+/* «La facu en 3D»: the scene fills the window under the header; the title and the buttons float on it. */
+.facu3d {
+  position: relative;
+  height: calc(100dvh - var(--alto-cabecera));
+  min-height: 420px;
+  background: var(--superficie-2);
+}
+
+.facu3d .entrada3d {
+  position: absolute;
+  inset: 0;
+}
+
+.facu3d__cartel {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  display: grid;
+  gap: 8px;
+  max-width: min(26rem, calc(100% - 32px));
+  padding: 14px 16px;
+  border-radius: var(--radio-bloque);
+  background: color-mix(in srgb, var(--superficie) 92%, transparent);
+  box-shadow: 0 6px 24px rgb(0 0 0 / 0.18);
+}
+
+.facu3d__cartel h1 {
+  font-size: var(--t-h3);
+  margin: 0;
+}
+
+.facu3d__cartel p {
+  margin: 0;
+  color: var(--texto-suave);
+}
+
+.facu3d__botones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* On a phone the card goes to the bottom, where the thumb is, and leaves the building in view. */
+@media (max-width: 40rem) {
+  .facu3d__cartel {
+    top: auto;
+    bottom: 12px;
+    left: 12px;
+    max-width: calc(100% - 24px);
+  }
+}

@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { documentoDeTexto } from '../lib/consultron/adjuntar';
 import { ponerEnVisor, useEnVisor, useHayConsultron } from '../lib/consultron/enVisor';
 import { useSoloEnCaja } from '../lib/consultron/panel';
@@ -13,6 +13,7 @@ import { FORMA, traerHtml, traerParaLeer, traerPdf, traerVista, urlDeBajar } fro
 import { ErrorConReintento } from './Filas';
 import LlevarALaSesion from './enVivo/LlevarALaSesion';
 import EsperaLector from './lector/Espera';
+import { pasoDeLetra, useMarcoTactil, LETRA_MAX, LETRA_MIN } from './lector/marcoTactil';
 import { BarraSeleccion } from './lector/Resaltar';
 
 const VisorPdf = lazy(() => import('./VisorPdf'));
@@ -20,6 +21,10 @@ const ConsultronEnVisor = lazy(() => import('./consultron/EnVisor'));
 // From here Consultron goes beside the summary (resumenes.css, 62.5rem).
 const ANCHO_AL_LADO = 1000;
 const useAncho = () => useSyncExternalStore((f) => (window.addEventListener('resize', f), () => window.removeEventListener('resize', f)), () => window.innerWidth, () => 1280);
+// A phone: a touch screen narrower than this (the PDF reader's narrow bar, VisorPdf.jsx). There the header is one short
+// block that goes away while reading down.
+const ANCHO_MOVIL = 560;
+const tactil = () => window.matchMedia?.('(pointer: coarse)').matches ?? false;
 const otraPestana = <span className="solo-lectores">, se abre en otra pestaña</span>;
 // The reader of El Santo Resumen for an HTML whose scripts were turned on there, and how long it has to say it is ready.
 // In development only, another reader on this computer (VITE_LECTOR_LOCAL, as http://localhost:<port>/visor/), to try a
@@ -53,16 +58,17 @@ function useDescarga(traer, deps) {
 
 // `enMesa`: open in a tab of a live session (ResumenEnLaMesa): `pdf` is what the reader gets from the table, and
 // `alListo({ caja, texto })` hears, once each body has it, the box that scrolls (or null) and the summary's text.
-function Pdf({ r, enMesa }) {
+// `cabeza`: on a phone, the viewer's header, which goes in the reader with its bar and goes away with it.
+function Pdf({ r, enMesa, cabeza = null }) {
   const { datos, error, recargar } = useDescarga((senal) => traerPdf(r.id, senal), [r.id]);
   // Its Consultron is the reader's: it answers with this summary alone, as beside an HTML one.
   const abierto = useTextoDe(r, useEnVisor());
   const resumenDelPdf = useMemo(() => ({ abierto, doc: `resumen:${r.id}`, fuente: fuenteDeResumen(r) }), [abierto, r]);
-  if (error && !datos) return <ErrorConReintento texto={error} recargar={recargar} />;
-  if (!datos) return <EsperaLector />;
+  if (error && !datos) return <>{cabeza}<ErrorConReintento texto={error} recargar={recargar} /></>;
+  if (!datos) return <>{cabeza}<EsperaLector /></>;
   return (
     <div className="visor__pdf">
-      <Suspense fallback={<EsperaLector />}><VisorPdf blob={datos} nombre={r.titulo} doc={enMesa ? null : docDeResumen(r.id)} origen={{ materia: null, apunte: r.titulo }} resumen={resumenDelPdf} compartido={enMesa?.pdf ?? null} /></Suspense>
+      <Suspense fallback={<>{cabeza}<EsperaLector /></>}><VisorPdf blob={datos} nombre={r.titulo} doc={enMesa ? null : docDeResumen(r.id)} origen={{ materia: null, apunte: r.titulo }} resumen={resumenDelPdf} compartido={enMesa?.pdf ?? null} cabeza={cabeza} /></Suspense>
     </div>
   );
 }
@@ -280,12 +286,18 @@ function useSeleccionEnMarco(marco, activo) {
 
 // The HTML lives in a frame with no scripts, as in El Santo Resumen. One whose scripts were turned on there runs them in
 // its reader. `alPreguntar(texto)`: what the student selected goes to Consultron (only when it's here).
-function Html({ r, alPreguntar, enMesa }) {
+// `letra`, `setLetra`, `alCorrer`: on a phone, the size of its letters and the header that goes away (marcoTactil.js).
+const SIN_LETRA = { letra: 1, setLetra: () => {}, alCorrer: () => {} };
+function Html({ r, alPreguntar, enMesa, letra = SIN_LETRA }) {
   const { datos, error, recargar } = useDescarga((senal) => traerParaLeer(r.id, r.js, senal), [r.id, r.js]);
   const marco = useRef(null);
   const { sel, cargado, ocultar, soltar } = useSeleccionEnMarco(marco, Boolean(alPreguntar));
+  const [carga, setCarga] = useState(0);
+  // Only on a phone (with `letra`): elsewhere the frame is left as it comes.
+  useMarcoTactil(marco, { ...letra, carga: letra === SIN_LETRA ? 0 : carga });
   const alCargar = () => {
     cargado();
+    setCarga((n) => n + 1);
     const doc = marco.current?.contentDocument;
     if (enMesa && doc) enMesa.alListo({ caja: doc.scrollingElement, texto: textoDeHtml(doc.documentElement.outerHTML) });
   };
@@ -436,9 +448,15 @@ export function useConsultronDelResumen(r, forma, botonConsultron, { enMesa = fa
 
 // What to do with it: «Abrir en El Santo Resumen», «Bajar» and Consultron; in the viewer, its «me gusta» and taking it
 // to a live session too.
-export function Acciones({ r, forma, c, boton, antes = null }) {
+export function Acciones({ r, forma, c, boton, antes = null, letra = null }) {
   return (
     <div className="visor__acciones">
+      {letra && (
+        <span className="visor__letra" role="group" aria-label="Tamaño de la letra">
+          <button type="button" className="boton boton--secundario boton--chico" aria-label="Achicar la letra" disabled={letra.letra <= LETRA_MIN} onClick={() => letra.setLetra(pasoDeLetra(letra.letra, -1))}>A−</button>
+          <button type="button" className="boton boton--secundario boton--chico" aria-label="Agrandar la letra" disabled={letra.letra >= LETRA_MAX} onClick={() => letra.setLetra(pasoDeLetra(letra.letra, 1))}>A+</button>
+        </span>
+      )}
       {antes}
       {r.url && <a className="boton boton--secundario boton--chico" href={r.url} target="_blank" rel="noreferrer">Abrir en El Santo Resumen{otraPestana}</a>}
       {forma !== 'afuera' && <a className="boton boton--secundario boton--chico" href={urlDeBajar(r.id)} target="_blank" rel="noreferrer">Bajar{otraPestana}</a>}
@@ -453,12 +471,13 @@ export function Acciones({ r, forma, c, boton, antes = null }) {
 }
 
 // The summary and, beside it, Consultron. `boton`: the ref of Consultron's button, as for Acciones.
-export function Fila({ r, forma, c, boton, alIr, enMesa = null }) {
+// `cuerpo`: more for the body (Pdf's `cabeza`, Html's `letra`).
+export function Fila({ r, forma, c, boton, alIr, enMesa = null, cuerpo = null }) {
   const Cuerpo = CUERPOS[forma];
   return (
     <div className="visor__fila">
       <div className="visor__cuerpo" inert={c.conConsultron && c.encima && !c.caja ? true : undefined}>
-        <Cuerpo r={r} alPreguntar={c.preguntar} enMesa={enMesa} />
+        <Cuerpo r={r} alPreguntar={c.preguntar} enMesa={enMesa} {...cuerpo} />
       </div>
       {c.hayConsultron && c.caja && !c.conConsultron && (
         <button ref={boton} type="button" className="flotante__boton" title="Consultron" onClick={() => ponerEnVisor(true)}>
@@ -483,6 +502,30 @@ export default function VisorResumen({ resumen: r, gusto, onCerrar }) {
   const enVivo = useSesionEnVivo();
   const botonConsultron = useRef(null);
   const c = useConsultronDelResumen(r, forma, botonConsultron);
+  // A phone: the header is short, and goes away while reading down. In a PDF it goes in the reader, with its bar; in an
+  // HTML without scripts the text below follows it (marcoTactil.js). One with scripts lives in another origin and says
+  // nothing of its scroll: there it goes only while the browser's zoom is on, which made it grow over everything.
+  const [enTactil] = useState(tactil);
+  const ancho = useAncho();
+  const movil = enTactil && ancho < ANCHO_MOVIL;
+  const [letra, setLetra] = useState(1);
+  const [fuera, setFuera] = useState(false);
+  const [conZoom, setConZoom] = useState(false);
+  // Never while the focus is in it: it would be lost.
+  const alCorrer = useCallback((ver) => {
+    if (!ver && dialogo.current?.querySelector('.visor__cabeza')?.contains(document.activeElement)) return;
+    setFuera(!ver);
+  }, []);
+  const conLetra = movil && forma === 'html' && !r.js;
+  const datosLetra = useMemo(() => (conLetra ? { letra, setLetra, alCorrer } : null), [conLetra, letra, alCorrer]);
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!movil || forma !== 'html' || !vv) return undefined;
+    const ver = () => setConZoom(vv.scale > 1.05);
+    vv.addEventListener('resize', ver);
+    return () => vv.removeEventListener('resize', ver);
+  }, [movil, forma]);
+  const sinCabeza = movil && (conZoom || (conLetra && fuera));
   // Esc inside Consultron closes it, not the summary.
   const alCancelar = (e) => {
     if (c.conConsultron && e.target === dialogo.current && document.activeElement?.closest('.lector__consultron')) {
@@ -495,7 +538,7 @@ export default function VisorResumen({ resumen: r, gusto, onCerrar }) {
   useEffect(() => {
     const el = dialogo.current;
     if (!el.open) el.showModal();
-    cerrar.current.focus();
+    cerrar.current?.focus();
   }, []);
 
   const antes = (
@@ -504,18 +547,23 @@ export default function VisorResumen({ resumen: r, gusto, onCerrar }) {
       {enVivo?.sesion && <LlevarALaSesion key={r.id} sesion={enVivo.sesion} className="boton boton--secundario boton--chico" llevar={llevarResumen(r)} />}
     </>
   );
+  const cabeza = (
+    <div className="visor__cabeza" hidden={sinCabeza || undefined}>
+      <div className="visor__nombre">
+        <h2 id="visor-titulo">{r.titulo}</h2>
+        {r.dato && <p className="visor__dato">{r.dato}</p>}
+      </div>
+      <Acciones r={r} forma={forma} c={c} boton={botonConsultron} antes={antes} letra={datosLetra} />
+      <button ref={cerrar} type="button" className="boton boton--chico visor__cerrar" onClick={() => dialogo.current.close()}>Cerrar</button>
+    </div>
+  );
+  const enLector = movil && forma === 'pdf';
+  const cuerpo = enLector ? { cabeza } : conLetra ? { letra: datosLetra } : null;
   return (
-    <dialog ref={dialogo} className="visor" aria-labelledby="visor-titulo" data-forma={forma} data-consultron={c.conConsultron || undefined} onClose={onCerrar} onCancel={alCancelar}>
+    <dialog ref={dialogo} className="visor" aria-labelledby="visor-titulo" data-forma={forma} data-consultron={c.conConsultron || undefined} data-movil={movil || undefined} data-cabeza={enLector ? 'lector' : sinCabeza ? 'fuera' : undefined} onClose={onCerrar} onCancel={alCancelar}>
       <div className="visor__caja">
-        <div className="visor__cabeza">
-          <div className="visor__nombre">
-            <h2 id="visor-titulo">{r.titulo}</h2>
-            {r.dato && <p className="visor__dato">{r.dato}</p>}
-          </div>
-          <Acciones r={r} forma={forma} c={c} boton={botonConsultron} antes={antes} />
-          <button ref={cerrar} type="button" className="boton boton--chico visor__cerrar" onClick={() => dialogo.current.close()}>Cerrar</button>
-        </div>
-        <Fila r={r} forma={forma} c={c} boton={botonConsultron} alIr={() => dialogo.current?.close()} />
+        {!enLector && cabeza}
+        <Fila r={r} forma={forma} c={c} boton={botonConsultron} alIr={() => dialogo.current?.close()} cuerpo={cuerpo} />
       </div>
     </dialog>
   );

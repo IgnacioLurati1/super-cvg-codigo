@@ -150,18 +150,18 @@ export function clienteDrivePublico({ clave = CLAVE_DRIVE, pedir = (...a) => fet
       const nodo = nodoDe(f, '');
       return { id: f.id, nombre: String(f.name ?? ''), carpeta: Boolean(nodo?.c), nodo };
     },
-    /** Everything right inside a folder, page by page. */
-    async hijos(id, k = null, senal) {
+    /** Everything right inside a folder, page by page. With `tope`, it stops once it has that many. */
+    async hijos(id, k = null, senal, tope = Infinity) {
       const todos = [];
       let pagina = '';
       do {
-        const params = { q: `'${id}' in parents and trashed=false`, fields: `nextPageToken,files(${CAMPOS})`, pageSize: '1000', supportsAllDrives: 'true', includeItemsFromAllDrives: 'true' };
+        const params = { q: `'${id}' in parents and trashed=false`, fields: `nextPageToken,files(${CAMPOS})`, pageSize: String(Math.min(1000, tope)), supportsAllDrives: 'true', includeItemsFromAllDrives: 'true' };
         if (pagina) params.pageToken = pagina;
         const r = await pedirJson('files', params, { k, id, senal });
         const datos = await r.json();
         todos.push(...(Array.isArray(datos.files) ? datos.files : []));
         pagina = typeof datos.nextPageToken === 'string' ? datos.nextPageToken : '';
-      } while (pagina);
+      } while (pagina && todos.length < tope);
       return todos;
     },
     /** The bytes of a file. Google's own apps come as a PDF. */
@@ -246,6 +246,19 @@ function nodoDe(f, padre) {
   if (esClaveDeRecurso(k)) nodo.k = k;
   if (atajo && esIdDeDrive(atajo.targetId)) nodo.a = atajo.targetId;
   return esIdDeDrive(nodo.id) ? nodo : null;
+}
+
+// A folder linked from a course opens in the preview sheet one level at a time. Past this many things in one level it
+// is too big to look through here: it opens in Drive.
+export const TOPE_CARPETA_SUELTA = 500;
+
+/** What is right inside one folder ({ id, k }): { nodos (folders first, then by name), grande (past `tope`) }. */
+export async function contenidoDe(carpeta, { cliente = clienteDrivePublico(), tope = TOPE_CARPETA_SUELTA, senal } = {}) {
+  const crudos = await cliente.hijos(carpeta.id, carpeta.k ?? null, senal, tope + 1);
+  if (crudos.length > tope) return { nodos: [], grande: true };
+  const nodos = crudos.map((f) => nodoDe(f, carpeta.id)).filter(Boolean);
+  nodos.sort((x, y) => (y.c ?? 0) - (x.c ?? 0) || x.n.localeCompare(y.n, 'es', { numeric: true, sensitivity: 'base' }));
+  return { nodos, grande: false };
 }
 
 /** Walks a public folder whole, a few folders at a time, and gives back its map. `alAvanzar(nodos)` gets what came so

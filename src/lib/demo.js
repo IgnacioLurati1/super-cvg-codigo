@@ -5,6 +5,7 @@
 import { DEMO_NOTIFICACIONES } from './demoNotificaciones';
 import { CUESTIONARIOS_DEMO } from './demoCuestionarios';
 import { TAREAS_DEMO } from './demoTareas';
+import { FOROS_DEMO } from './demoForos';
 
 const ahora = () => Math.floor(Date.now() / 1000);
 const DIA = 86_400;
@@ -49,9 +50,16 @@ const contenido = (id) => [
     modulo(id * 10 + 1, 'resource', `Apunte de ejemplo ${id}`, [archivo(`apunte-ejemplo-${id}.pdf`, id)]),
     modulo(id * 10 + 2, 'url', 'Enlace de ejemplo', [{ type: 'url', fileurl: 'https://example.org/material', timemodified: 0 }]),
     ...CUESTIONARIOS_DEMO.modulos(id),
+    ...FOROS_DEMO.modulos(id),
   ] },
   { id: id * 100 + 2, name: 'Notas 2023 de ejemplo', uservisible: true, modules: [
     modulo(id * 10 + 4, 'resource', `Guía de ejemplo ${id}`, [archivo(`guia-ejemplo-${id}.pdf`, id + 5)]),
+    // A Drive folder: in the demo, the sample folder of demoDrivePublico.js. As a link of its own and inside a text.
+    modulo(70_000 + id, 'url', 'Carpeta de ejemplo', [{ type: 'url', fileurl: 'https://drive.google.com/drive/folders/1DemoCarpetaDeEjemplo00', timemodified: 0 }]),
+    {
+      ...modulo(71_000 + id, 'label', ''),
+      description: '<p><strong>Unidad 2 de ejemplo</strong></p><ul><li>Primer tema de ejemplo.</li><li>Segundo tema de ejemplo.</li></ul><p><a href="https://drive.google.com/drive/folders/1DemoCarpetaDeEjemplo01">https://drive.google.com/drive/folders/1DemoCarpetaDeEjemplo01</a></p>',
+    },
   ] },
   ...TAREAS_DEMO.seccion(id),
   // A long one, to see how a section with many things shows only the first.
@@ -204,6 +212,8 @@ export const DEMO = {
       ].filter((e) => e.modulename !== 'assign' || !TAREAS_DEMO.entregada(Number(new URL(e.action.url).searchParams.get('id')))) }),
       mod_assign_get_assignments: () => TAREAS_DEMO.tareas(parametros),
       mod_assign_get_submission_status: () => TAREAS_DEMO.estado(parametros),
+      // The forums, read only (demoForos.js).
+      ...Object.fromEntries(Object.entries(FOROS_DEMO.respuestas).map(([f, responder]) => [f, () => responder(parametros)])),
       // The quizzes, read only (demoCuestionarios.js).
       ...Object.fromEntries(Object.entries(CUESTIONARIOS_DEMO.respuestas).map(([f, responder]) => [f, () => responder(parametros)])),
       core_calendar_get_calendar_monthly_view: () => ({ weeks: [{ days: [{ events: [

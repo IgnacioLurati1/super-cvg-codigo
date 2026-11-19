@@ -30,6 +30,14 @@ describe('el lugar de cada página', () => {
     expect(armarLayout([[400, 200]], 1, 300).ancho).toBe(400 + 2 * BORDE);
   });
 
+  it('deja lugar arriba para las barras que flotan, sin mover nada más', () => {
+    const sin = armarLayout([[100, 200], [50, 100]], 1, 300);
+    const con = armarLayout([[100, 200], [50, 100]], 1, 300, BORDE, 90);
+    expect(con.tops).toEqual(sin.tops.map((t) => t + 90));
+    expect(con.alto).toBe(sin.alto + 90);
+    expect(con.izquierdas).toEqual(sin.izquierdas);
+  });
+
   it('sabe qué página se lee y cuáles dibujar', () => {
     const l = armarLayout(Array.from({ length: 10 }, () => [100, 100]), 1, 200);
     expect(paginaEn(l.tops, 0)).toBe(0);

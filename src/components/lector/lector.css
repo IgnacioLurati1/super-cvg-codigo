@@ -31,6 +31,41 @@ dialog:has(.lector[data-pantalla='css']) {
   transform: none;
 }
 
+/* ---------- The bars on top (VisorPdf, lector__techo) ---------- */
+/* In their place, as if the box weren't there. On a phone they float over the pages, which start under them, and slide
+   away while reading down: only transform, by the compositor, and the pages never move. */
+.lector__techo {
+  display: contents;
+}
+
+.lector[data-flotante] .lector__techo {
+  position: absolute;
+  z-index: 6;
+  top: 0;
+  right: 0;
+  left: 0;
+  display: block;
+  background: var(--superficie);
+  box-shadow: 0 1px 0 var(--borde);
+  transition: transform 220ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.lector[data-flotante] .lector__techo[data-fuera] {
+  /* A bit further than its height, so its shadow goes too. */
+  transform: translateY(calc(-100% - 4px));
+  transition-duration: 180ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lector[data-flotante] .lector__techo {
+    transition: opacity 160ms ease;
+  }
+
+  .lector[data-flotante] .lector__techo[data-fuera] {
+    opacity: 0;
+  }
+}
+
 /* ---------- Bar ---------- */
 /* When it doesn't fit it scrolls sideways, without a scrollbar: the edge with more buttons behind it fades
    (data-mas, from VisorPdf). The second layer keeps the line under the bar whole. */

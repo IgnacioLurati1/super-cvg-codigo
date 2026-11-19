@@ -4,6 +4,87 @@
 // Older updates keep `cambios` ([kind, text]), shown the same way. In the student's words: nothing technical.
 export const NOVEDADES = [
   {
+    fecha: '2026-11-19',
+    titulo: 'Foros, temas y la facu en 3D',
+    funciones: [
+      {
+        tipo: 'nuevo',
+        nombre: 'Foros',
+        texto: 'Todos los foros de tus materias en un solo lugar. Está en Mensajes, con el botón Foros.',
+        puntos: [
+          'Lo nuevo desde tu última visita queda resaltado. Al abrir una discusión vas directo ahí.',
+          'Cada discusión se lee como una charla. Si alguien responde a otra respuesta, ves a quién.',
+          'Sin «Re: Re:» ni mensajes citados.',
+          'Respondé desde acá, a la discusión o a una respuesta.',
+          'Buscá en todos los foros y filtrá por materia.',
+          'Lo de hace más de un año queda escondido. Se ve con un toque.',
+          'Los archivos y las fotos de cada mensaje se abren acá.',
+          'Un aviso de foro en la campana abre su discusión.',
+        ],
+      },
+      {
+        tipo: 'nuevo',
+        nombre: 'Temas',
+        texto: 'Seis temas nuevos en Configuración: Rosa oscuro, Verde bosque, Café, Lavanda, Infierno y Glaciar.',
+        puntos: [
+          'Cada tema pinta cualquier estilo. El estilo pone la forma y el tema, los colores.',
+          'Con el tema claro, Plano es un plano en papel y Pizarrón, una pizarra blanca.',
+          'El color principal también pinta la cabecera. Si cambiás de estilo, vuelve la del estilo.',
+        ],
+      },
+      {
+        tipo: 'nuevo',
+        nombre: 'La facu en 3D',
+        texto: 'La entrada de la facu, en 3D, de fondo cuando entrás. Con el tema oscuro es de noche.',
+        puntos: ['Se ve solo si tu navegador usa la placa de video.'],
+      },
+      {
+        tipo: 'nuevo',
+        nombre: 'Fusionar en un PDF',
+        texto: 'Juntá PDF y fotos de una materia en un solo archivo, en el orden que quieras. Está en cada materia.',
+        puntos: [
+          'Elegí qué páginas van de cada uno.',
+          'Bajalo con un marcador por archivo o guardalo en una sección.',
+          'Si un archivo no abre o le faltan páginas, te avisa antes de fusionar.',
+        ],
+      },
+      {
+        tipo: 'mejora',
+        nombre: 'Tu carrera',
+        texto: '«Lo que más te frena» cuenta toda la cadena: cuántas materias te abre cada una y cuántas te frena.',
+        puntos: ['«Finales para rendir» muestra los que ya podés rendir, el que más destraba primero.', 'Sysacad y Consultron cuentan igual.'],
+      },
+      {
+        tipo: 'mejora',
+        nombre: 'Leer en el celular',
+        texto: 'La barra se esconde mientras leés y vuelve cuando subís.',
+        puntos: ['En un resumen, dos dedos agrandan la letra.'],
+      },
+      {
+        tipo: 'mejora',
+        nombre: 'Bajar para tu calendario',
+        texto: 'El archivo para Outlook o el celular trae todo lo que viene, no solo el mes que mirás.',
+      },
+      {
+        tipo: 'mejora',
+        nombre: 'Carpetas de Drive',
+        texto: 'Un link a una carpeta de Drive se recorre acá, sin salir de Super CVG. Vale en las materias, sus textos y los foros.',
+        puntos: ['Sus PDF y fotos se abren en el visor. «Volver a la carpeta» te deja donde estabas.', 'Una carpeta con más de 500 archivos se abre en Drive.'],
+      },
+      {
+        tipo: 'mejora',
+        nombre: 'Menú en el celular',
+        texto: 'Arriba quedan la campana y Mensajes. Lo demás va en el menú, con «Más» cerrado hasta que lo tocás.',
+      },
+      {
+        tipo: 'mejora',
+        nombre: 'Menú de arriba',
+        texto: 'Elegí si sus pantallas van a la izquierda, al medio o a la derecha. Está en Configuración, Menú.',
+        puntos: ['Con «Toda la pantalla» entran más antes de que se pliegue.', 'Se guarda en tu Drive y pasa con «Pasar tu estilo».'],
+      },
+    ],
+  },
+  {
     fecha: '2026-11-18',
     titulo: 'United We Stand',
     funciones: [

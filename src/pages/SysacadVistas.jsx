@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import Campo from '../components/Campo';
 import { nombreDelAnio } from '../lib/carrera';
 import { normalizar } from '../lib/datos';
+import { cuantoFrena } from '../lib/frenos';
 import { ENTRE_LINEAS, filasQueCoinciden } from '../lib/sysacadPestanas';
 import { aniosDe, decimal, esTotal, filtrosDe, notaComoTexto, ordenar, sinMayusculas } from '../lib/sysacadVistas';
 
@@ -226,7 +227,7 @@ function Frenos({ frenos, verbo }) {
   const fila = (f) => (
     <li key={f.nombre} className="sysacad-freno">
       <span className="sysacad-freno__nombre">{f.nombre}</span>
-      <span className="sysacad-freno__cuantas">frena {f.cuantas} materias</span>
+      <span className="sysacad-freno__cuantas">{cuantoFrena(f)}</span>
     </li>
   );
   const resto = frenos.slice(FRENOS_A_LA_VISTA);

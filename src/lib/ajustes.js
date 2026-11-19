@@ -27,7 +27,7 @@ export const OPCIONES = {
   // or dark, or black and yellow), an engineering blueprint, or the classroom's chalkboard. The last three are always dark
   // (public/ajustes.js). The looks are in tokens.css and estilos.css.
   estilo: ['original', 'hoja', 'profesional', 'batman', 'plano', 'pizarron'],
-  tema: ['sistema', 'claro', 'oscuro'],
+  tema: ['sistema', 'claro', 'oscuro', 'rosa', 'bosque', 'cafe', 'lavanda', 'infierno', 'glaciar'],
   contraste: ['normal', 'alto'],
   daltonismo: ['ninguno', 'rojo-verde', 'azul-amarillo'],
   letra: ['normal', 'grande', 'mas-grande', 'enorme'],
@@ -53,17 +53,18 @@ export const APARIENCIA_CONSULTRON = {
 export const APARICIONES_CONSULTRON = ['modal', 'lateral'];
 
 // The styles that are always dark, whatever the theme says (public/ajustes.js does the same).
-export const SIEMPRE_OSCUROS = ['batman', 'plano', 'pizarron'];
+export const SIEMPRE_OSCUROS = ['batman'];
 
 // The styles that look better framed (Hoja, Plano): choosing one turns Bordes on, and leaving it turns them off again, unless the
 // student had them on before or touched the switch since (`bordesDelEstilo` says the style turned them on).
 export const CON_BORDES = ['hoja', 'plano'];
 
-/** What changes when a style is chosen. */
+/** What changes when a style is chosen. Another style also drops the main color chosen: the header goes back to the style's own. */
 export function cambioDeEstilo(ajustes, estilo) {
-  if (CON_BORDES.includes(estilo)) return ajustes.bordes ? { estilo } : { estilo, bordes: true, bordesDelEstilo: true };
-  if (ajustes.bordesDelEstilo) return { estilo, bordes: false, bordesDelEstilo: false };
-  return { estilo };
+  const color = estilo !== ajustes.estilo ? { accion: null } : {};
+  if (CON_BORDES.includes(estilo)) return ajustes.bordes ? { estilo, ...color } : { estilo, ...color, bordes: true, bordesDelEstilo: true };
+  if (ajustes.bordesDelEstilo) return { estilo, ...color, bordes: false, bordesDelEstilo: false };
+  return { estilo, ...color };
 }
 
 /** What changes when the switch is touched: from then on, the frames are the student's. */
@@ -143,6 +144,10 @@ const lugarValido = (clave, lugar) =>
 // Where the menu goes: the bar on top, or a column on the left (only on wide screens: a phone keeps the bar on top).
 // public/ajustes.js writes it to <html> as `data-menu-lado`, so the column is there before the first paint.
 export const POSICIONES_DEL_MENU = ['arriba', 'izquierda'];
+// The bar on top: where its screens go along it (as it came, to the right), and how wide it is (as the page, or the
+// whole window, with more room before it folds).
+export const ALINEACIONES_DEL_MENU = ['derecha', 'medio', 'izquierda'];
+export const ANCHOS_DEL_MENU = ['pagina', 'pantalla'];
 
 /** The order of the menu: the known screens as the student left them, each once, and the missing ones (a screen that
  * came later) after them, in the order they came. */
@@ -160,12 +165,23 @@ function normalizarMenu(crudo) {
     lugares: Object.fromEntries(EN_EL_MENU.map((c) => [c, lugares[c] ?? LUGAR_DE_ENTRADA[c]]).filter(([c, l]) => lugarValido(c, l))),
     orden: ordenValido(menu.orden),
     posicion: entre(POSICIONES_DEL_MENU, menu.posicion),
+    alineacion: entre(ALINEACIONES_DEL_MENU, menu.alineacion),
+    ancho: entre(ANCHOS_DEL_MENU, menu.ancho),
   };
 }
 
 export const ORIGINALES = {
   claro: { accion: '#17324d', resaltador: '#ffe14d' },
   oscuro: { accion: '#3578bd', resaltador: '#ffe14d' },
+  // The palettes of tokens.css (`data-paleta`): Rosa oscuro, Verde bosque, Café, Infierno and Glaciar are dark, Lavanda is light.
+  rosa: { accion: '#c2306e', resaltador: '#ffe14d' },
+  bosque: { accion: '#17805a', resaltador: '#ffe14d' },
+  cafe: { accion: '#b8531a', resaltador: '#ffe14d' },
+  lavanda: { accion: '#5b3fb0', resaltador: '#ffe14d' },
+  infierno: { accion: '#c4320a', resaltador: '#ffe14d' },
+  glaciar: { accion: '#0e7490', resaltador: '#ffe14d' },
+  // Lavanda with an always-dark style: the same violet, lighter.
+  'lavanda-oscuro': { accion: '#7456d0', resaltador: '#ffe14d' },
 };
 
 const ES_COLOR = /^#[0-9a-f]{6}$/i;
@@ -399,6 +415,10 @@ export const ordenarMenu = (orden) => cambiarAjustes({ menu: { ...actual.menu, o
 
 export const ponerPosicionDelMenu = (posicion) => cambiarAjustes({ menu: { ...actual.menu, posicion } });
 
+/** Where the screens of the bar on top go along it, and how wide the bar is. */
+export const ponerAlineacionDelMenu = (alineacion) => cambiarAjustes({ menu: { ...actual.menu, alineacion } });
+export const ponerAnchoDelMenu = (ancho) => cambiarAjustes({ menu: { ...actual.menu, ancho } });
+
 const suscribirTema = (avisar) => {
   const observador = new MutationObserver(avisar);
   observador.observe(document.documentElement, { attributes: true, attributeFilter: ['data-tema'] });
@@ -419,7 +439,9 @@ export const cambiarLectura = (lectura) => cambiarAjustes({ lectura: Boolean(lec
 
 /** What the color control should show: the chosen color or the one the current theme brings. */
 export function colorActual(ajustes, clave) {
-  const tema = document.documentElement.dataset.tema === 'oscuro' ? 'oscuro' : 'claro';
+  const { tema: marca, paleta } = document.documentElement.dataset;
+  const delTema = paleta === 'lavanda' && marca === 'oscuro' ? 'lavanda-oscuro' : paleta;
+  const tema = delTema in ORIGINALES ? delTema : marca === 'oscuro' ? 'oscuro' : 'claro';
   // Consultron's own color starts as the main one.
   if (clave === 'consultronColor') return ajustes.consultronColor ?? ajustes.accion ?? ORIGINALES[tema].accion;
   return ajustes[clave] ?? ORIGINALES[tema][clave];

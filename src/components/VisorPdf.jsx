@@ -45,6 +45,8 @@ const ANCHO_CON_PANEL = 880;
 const PARTE_PAGINAS = 0.55;
 const MIN_PAGINAS = 440;
 const ANCHO_ANGOSTO = 560;
+// How far the pages go down (or up) before the floating bars of a phone go away (or come back).
+const CORRIDO_BARRAS = 24;
 // A tool's name, the same in the bar (its title) and in «Más herramientas» (its text).
 const nombreDeHerramienta = (boton) => boton.getAttribute('title') ?? boton.textContent;
 // With Consultron open, a reader at least this wide keeps it beside the pages; a narrower one shows it over them.
@@ -114,7 +116,7 @@ const Teclas = ({ atajo: a }) => (a.con ?? a.teclas).map((t, i) => <span key={t}
  * `autor`), it says where it is (`mover`), goes where the one it follows is (`guia`, gliding with `desplazar(marco,
  * top)`) and stops following when the student moves on their own (`soltar`). `capa(layout)` draws over the pages,
  * `barra` goes in the bar, and `alAbrir` gets the text of the pages. Nothing of it goes to `doc`, which comes null. */
-export default function VisorPdf({ blob, nombre = 'documento.pdf', doc = null, inicio = null, origen = null, fuente = null, resumen = null, compartido = null }) {
+export default function VisorPdf({ blob, nombre = 'documento.pdf', doc = null, inicio = null, origen = null, fuente = null, resumen = null, compartido = null, cabeza = null }) {
   const [estado, setEstado] = useState({ pdf: null, base: null, error: null });
 
   useEffect(() => {
@@ -139,16 +141,19 @@ export default function VisorPdf({ blob, nombre = 'documento.pdf', doc = null, i
 
   if (estado.error) {
     return (
-      <p className="previa__aviso lector__error" role="alert">
-        {estado.error === 'clave' ? 'Este PDF tiene contraseña. Bajalo para abrirlo.' : 'No se pudo mostrar este PDF. Bajalo para abrirlo.'}
-      </p>
+      <>
+        {cabeza}
+        <p className="previa__aviso lector__error" role="alert">
+          {estado.error === 'clave' ? 'Este PDF tiene contraseña. Bajalo para abrirlo.' : 'No se pudo mostrar este PDF. Bajalo para abrirlo.'}
+        </p>
+      </>
     );
   }
-  if (!estado.pdf) return <EsperaLector />;
-  return <Lector pdf={estado.pdf} base={estado.base} nombre={nombre} doc={doc} inicio={inicio} origen={origen} fuente={fuente} resumen={resumen} compartido={compartido} />;
+  if (!estado.pdf) return <>{cabeza}<EsperaLector /></>;
+  return <Lector pdf={estado.pdf} base={estado.base} nombre={nombre} doc={doc} inicio={inicio} origen={origen} fuente={fuente} resumen={resumen} compartido={compartido} cabeza={cabeza} />;
 }
 
-function Lector({ pdf, base, nombre, doc, inicio, origen, fuente, resumen, compartido }) {
+function Lector({ pdf, base, nombre, doc, inicio, origen, fuente, resumen, compartido, cabeza }) {
   const total = pdf.numPages;
   const id = useId();
   const { confirmar } = useUI();
@@ -231,7 +236,15 @@ function Lector({ pdf, base, nombre, doc, inicio, origen, fuente, resumen, compa
   const alAncho = escalaAncho(tamanos, vista.ancho);
   // In full screen the page takes the whole width; out of it, up to a size that reads well.
   const escala = escalaDeZoom(zoom, alAncho, pantalla.modo);
-  const layout = useMemo(() => armarLayout(tamanos, escala, vista.ancho), [tamanos, escala, vista.ancho]);
+  const angosto = vista.raiz > 0 && vista.raiz < ANCHO_ANGOSTO;
+  // On a phone the bars float over the pages and go away while reading down, as in the phone's own browser; they come
+  // back scrolling up, touching a page or near the top (lector__techo). The pages start under them, so nothing is
+  // covered at the top. With the panel or Consultron open, they stay in their place.
+  const techoRef = useRef(null);
+  const [techo, setTecho] = useState(0);
+  const flotante = tactil && angosto && panel === null && !conConsultron;
+  const techoPaginas = flotante ? techo : 0;
+  const layout = useMemo(() => armarLayout(tamanos, escala, vista.ancho, BORDE, techoPaginas), [tamanos, escala, vista.ancho, techoPaginas]);
   // The zoom as a live session shares it: 'auto', 'ancho' or the percent.
   const zoomCompartido = zoom.modo === 'libre' ? porcentaje(escala) : zoom.modo;
   const altoVista = vista.alto || 700;
@@ -277,7 +290,6 @@ function Lector({ pdf, base, nombre, doc, inicio, origen, fuente, resumen, compa
     e.preventDefault();
     cambiarAjustes({ anchoPanelPdf: acotarPanel(nuevo) });
   };
-  const angosto = vista.raiz > 0 && vista.raiz < ANCHO_ANGOSTO;
   // On a phone the bar keeps what is used while reading; the rest goes under «Más herramientas», in a row of its own
   // that opens under the bar (a list over the pages would be cut by the bar, which scrolls sideways).
   const masAbierto = mas && angosto;
@@ -392,11 +404,13 @@ function Lector({ pdf, base, nombre, doc, inicio, origen, fuente, resumen, compa
     u.compartido = compartido;
     u.zoomCompartido = zoomCompartido;
     u.ventana = [desde, hasta, pagina];
+    u.techo = techoPaginas;
+    u.flotante = flotante;
     const el = marco.current;
     if (!el || !vista.ancho) return;
     if (!u.inicial) {
       u.inicial = true;
-      el.scrollTop = Math.max(0, layout.tops[arranque.pagina - 1] - BORDE / 2);
+      el.scrollTop = Math.max(0, layout.tops[arranque.pagina - 1] - BORDE / 2 - techoPaginas);
       return;
     }
     const a = ancla.current;
@@ -437,7 +451,7 @@ function Lector({ pdf, base, nombre, doc, inicio, origen, fuente, resumen, compa
     const a = ancla.current;
     const el = marco.current;
     if (!a || !el || !u.tamanos || !ancho) return;
-    const L = armarLayout(u.tamanos, escalaDeZoom(z, escalaAncho(u.tamanos, ancho), u.pantallaCompleta), ancho);
+    const L = armarLayout(u.tamanos, escalaDeZoom(z, escalaAncho(u.tamanos, ancho), u.pantallaCompleta), ancho, BORDE, u.techo ?? 0);
     if (L.tops[a.i] === undefined) return;
     setArriba(Math.max(0, Math.min(L.alto - el.clientHeight, L.tops[a.i] + a.fy * L.altos[a.i] - a.py)));
   }, []);
@@ -505,6 +519,7 @@ function Lector({ pdf, base, nombre, doc, inicio, origen, fuente, resumen, compa
     const y = el.scrollTop;
     const u = ultimo.current;
     if (y === 0 || (Math.abs(y - arriba) >= PASO_SCROLL && cambiaLaVentana(u, y))) setArriba(y);
+    if (u.flotante) seguirConBarras(u, y, el.clientHeight);
     if (el.clientWidth) u.lugar = lugarEn(0, 0);
     if (compartido && !u.cuadro) {
       u.cuadro = requestAnimationFrame(() => {
@@ -513,6 +528,40 @@ function Lector({ pdf, base, nombre, doc, inicio, origen, fuente, resumen, compa
       });
     }
   };
+
+  // The floating bars: down a bit (not a jump of the reader, bigger than the view) they go, up a bit or near the top
+  // they come back. Only the attribute changes, with no render: the bars slide by the compositor.
+  const mostrarBarras = useCallback((ver) => {
+    const t = techoRef.current;
+    if (!t || Boolean(ultimo.current.barrasFuera) === !ver) return;
+    if (!ver && t.contains(document.activeElement)) return;
+    ultimo.current.barrasFuera = !ver;
+    t.toggleAttribute('data-fuera', !ver);
+  }, []);
+  const seguirConBarras = (u, y, alto) => {
+    const dy = y - (u.yBarras ?? y);
+    u.yBarras = y;
+    if (y <= u.techo) {
+      u.corrido = 0;
+      mostrarBarras(true);
+      return;
+    }
+    if (!dy || Math.abs(dy) > alto * 0.9) return;
+    u.corrido = Math.sign(dy) === Math.sign(u.corrido ?? 0) ? u.corrido + dy : dy;
+    if (u.corrido > CORRIDO_BARRAS) mostrarBarras(false);
+    else if (u.corrido < -CORRIDO_BARRAS) mostrarBarras(true);
+  };
+  useEffect(() => {
+    if (!flotante) mostrarBarras(true);
+  }, [flotante, mostrarBarras]);
+  useLayoutEffect(() => {
+    const t = techoRef.current;
+    if (!flotante || !t) return undefined;
+    const ro = new ResizeObserver(() => setTecho(t.offsetHeight));
+    ro.observe(t);
+    setTecho(t.offsetHeight);
+    return () => ro.disconnect();
+  }, [flotante]);
 
   const cambiaLaVentana = (u, y) => {
     const L = u.layout;
@@ -588,8 +637,9 @@ function Lector({ pdf, base, nombre, doc, inicio, origen, fuente, resumen, compa
     const L = ultimo.current.layout;
     const i = Math.min(total, Math.max(1, n)) - 1;
     if (!el || !L) return;
-    el.scrollTop = Math.max(0, L.tops[i] - BORDE / 2 + ajuste);
-  }, [total, propio]);
+    mostrarBarras(true);
+    el.scrollTop = Math.max(0, L.tops[i] - BORDE / 2 - (ultimo.current.techo ?? 0) + ajuste);
+  }, [total, propio, mostrarBarras]);
 
   // Reading aloud (lector/Voz.jsx).
   const paginaActual = useCallback(() => ultimo.current.pagina, []);
@@ -748,7 +798,7 @@ function Lector({ pdf, base, nombre, doc, inicio, origen, fuente, resumen, compa
     const L = ultimo.current.layout;
     const i = hallazgo.pagina - 1;
     if (!el || !L) return;
-    if (L.tops[i] + L.altos[i] < el.scrollTop || L.tops[i] > el.scrollTop + el.clientHeight) el.scrollTop = Math.max(0, L.tops[i] - BORDE / 2);
+    if (L.tops[i] + L.altos[i] < el.scrollTop || L.tops[i] > el.scrollTop + el.clientHeight) el.scrollTop = Math.max(0, L.tops[i] - BORDE / 2 - (ultimo.current.techo ?? 0));
   }, [claveActual, elegido.pedido, hallazgo]);
 
   const ubicar = useCallback((n, caja) => {
@@ -969,13 +1019,22 @@ function Lector({ pdf, base, nombre, doc, inicio, origen, fuente, resumen, compa
     setGlobo(editar ? { id: r.id, editando: true } : null);
   };
 
+  // A touch on the pages that does nothing else brings the floating bars or sends them away.
+  const alternarBarras = (e) => {
+    if (ultimo.current.flotante && !e.target.closest('a, button, input, .lector__globo, .lector__barra-sel')) mostrarBarras(Boolean(ultimo.current.barrasFuera));
+  };
   const alTocarPaginas = (e) => {
-    if (!notas || e.target.closest('.lector__globo, .lector__barra-sel')) return;
+    if (e.target.closest('.lector__globo, .lector__barra-sel')) return;
     const sel = document.getSelection();
     if (sel && !sel.isCollapsed) return;
+    if (!notas) {
+      alternarBarras(e);
+      return;
+    }
     const hoja = e.target.closest('.lector__pagina');
     if (!hoja) {
       setGlobo(null);
+      alternarBarras(e);
       return;
     }
     const caja = hoja.getBoundingClientRect();
@@ -983,6 +1042,7 @@ function Lector({ pdf, base, nombre, doc, inicio, origen, fuente, resumen, compa
     setArriba(marco.current.scrollTop);
     const tocado = [...(porPagina.get(Number(hoja.dataset.pagina)) ?? [])].reverse().find((r) => r.cajas.some((c) => enCaja(punto, c)));
     setGlobo(tocado ? { id: tocado.id, editando: false } : null);
+    if (!tocado && !globo) alternarBarras(e);
   };
 
   // Where the bar of a selection and the bubble of a highlight go, in the pages' own space.
@@ -1282,8 +1342,11 @@ function Lector({ pdf, base, nombre, doc, inicio, origen, fuente, resumen, compa
       data-panel={conPanel ? (panelAlLado ? 'lado' : 'encima') : undefined}
       data-angosto={angosto || undefined}
       data-consultron={conConsultron ? (soloEnCaja ? 'caja' : consultronAlLado ? 'lado' : 'encima') : undefined}
+      data-flotante={flotante || undefined}
       style={conPanel && panelAlLado ? { '--ancho-panel': `${anchoPanel}px` } : undefined}
     >
+      <div ref={techoRef} className="lector__techo" onFocus={() => mostrarBarras(true)}>
+      {cabeza}
       <div
         ref={barraRef}
         className="lector__barra"
@@ -1421,6 +1484,7 @@ function Lector({ pdf, base, nombre, doc, inicio, origen, fuente, resumen, compa
           {aviso && <button type="button" className="boton boton--secundario boton--chico" onClick={() => setAviso('')}>Entendido</button>}
         </div>
       )}
+      </div>
 
       <div className="lector__cuerpo">
         {conPanel && (

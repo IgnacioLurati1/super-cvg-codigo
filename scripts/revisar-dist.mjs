@@ -28,12 +28,20 @@ const CONOCIDOS = new Set([
 ]);
 export const esConocido = (bytes) => CONOCIDOS.has(createHash('sha256').update(bytes).digest('hex'));
 
+// The PDF library of Fusionar en un PDF (@cantoo/pdf-lib) checks its own AES before opening a locked PDF: the AES-128
+// of a block of zeros with a key of zeros, a public test value. Only that value, and only right after that check.
+const PUBLICAS = [{ valor: '66e94bd4ef8a2c3b884cfa59ca342b2e', antes: 'aes128CbcNoPadding(' }];
+const esPublica = (texto, m) => PUBLICAS.some((p) => m[0].toLowerCase() === p.valor && texto.slice(Math.max(0, m.index - 60), m.index).includes(p.antes));
+
 /** Problems in one text: [{ nombre, muestra }]. The sample shows only the start, never a whole match. `conocido`: one
  * of the files above, which skips the rule of the key. */
 export function revisarTexto(texto, { conocido = false } = {}) {
   const fallas = [];
   for (const { nombre, patron } of conocido ? REGLAS.slice(1) : REGLAS) {
-    for (const m of texto.matchAll(patron)) fallas.push({ nombre, muestra: `${m[0].slice(0, 4)}…` });
+    for (const m of texto.matchAll(patron)) {
+      if (patron === REGLAS[0].patron && esPublica(texto, m)) continue;
+      fallas.push({ nombre, muestra: `${m[0].slice(0, 4)}…` });
+    }
   }
   return fallas;
 }

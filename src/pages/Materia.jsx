@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import BajarMateria from '../components/BajarMateria';
+import FusionarApuntes from '../components/FusionarApuntes';
+import { fusionables } from '../lib/fusion';
 import ClassroomDeMateria, { abrirEnClassroom, ID_TABLON, idDeTema, porTema, useClassroomDeMateria } from '../components/Classroom';
 import CompartirMateria from '../components/CompartirMateria';
 import FilaEditable from '../components/FilaEditable';
@@ -217,6 +219,7 @@ export default function Materia() {
   const visibles = useMemo(() => todos.filter((i) => !enLaDerecha(i) && !estaOculto(mio, i)), [todos, mio]);
   const derecha = useMemo(() => todos.filter((i) => enLaDerecha(i) && !estaOculto(mio, i)), [todos, mio]);
   const delCampus = useMemo(() => todos.filter((i) => !i.origen), [todos]);
+  const paraFusionar = useMemo(() => fusionables(visibles), [visibles]);
   const sinVer = soloSinVer && marcarVistos;
   const hayFiltro = Boolean(filtro.trim() || tipo || sinVer || soloParcial);
 
@@ -364,6 +367,15 @@ export default function Materia() {
     abrirSiPlegada(seccion.id);
     setEnfocar(`${r.propia}-${r.ids[0]}`);
     return r.ids.length;
+  };
+  // The PDF of «Fusionar en un PDF», saved in a section like a file of the student's own. Says if it went in.
+  const guardarFusion = async (seccion, archivo) => {
+    const { bloques, avisos } = await guardarArchivos([archivo]);
+    const n = bloques.length ? sumarA(seccion)(bloques) : 0;
+    soltarSobrantes(bloques.slice(n));
+    if (!n && bloques.length) avisos.unshift(`No entró. Una sección lleva hasta ${LIMITES.bloques} cosas.`);
+    if (avisos.length) avisar(avisos.join(' '), 'error');
+    return n > 0;
   };
   // Files dropped from the computer on a section.
   const soltarArchivos = async (seccion, lista) => {
@@ -773,6 +785,16 @@ export default function Materia() {
               <FechasSumadas materiaId={materiaId} fechas={propia.fechas} />
               <PanelFechas materia={datos.materia} items={visibles} />
             </Panel>
+            {paraFusionar.length > 1 && (
+            <Panel titulo="Fusionar en un PDF">
+              <FusionarApuntes
+                materia={datos.materia}
+                items={paraFusionar}
+                secciones={segun(ordenar(agrupar(visibles), agregada, true), todasLasSecciones).map((g) => ({ id: g.id, nombre: g.nombre }))}
+                onGuardar={guardarFusion}
+              />
+            </Panel>
+            )}
             <Panel titulo="Bajar en un ZIP">
               <BajarMateria materia={datos.materia} items={visibles.filter((i) => i.origen !== 'propia')} />
             </Panel>

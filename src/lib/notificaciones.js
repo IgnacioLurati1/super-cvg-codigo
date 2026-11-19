@@ -242,6 +242,9 @@ export function destinoDe(n, materia) {
   if (tarea && materia) return { ruta: `/materias/${materia.id}/tareas/${tarea}`, campus };
   if (/^\/grade\//.test(p) || (p === '/course/user.php' && url.searchParams.get('mode') === 'grade') || /grad/.test(String(n?.eventtype ?? ''))) return { ruta: null, campus };
   if (/^\/message\//.test(p)) return { ruta: '/mensajes', campus };
+  // A forum post: its discussion, read in Foros (inside Mensajes).
+  const discusion = p === '/mod/forum/discuss.php' ? numero(url.searchParams.get('d')) : null;
+  if (discusion) return { ruta: `/mensajes/foros/${discusion}`, campus };
   if (materia && ((p === '/course/view.php' && id === materia.id) || /^\/mod\/(?:resource|folder|url|page|book|label)\/view\.php$/.test(p))) {
     return { ruta: `/materias/${materia.id}`, campus };
   }

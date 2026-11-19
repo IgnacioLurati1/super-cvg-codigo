@@ -103,7 +103,7 @@ const seguirSistema = (avisar) => {
 };
 const sistemaQuieto = () => Boolean(window.matchMedia?.(CONSULTA).matches);
 // What changes the colors the scene takes from CSS: theme, contrast, palette and the custom colors (inline style).
-const ATRIBUTOS = ['data-tema', 'data-contraste', 'data-daltonismo', 'data-luz', 'style'];
+const ATRIBUTOS = ['data-tema', 'data-paleta', 'data-contraste', 'data-daltonismo', 'data-luz', 'style'];
 
 // Whether the scene already arrived once in this visit: then it comes back without the skeleton and the fade.
 let yaVino = false;

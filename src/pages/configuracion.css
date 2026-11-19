@@ -254,6 +254,78 @@
   background: #233240;
 }
 
+.dibujo-tema[data-cual='rosa'] {
+  background: #1a1022;
+}
+
+.dibujo-tema[data-cual='rosa']::before {
+  background: #c2306e;
+}
+
+.dibujo-tema[data-cual='rosa']::after {
+  background: #33203f;
+}
+
+.dibujo-tema[data-cual='bosque'] {
+  background: #0b1510;
+}
+
+.dibujo-tema[data-cual='bosque']::before {
+  background: #17805a;
+}
+
+.dibujo-tema[data-cual='bosque']::after {
+  background: #1b3025;
+}
+
+.dibujo-tema[data-cual='cafe'] {
+  background: #1e140e;
+}
+
+.dibujo-tema[data-cual='cafe']::before {
+  background: #b8531a;
+}
+
+.dibujo-tema[data-cual='cafe']::after {
+  background: #3a2819;
+}
+
+.dibujo-tema[data-cual='lavanda'] {
+  background: #f4f0fb;
+}
+
+.dibujo-tema[data-cual='lavanda']::before {
+  background: #5b3fb0;
+}
+
+.dibujo-tema[data-cual='lavanda']::after {
+  background: #ffffff;
+}
+
+.dibujo-tema[data-cual='infierno'] {
+  background: linear-gradient(160deg, #170806 55%, #3a1208);
+}
+
+.dibujo-tema[data-cual='infierno']::before {
+  background: linear-gradient(90deg, #c4320a, #ffb020);
+}
+
+.dibujo-tema[data-cual='infierno']::after {
+  background: #321710;
+}
+
+.dibujo-tema[data-cual='glaciar'] {
+  background: #07121a;
+}
+
+.dibujo-tema[data-cual='glaciar']::before {
+  background: #0e7490;
+}
+
+.dibujo-tema[data-cual='glaciar']::after {
+  background: #152a38;
+}
+
 .dibujo-tema[data-cual='sistema'] {
   background: linear-gradient(115deg, #eef2f6 50%, #0f1923 50%);
 }
@@ -356,6 +428,31 @@
   border-radius: 2px;
   background: #f2f0e8;
   box-shadow: 0 8px 0 -1px #f2d873;
+}
+
+html[data-tema='claro'] .dibujo-tema[data-cual='plano'] {
+  background:
+    linear-gradient(rgb(29 79 159 / 0.18) 1px, transparent 1px) 0 0 / 8px 8px,
+    linear-gradient(90deg, rgb(29 79 159 / 0.18) 1px, transparent 1px) 0 0 / 8px 8px,
+    #f5f1e4;
+}
+
+html[data-tema='claro'] .dibujo-tema[data-cual='plano']::before {
+  background: #ebe5d1;
+  border-bottom: 1px solid #1d4f9f;
+}
+
+html[data-tema='claro'] .dibujo-tema[data-cual='plano']::after {
+  border-color: #14284d;
+}
+
+html[data-tema='claro'] .dibujo-tema[data-cual='pizarron'] {
+  background: #f9fbfc;
+}
+
+html[data-tema='claro'] .dibujo-tema[data-cual='pizarron']::before {
+  background: #c9cfd5;
+  border-bottom: 2px solid #8a929b;
 }
 
 .muestra-letra {

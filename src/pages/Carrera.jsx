@@ -5,6 +5,7 @@ import { cargarPerfil } from '../lib/campus';
 import { armarCarrera, carreraParaConsultron, conSupuestas, cuentas, loQueDestraba, nombreDelAnio } from '../lib/carrera';
 import { carreraParaLaPregunta } from '../lib/consultron/deLaCarrera';
 import { usePantallaDeConsultron } from '../lib/consultron/pantalla';
+import { cuantoFrena } from '../lib/frenos';
 import { esDemo } from '../lib/modoDemo';
 import { tituloDe, useSeo } from '../lib/seo';
 import { tokenActual } from '../lib/sesion';
@@ -145,6 +146,34 @@ function Ficha({ materia, elegida, relacion, abre, supuesta, onElegir, referenci
 
 /** The whole plan at a glance, like the printed one: a column per year, a square per subject, painted by where it
  * stands. Only a picture: the legend next to it says the same in words. */
+/** Cards of what holds back the most, with a padlock per subject it keeps closed. */
+function Frenos({ id, titulo, frenos, elegir }) {
+  return (
+    <section className="carrera-frenos" aria-labelledby={id}>
+      <h2 id={id} className="carrera-frenos__titulo">{titulo}</h2>
+      <ol className="carrera-frenos__lista">
+        {frenos.map((f) => (
+          <li key={f.clave} className="carrera-freno">
+            {f.enMapa === false ? (
+              <span className="carrera-freno__nombre">{f.nombre}</span>
+            ) : (
+              <button type="button" className="carrera-enlace carrera-freno__nombre" onClick={() => elegir(f.clave)}>{f.nombre}</button>
+            )}
+            <span className="carrera-freno__pie">
+              {f.frena > 0 && (
+                <span className="carrera-freno__candados" aria-hidden="true">
+                  {Array.from({ length: Math.min(f.frena, 8) }, (_, i) => <span key={i} />)}
+                </span>
+              )}
+              <span className="carrera-frenos__cuenta"><span className="solo-lectores">, </span>{cuantoFrena(f)}</span>
+            </span>
+          </li>
+        ))}
+      </ol>
+    </section>
+  );
+}
+
 function Plano({ carrera, elegida }) {
   const columnas = carrera.anios
     .filter((a) => a !== null)
@@ -266,26 +295,10 @@ function Mapa({ carrera }) {
       )}
 
       {carrera.frenos.length > 0 && (
-        <section className="carrera-frenos" aria-labelledby={`${id}-frenos`}>
-          <h2 id={`${id}-frenos`} className="carrera-frenos__titulo">Lo que más te frena</h2>
-          <ol className="carrera-frenos__lista">
-            {carrera.frenos.slice(0, 3).map((f) => (
-              <li key={f.clave} className="carrera-freno">
-                {f.enMapa ? (
-                  <button type="button" className="carrera-enlace carrera-freno__nombre" onClick={() => elegir(f.clave)}>{f.nombre}</button>
-                ) : (
-                  <span className="carrera-freno__nombre">{f.nombre}</span>
-                )}
-                <span className="carrera-freno__pie">
-                  <span className="carrera-freno__candados" aria-hidden="true">
-                    {Array.from({ length: Math.min(f.cuenta, 8) }, (_, i) => <span key={i} />)}
-                  </span>
-                  <span className="carrera-frenos__cuenta"><span className="solo-lectores">, </span>frena {f.cuenta}</span>
-                </span>
-              </li>
-            ))}
-          </ol>
-        </section>
+        <Frenos id={`${id}-frenos`} titulo="Lo que más te frena" frenos={carrera.frenos.slice(0, 3)} elegir={elegir} />
+      )}
+      {carrera.paraRendir.length > 0 && (
+        <Frenos id={`${id}-rendir`} titulo="Finales para rendir" frenos={carrera.paraRendir} elegir={elegir} />
       )}
 
       <div className="carrera-filtros">

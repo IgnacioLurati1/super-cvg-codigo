@@ -1,9 +1,12 @@
 import { createContext, lazy, Suspense, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { cargarVideo } from '../lib/campus';
 import { guardarArchivo, traerArchivo } from '../lib/archivos';
 import { fecha, fechaHora, peso } from '../lib/datos';
-import { FRENADO, leerEnlace, visorDe, vistaDeGoogle } from '../lib/drivePublico';
-import { archivoDeEnlace, itemDeNodo, nodoDeEnlace } from '../lib/mapasDrive';
+import { enlaceDe, FRENADO, leerEnlace, visorDe, vistaDeGoogle } from '../lib/drivePublico';
+import { CarpetaEnHoja, esCarpetaDeDrive, useAbrirCarpeta } from './carpetaEnHoja';
+import { destinoDeEnlace, itemDeNodo, nodoDeEnlace } from '../lib/mapasDrive';
+import CarpetaDeDrive from './CarpetaDeDrive';
 import { docDe } from '../lib/lectura';
 import { alternarEn, materiaDe, useMio } from '../lib/mio';
 import { esDemo } from '../lib/modoDemo';
@@ -172,6 +175,7 @@ function PreviaEnlace({ item, deDrive }) {
 }
 
 function PreviaTexto({ item }) {
+  const abrirCarpeta = useAbrirCarpeta();
   return (
     <>
       {item.formato
@@ -184,6 +188,16 @@ function PreviaTexto({ item }) {
         <ul className="previa__enlaces">
           {item.enlaces.map((e, i) => (
             <li key={`${e.destino}-${i}`}>
+              {abrirCarpeta && esCarpetaDeDrive(e.destino) ? (
+                // A Drive folder opens here, in this same sheet.
+                <button type="button" className="previa__destino previa__enlace" onClick={() => abrirCarpeta(e)}>
+                  <Icono nombre={iconoDeEnlace(e.destino).simbolo} tono={iconoDeEnlace(e.destino).tono} tamano="tipo" />
+                  <span className="previa__enlace-texto">
+                    <span className="previa__dominio">{nombreDeLink(e.texto, e.destino) || 'Carpeta de Drive'}</span>
+                    <span className="previa__direccion">Se abre acá</span>
+                  </span>
+                </button>
+              ) : (
               <a className="previa__destino previa__enlace" href={e.destino} target="_blank" rel="noreferrer">
                 <Icono nombre={iconoDeEnlace(e.destino).simbolo} tono={iconoDeEnlace(e.destino).tono} tamano="tipo" />
                 <span className="previa__enlace-texto">
@@ -192,6 +206,7 @@ function PreviaTexto({ item }) {
                 </span>
                 <span className="solo-lectores">, se abre en otra pestaña</span>
               </a>
+              )}
             </li>
           ))}
         </ul>
@@ -222,6 +237,16 @@ function PreviaActividad({ item }) {
         <a className="boton" href={item.destino} target="_blank" rel="noreferrer">{item.origen === 'classroom' ? 'Abrir en Classroom' : 'Abrir en el campus'}</a>
       </div>
     </>
+  );
+}
+
+/** A forum of the campus: it is read in Foros, already filtered to it. */
+function ForoPrevia({ item, onIr }) {
+  return (
+    <div className="previa__acciones">
+      <Link className="boton" to={`/mensajes/foros?foro=${item.foro.cmid}`} onClick={onIr}>Leer el foro</Link>
+      <a className="boton boton--secundario" href={item.destino} target="_blank" rel="noreferrer">Abrir en el campus<span className="solo-lectores">, se abre en otra pestaña</span></a>
+    </div>
   );
 }
 
@@ -256,19 +281,80 @@ function conDrive(item) {
 // Otherwise Drive is asked what the file is: any file shared with anyone who has the link.
 const preguntarleADrive = (item) => item.tipo === 'enlace' && Boolean(item.destino) && [false, null].includes(leerEnlace(item.destino)?.carpeta);
 
+// A link to a Drive folder is looked through here (CarpetaDeDrive.jsx), from the folder it names.
+function carpetaDeEnlace(item) {
+  if (item.tipo !== 'enlace' || !item.destino) return null;
+  const enlace = leerEnlace(item.destino);
+  return enlace?.carpeta ? { id: enlace.id, k: enlace.k, nombre: item.nombre } : null;
+}
+
+// The name a folder link of a text gives it: its text, unless that is only the address or its site («drive.google.com»).
+// Without one, CarpetaDeDrive asks Drive for it.
+function nombreDeLink(texto, destino) {
+  const t = String(texto ?? '').trim();
+  return !t || t === destino || /^(https?:\/\/)?[\w.-]+\.[a-z]{2,}(\/\S*)?$/i.test(t) ? '' : t[0].toUpperCase() + t.slice(1);
+}
+
+// A file opened from a folder of the course: the course and the folders it is in, under its name.
+function deLaCarpeta(original, nodo, donde) {
+  return { ...itemDeNodo(nodo), materia: original.materia, materiaId: original.materiaId, seccion: [original.seccion, donde].filter(Boolean).join(', '), enMateria: true };
+}
+
 function Hoja({ item: original, onCerrar }) {
   const directo = useMemo(() => conDrive(original), [original]);
   const preguntar = directo === original && preguntarleADrive(original);
-  const [deDrive, setDeDrive] = useState({ listo: !preguntar, item: null });
+  const [deDrive, setDeDrive] = useState({ listo: !preguntar, item: null, carpeta: null });
   useEffect(() => {
     if (!preguntar) return undefined;
     let vigente = true;
-    archivoDeEnlace(original.destino).then((nodo) => {
-      if (vigente) setDeDrive({ listo: true, item: nodo ? conNodo(original, nodo) : null });
+    destinoDeEnlace(original.destino).then((destino) => {
+      if (!vigente) return;
+      setDeDrive({
+        listo: true,
+        item: destino?.nodo ? conNodo(original, destino.nodo) : null,
+        carpeta: destino?.carpeta ? { ...destino.carpeta, nombre: original.nombre || destino.carpeta.nombre } : null,
+      });
     });
     return () => { vigente = false; };
   }, [preguntar, original]);
-  const item = deDrive.item ?? directo;
+  // In a folder: the way down to the one in view, the file opened from it and the one it came back from.
+  const [camino, setCamino] = useState(() => {
+    const raiz = carpetaDeEnlace(original);
+    return raiz ? [raiz] : null;
+  });
+  const [deCarpeta, setDeCarpeta] = useState(null);
+  const [volvioDe, setVolvioDe] = useState(null);
+  // A folder opened from a link of the text, with the way back to it.
+  const [desdeTexto, setDesdeTexto] = useState(false);
+  const abrirCarpetaDeTexto = useCallback(({ destino, texto }) => {
+    const enlace = leerEnlace(destino);
+    if (!enlace?.carpeta) return;
+    setCamino([{ id: enlace.id, k: enlace.k, nombre: nombreDeLink(texto, destino) }]);
+    setDesdeTexto(true);
+    setDeCarpeta(null);
+    setVolvioDe(null);
+    requestAnimationFrame(() => document.getElementById('previa-titulo')?.focus());
+  }, []);
+  const volverAlTexto = () => {
+    setCamino(null);
+    setDesdeTexto(false);
+    alTitulo();
+  };
+  const caminoAhora = camino ?? (deDrive.carpeta ? [deDrive.carpeta] : null);
+  const enCarpeta = Boolean(caminoAhora) && !deCarpeta;
+  const item = deCarpeta ?? deDrive.item ?? directo;
+  // Changing what the sheet shows leaves the focus on its title, so it isn't lost on the page under the dialog.
+  const titulo = useRef(null);
+  const alTitulo = () => requestAnimationFrame(() => titulo.current?.focus());
+  const abrirDeCarpeta = (nodo, donde) => {
+    setVolvioDe(null);
+    setDeCarpeta(deLaCarpeta(original, nodo, donde));
+    alTitulo();
+  };
+  const volverACarpeta = () => {
+    setVolvioDe(deCarpeta.drive.nodo.id);
+    setDeCarpeta(null);
+  };
   // A file of Drive goes to a course from here: its button with the others, what it asks under them.
   const [mandando, setMandando] = useState(false);
   const [mandado, setMandado] = useState(null);
@@ -337,9 +423,10 @@ function Hoja({ item: original, onCerrar }) {
   }, [conPaginas]);
   const datos = item.tipo === 'archivo'
     ? [extension(item.archivo), item.modificado ? `Actualizado el ${fecha(item.modificado)}` : null]
-    : [item.detalle ?? (item.tipo === 'enlace' ? 'Enlace' : item.clase)];
+    : [enCarpeta ? 'Carpeta de Drive' : item.detalle ?? (item.tipo === 'enlace' ? 'Enlace' : item.clase)];
 
   return (
+    <CarpetaEnHoja.Provider value={abrirCarpetaDeTexto}>
     <dialog
       ref={dialogo}
       className={lector ? 'previa previa--pdf' : 'previa'}
@@ -350,7 +437,9 @@ function Hoja({ item: original, onCerrar }) {
     >
       <div className="previa__caja">
         <div className="previa__cabeza">
-          <h2 id="previa-titulo">{item.nombre}</h2>
+          <h2 id="previa-titulo" ref={titulo} tabIndex={-1}>{item.nombre}</h2>
+          {deCarpeta && <button type="button" className="boton boton--secundario boton--chico previa__volver" onClick={volverACarpeta}>Volver a la carpeta</button>}
+          {desdeTexto && enCarpeta && <button type="button" className="boton boton--secundario boton--chico previa__volver" onClick={volverAlTexto}>Volver al texto</button>}
           <button type="button" className="boton boton--secundario boton--chico" onClick={() => dialogo.current.close()}>Cerrar</button>
         </div>
         <p className="previa__dato">{datos.filter(Boolean).join(', ')}</p>
@@ -373,14 +462,24 @@ function Hoja({ item: original, onCerrar }) {
           </div>
         )}
         {mandado && <Mandado hecho={mandado} />}
-        {item.tipo === 'enlace' && (deDrive.listo
+        {enCarpeta && (
+          <>
+            <CarpetaDeDrive camino={caminoAhora} alCambiarCamino={setCamino} alAbrir={abrirDeCarpeta} volvioDe={volvioDe} conTitulo={desdeTexto} />
+            <div className="previa__acciones">
+              <a className="boton boton--secundario" href={enlaceDe({ c: 1, id: caminoAhora[0].id, k: caminoAhora[0].k })} target="_blank" rel="noreferrer">Abrir en Drive<span className="solo-lectores">, se abre en otra pestaña</span></a>
+              {original.campus && original.campus !== original.destino && <a className="boton boton--secundario" href={original.campus} target="_blank" rel="noreferrer">{original.origen === 'classroom' ? 'Ver en Classroom' : 'Ver en el campus'}</a>}
+            </div>
+          </>
+        )}
+        {item.tipo === 'enlace' && !enCarpeta && (deDrive.listo
           ? <PreviaEnlace item={item} deDrive={preguntar} />
           : <p className="previa__dato" role="status">Buscando el archivo en Drive…</p>)}
-        {item.tipo === 'actividad' && (item.tarea?.cmid ? <TareaPrevia item={item} onIr={() => dialogo.current.close()} /> : item.cuestionario?.cmid ? <CuestionarioPrevia item={item} onIr={() => dialogo.current.close()} /> : <PreviaActividad item={item} />)}
-        {item.tipo === 'texto' && <PreviaTexto item={item} />}
+        {item.tipo === 'actividad' && (item.tarea?.cmid ? <TareaPrevia item={item} onIr={() => dialogo.current.close()} /> : item.cuestionario?.cmid ? <CuestionarioPrevia item={item} onIr={() => dialogo.current.close()} /> : item.foro?.cmid ? <ForoPrevia item={item} onIr={() => dialogo.current.close()} /> : <PreviaActividad item={item} />)}
+        {item.tipo === 'texto' && !enCarpeta && <PreviaTexto item={item} />}
         {item.clave && !lector && <Marcar item={item} />}
       </div>
     </dialog>
+    </CarpetaEnHoja.Provider>
   );
 }
 
@@ -388,10 +487,17 @@ export function PreviaProvider({ children }) {
   const [item, setItem] = useState(null);
   const abrir = useCallback((nuevo) => setItem(nuevo), []);
   const cerrar = useCallback(() => setItem(null), []);
+  // A folder link in a text of a page opens the folder in the sheet, as a link of a course does.
+  const abrirCarpeta = useCallback(({ destino, texto }) => {
+    const enlace = leerEnlace(destino);
+    if (enlace?.carpeta) setItem({ id: `carpeta:${enlace.id}`, tipo: 'enlace', destino, nombre: nombreDeLink(texto, destino) || 'Carpeta de Drive' });
+  }, []);
   return (
     <Contexto.Provider value={abrir}>
-      {children}
-      {item && <Hoja key={item.id} item={item} onCerrar={cerrar} />}
+      <CarpetaEnHoja.Provider value={abrirCarpeta}>
+        {children}
+        {item && <Hoja key={item.id} item={item} onCerrar={cerrar} />}
+      </CarpetaEnHoja.Provider>
     </Contexto.Provider>
   );
 }

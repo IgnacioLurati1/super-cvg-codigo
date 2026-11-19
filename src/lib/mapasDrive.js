@@ -3,7 +3,7 @@
 // (`/drive/carrera.json`, scripts/drive/carrera.mjs); one made later by the student wins while it is newer. Salir
 // deletes them all (sesion.js). Nothing here throws: without the database, a map stays only for the visit.
 import { useEffect, useSyncExternalStore } from 'react';
-import { armarMapa, CARRERA, clienteDrivePublico, enlaceDe, esDeGoogle, indiceDe, leerEnlace, MAX_DRIVES, sanearMapa, visorDe } from './drivePublico';
+import { armarMapa, CARRERA, clienteDrivePublico, contenidoDe, enlaceDe, esDeGoogle, indiceDe, leerEnlace, MAX_DRIVES, sanearMapa, visorDe } from './drivePublico';
 import { textoError } from './errores';
 import { esDemo } from './modoDemo';
 import { cambiarMio, mioActual, usuarioActual } from './mio';
@@ -276,15 +276,16 @@ export function nodoDeEnlace(url, nombre) {
 // What each linked file turned out to be, for the visit: a link opened again is not asked again.
 const fichas = new Map();
 
-/** The file a Drive link points to, asked to Drive when the link doesn't say what it is: a node, or null for a folder
- * or a file that isn't shared with anyone who has the link (and when Drive can't be reached, to ask again later). */
-export function archivoDeEnlace(url) {
+/** What a Drive link points to, asked to Drive when the link doesn't say what it is: { nodo } for a file, { carpeta }
+ * ({ id, k, nombre }) for a folder, or null for one that isn't shared with anyone who has the link (and when Drive can't
+ * be reached, to ask again later). */
+export function destinoDeEnlace(url) {
   const enlace = leerEnlace(url);
   if (!enlace || enlace.carpeta === true) return Promise.resolve(null);
   if (!fichas.has(enlace.id)) {
     fichas.set(enlace.id, clienteDeAhora()
       .then((cliente) => cliente.ficha(enlace.id, enlace.k))
-      .then((ficha) => (ficha.carpeta || !ficha.nodo ? null : ficha.nodo), () => {
+      .then((ficha) => (ficha.carpeta ? { carpeta: { id: ficha.id, k: enlace.k, nombre: ficha.nombre } } : ficha.nodo ? { nodo: ficha.nodo } : null), () => {
         fichas.delete(enlace.id);
         return null;
       }));
@@ -292,9 +293,29 @@ export function archivoDeEnlace(url) {
   return fichas.get(enlace.id);
 }
 
+// What each folder opened from a link holds, for the visit: going back up doesn't ask again.
+const contenidos = new Map();
+
+/** What is right inside a folder of Drive ({ id, k }), as `contenidoDe` gives it. A failure is asked again next time. */
+export function contenidoDeCarpeta(carpeta) {
+  if (!contenidos.has(carpeta.id)) {
+    const pedido = clienteDeAhora().then((cliente) => contenidoDe(carpeta, { cliente }));
+    pedido.catch(() => contenidos.delete(carpeta.id));
+    contenidos.set(carpeta.id, pedido);
+  }
+  return contenidos.get(carpeta.id);
+}
+
 /** Asks again for a map that could not be read. */
 export function volverACargar(drive) {
   estados = new Map(estados);
   estados.delete(drive.id);
   cargar(drive);
+}
+
+/** The name of a folder ({ id, k }) in Drive, for a link that only says its address. Empty when Drive doesn't answer. */
+export function nombreDeCarpeta(carpeta) {
+  return clienteDeAhora()
+    .then((cliente) => cliente.ficha(carpeta.id, carpeta.k ?? null))
+    .then((ficha) => ficha.nombre, () => '');
 }

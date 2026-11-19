@@ -30,8 +30,9 @@ describe('preguntas de su carrera', () => {
   });
 
   it('lo que le conviene, ya ordenado entre lo que puede', () => {
-    expect(carreraParaLaPregunta(carrera, 'y que me conviene rendir primero?')).toContain('- Te conviene rendir primero: Análisis Matemático II, porque destraba 2 materias\n- Después, para rendir: Física II (destraba 1 materia)');
-    expect(carreraParaLaPregunta(carrera, 'que me conviene cursar?')).toMatch(/- Te conviene cursar primero: Legislación, porque destraba 1 materia/);
+    // The count of Tu carrera: only what asks for it passed, and the chain from there (Simulación, then its two).
+    expect(carreraParaLaPregunta(carrera, 'y que me conviene rendir primero?')).toContain('- Te conviene rendir primero: Análisis Matemático II, porque te abre 1 materia ya y frena 4 materias contando la cadena\n- Después, para rendir: Física II (te abre 1 materia ya y frena 1 materia contando la cadena)');
+    expect(carreraParaLaPregunta(carrera, 'que me conviene cursar?')).toMatch(/- Te conviene cursar primero: Legislación, porque frena 1 materia contando la cadena/);
   });
 
   it('cada materia, sin nada que se pueda leer al revés', () => {

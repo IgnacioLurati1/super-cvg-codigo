@@ -247,6 +247,17 @@ describe('armarIcs', () => {
     // The campus' own dates get the kind their title points to.
     expect(ics).toContain('CATEGORIES:Entrega');
   });
+  it('ends each date like Google Calendar: a deadline at its time, a date without a time the next day', () => {
+    const vence = armarIcs([{ ...evento, vencimiento: true }], 1);
+    expect(vence).toContain(`DTSTART:${new Date((evento.cuando - 3600) * 1000).toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '')}`);
+    expect(vence).toContain(`DTEND:${new Date(evento.cuando * 1000).toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '')}`);
+    const clase = armarIcs([evento], 1);
+    expect(clase).toContain(`DTEND:${new Date((evento.cuando + 3600) * 1000).toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '')}`);
+    const fin = armarIcs([{ id: 'e2', titulo: 'Feriado', cuando: Math.floor(new Date(2026, 11, 31, 12).getTime() / 1000), sinHora: true }], 1);
+    expect(fin).toContain('DTSTART;VALUE=DATE:20261231');
+    expect(fin).toContain('DTEND;VALUE=DATE:20270101');
+    expect(fin).toContain('TRANSP:TRANSPARENT');
+  });
   it('folds long lines', () => {
     const largo = armarIcs([{ ...evento, titulo: 'x'.repeat(200), url: null }], 1);
     expect(largo.split('\r\n').every((l) => l.length <= 73)).toBe(true);

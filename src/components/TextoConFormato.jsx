@@ -1,11 +1,17 @@
 import { Fragment } from 'react';
 import { dominioDe } from '../lib/datos';
 import { leerFormato } from '../lib/formato';
+import { esCarpetaDeDrive, useAbrirCarpeta } from './carpetaEnHoja';
 
 function Partes({ partes }) {
+  const abrirCarpeta = useAbrirCarpeta();
   return partes.map((p, i) => {
     if (p.tipo === 'negrita') return <strong key={i}>{p.texto}</strong>;
     if (p.tipo === 'cursiva') return <em key={i}>{p.texto}</em>;
+    // A Drive folder opens here (carpetaEnHoja.js).
+    if (p.tipo === 'enlace' && abrirCarpeta && esCarpetaDeDrive(p.url)) {
+      return <button key={i} type="button" className="enlace-carpeta" aria-haspopup="dialog" onClick={() => abrirCarpeta({ destino: p.url, texto: p.texto })}>{p.texto}</button>;
+    }
     // The text of a link does not say where it goes: its site shows on hover.
     if (p.tipo === 'enlace') return <a key={i} href={p.url} title={dominioDe(p.url) || undefined} target="_blank" rel="noreferrer">{p.texto}<span className="solo-lectores">, se abre en otra pestaña</span></a>;
     return <Fragment key={i}>{p.texto}</Fragment>;

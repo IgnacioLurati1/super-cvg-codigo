@@ -262,7 +262,9 @@ export function aplanarContenido(secciones, materia) {
         const tarea = modulo.modname === 'assign' && Number.isSafeInteger(modulo.id) ? { materiaId: materia.id, cmid: modulo.id } : undefined;
         // A quiz too: its attempts, grade and review (Cuestionario.jsx).
         const cuestionario = modulo.modname === 'quiz' && Number.isSafeInteger(modulo.id) ? { materiaId: materia.id, cmid: modulo.id } : undefined;
-        items.push({ ...base, tipo: 'actividad', clase: textoPlano(modulo.modplural), destino: base.campus, modificado: 0, tarea, cuestionario });
+        // A forum is read in Foros (Foros.jsx).
+        const foro = modulo.modname === 'forum' && Number.isSafeInteger(modulo.id) ? { materiaId: materia.id, cmid: modulo.id } : undefined;
+        items.push({ ...base, tipo: 'actividad', clase: textoPlano(modulo.modplural), destino: base.campus, modificado: 0, tarea, cuestionario, foro });
       }
     }
   }
@@ -439,15 +441,28 @@ const plegar = (linea) => {
 // The campus' date when an activity opens says so: its close comes with the same name.
 const conMomento = (e) => (!e.propio && e.momento === 'abre' ? `Abre ${e.titulo}` : e.titulo);
 
+const HORA = 3600;
+const diaEnIcs = (segundos) => claveDia(segundos).replace(/-/g, '');
+const diaDespues = (segundos) => {
+  const d = fechaDeClave(claveDia(segundos));
+  return claveDeFecha(new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1)).replace(/-/g, '');
+};
+
+/** Like the calendar «Super CVG» of Google: a date without a time takes its whole day, a campus deadline ends at its
+ * time and anything else with a time starts at it, an hour long. None marks the student as busy. */
 export function armarIcs(eventos, ahoraSegundos) {
-  const lineas = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Super CVG//ES', 'CALSCALE:GREGORIAN'];
+  const lineas = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Super CVG//ES', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH', 'X-WR-CALNAME:Super CVG'];
   for (const e of eventos) {
+    const desde = !e.propio && e.vencimiento ? e.cuando - HORA : e.cuando;
     lineas.push(
       'BEGIN:VEVENT',
       `UID:${String(e.id).replace(/[^\w-]/g, '')}@super-cvg`,
       `DTSTAMP:${utc(ahoraSegundos)}`,
       // A whole-day date stays on its day in any time zone.
-      e.sinHora ? `DTSTART;VALUE=DATE:${claveDia(e.cuando).replace(/-/g, '')}` : `DTSTART:${utc(e.cuando)}`,
+      ...(e.sinHora
+        ? [`DTSTART;VALUE=DATE:${diaEnIcs(e.cuando)}`, `DTEND;VALUE=DATE:${diaDespues(e.cuando)}`]
+        : [`DTSTART:${utc(desde)}`, `DTEND:${utc(desde + HORA)}`]),
+      'TRANSP:TRANSPARENT',
       `SUMMARY:${escaparIcs(e.materia ? `${conMomento(e)} (${e.materia})` : conMomento(e))}`,
     );
     const tipo = tipoDe(e);

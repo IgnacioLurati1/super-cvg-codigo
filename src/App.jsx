@@ -52,6 +52,7 @@ const router = createBrowserRouter(
             // Only in dev: the tools of a live session, two-up, without Realtime (BancoEnVivo.jsx).
             ...(import.meta.env.DEV ? [{ path: 'en-vivo/banco', lazy: aparte(() => import('./pages/BancoEnVivo')) }] : []),
             { path: 'opinar', element: <Opinar /> },
+            { path: 'entrada', lazy: aparte(() => import('./pages/Entrada')) },
             {
               element: <ConSesion />,
               children: [
@@ -79,6 +80,8 @@ const router = createBrowserRouter(
                 { path: 'calculadoras/:cual', lazy: aparte(() => import('./pages/Calculadora')) },
                 { path: 'configuracion', lazy: aparte(() => import('./pages/Configuracion')) },
                 { path: 'mensajes', lazy: aparte(() => import('./pages/Mensajes')) },
+                { path: 'mensajes/foros', lazy: aparte(() => import('./pages/Foros')) },
+                { path: 'mensajes/foros/:discusion', lazy: aparte(() => import('./pages/Foros')) },
                 { path: 'laboratorio', lazy: aparte(() => import('./pages/Laboratorio')) },
                 // Cards that come back before they are forgotten: the student's own, in mio.js.
                 { path: 'repaso', lazy: aparte(() => import('./pages/Repaso')) },

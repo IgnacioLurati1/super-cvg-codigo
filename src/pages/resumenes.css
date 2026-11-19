@@ -681,6 +681,65 @@ html:has(.visor[open]) {
   }
 }
 
+/* A phone (VisorResumen.jsx, data-movil): one short row, what to do with it (sideways when it doesn't fit) and «Cerrar».
+   The name was just touched in the list: it stays only for screen readers, which name the viewer with it. It goes away while reading down; in a PDF it is in the reader, with its bar (lector__techo). */
+.visor__cabeza[hidden] {
+  display: none;
+}
+
+/* Its note about what shows only in El Santo Resumen goes with it. */
+.visor[data-cabeza='fuera'] .visor__nota--arriba {
+  display: none;
+}
+
+.visor[data-movil] .visor__cabeza {
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas: 'acciones cerrar';
+  gap: 8px;
+  padding: 8px 12px;
+}
+
+.visor[data-movil] .visor__nombre {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.visor[data-movil] .visor__cerrar {
+  align-self: center;
+}
+
+.visor[data-movil] .visor__acciones {
+  flex-wrap: nowrap;
+  margin-left: -12px;
+  padding-inline: 12px 20px;
+  /* What doesn't fit fades by «Cerrar», so it shows there is more sideways. */
+  mask-image: linear-gradient(to left, transparent, #000 20px);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.visor[data-movil] .visor__acciones::-webkit-scrollbar {
+  display: none;
+}
+
+.visor[data-movil] .visor__acciones > * {
+  flex: none;
+  white-space: nowrap;
+}
+
+.lector__techo > .visor__cabeza {
+  background: var(--superficie);
+}
+
+.visor__letra {
+  display: inline-flex;
+  gap: 4px;
+}
+
 .visor__nombre h2 {
   margin: 0;
   font-size: var(--t-h3);
@@ -712,6 +771,11 @@ html:has(.visor[open]) {
   display: flex;
   min-width: 0;
   min-height: 0;
+}
+
+.visor__caja > .visor__fila {
+  /* Under the header, also when the header is not there (in the reader on a phone, or gone while reading). */
+  grid-row: 2;
 }
 
 .visor__fila > .visor__cuerpo {

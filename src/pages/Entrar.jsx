@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef, useState, useSyncExternalStore } from 'react';
 import Campo from '../components/Campo';
 import Cuaderno3D from '../components/cuaderno3d/Cuaderno3D';
+import Entrada3D from '../components/entrada3d/Entrada3D';
 import { textoError } from '../lib/errores';
 import { CLIENTE_GOOGLE, cancelarConexion, conectarGoogle, olvidarGoogle } from '../lib/google';
 import { CAMPUS, pedirClave } from '../lib/moodle';
@@ -90,6 +91,8 @@ export default function Entrar() {
 
   return (
     <section className="contenedor pagina entrar" aria-labelledby="entrar-titulo">
+      {/* Behind the whole page, only with a real graphics card: the faculty's entrance (also at /entrada). */}
+      <Entrada3D modo="fondo" />
       <div className="entrar__texto">
         <h1 id="entrar-titulo" data-aparece="">Todo lo que tenés que entregar, en una sola pantalla</h1>
         <p className="entrar__bajada" data-aparece="" style={{ '--orden': 1 }}>Entregas, archivos y notas de tus materias del campus de UTN FRRO.{CLIENTE_GOOGLE && ' Si tu materia usa Google Classroom, también sus temas, avisos y tareas.'}</p>

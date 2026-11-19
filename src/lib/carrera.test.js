@@ -80,11 +80,27 @@ describe('armarCarrera with the real Sysacad pages', () => {
     expect(seminario.rendir.faltan.map((r) => r.texto)).toEqual(['Física II', 'Comunicación de Datos']);
   });
 
-  it('ranks what holds back the most', () => {
-    expect(carrera.frenos[0]).toMatchObject({ nombre: 'Administración de Sistemas de Información', enMapa: true });
-    // Gestión Gerencial, Seguridad and Proyecto Final: the electives it also holds don't count.
-    expect(carrera.frenos[0].cuenta).toBe(3);
-    expect(carrera.frenos.every((f) => f.cuenta >= 2)).toBe(true);
+  it('ranks what holds back the most: first what opens right away, then the whole chain', () => {
+    // Before, by the direct ones only: Administración (3), Comunicación, Redes, Simulación (2 each).
+    expect(carrera.frenos.map((f) => [f.nombre, f.abre, f.frena])).toEqual([
+      ['Simulación', 2, 2],
+      // Redes de Datos, and down from it Seguridad and Proyecto Final.
+      ['Comunicación de Datos', 1, 3],
+      // Gestión Gerencial, Seguridad and Proyecto Final: the electives it also holds don't count.
+      ['Administración de Sistemas de Información', 0, 3],
+      ['Redes de Datos', 0, 2],
+    ]);
+    expect(carrera.frenos[0].enMapa).toBe(true);
+  });
+
+  it('the finals it can sit, counting only what asks for them passed', () => {
+    // Proyecto Final asks for Física II and Tecnologías para la Automatización passed (Seminario Integrador is an elective).
+    expect(carrera.paraRendir.map((f) => [f.nombre, f.abre, f.frena])).toEqual([
+      ['Física II', 0, 1],
+      ['Tecnologías para la Automatización', 0, 1],
+      ['Entornos Gráficos (Elec.)', 0, 0],
+      ['Tecnologías de Desarrollo de Software ID', 0, 0],
+    ]);
   });
 
   it('says what a subject frees, and what supposing it frees', () => {
@@ -161,7 +177,8 @@ describe('what Consultron reads', () => {
     expect(dato('Podés cursar')).toContain('Legislación (4.º año)');
     expect(dato('Regulares')).toMatch(/Física II \(2\.º año, podés rendirla\)/);
     expect(dato('Te falta algo para cursarlas')).toMatch(/Redes de Datos \(4\.º año, te falta regularizar Comunicación de Datos\)/);
-    expect(p.resultado[0]).toEqual(['Lo que más te frena', expect.stringMatching(/^Administración de Sistemas de Información \(frena 3 materias\)/)]);
+    expect(p.resultado[0]).toEqual(['Lo que más te frena para cursar', expect.stringMatching(/^Simulación \(te abre 2 materias ya, frena 2 materias contando la cadena\); Análisis de Sistemas de Información \(te abre 1 materia ya, frena 6 materias contando la cadena\)/)]);
+    expect(p.resultado[1]).toEqual(['Qué final rendir primero, contando solo las que la piden aprobada', 'Análisis Matemático II (te abre 1 materia ya, frena 4 materias contando la cadena); Física II (te abre 1 materia ya, frena 1 materia contando la cadena)']);
     expect(p.notas).toContain('hace 3 días');
   });
 
@@ -169,7 +186,7 @@ describe('what Consultron reads', () => {
     const clave = carrera.materias.find((m) => m.nombre === 'Comunicación de Datos').clave;
     const supuestas = new Set([clave]);
     const p = carreraParaConsultron(carrera, { supuestas, abren: conSupuestas(carrera, supuestas), elegida: clave });
-    const [abierta, suponiendo] = p.resultado.slice(1);
+    const [abierta, suponiendo] = p.resultado.slice(2);
     expect(abierta[0]).toBe('La materia abierta, Comunicación de Datos (3.º año)');
     expect(abierta[1]).toMatch(/^cursando\. te la piden para cursar .*Redes de Datos/);
     expect(suponiendo).toEqual(['Suponiendo que tenés Comunicación de Datos', expect.stringContaining('se te abren para cursar Redes de Datos')]);

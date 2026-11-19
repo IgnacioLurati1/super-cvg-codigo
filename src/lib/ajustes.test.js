@@ -3,7 +3,7 @@ import { resolve } from 'node:path';
 import { act, createElement } from 'react';
 import { createRoot } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { EN_EL_MENU, POSICIONES_DEL_MENU, movimientoDe, ordenarMenu, ordenValido, ponerPosicionDelMenu } from './ajustes';
+import { ALINEACIONES_DEL_MENU, ANCHOS_DEL_MENU, EN_EL_MENU, POSICIONES_DEL_MENU, movimientoDe, ordenarMenu, ordenValido, ponerPosicionDelMenu } from './ajustes';
 import { APARIENCIA_CONSULTRON, LAB_TAMANO, LETRAS_DE_CODIGO, SIEMPRE_OSCUROS, cambioDeBordes, cambioDeEstilo, ALTO_CONSULTRON, BRILLO_PDF, CLAVE_AJUSTES, OPCIONES, ORIGINALES, PANEL_CONSULTRON, PANEL_PDF, PDF_CLAROS, RINCON_CONSULTRON, VISTAS, ajustesActuales, alternarPdfOscuro, cambiarAjustes, contraste, cuestaLeerSobre, elegirVista, normalizar, pdfOscuro, textoSobre, useVista, volverAjustesOriginales } from './ajustes';
 import { ESTILOS_DE_TARJETA } from './tarjetas';
 
@@ -71,19 +71,27 @@ function comoSeVe(color, vision) {
 }
 const distancia = (a, b, vision) => Math.hypot(...comoSeVe(a, vision).map((v, i) => v - comoSeVe(b, vision)[i]));
 
-const TEMAS = ['claro', 'oscuro'];
+// «Rosa oscuro» is the dark theme plus `data-paleta='rosa'`.
+const PALETAS = { rosa: 'oscuro', bosque: 'oscuro', cafe: 'oscuro', lavanda: 'claro', infierno: 'oscuro', glaciar: 'oscuro' };
+const TEMAS = ['claro', 'oscuro', ...Object.keys(PALETAS)];
+// What <html> says for a theme with a style: a palette goes with every style, and an always-dark one is dark with any.
+const marcas = (tema, estilo) => {
+  const base = SIEMPRE_OSCUROS.includes(estilo) ? 'oscuro' : PALETAS[tema] ?? tema;
+  return PALETAS[tema] ? { tema: base, paleta: tema } : { tema: base };
+};
 // With a color-blind palette, six that vision tells apart; then they repeat (tokens.css). Without one, ten.
 const COLORES_MATERIA = [0, 1, 2, 3, 4, 5].map((n) => `--materia-${n}`);
 const TODAS_LAS_MATERIAS = Array.from({ length: 10 }, (_, n) => `--materia-${n}`);
 const COLORES_ESTADO = ['--error', '--ok', '--aviso'];
 
 // Each style with the themes it can have: some are always dark (public/ajustes.js).
-const ESTILOS_Y_TEMAS = OPCIONES.estilo.flatMap((estilo) => (SIEMPRE_OSCUROS.includes(estilo) ? ['oscuro'] : TEMAS).map((tema) => [estilo, tema]));
+// Every style with its themes and palettes. The always-dark ones don't have Claro, and take Lavanda in its dark version.
+const ESTILOS_Y_TEMAS = OPCIONES.estilo.flatMap((estilo) => (SIEMPRE_OSCUROS.includes(estilo) ? TEMAS.filter((t) => t !== 'claro') : TEMAS).map((tema) => [estilo, tema]));
 
 const combinaciones = [];
 for (const [estilo, tema] of ESTILOS_Y_TEMAS) {
   for (const contraste_ of OPCIONES.contraste) {
-    for (const daltonismo of OPCIONES.daltonismo) combinaciones.push({ estilo, tema, contraste: contraste_, daltonismo });
+    for (const daltonismo of OPCIONES.daltonismo) combinaciones.push({ estilo, ...marcas(tema, estilo), contraste: contraste_, daltonismo });
   }
 }
 // «Sensible a la luz» changes the light themes' surfaces: each one again with it.
@@ -91,7 +99,7 @@ for (const c of combinaciones.filter((x) => x.tema === 'claro')) combinaciones.p
 // The visions each palette is made for, and the usual one.
 const VISIONES = { ninguno: ['normal'], 'rojo-verde': ['protan', 'deutan', 'normal'], 'azul-amarillo': ['tritan', 'normal'] };
 const FONDOS = ['--fondo', '--superficie', '--superficie-2'];
-const nombre = (c) => `${c.estilo}, ${c.tema}, contraste ${c.contraste}, daltonismo ${c.daltonismo}${c.luz ? ', sensible a la luz' : ''}`;
+const nombre = (c) => `${c.estilo}, ${c.paleta ?? c.tema}, contraste ${c.contraste}, daltonismo ${c.daltonismo}${c.luz ? ', sensible a la luz' : ''}`;
 
 describe('tokens', () => {
   // On the page, the cards and what sits sunk, each style with its own background, and as the palette's vision sees them.
@@ -163,7 +171,7 @@ describe('tokens', () => {
   const casos = ESTILOS_Y_TEMAS.flatMap(([estilo, tema]) => ['rojo-verde', 'azul-amarillo'].map((daltonismo) => [estilo, tema, daltonismo]));
 
   it.each(casos)('las paletas se distinguen con esa visión: %s, %s, %s', (estilo, tema, daltonismo) => {
-    const t = tokens({ estilo, tema, daltonismo });
+    const t = tokens({ estilo, ...marcas(tema, estilo), daltonismo });
     for (const vision of VISIONES[daltonismo]) {
       for (const grupo of [COLORES_MATERIA, COLORES_ESTADO]) {
         grupo.forEach((a, i) => grupo.slice(i + 1).forEach((b) => {
@@ -174,7 +182,7 @@ describe('tokens', () => {
   });
 
   it.each(TEMAS)('sin daltonismo, las diez materias se distinguen entre sí: %s', (tema) => {
-    const t = tokens({ tema });
+    const t = tokens(marcas(tema));
     TODAS_LAS_MATERIAS.forEach((a, i) => TODAS_LAS_MATERIAS.slice(i + 1).forEach((b) => {
       expect(distancia(t[a], t[b], 'normal'), `${a} y ${b}`).toBeGreaterThanOrEqual(8.5);
     }));
@@ -182,9 +190,40 @@ describe('tokens', () => {
 
   it('los colores originales son los de los tokens', () => {
     for (const tema of TEMAS) {
-      expect(tokens({ tema })['--accion']).toBe(ORIGINALES[tema].accion);
-      expect(tokens({ tema })['--resaltador']).toBe(ORIGINALES[tema].resaltador);
+      expect(tokens(marcas(tema))['--accion']).toBe(ORIGINALES[tema].accion);
+      expect(tokens(marcas(tema))['--resaltador']).toBe(ORIGINALES[tema].resaltador);
     }
+  });
+
+  it('Lavanda con un estilo siempre oscuro: su violeta más claro, y es el original de esa combinación', () => {
+    const t = tokens({ estilo: 'batman', tema: 'oscuro', paleta: 'lavanda' });
+    expect(t['--accion']).toBe(ORIGINALES['lavanda-oscuro'].accion);
+  });
+
+  // Plano and Pizarrón follow the theme: paper and whiteboard in the light one, the blueprint and the chalkboard in the dark.
+  it.each(['plano', 'pizarron'])('%s: claro y oscuro son dos versiones, y la paleta clara es la del papel o la pizarra', (estilo) => {
+    const claro = tokens({ estilo, tema: 'claro' });
+    const oscuro = tokens({ estilo, tema: 'oscuro' });
+    expect(contraste(claro['--fondo'], claro['--texto'])).toBeGreaterThan(10);
+    expect(oscuro['--fondo']).not.toBe(claro['--fondo']);
+    // Lavanda is light: with these two it gives a lilac paper and a lilac whiteboard, not a dark version.
+    const lavanda = tokens({ estilo, tema: 'claro', paleta: 'lavanda' });
+    expect(lavanda['--fondo']).toBe('#f4f0fb');
+    expect(lavanda['--accion']).toBe(ORIGINALES.lavanda.accion);
+  });
+
+  it('la pizarra blanca lleva fibrón: las calculadoras toman su pizarra y su tinta en claro', () => {
+    const t = tokens({ estilo: 'pizarron', tema: 'claro' });
+    expect(contraste(t['--pizarron'], t['--pizarron-tiza'])).toBeGreaterThanOrEqual(7);
+    for (const tinta of ['--pizarron-tiza-suave', '--pizarron-amarillo', '--pizarron-rojo']) {
+      expect(contraste(t['--pizarron'], t[tinta]), tinta).toBeGreaterThanOrEqual(4.5);
+    }
+    const alto = tokens({ estilo: 'pizarron', tema: 'claro', contraste: 'alto' });
+    for (const tinta of ['--pizarron-tiza', '--pizarron-tiza-suave', '--pizarron-amarillo', '--pizarron-rojo']) {
+      expect(contraste(alto['--pizarron'], alto[tinta]), tinta).toBeGreaterThanOrEqual(7);
+    }
+    // The chalkboard of the dark one stays as it was.
+    expect(tokens({ estilo: 'pizarron', tema: 'oscuro' })['--pizarron-cab-1']).toBe('#8f6c47');
   });
 
   it('el tema oscuro define su esquema de color', () => {
@@ -230,7 +269,7 @@ describe('leer los ajustes', () => {
       labCerrar: false,
       labLineaActual: true,
       labColores: {},
-      menu: { estilo: 'texto', lugares: { horario: 'mas', sysacad: 'mas', carrera: 'mas', laboratorio: 'mas', calculadoras: 'mas', repaso: 'mas', consultron: 'mas', envivo: 'mas' }, orden: EN_EL_MENU, posicion: 'arriba' },
+      menu: { estilo: 'texto', lugares: { horario: 'mas', sysacad: 'mas', carrera: 'mas', laboratorio: 'mas', calculadoras: 'mas', repaso: 'mas', consultron: 'mas', envivo: 'mas' }, orden: EN_EL_MENU, posicion: 'arriba', alineacion: 'derecha', ancho: 'pagina' },
       tarjeta: 'simbolo',
       contenido: 'icono',
       consultronLetra: 'normal',
@@ -243,9 +282,9 @@ describe('leer los ajustes', () => {
 
   it('el menú: un estilo de la lista, y solo «Más» u «Oculta» para las pantallas que tiene; Configuración no se oculta', () => {
     expect(normalizar({ menu: { estilo: 'pastillas', lugares: { notas: 'oculta', sysacad: 'mas', horario: 'oculta', hoy: 'vista', configuracion: 'oculta', otra: 'mas', buscar: 'x' } } }).menu)
-      .toEqual({ estilo: 'pastillas', lugares: { sysacad: 'mas', carrera: 'mas', horario: 'oculta', laboratorio: 'mas', calculadoras: 'mas', repaso: 'mas', consultron: 'mas', envivo: 'mas' }, orden: EN_EL_MENU, posicion: 'arriba' });
-    expect(normalizar({ menu: { estilo: '"><b>', lugares: { configuracion: 'mas' } } }).menu).toEqual({ estilo: 'texto', lugares: { horario: 'mas', sysacad: 'mas', carrera: 'mas', configuracion: 'mas', laboratorio: 'mas', calculadoras: 'mas', repaso: 'mas', consultron: 'mas', envivo: 'mas' }, orden: EN_EL_MENU, posicion: 'arriba' });
-    for (const raro of ['x', 1, null, []]) expect(normalizar({ menu: raro }).menu).toEqual({ estilo: 'texto', lugares: { horario: 'mas', sysacad: 'mas', carrera: 'mas', laboratorio: 'mas', calculadoras: 'mas', repaso: 'mas', consultron: 'mas', envivo: 'mas' }, orden: EN_EL_MENU, posicion: 'arriba' });
+      .toEqual({ estilo: 'pastillas', lugares: { sysacad: 'mas', carrera: 'mas', horario: 'oculta', laboratorio: 'mas', calculadoras: 'mas', repaso: 'mas', consultron: 'mas', envivo: 'mas' }, orden: EN_EL_MENU, posicion: 'arriba', alineacion: 'derecha', ancho: 'pagina' });
+    expect(normalizar({ menu: { estilo: '"><b>', lugares: { configuracion: 'mas' } } }).menu).toEqual({ estilo: 'texto', lugares: { horario: 'mas', sysacad: 'mas', carrera: 'mas', configuracion: 'mas', laboratorio: 'mas', calculadoras: 'mas', repaso: 'mas', consultron: 'mas', envivo: 'mas' }, orden: EN_EL_MENU, posicion: 'arriba', alineacion: 'derecha', ancho: 'pagina' });
+    for (const raro of ['x', 1, null, []]) expect(normalizar({ menu: raro }).menu).toEqual({ estilo: 'texto', lugares: { horario: 'mas', sysacad: 'mas', carrera: 'mas', laboratorio: 'mas', calculadoras: 'mas', repaso: 'mas', consultron: 'mas', envivo: 'mas' }, orden: EN_EL_MENU, posicion: 'arriba', alineacion: 'derecha', ancho: 'pagina' });
   });
 
   it('el orden del menú: las conocidas una vez, en el orden elegido, y las que faltan al final como vinieron', () => {
@@ -259,6 +298,13 @@ describe('leer los ajustes', () => {
     expect(POSICIONES_DEL_MENU).toEqual(['arriba', 'izquierda']);
     expect(normalizar({ menu: { posicion: 'izquierda' } }).menu.posicion).toBe('izquierda');
     for (const raro of ['derecha', 1, null, '"><b>']) expect(normalizar({ menu: { posicion: raro } }).menu.posicion).toBe('arriba');
+  });
+
+  it('la barra de arriba: a la derecha y como la página, salvo que se elija otra cosa', () => {
+    expect(ALINEACIONES_DEL_MENU).toEqual(['derecha', 'medio', 'izquierda']);
+    expect(ANCHOS_DEL_MENU).toEqual(['pagina', 'pantalla']);
+    expect(normalizar({ menu: { alineacion: 'medio', ancho: 'pantalla' } }).menu).toMatchObject({ alineacion: 'medio', ancho: 'pantalla' });
+    for (const raro of ['arriba', 1, null, '"><b>']) expect(normalizar({ menu: { alineacion: raro, ancho: raro } }).menu).toMatchObject({ alineacion: 'derecha', ancho: 'pagina' });
   });
 
   it('el laboratorio arranca en «Más», y puede ir a la vista o quedar oculto', () => {
@@ -346,6 +392,13 @@ describe('leer los ajustes', () => {
     for (const raro of ['true', 1, {}, null]) expect(normalizar({ lectura: raro }).lectura).toBe(false);
   });
 
+  it('otro estilo vuelve el color principal al original; el mismo estilo lo deja', () => {
+    const elegir = (antes, estilo) => normalizar({ ...antes, ...cambioDeEstilo(normalizar(antes), estilo) });
+    const conColor = { estilo: 'original', accion: '#8a1f3d' };
+    for (const estilo of OPCIONES.estilo.filter((e) => e !== 'original')) expect(elegir(conColor, estilo).accion).toBeNull();
+    expect(elegir(conColor, 'original').accion).toBe('#8a1f3d');
+  });
+
   it('Hoja y Plano prenden los bordes, y otro estilo los apaga solo si los prendió uno de ellos', () => {
     const elegir = (antes, estilo) => normalizar({ ...antes, ...cambioDeEstilo(normalizar(antes), estilo) });
     const conHoja = elegir({}, 'hoja');
@@ -366,7 +419,7 @@ describe('leer los ajustes', () => {
 
   it('lo que no está en la lista se descarta', () => {
     const r = normalizar({
-      tema: 'rosa', letra: '200%', movimiento: 1, accion: 'red;background:url(//x)', resaltador: '#12345',
+      tema: 'violeta', letra: '200%', movimiento: 1, accion: 'red;background:url(//x)', resaltador: '#12345',
       vistas: { hoy: 'otra', materia: 'tabla', extra: 'x' },
     });
     expect(r.tema).toBe('sistema');
@@ -427,16 +480,24 @@ describe('public/ajustes.js', () => {
     for (const [clave, lista] of Object.entries(OPCIONES)) {
       for (const valor of lista) {
         aplicar({ [clave]: valor });
-        const esperado = clave === 'tema' && valor === 'sistema' ? 'claro' : valor;
+        const esperado = clave === 'tema' ? { sistema: 'claro', ...PALETAS }[valor] ?? valor : valor;
         expect(atributo(clave)).toBe(esperado);
       }
     }
   });
 
   it('los estilos siempre oscuros lo son con cualquier tema, y los bordes solo con true', () => {
+    expect(SIEMPRE_OSCUROS).toEqual(['batman']);
     for (const estilo of SIEMPRE_OSCUROS) {
       aplicar({ estilo, tema: 'claro' });
       expect(atributo('estilo')).toBe(estilo);
+      expect(atributo('tema')).toBe('oscuro');
+    }
+    // Plano and Pizarrón follow the theme, like Original.
+    for (const estilo of ['plano', 'pizarron']) {
+      aplicar({ estilo, tema: 'claro' });
+      expect(atributo('tema')).toBe('claro');
+      aplicar({ estilo, tema: 'oscuro' });
       expect(atributo('tema')).toBe('oscuro');
     }
     expect(atributo('bordes')).toBe('no');
@@ -447,6 +508,38 @@ describe('public/ajustes.js', () => {
     expect(atributo('bordes')).toBe('no');
     expect(normalizar({ bordes: 'si' }).bordes).toBe(false);
     expect(normalizar({ estilo: 'otro' }).estilo).toBe('original');
+  });
+
+  it.each(Object.entries(PALETAS))('%s es el tema %s con data-paleta, y la marca se borra al volver a otro tema', (paleta, base) => {
+    aplicar({ tema: paleta });
+    expect(atributo('tema')).toBe(base);
+    expect(atributo('paleta')).toBe(paleta);
+    aplicar({ tema: base });
+    expect(atributo('tema')).toBe(base);
+    expect(atributo('paleta')).toBeNull();
+    aplicar({ tema: paleta });
+    aplicar({ tema: 'sistema' });
+    expect(atributo('paleta')).toBeNull();
+    // Every style takes the palette, and an always-dark one stays dark with any of them (Lavanda too).
+    for (const estilo of OPCIONES.estilo) {
+      aplicar({ tema: paleta, estilo });
+      expect(atributo('paleta'), estilo).toBe(paleta);
+      expect(atributo('tema'), estilo).toBe(SIEMPRE_OSCUROS.includes(estilo) ? 'oscuro' : base);
+    }
+    expect(normalizar({ tema: paleta }).tema).toBe(paleta);
+  });
+
+  it.each(OPCIONES.estilo)('el color principal elegido pinta la cabecera de %s, y sin él vuelve la del estilo', (estilo) => {
+    aplicar({ estilo, accion: '#8a1f3d' });
+    expect(atributo('cabecera')).toBe('propia');
+    expect(variable('--accion')).toBe('#8a1f3d');
+    aplicar({ estilo });
+    expect(atributo('cabecera')).toBeNull();
+  });
+
+  it('el color de la acción elegido le gana a la paleta', () => {
+    aplicar({ tema: 'rosa', accion: '#112233' });
+    expect(variable('--accion')).toBe('#112233');
   });
 
   it('el tema del sistema se resuelve al que tenga el dispositivo', () => {

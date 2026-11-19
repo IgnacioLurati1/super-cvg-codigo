@@ -27,13 +27,14 @@ export function siguientePaso(escala, dir) {
 }
 
 /** Every page with its place: { tops, izquierdas, anchos, altos, ancho, alto } in CSS pixels. `tamanos`: [w, h] of
- * each page in points. The pages go one under the other, centered, and the whole is at least as wide as the view. */
-export function armarLayout(tamanos, escala, anchoVista, borde = BORDE) {
+ * each page in points. The pages go one under the other, centered, and the whole is at least as wide as the view.
+ * `techo`: room left over the first page, for bars that float over the pages (a phone). */
+export function armarLayout(tamanos, escala, anchoVista, borde = BORDE, techo = 0) {
   const anchos = tamanos.map(([w]) => Math.max(1, Math.round(w * escala)));
   const altos = tamanos.map(([, h]) => Math.max(1, Math.round(h * escala)));
   const ancho = Math.max(anchoVista, Math.max(0, ...anchos) + 2 * borde);
   const tops = [];
-  let y = borde;
+  let y = borde + techo;
   for (const alto of altos) {
     tops.push(y);
     y += alto + ENTRE;

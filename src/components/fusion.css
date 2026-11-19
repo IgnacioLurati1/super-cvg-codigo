@@ -1,0 +1,222 @@
+/* Fusionar en un PDF: the files to pick on the left, the order on the right. On the phone, one under the other. */
+.previa.fusion {
+  width: min(64rem, 100vw);
+}
+
+.fusion__caja {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  height: 100%;
+  min-height: 0;
+  padding-bottom: 0;
+}
+
+.fusion__cuerpo {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
+  gap: 20px;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.fusion__columna {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  min-width: 0;
+  min-height: 0;
+}
+
+.fusion__subtitulo {
+  margin: 0;
+  font-size: var(--t-ui);
+}
+
+.fusion__lista {
+  max-height: 60vh;
+  max-height: 60dvh;
+}
+
+.fusion__numero {
+  display: inline-grid;
+  place-items: center;
+  min-width: 1.75rem;
+  height: 1.75rem;
+  margin-left: auto;
+  border-radius: 999px;
+  background: var(--accion);
+  color: var(--accion-texto);
+  font-size: var(--t-chica);
+  font-weight: 700;
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+.fusion__vacio {
+  margin: 0;
+  color: var(--texto-suave);
+}
+
+.fusion__orden {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.fusion__fila {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-areas:
+    'agarre nombre'
+    'agarre paginas'
+    'agarre acciones';
+  gap: 6px 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-bloque);
+  background: var(--superficie);
+}
+
+.fusion__fila--sobre {
+  border-color: var(--foco);
+  box-shadow: 0 -3px 0 var(--foco);
+}
+
+.fusion__agarre {
+  grid-area: agarre;
+  display: grid;
+  place-items: center;
+  align-self: start;
+  width: 2rem;
+  height: 2rem;
+  border-radius: var(--radio-control);
+  background: var(--fondo);
+  font-weight: 700;
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+/* Dragging is for the mouse: on a touch screen the buttons move the rows. */
+@media (hover: hover) and (pointer: fine) {
+  .fusion__agarre {
+    cursor: grab;
+  }
+
+  .fusion__agarre:active {
+    cursor: grabbing;
+  }
+}
+
+.fusion__nombre {
+  grid-area: nombre;
+  min-width: 0;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.fusion__paginas {
+  grid-area: paginas;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+}
+
+.fusion__paginas label {
+  font-size: var(--t-chica);
+  color: var(--texto-suave);
+}
+
+.fusion__paginas .campo__control {
+  width: 9rem;
+  min-height: 36px;
+  padding-block: 4px;
+}
+
+.fusion__total,
+.fusion__falta {
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+}
+
+.fusion__falta {
+  margin: 0;
+}
+
+.fusion__paginas .campo__error {
+  flex-basis: 100%;
+  margin: 0;
+}
+
+.fusion__acciones button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.fusion__acciones {
+  grid-area: acciones;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+}
+
+.elegir__pie.fusion__pie {
+  display: grid;
+  gap: 10px;
+}
+
+.fusion__datos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
+  gap: 0 12px;
+  padding-top: 6px;
+}
+
+.fusion__datos .campo {
+  margin: 0;
+}
+
+.fusion__botones,
+.fusion__trabajando {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+
+.fusion__trabajando .herramienta__barra {
+  flex: 1 1 10rem;
+}
+
+.fusion__final {
+  max-height: 30dvh;
+  overflow-y: auto;
+}
+
+.fusion__estado:empty {
+  display: none;
+}
+
+.fusion__final:empty {
+  display: none;
+}
+
+.fusion__final:focus {
+  outline: none;
+}
+
+@media (max-width: 38.75rem) {
+  .fusion__botones .boton {
+    flex: 1 1 100%;
+  }
+
+  .fusion__lista {
+    max-height: none;
+    overflow: visible;
+  }
+
+  .fusion__cuerpo {
+    grid-auto-rows: max-content;
+  }
+}

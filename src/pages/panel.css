@@ -1729,6 +1729,12 @@ html:has(.previa[open]) {
   flex: none;
 }
 
+/* Back to the folder a file came from, next to Cerrar. */
+.previa__cabeza .previa__volver {
+  margin-left: auto;
+  margin-right: -8px;
+}
+
 .previa__dato {
   margin: 0;
   color: var(--texto-suave);
@@ -2356,4 +2362,87 @@ html:has(.previa[open]) {
 
 .semana__dia[data-hoy] .semana__nombre {
   color: var(--texto);
+}
+
+/* A Drive folder of a course, looked through in the preview sheet (CarpetaDeDrive.jsx). */
+.carpeta-drive {
+  display: grid;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.carpeta-drive__camino ol {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--texto-suave);
+}
+
+.carpeta-drive__camino li::after {
+  content: '/';
+  padding-inline: 6px;
+}
+
+.carpeta-drive__paso {
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.carpeta-drive__titulo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  font-size: var(--t-h3);
+}
+
+.carpeta-drive__lista {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.carpeta-drive__flecha {
+  flex: none;
+  width: 1.125rem;
+  height: 1.125rem;
+  fill: none;
+  stroke: var(--texto-suave);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2;
+}
+
+/* A folder link of a text: a button that opens it in the sheet. Inside a sheet of links, like the other links; inline in
+   a text, like a link. */
+button.previa__enlace {
+  width: 100%;
+  border: 0;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+
+.enlace-carpeta {
+  display: inline;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }

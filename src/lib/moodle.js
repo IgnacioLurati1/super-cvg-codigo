@@ -3,7 +3,8 @@
 //   - The writes, apart: `inscribirse` enrols the student in a course, and `subirArchivo`, `guardarEntrega` and
 //     `enviarEntrega` hand in a task. Only through ESCRITURA, one attempt each, and only after the screen asked.
 //     `responderEnConversacion` and `mandarMensaje` send a private message, after asking too, and `marcarLeida` marks a
-//     conversation as read when it is opened, like the campus does.
+//     conversation as read when it is opened, like the campus does. `responderEnForo` answers a post of a forum, when
+//     the student taps Publicar.
 //   - Quizzes are read only: an attempt is started and continued on the campus, never from here.
 //   - The key never travels in a URL: it always goes in the request body.
 export const CAMPUS = 'https://frro.cvg.utn.edu.ar';
@@ -42,6 +43,11 @@ export const LECTURA = new Set([
   'core_message_get_conversations',
   'core_message_get_conversation_messages',
   'core_message_message_search_users',
+  // The forums of the courses, the discussions of one and the posts of one, to read them (Foros). Never one that
+  // writes or logs a view (add_discussion, add_discussion_post, view_forum*).
+  'mod_forum_get_forums_by_courses',
+  'mod_forum_get_forum_discussions',
+  'mod_forum_get_discussion_posts',
 ]);
 
 // The only function that changes something in the campus, kept out of LECTURA so `llamar` never sends it.
@@ -56,7 +62,9 @@ const ENVIAR_ENTREGA = 'mod_assign_submit_for_grading';
 const RESPONDER = 'core_message_send_messages_to_conversation';
 const MANDAR = 'core_message_send_instant_messages';
 const MARCAR_LEIDA = 'core_message_mark_all_conversation_messages_as_read';
-export const ESCRITURA = new Set([INSCRIBIR, SUBIR, GUARDAR_ENTREGA, ENVIAR_ENTREGA, RESPONDER, MANDAR, MARCAR_LEIDA]);
+// Forums: an answer to a post of a discussion. Never a discussion of its own, an edit or a deletion.
+const RESPONDER_EN_FORO = 'mod_forum_add_discussion_post';
+export const ESCRITURA = new Set([INSCRIBIR, SUBIR, GUARDAR_ENTREGA, ENVIAR_ENTREGA, RESPONDER, MANDAR, MARCAR_LEIDA, RESPONDER_EN_FORO]);
 
 export class ErrorCampus extends Error {
   constructor(mensaje, codigo) {
@@ -305,4 +313,44 @@ export async function enviarEntrega(token, tareaId, { aceptar = false } = {}) {
   // Its notice carries internal numbers: never shown.
   if (avisos.length) throw new ErrorCampus('El campus no la envió para calificar. Quedó guardada como borrador.', 'no_enviada');
   return true;
+}
+
+// Forum answers. Sent once, never retried, like a message.
+
+/** The longest answer taken here: the campus has no limit of its own for a post, this one keeps it a post. */
+export const LARGO_FORO = 20_000;
+const LARGO_ASUNTO = 255;
+const escaparHtml = (t) => t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+
+/** What the student wrote, as the HTML of a post: everything escaped, a blank line starts a paragraph and a line break
+ * stays one. Nothing of what was written becomes a tag. */
+export function textoAHtml(texto) {
+  return String(texto ?? '').replace(/\r\n?/g, '\n').trim().split(/\n\s*\n/)
+    .map((parrafo) => parrafo.trim()).filter(Boolean)
+    .map((parrafo) => `<p>${parrafo.split('\n').map(escaparHtml).join('<br>')}</p>`).join('');
+}
+
+function errorDeForo(codigo) {
+  if (codigo === 'nopostforum' || codigo === 'cannotreply') return new ErrorCampus('El campus no te deja responder en esta discusión.', 'no_responde');
+  if (codigo === 'discussionlocked') return new ErrorCampus('Esta discusión está cerrada.', 'cerrada');
+  return errorDeAcceso(codigo);
+}
+
+/** What the campus answered to an answer in a forum: { id } of the new post, or an error in words. */
+export function leerPublicado(datos) {
+  if (datos?.exception) throw errorDeForo(datos.errorcode);
+  if (!numero(datos?.postid)) throw new ErrorCampus('El campus no confirmó la respuesta.', 'sin_confirmar');
+  return { id: datos.postid };
+}
+
+/** Answers a post of a discussion: sends RESPONDER_EN_FORO with the text as HTML and the subject the campus puts. */
+export async function responderEnForo(token, postId, asunto, texto) {
+  const valido = typeof texto === 'string' && texto.trim() !== '' && texto.length <= LARGO_FORO;
+  if (!numero(postId) || !valido || typeof asunto !== 'string' || !asunto.trim()) throw new ErrorCampus('No pudimos publicarla. Probá de nuevo.', 'datos_invalidos');
+  return leerPublicado(await enviar(ESCRITURA, token, RESPONDER_EN_FORO, {
+    postid: String(postId),
+    subject: asunto.trim().slice(0, LARGO_ASUNTO),
+    message: textoAHtml(texto),
+    messageformat: '1',
+  }));
 }
