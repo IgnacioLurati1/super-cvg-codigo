@@ -44,7 +44,7 @@
   var BARRA = { claro: '#17324d', oscuro: '#3578bd', rosa: '#c2306e', bosque: '#17805a', cafe: '#b8531a', lavanda: '#5b3fb0', 'lavanda-oscuro': '#7456d0', infierno: '#c4320a', glaciar: '#0e7490' };
   // The palettes of tokens.css: each one is a theme (the one `data-tema` says) with its own colors (`data-paleta`).
   var PALETAS = { rosa: 'oscuro', bosque: 'oscuro', cafe: 'oscuro', lavanda: 'claro', infierno: 'oscuro', glaciar: 'oscuro' };
-  // The header of these styles doesn't take the theme's action color: the browser's bar takes the header's own. A main
+  // The header of these styles doesn't take the theme's action color: the browser's bar takes the header's own. A header
   // color the student chose paints every header (`data-cabecera`), and the bar with it.
   var BARRA_DEL_ESTILO = { hoja: { claro: '#fcfdfe', oscuro: '#171c27' }, profesional: { claro: '#ffffff', oscuro: '#111a30' }, batman: { oscuro: '#141519' }, plano: { claro: '#ebe5d1', oscuro: '#0a2647' }, pizarron: { claro: '#c9cfd5', oscuro: '#7f5f3f' } };
   // The same with a palette, where it paints the header: the page's background (Hoja), the first color of its gradient
@@ -183,6 +183,7 @@
 
     var accion = colorValido(datos.accion);
     var resaltador = colorValido(datos.resaltador);
+    var cabecera = colorValido(datos.cabecera);
     ponerVariables(raiz.style, {
       '--accion': accion,
       '--accion-hover': accion && alPasar(accion),
@@ -193,8 +194,14 @@
       '--resaltador-texto': resaltador && textoSobre(resaltador),
       '--pdf-brillo': String(brilloValido(datos.pdfBrillo)),
     });
-    // A main color the student chose also paints the header of the styles that bring their own (estilos.css).
-    if (accion) raiz.setAttribute('data-cabecera', 'propia');
+    // The header's own color, apart from the buttons': it paints the header of any style (estilos.css). Without it, the
+    // Original's header is the main color and the other styles keep theirs.
+    ponerVariables(raiz.style, {
+      '--cabecera-elegida': cabecera,
+      '--cabecera-elegida-hover': cabecera && alPasar(cabecera),
+      '--cabecera-elegida-texto': cabecera && textoSobre(cabecera),
+    });
+    if (cabecera) raiz.setAttribute('data-cabecera', 'propia');
     else raiz.removeAttribute('data-cabecera');
 
     Object.keys(CONSULTRON).forEach(function (clave) {
@@ -232,7 +239,7 @@
     var clave = paleta === 'lavanda' && tema === 'oscuro' ? 'lavanda-oscuro' : paleta;
     var propia = BARRA_DEL_ESTILO[estilo] ? BARRA_DEL_ESTILO[estilo][tema] : null;
     if (clave && BARRA_PALETA[clave][estilo]) propia = BARRA_PALETA[clave][estilo];
-    var barra = accion || propia || BARRA[clave || tema];
+    var barra = cabecera || propia || accion || BARRA[clave || tema];
     for (var i = 0; i < barras.length; i++) barras[i].setAttribute('content', barra);
   };
 

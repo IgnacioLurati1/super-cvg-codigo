@@ -14,13 +14,13 @@ import { VELOCIDADES } from './voz';
 //
 // Written in Crockford's base 32 (no i, l, o or u, which read like 1, 0 or v; typed, they count as those). Each setting
 // takes a fixed number of characters: its place in its list, a number, a set as bits, an order as its rank among all
-// orders. The three colors go last, six hex digits or «z» without one, and a last character checks the rest, so a typo
+// orders. The colors go last, six hex digits or «z» without one, and a last character checks the rest, so a typo
 // doesn't pass as someone else's look. The lists only grow at the end; a version goes first, in case that ever changes.
 
 // Version 2 added what a course looks like inside (`contenido`): a code of version 1 still reads, without it. Version 3
-// added where the screens of the bar on top go and how wide it is.
-const VERSION = '3';
-const VERSIONES = ['1', '2', '3'];
+// added where the screens of the bar on top go and how wide it is. Version 4, the header's own color, after the others.
+const VERSION = '4';
+const VERSIONES = ['1', '2', '3', '4'];
 const PREFIJO = 'CVG';
 const ABC = '0123456789abcdefghjkmnpqrstvwxyz';
 const SIN_COLOR = 'z';
@@ -70,7 +70,7 @@ const COLUMNA_DE_ENTRADA = Object.fromEntries(BLOQUES_DE_HOY.map((b) => [b.clave
 const CUENTAN = ['entregas', 'cuestionarios', 'classroom', 'propias'];
 const AVISOS = GRUPOS_DE_AVISOS.map((g) => g.clave);
 const NULO_SI = [null, true, false];
-const COLORES = ['accion', 'resaltador', 'consultronColor'];
+const COLORES = [{ clave: 'accion' }, { clave: 'resaltador' }, { clave: 'consultronColor' }, { clave: 'cabecera', desde: '4' }];
 
 const eleccion = (clave, lista) => ({
   ancho: 1,
@@ -150,7 +150,7 @@ export function codigoDeEstilo(ajustes, mio) {
   const a = normalizar(ajustes);
   let texto = VERSION;
   for (const campo of CAMPOS) texto += aTexto(campo.de(a, mio), campo.ancho);
-  for (const c of COLORES) texto += a[c] ? a[c].slice(1) : SIN_COLOR;
+  for (const { clave: c } of COLORES) texto += a[c] ? a[c].slice(1) : SIN_COLOR;
   texto += control(texto);
   return `${PREFIJO}-${texto.toUpperCase().match(/.{1,5}/g).join('-')}`;
 }
@@ -184,7 +184,11 @@ export function leerCodigoDeEstilo(escrito, actuales) {
     if (n >= campo.tope) return null;
     campo.a(n, cambio);
   }
-  for (const c of COLORES) {
+  for (const { clave: c, desde } of COLORES) {
+    if (desde > version) {
+      cambio.ajustes[c] = null;
+      continue;
+    }
     if (cuerpo[i] === SIN_COLOR) {
       cambio.ajustes[c] = null;
       i += 1;

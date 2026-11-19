@@ -192,6 +192,15 @@ const COLORES_ACCION = [
   { valor: '#5b3a9d', nombre: 'Violeta' },
 ];
 
+const COLORES_CABECERA = [
+  { valor: '#121417', nombre: 'Negro' },
+  { valor: '#ffffff', nombre: 'Blanco' },
+  { valor: '#17324d', nombre: 'Tinta' },
+  { valor: '#0b5a9e', nombre: 'Azul' },
+  { valor: '#8a1f3d', nombre: 'Bordó' },
+  { valor: '#5b3a9d', nombre: 'Violeta' },
+];
+
 const COLORES_RESALTADOR = [
   { valor: '#ffe14d', nombre: 'Amarillo' },
   { valor: '#b6f36b', nombre: 'Lima' },
@@ -1126,13 +1135,23 @@ export default function Configuracion() {
           <ElegirColor
             clave="accion"
             titulo="Color principal"
-            ayuda="La cabecera y los botones."
+            ayuda="Los botones."
             otroColor="Otro color principal"
             opciones={COLORES_ACCION}
             ajustes={ajustes}
             poner={poner}
             alerta="Con este color cuesta leer el texto de los botones. Probá uno más claro o más oscuro."
             previa={<span className="boton">Así queda</span>}
+          />
+          <ElegirColor
+            clave="cabecera"
+            titulo="Cabecera"
+            ayuda="Sin elegir, va la del estilo."
+            otroColor="Otro color de cabecera"
+            opciones={COLORES_CABECERA}
+            ajustes={ajustes}
+            poner={poner}
+            alerta="Con este color cuesta leer la cabecera. Probá uno más claro o más oscuro."
           />
           <ElegirColor
             clave="resaltador"

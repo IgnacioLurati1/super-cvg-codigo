@@ -9,6 +9,12 @@ export const NOVEDADES = [
     funciones: [
       {
         tipo: 'nuevo',
+        nombre: 'Cronómetro en la sesión en vivo',
+        texto: 'Cronómetros y cuentas regresivas en la barra de la sesión. Los ven todos.',
+        puntos: ['Mientras uno corre, el botón muestra el tiempo.', 'Cuando termina una cuenta regresiva, suena y avisa a todos.'],
+      },
+      {
+        tipo: 'nuevo',
         nombre: 'Foros',
         texto: 'Todos los foros de tus materias en un solo lugar. Está en Mensajes, con el botón Foros.',
         puntos: [
@@ -29,7 +35,7 @@ export const NOVEDADES = [
         puntos: [
           'Cada tema pinta cualquier estilo. El estilo pone la forma y el tema, los colores.',
           'Con el tema claro, Plano es un plano en papel y Pizarrón, una pizarra blanca.',
-          'El color principal también pinta la cabecera. Si cambiás de estilo, vuelve la del estilo.',
+          'La cabecera tiene su propio color, aparte de los botones. Está en Colores. Si cambiás de estilo, vuelve la del estilo.',
         ],
       },
       {

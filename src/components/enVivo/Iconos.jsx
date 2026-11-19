@@ -12,6 +12,7 @@ const DIBUJOS = {
   sitio: <path d="M4 11.5 12 5l8 6.5M6.5 9.5v9.5h11V9.5" />,
   salir: <path d="M14 4.5h4.5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H14M10 8l-4 4 4 4M6 12h10" />,
   mas: <path d="M5.5 12h.01M12 12h.01M18.5 12h.01" strokeWidth="3" />,
+  cronometro: <path d="M12 20.5a7 7 0 1 0 0-14 7 7 0 0 0 0 14zM12 13.5V10M10 3.5h4M12 3.5v3M18 6.5l1.5-1.5" />,
   cerrar: <path d="M6 6l12 12M18 6L6 18" />,
   abrir: <path d="M12 5v14M5 12h14" />,
   documento: <path d="M6.5 3.5h7.5l4 4v12.5a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5V4a.5.5 0 0 1 .5-.5zM14 3.5v4h4M9 12h6M9 15.5h6" />,

@@ -239,7 +239,7 @@ export const PANTALLAS = [
   {
     ruta: null,
     nombre: 'Temas y aspecto',
-    texto: 'En Configuración, en «Cómo se ve», elegís el tema (claro, oscuro o del sistema), el contraste, el modo para daltonismo, el tamaño de letra y el movimiento. «Sensible a la luz» saca los destellos y los saltos de brillo. En «Menú» cambiás el estilo y qué pantallas van a la vista o en «Más». Elegís también el color principal y el resaltador, y cómo se ven Hoy, las materias y el calendario.',
+    texto: 'En Configuración, en «Cómo se ve», elegís el tema (claro, oscuro o del sistema), el contraste, el modo para daltonismo, el tamaño de letra y el movimiento. «Sensible a la luz» saca los destellos y los saltos de brillo. En «Menú» cambiás el estilo y qué pantallas van a la vista o en «Más». Elegís también el color principal (los botones), el de la cabecera y el resaltador, y cómo se ven Hoy, las materias y el calendario.',
     palabras: 'tema oscuro claro modo oscuro colores letra grande contraste daltonismo animaciones epilepsia fotosensible destellos brillo aspecto personalizar vista tarjetas tabla agenda',
   },
 ];

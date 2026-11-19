@@ -1,0 +1,143 @@
+/* The Cronómetro of the session's bar: one card per timer, one under the other, with digits that don't move as they
+   change. */
+.ev-crono {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+
+.ev-crono__lista {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ev-crono__uno {
+  display: grid;
+  align-content: start;
+  gap: 6px;
+  padding: 8px 10px 10px 12px;
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-bloque);
+}
+
+.ev-crono__uno[data-corriendo] {
+  border-color: var(--accion);
+}
+
+.ev-crono__uno[data-termino] {
+  border-color: var(--error);
+  box-shadow: inset 0 0 0 1px var(--error);
+}
+
+.ev-crono__cabeza {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ev-crono__nombre {
+  flex: 1;
+  min-width: 0;
+  padding: 4px 6px;
+  margin-left: -6px;
+  font: inherit;
+  /* 16 px at least: a smaller field makes iOS zoom in when it takes the focus. */
+  font-size: max(1rem, 16px);
+  font-weight: 700;
+  color: var(--texto);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radio-control);
+}
+
+.ev-crono__nombre:focus-visible {
+  border-color: var(--borde-control);
+}
+
+.ev-crono__quitar {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  color: var(--texto-suave);
+  background: none;
+  border: 0;
+  border-radius: var(--radio-control);
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ev-crono__quitar:active {
+  color: var(--texto);
+  background: var(--superficie-2);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .ev-crono__nombre:hover {
+    border-color: var(--borde-control);
+  }
+
+  .ev-crono__quitar:hover {
+    color: var(--texto);
+    background: var(--superficie-2);
+  }
+}
+
+.ev-crono__quitar .envivo-icono {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+}
+
+.ev-crono__reloj {
+  margin: 0;
+  font-family: var(--fuente-ui);
+  font-size: 2.25rem;
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums lining-nums;
+  letter-spacing: -0.01em;
+  color: var(--texto);
+}
+
+.ev-crono__uno[data-termino] .ev-crono__reloj,
+.ev-crono__uno[data-termino] .ev-crono__estado {
+  color: var(--error);
+}
+
+.ev-crono__estado {
+  min-height: 1.4em;
+  margin: 0;
+  font-size: var(--t-chica);
+  color: var(--texto-suave);
+}
+
+.ev-crono__minutos {
+  max-width: 8rem;
+}
+
+.ev-crono__botones,
+.ev-crono__sumar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.ev-crono__nota {
+  margin: 0;
+  color: var(--texto-suave);
+}
+
+/* The time in the bar's button while one runs: same width every second. */
+.ev-crono__barra {
+  font-variant-numeric: tabular-nums lining-nums;
+}

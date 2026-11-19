@@ -422,9 +422,13 @@ html[data-bordes='si'] :where(.bloque) > :where(h2:first-child) {
   }
 }
 
-/* A main color the student chose (Configuración, Color principal) paints the header in every style, over the style's own:
-   the style keeps its shape (the red lines of Hoja, the double line of Plano, the chalk tray of Pizarrón). */
+/* A header color the student chose (Configuración, Cabecera) paints the header in every style, over the style's own:
+   the style keeps its shape (the red lines of Hoja, the double line of Plano, the chalk tray of Pizarrón). Inside the
+   header it is the main color, so its menu, rings and focus follow it and the buttons of the page keep theirs. */
 html[data-estilo][data-cabecera='propia'] .cabecera {
+  --accion: var(--cabecera-elegida);
+  --accion-hover: var(--cabecera-elegida-hover);
+  --accion-texto: var(--cabecera-elegida-texto);
   background: var(--accion);
   color: var(--accion-texto);
 }

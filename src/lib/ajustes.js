@@ -59,9 +59,9 @@ export const SIEMPRE_OSCUROS = ['batman'];
 // student had them on before or touched the switch since (`bordesDelEstilo` says the style turned them on).
 export const CON_BORDES = ['hoja', 'plano'];
 
-/** What changes when a style is chosen. Another style also drops the main color chosen: the header goes back to the style's own. */
+/** What changes when a style is chosen. Another style also drops the header color chosen: the header goes back to the style's own. */
 export function cambioDeEstilo(ajustes, estilo) {
-  const color = estilo !== ajustes.estilo ? { accion: null } : {};
+  const color = estilo !== ajustes.estilo ? { cabecera: null } : {};
   if (CON_BORDES.includes(estilo)) return ajustes.bordes ? { estilo, ...color } : { estilo, ...color, bordes: true, bordesDelEstilo: true };
   if (ajustes.bordesDelEstilo) return { estilo, ...color, bordes: false, bordesDelEstilo: false };
   return { estilo, ...color };
@@ -222,6 +222,8 @@ export function normalizar(crudo) {
     pdfBrillo: brilloValido(datos.pdfBrillo),
     accion: colorValido(datos.accion),
     resaltador: colorValido(datos.resaltador),
+    // The header's own color, apart from the buttons' (public/ajustes.js). null: the style's.
+    cabecera: colorValido(datos.cabecera),
     vistas: Object.fromEntries(Object.entries(VISTAS).map(([pantalla, lista]) => [pantalla, lista.includes(vistas[pantalla]) ? vistas[pantalla] : (VISTA_DE_ENTRADA[pantalla] ?? lista[0])])),
     // «Sensible a la luz», for photosensitivity: no jumps of brightness, softer whites, animated pictures still until
     // tapped, and everything still as with «Sin animaciones» (public/ajustes.js writes `data-luz`, styles/luz.css does
@@ -444,5 +446,7 @@ export function colorActual(ajustes, clave) {
   const tema = delTema in ORIGINALES ? delTema : marca === 'oscuro' ? 'oscuro' : 'claro';
   // Consultron's own color starts as the main one.
   if (clave === 'consultronColor') return ajustes.consultronColor ?? ajustes.accion ?? ORIGINALES[tema].accion;
+  // The header's starts as the one on screen, the one public/ajustes.js gives the browser's bar.
+  if (clave === 'cabecera') return ajustes.cabecera ?? document.querySelector('meta[name="theme-color"]')?.getAttribute('content') ?? ORIGINALES[tema].accion;
   return ajustes[clave] ?? ORIGINALES[tema][clave];
 }

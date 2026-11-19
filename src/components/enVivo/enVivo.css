@@ -290,6 +290,18 @@ html[data-mesa-en-vivo] :is(.flotante, .flotante__boton):not([data-en-mesa]) {
   min-width: 0;
   padding-inline: 2px;
 }
+/* A narrow window with a mouse: the bar's buttons share the width, as on a phone. */
+@media (max-width: 30rem) {
+  .envivo-mesa:not([data-tactil]) .envivo-barra {
+    width: calc(100% - 1rem);
+  }
+
+  .envivo-barra__boton {
+    flex: 1 1 0;
+    min-width: 0;
+    padding-inline: 2px;
+  }
+}
 .envivo-barra__boton:active {
   transform: scale(0.97);
 }

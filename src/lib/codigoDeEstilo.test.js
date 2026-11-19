@@ -148,6 +148,22 @@ describe('pasar tu estilo con un código', () => {
     expect(ajustes.accion).toBe('#7a3fb0');
   });
 
+  it('la cabecera viaja en el código, aparte del color principal', () => {
+    const mios = normalizar({ ...MIOS, cabecera: '#121417' });
+    const codigo = codigoDeEstilo(mios, MIO);
+    const { ajustes } = aplicar(leerCodigoDeEstilo(codigo, TUYOS));
+    expect([ajustes.accion, ajustes.cabecera]).toEqual(['#7a3fb0', '#121417']);
+    expect(codigoDeEstilo(ajustes, MIO)).toBe(codigo);
+  });
+
+  // Made on 19/11, before the header's own color (version 3): Hoja and a bordó. The header goes back to the style's.
+  it('un código de la versión 3 se sigue leyendo, con la cabecera del estilo', () => {
+    const viejo = 'CVG-31000-00C01-00011-00101-W01W0-B8050-00000-00000-00006-T4HR0-00000-000G0-00000-8A1F3-DZZE';
+    const tuyos = normalizar({ cabecera: '#ffffff' });
+    const { ajustes } = aplicar(leerCodigoDeEstilo(viejo, tuyos), tuyos);
+    expect([ajustes.estilo, ajustes.accion, ajustes.cabecera]).toEqual(['hoja', '#8a1f3d', null]);
+  });
+
   it('un error de tipeo o algo que no es un código no pasa', () => {
     const codigo = codigoDeEstilo(MIOS, MIO);
     for (let i = 4; i < codigo.length; i++) {

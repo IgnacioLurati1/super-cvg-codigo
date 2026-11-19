@@ -234,7 +234,7 @@ describe('tokens', () => {
 describe('leer los ajustes', () => {
   it('sin nada, los valores de siempre', () => {
     expect(normalizar(null)).toEqual({
-      estilo: 'original', tema: 'sistema', contraste: 'normal', daltonismo: 'ninguno', letra: 'normal', movimiento: 'sistema', pdf: 'claro', pdfClaro: 'claro', pdfBrillo: 0.92, accion: null, resaltador: null,
+      estilo: 'original', tema: 'sistema', contraste: 'normal', daltonismo: 'ninguno', letra: 'normal', movimiento: 'sistema', pdf: 'claro', pdfClaro: 'claro', pdfBrillo: 0.92, accion: null, resaltador: null, cabecera: null,
       vistas: { hoy: 'agenda', materia: 'tarjetas', materias: 'tarjetas', calendario: 'mes' },
       luz: false,
       lectura: false,
@@ -392,11 +392,14 @@ describe('leer los ajustes', () => {
     for (const raro of ['true', 1, {}, null]) expect(normalizar({ lectura: raro }).lectura).toBe(false);
   });
 
-  it('otro estilo vuelve el color principal al original; el mismo estilo lo deja', () => {
+  it('otro estilo vuelve la cabecera a la del estilo y deja el color principal; el mismo estilo deja los dos', () => {
     const elegir = (antes, estilo) => normalizar({ ...antes, ...cambioDeEstilo(normalizar(antes), estilo) });
-    const conColor = { estilo: 'original', accion: '#8a1f3d' };
-    for (const estilo of OPCIONES.estilo.filter((e) => e !== 'original')) expect(elegir(conColor, estilo).accion).toBeNull();
-    expect(elegir(conColor, 'original').accion).toBe('#8a1f3d');
+    const conColor = { estilo: 'original', accion: '#8a1f3d', cabecera: '#121417' };
+    for (const estilo of OPCIONES.estilo.filter((e) => e !== 'original')) {
+      expect(elegir(conColor, estilo).cabecera).toBeNull();
+      expect(elegir(conColor, estilo).accion).toBe('#8a1f3d');
+    }
+    expect(elegir(conColor, 'original')).toMatchObject({ accion: '#8a1f3d', cabecera: '#121417' });
   });
 
   it('Hoja y Plano prenden los bordes, y otro estilo los apaga solo si los prendió uno de ellos', () => {
@@ -529,12 +532,25 @@ describe('public/ajustes.js', () => {
     expect(normalizar({ tema: paleta }).tema).toBe(paleta);
   });
 
-  it.each(OPCIONES.estilo)('el color principal elegido pinta la cabecera de %s, y sin él vuelve la del estilo', (estilo) => {
-    aplicar({ estilo, accion: '#8a1f3d' });
+  it.each(OPCIONES.estilo)('la cabecera elegida pinta la de %s sin tocar los botones, y sin ella vuelve la del estilo', (estilo) => {
+    const barra = () => document.querySelector('meta[name="theme-color"]')?.getAttribute('content');
+    aplicar({ estilo, accion: '#8a1f3d', cabecera: '#121417' });
     expect(atributo('cabecera')).toBe('propia');
     expect(variable('--accion')).toBe('#8a1f3d');
-    aplicar({ estilo });
+    expect(variable('--cabecera-elegida')).toBe('#121417');
+    expect(variable('--cabecera-elegida-texto')).toBe('#ffffff');
+    if (barra() !== undefined) expect(barra()).toBe('#121417');
+    // The main color alone no longer paints the header.
+    aplicar({ estilo, accion: '#8a1f3d' });
     expect(atributo('cabecera')).toBeNull();
+    expect(variable('--cabecera-elegida')).toBe('');
+  });
+
+  it('el CSS pinta la cabecera con su color y deja el principal para los botones', () => {
+    const css = leerArchivo('../styles/estilos.css');
+    const regla = css.split("html[data-estilo][data-cabecera='propia'] .cabecera {")[1]?.split('}')[0] ?? '';
+    expect(regla).toContain('--accion: var(--cabecera-elegida)');
+    expect(regla).toContain('--accion-texto: var(--cabecera-elegida-texto)');
   });
 
   it('el color de la acción elegido le gana a la paleta', () => {

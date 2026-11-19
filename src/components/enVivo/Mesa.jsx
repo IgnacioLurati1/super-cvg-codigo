@@ -13,6 +13,9 @@ import { usePestana, useVersion } from './usePestana';
 import Chat from './Chat';
 import GuardarEnLoMio from './GuardarEnLoMio';
 import Icono from './Iconos';
+import { sonarFin, useFinDeCuentas } from './useFinDeCuentas';
+import Cronometros, { TextoDeLaBarra } from './Cronometros';
+import { cronometrosDeLaSesion } from '../../lib/enVivo/cronometros';
 import './enVivo.css';
 
 // The table of a live session, like a call: the open tool takes the whole screen, and everything else lives in a
@@ -384,6 +387,14 @@ export default function Mesa({ sesion, codigo, estado, anfitrion, alSalir, alTer
     return () => meta.unobserve(mirar);
   }, [sesion]);
 
+  // A countdown of the session's Cronómetro reached zero: everyone is told, on any tab, with a beep.
+  const relojes = useMemo(() => cronometrosDeLaSesion(sesion.doc), [sesion.doc]);
+  useFinDeCuentas(relojes, (cronometro) => {
+    sonarFin();
+    setAvisos((a) => [...a, { clave: `cuenta-${cronometro.id}-${cronometro.desde}`, tipo: 'cuenta', nombre: cronometro.nombre, color: 'var(--error)', texto: 'Se terminó el tiempo.' }].slice(-MAX_AVISOS));
+    setAnuncio(`Se terminó el tiempo de ${cronometro.nombre}.`);
+  });
+
   // The session's Consultron: one thread for the table, in its own place of the doc. A new answer floats as a bubble
   // in the middle, unless the thread is open at the side.
   const [globo, setGlobo] = useState(null);
@@ -629,7 +640,8 @@ export default function Mesa({ sesion, codigo, estado, anfitrion, alSalir, alTer
         {avisos.map((a) => (
           <Aviso key={a.clave} aviso={a} alCerrar={() => quitarAviso(a.clave)} alAbrir={() => {
             quitarAviso(a.clave);
-            setLado('chat');
+            if (a.tipo === 'cuenta') setPanel('cronometro');
+            else setLado('chat');
           }} />
         ))}
       </div>
@@ -703,6 +715,12 @@ export default function Mesa({ sesion, codigo, estado, anfitrion, alSalir, alTer
         </Panel>
       )}
 
+      {panel === 'cronometro' && (
+        <Panel id={`${id}-cronometro`} titulo="Cronómetro" alCerrar={cerrarPanel} botones={botones}>
+          <Cronometros datos={relojes} />
+        </Panel>
+      )}
+
       {panel === 'invitar' && (
         <Panel id={`${id}-invitar`} titulo="Invitar" alCerrar={cerrarPanel} botones={botones}>
           {invitar}
@@ -762,6 +780,7 @@ export default function Mesa({ sesion, codigo, estado, anfitrion, alSalir, alTer
         {botonBarra('abrir', 'abrir', 'Abrir', { etiqueta: 'Abrir otra herramienta' })}
         {botonBarra('personas', 'personas', otros.length ? `Personas (${otros.length + 1})` : 'Personas')}
         {botonBarra('chat', 'chat', 'Chat', { numero: sinLeer, expandido: lado === 'chat', onClick: () => alternarLado('chat') })}
+        {botonBarra('cronometro', 'cronometro', <TextoDeLaBarra datos={relojes} />)}
         {!soloEnCaja && botonBarra('consultron', 'consultron', 'Consultron', { punto: pensando, expandido: conConsultron, onClick: () => alternarLado('consultron') })}
         {ancha ? (
           <>
@@ -855,13 +874,15 @@ function Aviso({ aviso, alCerrar, alAbrir }) {
       onBlur={(e) => !e.currentTarget.contains(e.relatedTarget) && setQuieto(false)}
     >
       <p className="envivo-aviso__quien">
-        <Icono nombre={aviso.tipo === 'chat' ? 'chat' : 'pestanas'} />
+        <Icono nombre={{ chat: 'chat', cuenta: 'cronometro' }[aviso.tipo] ?? 'pestanas'} />
         {aviso.nombre}
         {aviso.mas > 0 && <span className="envivo-aviso__mas">y {aviso.mas} más</span>}
       </p>
       <p className="envivo-aviso__texto">{aviso.texto}</p>
       <div className="envivo-aviso__botones">
-        {aviso.tipo === 'chat' ? <button type="button" className="boton boton--chico" onClick={alAbrir}>Abrir el chat</button> : <span />}
+        {aviso.tipo === 'chat' && <button type="button" className="boton boton--chico" onClick={alAbrir}>Abrir el chat</button>}
+        {aviso.tipo === 'cuenta' && <button type="button" className="boton boton--chico" onClick={alAbrir}>Ver</button>}
+        {aviso.tipo !== 'chat' && aviso.tipo !== 'cuenta' && <span />}
         <button type="button" className="envivo-aviso__cerrar" aria-label="Cerrar el aviso" onClick={alCerrar}>
           <Icono nombre="cerrar" />
         </button>
