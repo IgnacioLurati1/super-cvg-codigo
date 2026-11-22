@@ -2,7 +2,7 @@ import { createContext, lazy, Suspense, useCallback, useContext, useEffect, useM
 import { Link } from 'react-router-dom';
 import { cargarVideo } from '../lib/campus';
 import { guardarArchivo, traerArchivo } from '../lib/archivos';
-import { fecha, fechaHora, peso } from '../lib/datos';
+import { dominioDe, fecha, fechaHora, peso } from '../lib/datos';
 import { enlaceDe, FRENADO, leerEnlace, visorDe, vistaDeGoogle } from '../lib/drivePublico';
 import { CarpetaEnHoja, esCarpetaDeDrive, useAbrirCarpeta } from './carpetaEnHoja';
 import { destinoDeEnlace, itemDeNodo, nodoDeEnlace } from '../lib/mapasDrive';
@@ -14,7 +14,7 @@ import { textoError } from '../lib/errores';
 import { tokenActual } from '../lib/sesion';
 import { useConsulta } from '../lib/useConsulta';
 import { useMarcarVistos } from '../lib/vistos';
-import { iconoDeEnlace } from '../lib/simbolos';
+import { dibujoDeItem } from '../lib/simbolos';
 import CuestionarioPrevia from './EstadoCuestionario';
 import TareaPrevia from './EstadoTarea';
 import { extension } from './Filas';
@@ -38,6 +38,12 @@ const UMBRAL_LECTURA = 40;
 const QUIETO_TRAS_CAMBIO = 250;
 
 const Contexto = createContext(() => {});
+
+// A link of a text: a file in Drive drawn as that file, with the link badge.
+function IconoDeEnlace({ enlace }) {
+  const { simbolo, tono, enlace: enlazado } = dibujoDeItem({ tipo: 'enlace', destino: enlace.destino, nombre: enlace.titulo ?? enlace.texto });
+  return <Icono nombre={simbolo} tono={tono} enlazado={enlazado} tamano="tipo" />;
+}
 export const useAbrirPrevia = () => useContext(Contexto);
 
 function esPdf(item) {
@@ -191,7 +197,7 @@ function PreviaTexto({ item }) {
               {abrirCarpeta && esCarpetaDeDrive(e.destino) ? (
                 // A Drive folder opens here, in this same sheet.
                 <button type="button" className="previa__destino previa__enlace" onClick={() => abrirCarpeta(e)}>
-                  <Icono nombre={iconoDeEnlace(e.destino).simbolo} tono={iconoDeEnlace(e.destino).tono} tamano="tipo" />
+                  <IconoDeEnlace enlace={e} />
                   <span className="previa__enlace-texto">
                     <span className="previa__dominio">{nombreDeLink(e.texto, e.destino) || 'Carpeta de Drive'}</span>
                     <span className="previa__direccion">Se abre acá</span>
@@ -199,7 +205,7 @@ function PreviaTexto({ item }) {
                 </button>
               ) : (
               <a className="previa__destino previa__enlace" href={e.destino} target="_blank" rel="noreferrer">
-                <Icono nombre={iconoDeEnlace(e.destino).simbolo} tono={iconoDeEnlace(e.destino).tono} tamano="tipo" />
+                <IconoDeEnlace enlace={e} />
                 <span className="previa__enlace-texto">
                   <span className="previa__dominio">{e.texto}</span>
                   <span className="previa__direccion">Va a {e.dominio}{e.destino.startsWith('http:') ? ', sin conexión segura' : ''}</span>
@@ -487,11 +493,15 @@ export function PreviaProvider({ children }) {
   const [item, setItem] = useState(null);
   const abrir = useCallback((nuevo) => setItem(nuevo), []);
   const cerrar = useCallback(() => setItem(null), []);
-  // A folder link in a text of a page opens the folder in the sheet, as a link of a course does.
-  const abrirCarpeta = useCallback(({ destino, texto }) => {
+  // A Drive link in a text of a page opens in the sheet, as a link of a course does: a folder to look through, a file
+  // in the viewer (`archivos`, seAbreAca in carpetaEnHoja.js).
+  const abrirCarpeta = useMemo(() => Object.assign(({ destino, texto }) => {
     const enlace = leerEnlace(destino);
-    if (enlace?.carpeta) setItem({ id: `carpeta:${enlace.id}`, tipo: 'enlace', destino, nombre: nombreDeLink(texto, destino) || 'Carpeta de Drive' });
-  }, []);
+    if (!enlace) return;
+    const nombre = nombreDeLink(texto, destino);
+    if (enlace.carpeta) setItem({ id: `carpeta:${enlace.id}`, tipo: 'enlace', destino, nombre: nombre || 'Carpeta de Drive' });
+    else setItem({ id: `drive:${enlace.id}`, tipo: 'enlace', destino, dominio: dominioDe(destino), nombre: nombre || 'Archivo de Drive' });
+  }, { archivos: true }), []);
   return (
     <Contexto.Provider value={abrir}>
       <CarpetaEnHoja.Provider value={abrirCarpeta}>

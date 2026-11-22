@@ -232,6 +232,21 @@ describe('planear', () => {
     expect(plan.base[c.id]).toEqual(igual(c));
   });
 
+  it('los exámenes de Sysacad solo van; sin saberlos acá, los de Google quedan como están', () => {
+    const examen = eventoParaGoogle({ id: 'x1', titulo: 'Final de Física I', propio: 'sysacad', tipo: 'final', dia: '2026-12-10', materiaSysacad: 'Física I', cuando: desde + 30 * 86_400, sinHora: true });
+    expect(planear({ deseados: [examen], existentes: [], desde }).poner.map((e) => e.id)).toEqual([examen.id]);
+    const base = { [examen.id]: igual(examen) };
+    // Changed in Google: it stays that way while Sysacad says the same, and never comes here.
+    const cambiado = planear({ deseados: [examen], existentes: [enGoogle({ ...examen, summary: 'Otro' })], base, desde });
+    expect(cambiado).toMatchObject({ poner: [], cambiar: [], quitar: [], traer: [] });
+    // Sysacad Lindo did not say them in this visit: nothing changes.
+    const sinSaber = planear({ deseados: [], existentes: [enGoogle(examen)], base, desde, conSysacad: false });
+    expect(sinSaber).toMatchObject({ poner: [], cambiar: [], quitar: [], traer: [] });
+    expect(sinSaber.base[examen.id]).toEqual(igual(examen));
+    // It did, and that one is no longer there: it goes away.
+    expect(planear({ deseados: [], existentes: [enGoogle(examen)], base, desde }).quitar).toEqual([examen.id]);
+  });
+
   it('lo que se repite en Google queda solo allá', () => {
     const serie = { id: 'serie1', summary: 'Gimnasio', start: { dateTime: '2026-11-10T08:00:00-03:00' }, recurrence: ['RRULE:FREQ=WEEKLY'] };
     const una = { id: 'serie1_20261117T110000Z', summary: 'Gimnasio', start: { dateTime: '2026-11-17T09:00:00-03:00' }, recurringEventId: 'serie1' };

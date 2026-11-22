@@ -111,6 +111,16 @@ describe('eventosPropios', () => {
     expect(eventos[0]).toMatchObject({ materia: 'Física', materiaId: 7, propio: 'tarea', sinHora: true, url: null });
     expect(new Date(eventos[0].cuando * 1000).getDate()).toBe(20);
   });
+
+  it('las de una materia tuya llevan su nombre y su id; las de una que ya no está, no salen', async () => {
+    const { crearPropia, borrarPropia } = await import('./propias');
+    const id = crearPropia({ nombre: 'Análisis II tuya' });
+    agregarTarea(id, 'Repasar', '2026-11-22', 1);
+    expect(eventosPropios(mioActual())).toContainEqual(expect.objectContaining({ titulo: 'Repasar', materia: 'Análisis II tuya', materiaId: id }));
+    borrarPropia(id);
+    agregarTarea(id, 'Huérfana', '2026-11-22', 2);
+    expect(eventosPropios(mioActual()).some((e) => e.titulo === 'Huérfana')).toBe(false);
+  });
 });
 
 describe('fechas del campus corregidas o borradas', () => {

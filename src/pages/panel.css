@@ -2224,6 +2224,35 @@ html:has(.previa[open]) {
   stroke-width: 1.75;
 }
 
+/* The link badge (Simbolo.jsx): a solid disc of the symbol's color with the chain cut out, and a ring of the box's
+   background that parts it from the drawing. It may stick out of the drawing, never out of the box. */
+.simbolo[data-enlazado] svg {
+  overflow: visible;
+}
+
+.simbolo__enlazado {
+  --fondo-enlazado: var(--superficie);
+}
+
+.simbolo--tipo .simbolo__enlazado {
+  --fondo-enlazado: var(--superficie-2);
+}
+
+.simbolo--tipo[data-tono] .simbolo__enlazado {
+  --fondo-enlazado: color-mix(in srgb, var(--color-tono) 15%, var(--superficie));
+}
+
+.simbolo__enlazado circle {
+  fill: currentColor;
+  stroke: var(--fondo-enlazado);
+  stroke-width: 1.6;
+}
+
+.simbolo__enlazado path {
+  stroke: var(--fondo-enlazado);
+  stroke-width: 4.4;
+}
+
 .simbolo--grande {
   width: 52px;
   height: 52px;

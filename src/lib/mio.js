@@ -742,6 +742,14 @@ export function personalizar(items, mio, extras = []) {
 
 /** Tasks with a date, confirmed dates and the student's own dates, shaped like the campus' calendar events.
  * `nombres` is { materiaId: name }. */
+/** Whose the marks kept under `id` are: a campus course (its number, named by `nombres`) or a course of the student's
+ * own (its id and its name). The marks of a course of one's own that isn't there anymore are nobody's (null). */
+export function materiaDeMarcas(mio, id, nombres = {}) {
+  if (!String(id).startsWith('p')) return { materiaId: Number(id), materia: nombres[id] ?? 'Materia' };
+  const propia = (mio.propias ?? []).find((p) => p.id === id);
+  return propia ? { materiaId: propia.id, materia: propia.nombre } : { materiaId: null, materia: null };
+}
+
 export function eventosPropios(mio, nombres = {}) {
   const eventos = (mio.eventos ?? []).map((e) => ({
     id: `e${e.id}`,
@@ -758,8 +766,8 @@ export function eventosPropios(mio, nombres = {}) {
     ...(e.gid ? { gid: e.gid } : {}),
   }));
   for (const [id, m] of Object.entries(mio.materias)) {
-    const materiaId = Number(id);
-    const materia = nombres[id] ?? 'Materia';
+    const { materiaId, materia } = materiaDeMarcas(mio, id, nombres);
+    if (materiaId === null) continue;
     for (const t of m.tareas) {
       if (t.hecha || !t.fecha) continue;
       eventos.push({ id: `t${id}-${t.id}`, titulo: t.texto, materia, materiaId, vencimiento: true, cuando: fechaDeClave(t.fecha).getTime() / 1000 + 12 * 3600, url: null, propio: 'tarea', sinHora: true });

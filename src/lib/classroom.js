@@ -1,6 +1,6 @@
 import { dominioDe, enlaceSeguro, fecha, fechaHora, huella, idDeYoutube, normalizar, primeraFrase, sinExtension } from './datos';
 import { olvidarGoogle, renovarGoogle, tokenGoogle } from './google';
-import { iconoDeEnlace, simboloDeItem, tonoDeItem } from './simbolos';
+import { dibujoDeArchivoEnlazado, iconoDeEnlace } from './simbolos';
 
 // What Super CVG reads from Classroom, read only, straight from the student's browser to Google. It stays in this
 // tab's memory, per permission: a new permission (or another account) never sees what the previous one brought. On disk
@@ -115,12 +115,10 @@ const OTROS_ADJUNTOS = { gem: 'Gem de Gemini', notebook: 'Cuaderno de NotebookLM
 const esCarpeta = (url) => /^https:\/\/drive\.google\.com\/(drive\/(u\/\d+\/)?)?folders?\//.test(url ?? '');
 
 // The drawing and color of a Drive file, as a file of the campus: by its extension or, if it is a Google document, a
-// spreadsheet or slides, by its address. Any other, with the color of Drive.
+// spreadsheet or slides, by its address. Any other, with the color of Drive. Always with the link badge.
 function dibujoDeDrive(titulo, url) {
-  const tono = tonoDeItem({ tipo: 'archivo', nombre: titulo });
-  if (tono) return { icono: simboloDeItem({ tipo: 'archivo', nombre: titulo }), tono };
-  const enlace = iconoDeEnlace(url);
-  return enlace.tono === 'drive' || enlace.tono === 'enlace' ? { icono: 'documento', tono: 'drive' } : { icono: enlace.simbolo, tono: enlace.tono };
+  const dibujo = dibujoDeArchivoEnlazado(url, titulo, true) ?? { simbolo: 'documento', tono: 'drive' };
+  return { icono: dibujo.simbolo, tono: dibujo.tono, enlazado: true };
 }
 
 function adjunto(m) {
@@ -129,7 +127,8 @@ function adjunto(m) {
     const url = enlaceSeguro(f.alternateLink);
     // A folder's name keeps its dots: «TP 1. Consignas» is not a file with an extension.
     if (esCarpeta(url)) return { nombre: limpio(f.title, 200) || 'Carpeta de Drive', url, icono: 'carpeta', tono: 'drive', tipo: 'Carpeta de Drive' };
-    return { nombre: sinExtension(limpio(f.title, 200)) || 'Archivo de Drive', url, ...dibujoDeDrive(limpio(f.title, 200), url), tipo: 'Archivo de Drive' };
+    const titulo = limpio(f.title, 200);
+    return { nombre: sinExtension(titulo) || 'Archivo de Drive', url, ...dibujoDeDrive(titulo, url), tipo: 'Archivo de Drive', titulo };
   }
   if (m?.youtubeVideo) {
     return { nombre: limpio(m.youtubeVideo.title, 200) || 'Video', url: enlaceSeguro(m.youtubeVideo.alternateLink), icono: 'video', tono: 'video', tipo: 'Video' };
@@ -182,7 +181,7 @@ function filasDe(post, clase) {
     if (clase === 'aviso') donde = ', en un aviso';
     else if (clase === 'tarea') donde = titulo ? `, de la tarea «${titulo}»` : '';
     else if (titulo && titulo !== a.nombre) donde = `, en «${titulo}»`;
-    filas.push({ clave: `c${post.id}.${huella(a.url)}`, nombre: a.nombre, url: a.url, icono: a.icono, tono: a.tono, dato: `${a.tipo}${donde}` });
+    filas.push({ clave: `c${post.id}.${huella(a.url)}`, nombre: a.nombre, url: a.url, icono: a.icono, tono: a.tono, enlazado: a.enlazado, titulo: a.titulo, dato: `${a.tipo}${donde}` });
   }
   return filas.filter((f) => f.url).map((f) => ({ ...f, cuando: cuandoDe(post), creado: creadoDe(post), enlace: propia }));
 }
@@ -222,7 +221,7 @@ export function armarCurso({ temas = [], materiales = [], tareas = [], avisos = 
   for (const a of avisos.filter(publicado).sort((x, y) => cuandoDe(y) - cuandoDe(x))) sumar(enAvisos, filasDe(a, 'aviso'));
   return [...grupos.values(), sinTema, enAvisos]
     .filter((g) => g.items.length)
-    .map((g) => ({ ...g, items: g.items.map((f, i) => ({ id: `${g.id}:${i}`, nombre: f.nombre, url: f.url, icono: f.icono, tono: f.tono, dato: f.dato, creado: f.creado })) }));
+    .map((g) => ({ ...g, items: g.items.map((f, i) => ({ id: `${g.id}:${i}`, nombre: f.nombre, url: f.url, icono: f.icono, tono: f.tono, enlazado: f.enlazado, dato: f.dato, creado: f.creado })) }));
 }
 
 /** The topics and materials of a course as items of a campus course (`materia`), so the student can move them to a
@@ -252,7 +251,7 @@ export function itemsDeCurso({ temas = [], materiales = [], tareas = [] }, mater
         fechas: f.vence ? [{ etiqueta: 'Entrega', cuando: f.vence }] : [],
       };
       if (f.tarea || f.url === f.enlace) grupo.items.push({ ...base, tipo: 'actividad', clase: f.tarea ? 'Tarea de Classroom' : 'Material de Classroom', destino: f.url });
-      else grupo.items.push({ ...base, tipo: 'enlace', destino: f.url, dominio: dominioDe(f.url), video: idDeYoutube(f.url) });
+      else grupo.items.push({ ...base, tipo: 'enlace', destino: f.url, dominio: dominioDe(f.url), video: idDeYoutube(f.url), ...(f.titulo ? { tituloEnDrive: f.titulo } : {}) });
     }
   }
   return [...grupos.values(), sinTema].flatMap((g) => g.items);
@@ -276,7 +275,7 @@ function mensajeDe(a, materia) {
     detalle: [creado ? fecha(creado) : null, adjuntos.length ? (adjuntos.length === 1 ? 'un adjunto' : `${adjuntos.length} adjuntos`) : null].filter(Boolean).join(', ') || null,
     texto,
     recortado: false,
-    enlaces: adjuntos.map((x) => ({ texto: x.nombre, destino: x.url, dominio: dominioDe(x.url) })),
+    enlaces: adjuntos.map((x) => ({ texto: x.nombre, destino: x.url, dominio: dominioDe(x.url), ...(x.titulo ? { titulo: x.titulo } : {}) })),
     campus: deClassroom(a.alternateLink),
     materia: materia.nombre,
     materiaId: materia.id,
@@ -329,6 +328,7 @@ export function itemsDelTablon({ avisos = [] }, materia) {
         destino: x.url,
         dominio: dominioDe(x.url),
         video: idDeYoutube(x.url),
+        ...(x.titulo ? { tituloEnDrive: x.titulo } : {}),
       });
     }
   }

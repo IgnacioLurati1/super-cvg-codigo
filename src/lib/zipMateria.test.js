@@ -27,6 +27,12 @@ async function bytesDe(blob) {
 }
 
 describe('plan del ZIP', () => {
+  it('suma los archivos tuyos de este navegador (materias tuyas), que se traen sin el campus', async () => {
+    const propio = { ...archivo('Resúmenes', 'mio.pdf'), direccion: undefined, traer: () => Promise.resolve(new Blob(['%PDF'])) };
+    const plan = planDeZip([propio, archivo('Teoría', 'a.pdf')], MATERIA);
+    expect(rutas(plan)).toEqual(['01 Resúmenes/mio.pdf', '02 Teoría/a.pdf']);
+  });
+
   it('una carpeta numerada por sección, en el orden de los ítems', () => {
     const plan = planDeZip([archivo('Unidad 2', 'b.pdf'), archivo('Unidad 1', 'a.pdf'), archivo('Unidad 2', 'c.pdf'), archivo('', 'd.pdf')], MATERIA);
     expect(rutas(plan)).toEqual(['01 Unidad 2/b.pdf', '02 Unidad 1/a.pdf', '01 Unidad 2/c.pdf', '03 General/d.pdf']);

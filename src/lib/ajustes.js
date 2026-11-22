@@ -248,6 +248,8 @@ export function normalizar(crudo) {
     calMateria: typeof datos.calMateria === 'string' && /^\d{1,10}$/.test(datos.calMateria) ? datos.calMateria : '',
     // The one-key shortcuts (atajos.js): on unless turned off.
     atajos: datos.atajos !== false,
+    // «Modo sin mouse» (sinMouse.js): the buttons that do what a drag does. Off unless turned on.
+    sinMouse: datos.sinMouse === true,
 
     // How fast the PDF reader reads aloud (voz.js): one of its steps, 1 until it's changed.
     velocidadVoz: normalizarVelocidad(datos.velocidadVoz),
@@ -323,8 +325,8 @@ function leer() {
 let actual = normalizar(leer());
 const POR_DEFECTO = normalizar(null);
 
-// The sizes of the panels fit the screen of each device: they don't travel.
-const DE_ESTE_DISPOSITIVO = ['anchoPanelPdf', 'anchoConsultron', 'altoConsultron', 'anchoRincon'];
+// The sizes of the panels fit the screen of each device, and a mouse is in one device: they don't travel.
+const DE_ESTE_DISPOSITIVO = ['anchoPanelPdf', 'anchoConsultron', 'altoConsultron', 'anchoRincon', 'sinMouse'];
 
 /** The settings that travel with the student (mio.apariencia, joined through their Drive by union.js): only what differs
  * from the default, so a device where nothing was changed has nothing to send. */

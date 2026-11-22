@@ -64,6 +64,7 @@ const pantallaDe = (hash) => {
 };
 const DENTRO_DE = {
   atajos: 'teclado',
+  'sin-mouse': 'teclado',
   [SECCION_DISPOSITIVOS]: 'datos',
   ...Object.fromEntries([...PANTALLAS_DE_AJUSTES.map((p) => p.id), ...Object.keys(PANTALLA_DE_ANCLA)].map((id) => [id, 'pantallas'])),
   consultron: 'como-se-ve',
@@ -1349,6 +1350,16 @@ export default function Configuracion() {
       </Panel>
 
       <Panel id="teclado" actual={seccion}>
+        <Seccion id="sin-mouse" titulo="Sin mouse">
+          <Interruptor
+            id="modo-sin-mouse"
+            nombre="Modo sin mouse"
+            ayuda="Muestra botones para lo que se hace arrastrando, como subir y bajar secciones o cambiar el tamaño de Consultron. En un celular están siempre."
+            prendido={ajustes.sinMouse}
+            alCambiar={(sinMouse) => poner({ sinMouse })}
+          />
+        </Seccion>
+
         <Seccion id="atajos" titulo="Atajos de teclado" bajada="Para moverte sin el mouse. Los de una tecla no andan mientras escribís en un campo.">
           <Atajos prendidos={ajustes.atajos} poner={poner} orden={ajustes.menu.orden} />
         </Seccion>

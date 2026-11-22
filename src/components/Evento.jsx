@@ -10,6 +10,8 @@ import { IconoHecha } from './Hecha';
 import Simbolo from './Simbolo';
 
 export const colorDe = (evento) => colorDeMateria(evento.materiaId);
+// The symbol of a date that is not of a course.
+const SIN_MATERIA = { facultad: 'facultad', sysacad: 'actividad' };
 
 /** When a date happens. A campus date also says what happens then («Vence 12 de noviembre, 08:00 a. m.», «Abre a las
  * 09:00 a. m.»), since its title no longer does. The time goes apart (`hora`): in the week's narrow columns it never
@@ -27,6 +29,7 @@ function cuandoDe(evento, conFecha) {
 
 function deDonde(evento) {
   if (evento.propio === 'facultad') return 'Calendario académico';
+  if (evento.propio === 'sysacad') return 'Te anotaste en Sysacad';
   if (evento.propio === 'tarea') return ['Tarea tuya', evento.materia].filter(Boolean).join(', ');
   if (evento.propio === 'fecha') return ['Fecha que sumaste', evento.materia].filter(Boolean).join(', ');
   if (evento.propio === 'evento') return evento.materia ? `Fecha tuya, ${evento.materia}` : 'Fecha tuya';
@@ -46,7 +49,7 @@ export default function Evento({ evento, conFecha = false, onCambiar, onCorregir
   const cuando = cuandoDe(evento, conFecha);
   const contenido = (
     <>
-      <Simbolo id={evento.materiaId} nombre={evento.materia} sinMateria={evento.propio === 'facultad' ? 'facultad' : undefined} />
+      <Simbolo id={evento.materiaId} nombre={evento.materia} sinMateria={SIN_MATERIA[evento.propio]} />
       <span className="evento__texto">
         <span className="evento__cuando">
           {marcado && <span className="evento__tipo">{textoDeTipo(tipo)}</span>}

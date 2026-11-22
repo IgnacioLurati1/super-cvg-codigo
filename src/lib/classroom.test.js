@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { armarCurso, cargarCurso, cargarCursos, cargarEntregas, cursoParecido, delTablon, itemsDeCurso, itemsDelTablon, leerCursos, mensajesDe, olvidarClassroom, pendientesDe, fechasDe, textosDeCurso } from './classroom';
 import { CLAVE_GOOGLE, tokenGoogle } from './google';
+import { dibujoDeItem } from './simbolos';
 
 const conectar = (token = 'tk') => sessionStorage.setItem(CLAVE_GOOGLE, JSON.stringify({ token, vence: Date.now() + 3_600_000 }));
 
@@ -215,6 +216,11 @@ describe('Classroom dentro de una materia del campus', () => {
     expect(tp).toMatchObject({ id: '7-c911', materiaId: 7, materia: 'Física II', origen: 'classroom', clase: 'Tarea de Classroom', descripcion: 'Entregar en PDF', destino: 'https://classroom.google.com/c/1/a/911' });
     expect(tp.fechas).toEqual([{ etiqueta: 'Entrega', cuando: Date.UTC(2026, 10, 20, 23, 59) / 1000 }]);
     expect(items.find((i) => i.nombre === 'Clase')).toMatchObject({ dominio: 'youtube.com', video: 'abcdefghijk', detalle: 'Video, en «Apuntes»' });
+    expect(items.find((i) => i.nombre === 'Clase').tituloEnDrive).toBeUndefined();
+    // A Drive file keeps its name in Drive, so it is drawn as the file it is (a PDF), not as a folder.
+    const teoria = items.find((i) => i.nombre === 'Teoria');
+    expect(teoria.tituloEnDrive).toMatch(/\.pdf$/);
+    expect(dibujoDeItem(teoria)).toMatchObject({ tono: 'pdf', enlace: true });
     // The same for every student: it can be stored and shared.
     expect(itemsDeCurso(datos, materia).map((i) => i.clave)).toEqual(items.map((i) => i.clave));
   });

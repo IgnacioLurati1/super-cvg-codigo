@@ -1,28 +1,35 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, Navigate, useParams } from 'react-router-dom';
-import { abrirEnClassroom, ClassroomDePropia, useClassroomDePropia } from '../components/Classroom';
+import BajarMateria from '../components/BajarMateria';
+import DeLaMateria from '../components/calculadoras/DeLaMateria';
+import { abrirEnClassroom, ClassroomDePropia } from '../components/Classroom';
 import CompartirPropia from '../components/CompartirPropia';
 import LlevarALaSesion from '../components/enVivo/LlevarALaSesion';
 import FilaEditable from '../components/FilaEditable';
-import { ErrorConReintento } from '../components/Filas';
+import { ErrorConReintento, esDeTipo, FiltroDeMateria, IconoDeFiltro } from '../components/Filas';
+import FusionarApuntes from '../components/FusionarApuntes';
 import IndiceSecciones, { useIndiceAlCostado } from '../components/IndiceSecciones';
 import ListaConMas from '../components/ListaConMas';
+import { Anotaciones, Avance, FechasSumadas, Panel, Tareas } from '../components/MisCosas';
+import PanelFechas from '../components/PanelFechas';
 import { Manija, Mas, Puntos, RenombrarSeccion, SumarSeccion, TituloDeSeccion } from '../components/Secciones';
 import { Icono } from '../components/Simbolo';
 import SumarCosas, { guardarArchivos, soltarSobrantes } from '../components/SumarCosas';
 import { useUI } from '../components/ui';
 import { cambiarLectura, useContenido, useLectura, useVista } from '../lib/ajustes';
 import { useDesplazarAlArrastrar } from '../lib/autoDesplazar';
+import { buscar } from '../lib/datos';
+import { fusionables } from '../lib/fusion';
 import { useSesionEnVivo } from '../lib/enVivo/estado';
 import { llevarMateria } from '../lib/enVivo/llevar';
 import { leerDeBodega } from '../lib/bodega';
 import { useGoogle } from '../lib/google';
 import {
-  alternarEn, alternarSeccion, conMarcas, estaOculto, fijarOrden, materiaDe, mioActual, nombreDeSeccion, ordenarSecciones, personalizar, plegarSeccion, ponerEnSeccion, renombrarSeccion, useMio, usuarioActual,
+  alternarEn, alternarSeccion, conMarcas, estaOculto, fijarOrden, materiaDe, mioActual, plegarSeccion, ponerEnSeccion, renombrarSeccion, useMio, usuarioActual, vaciarParcial,
 } from '../lib/mio';
-import { conTuyasEnOrden, enOrdenGuardado, moverA, segun } from '../lib/ordenSecciones';
+import { segun } from '../lib/ordenSecciones';
 import {
-  agregarBloques, agregarCategoria, borrarBloque, borrarCategoria, cambiarBloque, esAgregada, llevarBloque, ponerCategoria, propiaDe, renombrarArchivo, renombrarCategoria,
+  agregarBloques, agregarCategoria, borrarBloque, borrarCategoria, cambiarBloque, esAgregada, llevarBloque, propiaDe, renombrarArchivo, renombrarCategoria,
 } from '../lib/propias';
 import { LIMITES } from '../lib/propiasSaneo';
 import { faltaDe, iconoSinCampus, itemDeBloque, itemDeCampus, mezclarConClassroom, nombreSinCampus, TEXTO_FALTA } from '../lib/propiasVista';
@@ -30,7 +37,10 @@ import { resumenDe } from '../lib/santoResumen';
 import { tituloDe, useSeo } from '../lib/seo';
 import { useArrastreDeSecciones } from '../lib/useArrastreDeSecciones';
 import { useCampusDePropia } from '../lib/useCampusDePropia';
+import { useSeccionesDePropia } from '../lib/useSeccionesDePropia';
 import { useMoverConManija, usePliegue } from '../lib/useSecciones';
+import { useBotonesSinMouse } from '../lib/sinMouse';
+import { useMarcarVistos } from '../lib/vistos';
 import './panel.css';
 import './propio.css';
 import './propias.css';
@@ -114,6 +124,13 @@ function MateriaPropia({ propia }) {
   const lectura = useLectura();
   const enVivo = useSesionEnVivo();
   const [indiceClassroom, setIndiceClassroom] = useState([]);
+  const marcarVistos = useMarcarVistos();
+  const [filtro, setFiltro] = useState('');
+  const [tipo, setTipo] = useState('');
+  const [soloSinVer, setSoloSinVer] = useState(false);
+  const [soloParcial, setSoloParcial] = useState(false);
+  const [recienOculto, setRecienOculto] = useState(null);
+  const deshacer = useRef(null);
   useDesplazarAlArrastrar();
 
   // The form for a new section, the section whose «Sumar» is open, the one with its options open or being renamed.
@@ -134,22 +151,10 @@ function MateriaPropia({ propia }) {
   const base = propia.base ? campus.suyas?.get(propia.base) : null;
   const usaCampus = propia.categorias.some((c) => c.bloques.some((b) => b.tipo === 'campus'));
 
-  // Its Classroom course: each topic is a section, as the campus' are in a campus course. What's in them carries the
-  // student's names, marks, places and order (in the marks of this course), and can go to a section of the student's
-  // own. `tema`: the topic it comes from.
-  const cr = useClassroomDePropia(propia);
-  const catIds = propia.categorias.map((c) => `p${c.id}`);
-  const deClassroom = personalizar(cr.items, mio, propia.categorias.map((c) => ({ materiaId: propia.id, id: `p${c.id}`, nombre: c.nombre })))
-    .map((i) => ({ ...i, tema: i.seccionOriginal ?? i.seccionId, seccionOriginal: undefined }));
-  const temas = [];
-  for (const i of cr.items) {
-    if (!temas.some((t) => t.id === i.seccionId)) temas.push({ id: i.seccionId, original: i.seccion, nombre: nombreDeSeccion(marcas, i.seccionId) ?? i.seccion });
-  }
+  // Its Classroom course: each topic is a section, as the campus' are in a campus course (useSeccionesDePropia.js).
+  const { cr, deClassroom, temas, ordenTodo, mover: moverEntre } = useSeccionesDePropia(propia);
   const aLaVista = deClassroom.filter((i) => !estaOculto(mio, i));
   const enSeccion = (id) => aLaVista.filter((i) => i.seccionId === id);
-  // Every section in the student's order, also the hidden ones: moving one leaves the rest where they are. The
-  // categories keep their own order among them.
-  const ordenTodo = conTuyasEnOrden(enOrdenGuardado([...catIds, ...temas.map((t) => t.id)], marcas.ordenSecciones), catIds);
   const todas = segun([
     ...propia.categorias.map((c) => ({ id: `p${c.id}`, catId: c.id, nombre: c.nombre, items: mezclarConClassroom(itemsDe(propia, c, campus, marcas), enSeccion(`p${c.id}`), marcas.orden[`p${c.id}`]) })),
     // A topic everything left (moved or hidden) goes, as an empty section of the campus.
@@ -158,15 +163,34 @@ function MateriaPropia({ propia }) {
   const temasOcultos = temas.filter((t) => marcas.secciones.includes(t.id));
   const itemsOcultos = deClassroom.filter((i) => marcas.ocultos.includes(i.clave) && !marcas.secciones.includes(i.seccionId));
   const nadaTodavia = !propia.classroom && todas.every((g) => !g.items.length);
-  // With the tools hidden, the empty ones go: there is nothing to read in them.
-  const grupos = lectura ? todas.filter((g) => g.items.length) : todas;
+  // Everything that opens, for the search, the filters and the panels on the side.
+  const visibles = todas.flatMap((g) => g.items.filter((i) => !i.falta));
+  const sinVer = soloSinVer && marcarVistos;
+  const hayFiltro = Boolean(filtro.trim() || tipo || sinVer || soloParcial);
+  const filtrar = (items) => {
+    let lista = items.filter((i) => !i.falta);
+    if (tipo) lista = lista.filter((i) => esDeTipo(i, tipo));
+    if (sinVer) lista = lista.filter((i) => !i.visto);
+    if (soloParcial) lista = lista.filter((i) => i.parcial);
+    return filtro.trim() ? buscar(lista, filtro, 1000) : lista;
+  };
+  // With a filter, only the sections with something that matches. With the tools hidden, the empty ones go: there is
+  // nothing to read in them.
+  const grupos = hayFiltro
+    ? todas.map((g) => ({ ...g, items: filtrar(g.items) })).filter((g) => g.items.length)
+    : lectura ? todas.filter((g) => g.items.length) : todas;
+  const delParcial = visibles.filter((i) => i.parcial);
+  const paraFusionar = fusionables(visibles);
   // Where a card can go: what the student added, only to their own sections; what comes from Classroom, to any.
   const secciones = todas.map((g) => ({ id: g.id, nombre: g.nombre }));
   const seccionesTuyas = todas.filter((g) => g.catId !== undefined).map((g) => ({ id: g.id, nombre: g.nombre }));
   const recibe = (seccion, tuyo) => !tuyo || seccion.catId !== undefined;
   const materias = campus.materias ?? [];
   // The subject of El Santo Resumen opens on its own when the name says which one, or the campus course it came from.
-  const santo = resumenDe(propia.nombre)?.slug ?? resumenDe(base?.nombre ?? '')?.slug ?? '';
+  const resumen = resumenDe(propia.nombre) ?? resumenDe(base?.nombre ?? '');
+  const santo = resumen?.slug ?? '';
+  // What the panels on the side need of the course: its id (the student's marks) and its name.
+  const comoMateria = { id: propia.id, nombre: propia.nombre };
 
   // Something just went into a folded section: it opens, to show it.
   const abrirSiPlegada = (seccionId) => {
@@ -174,16 +198,14 @@ function MateriaPropia({ propia }) {
   };
   const alternarPliegue = usePliegue(propia.id, plegadas, idDeCuerpo);
   const { moviendo, setMoviendo, enfocarMover } = useMoverConManija(idDeManija);
+  const conBotones = useBotonesSinMouse();
   const enfocarSeccion = (seccionId) => requestAnimationFrame(() => document.getElementById(idDeSeccion(seccionId))?.focus());
 
   // A section to place `lugar` among the ones on screen. With topics, the whole order is kept in the student's marks;
   // a category also moves among the others, so the course keeps it when it's shared.
   const moverSeccionA = (seccion, lugar) => {
     const ids = grupos.map((g) => g.id);
-    if (lugar < 0 || lugar >= ids.length || ids.indexOf(seccion.id) === lugar) return false;
-    const nuevo = moverA(ordenTodo, ids, seccion.id, lugar);
-    if (temas.length) ordenarSecciones(propia.id, nuevo);
-    if (seccion.catId !== undefined) ponerCategoria(propia.id, seccion.catId, nuevo.filter((id) => catIds.includes(id)).indexOf(seccion.id));
+    if (!moverEntre(seccion.id, lugar, ids)) return false;
     setAnuncio(`${seccion.nombre} quedó en el lugar ${lugar + 1} de ${ids.length}`);
     return true;
   };
@@ -244,6 +266,17 @@ function MateriaPropia({ propia }) {
     if (avisos.length) avisar(avisos.join(' '), 'error');
   };
 
+  const guardarFusion = async (destino, archivo) => {
+    const seccion = todas.find((g) => g.id === destino?.id);
+    if (!seccion || seccion.catId === undefined) return false;
+    const { bloques, avisos } = await guardarArchivos([archivo]);
+    const n = bloques.length ? sumarA(seccion)(bloques) : 0;
+    soltarSobrantes(bloques.slice(n));
+    if (!n && bloques.length) avisos.unshift(`No entró. Una sección lleva hasta ${LIMITES.bloques} cosas.`);
+    if (avisos.length) avisar(avisos.join(' '), 'error');
+    return n > 0;
+  };
+
   const borrarSeccion = async (seccion) => {
     const cuantos = seccion.items.filter((i) => i.tuyo).length;
     const movidos = seccion.items.length - cuantos;
@@ -261,17 +294,31 @@ function MateriaPropia({ propia }) {
     if (!moverSeccionA(seccion, grupos.indexOf(seccion) + salto)) return;
     requestAnimationFrame(() => document.querySelector(`[aria-controls="opciones-${seccion.id}"]`)?.focus());
   };
-  // A topic, or something of Classroom, goes to «Lo que ocultaste», at the end, and comes back from there.
+  // A topic, or something of Classroom, goes to «Lo que ocultaste», at the end, and comes back from there. The notice
+  // floats at the foot of the screen with «Deshacer»: the page doesn't jump to the top, so a long course is cleaned up
+  // from where it is.
+  useEffect(() => {
+    if (recienOculto) deshacer.current?.focus({ preventScroll: true });
+  }, [recienOculto]);
+  const cerrarOculto = () => {
+    const volver = recienOculto?.volver;
+    setRecienOculto(null);
+    if (volver) requestAnimationFrame(() => document.getElementById(volver)?.focus({ preventScroll: true }));
+  };
   const ocultarSeccion = (seccion) => {
     alternarSeccion(propia.id, seccion.id);
     setOpcionesDe(null);
-    avisar(`Ocultaste ${seccion.nombre}. Está en «Lo que ocultaste», al final.`);
-    requestAnimationFrame(() => botonSumar.current?.focus());
+    setRecienOculto({ nombre: seccion.nombre, deshacer: () => alternarSeccion(propia.id, seccion.id) });
   };
   const ocultarItem = (item) => {
     alternarEn(propia.id, 'ocultos', item.clave);
-    avisar(`Ocultaste ${item.nombre}. Está en «Lo que ocultaste», al final.`);
-    enfocarSeccion(item.seccionId);
+    setRecienOculto({ nombre: item.nombre, volver: idDeSeccion(item.seccionId), deshacer: () => alternarEn(propia.id, 'ocultos', item.clave) });
+  };
+  // «Vaciar la lista» of the exam: also what came from a campus course keeps its mark there, so it goes one by one.
+  const vaciarDelParcial = async () => {
+    if (!(await confirmar({ titulo: '¿Vaciar la lista del parcial?', boton: 'Vaciar', peligro: true }))) return;
+    vaciarParcial(propia.id);
+    for (const i of delParcial) if (i.materiaId !== propia.id) alternarEn(i.materiaId, 'parcial', i.clave);
   };
 
   // Something of the campus comes back from the campus: it goes without asking. A file, a text or a link do not.
@@ -405,26 +452,57 @@ function MateriaPropia({ propia }) {
         </div>
       </div>
       {creando && !lectura && <SumarSeccion onCrear={crearSeccion} onCerrar={cerrarCrear} ayuda="Por ejemplo, Para el final o Resúmenes. Va al final." />}
+      {resumen && (
+        <p className="materia__santo">
+          <a href={resumen.url} target="_blank" rel="noreferrer">
+            Resumen de {resumen.nombre} en El Santo Resumen<span className="solo-lectores">, se abre en otra pestaña</span>
+          </a>
+        </p>
+      )}
+      <DeLaMateria nombre={base?.nombre ?? propia.nombre} />
+      <p className="materia__a-lo-tuyo"><a href="#lo-tuyo">Ir a tus tareas y anotaciones</a></p>
       {usaCampus && campus.error && !campus.contenidos && <ErrorConReintento texto={campus.error} recargar={campus.recargar} />}
       <div className="materia__cuerpo">
         {alCostado && vistaIndice}
         <div className="materia__contenido" aria-busy={usaCampus && campus.cargando ? 'true' : undefined}>
           {!alCostado && vistaIndice}
-          {lectura && !grupos.length && !propia.classroom && <p>Todavía está vacía. Mostrá las herramientas para sumarle archivos, textos, enlaces o cosas del campus.</p>}
+          {visibles.length > 0 && (
+            <FiltroDeMateria filtro={filtro} onFiltro={setFiltro} tipo={tipo} onTipo={setTipo}>
+              <div className="tipos" role="group" aria-label="Mostrar también">
+                {marcarVistos && <button type="button" className="tipos__opcion" aria-pressed={soloSinVer} onClick={() => setSoloSinVer((v) => !v)}><IconoDeFiltro nombre="ojo" />Sin ver</button>}
+                <button type="button" className="tipos__opcion" aria-pressed={soloParcial} onClick={() => setSoloParcial((v) => !v)}><IconoDeFiltro nombre="marcador" tono="pdf" />Para el parcial</button>
+                {soloParcial && delParcial.length > 0 && <button type="button" className="tipos__opcion" onClick={vaciarDelParcial}>Vaciar la lista</button>}
+              </div>
+            </FiltroDeMateria>
+          )}
+          {recienOculto && (
+            <div className="deshecho deshecho--flota" role="status" onKeyDown={(e) => e.key === 'Escape' && cerrarOculto()}>
+              <p>Ocultaste {recienOculto.nombre}.</p>
+              <div className="deshecho__botones">
+                <button ref={deshacer} type="button" className="boton boton--secundario boton--chico" onClick={() => { recienOculto.deshacer(); cerrarOculto(); }}>Deshacer</button>
+                <button type="button" className="deshecho__cerrar" aria-label="Cerrar el aviso" onClick={cerrarOculto}>
+                  <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
+                </button>
+              </div>
+            </div>
+          )}
+          <p role="status" className="materia__sin-nada">{hayFiltro && !grupos.length ? (soloParcial && !delParcial.length ? 'Todavía no sumaste nada al parcial. Abrí las opciones de un ítem.' : 'No hay nada para mostrar acá. Probá con otro filtro o mirá lo que ocultaste.') : ''}</p>
+          {lectura && !hayFiltro && !grupos.length && !propia.classroom && <p>Todavía está vacía. Mostrá las herramientas para sumarle archivos, textos, enlaces o cosas del campus.</p>}
           {!lectura && !todas.length && !creando && !propia.classroom && <p>No tiene secciones. Sumá una para empezar.</p>}
           <p role="status" className="solo-lectores">{anuncio}</p>
-          <p id="mover-ayuda" hidden>Arrastrala, movela con las flechas arriba y abajo, o tocala para subirla o bajarla.</p>
+          <p id="mover-ayuda" hidden>{conBotones ? 'Arrastrala, movela con las flechas arriba y abajo, o tocala para subirla o bajarla.' : 'Arrastrala o movela con las flechas arriba y abajo.'}</p>
 
           {grupos.map((seccion, lugar) => {
-            const claves = lectura ? null : seccion.items.map((i) => i.clave);
+            const claves = lectura || hayFiltro ? null : seccion.items.map((i) => i.clave);
             const vacia = !seccion.items.length;
             const tuya = seccion.catId !== undefined;
             // A course with nothing yet shows how to fill its first section, open. Otherwise an empty one waits for its «Sumar».
             const deEntrada = vacia && nadaTodavia && lugar === 0;
             const sumando = !lectura && (sumandoEn === seccion.id || deEntrada);
             const conOpciones = !lectura && opcionesDe === seccion.id;
-            const plegada = arrastrada !== null || plegadas.includes(seccion.id);
-            const conManija = !lectura && grupos.length > 1 && renombrando !== seccion.id;
+            // Folded as the student left it; with a filter, open; while a section is dragged, every one.
+            const plegada = arrastrada !== null || (!hayFiltro && plegadas.includes(seccion.id));
+            const conManija = !lectura && !hayFiltro && grupos.length > 1 && renombrando !== seccion.id;
             const vistaSumando = sumando && (
               <div id={`sumando-${seccion.id}`} className="seccion__sumando" onKeyDown={(e) => { if (e.key === 'Escape' && !deEntrada) cerrarSumando(seccion.id); }}>
                 <SumarCosas
@@ -477,7 +555,7 @@ function MateriaPropia({ propia }) {
                   ) : (
                     <div className="seccion__titular">
                       {conManija && (
-                        <button id={idDeManija(seccion.id)} type="button" className="seccion__manija" aria-label={`Mover ${seccion.nombre}`} aria-describedby="mover-ayuda" aria-expanded={moviendo === seccion.id} {...arrastreSecciones.manija(seccion.id)}>
+                        <button id={idDeManija(seccion.id)} type="button" className="seccion__manija" aria-label={`Mover ${seccion.nombre}`} aria-describedby="mover-ayuda" aria-expanded={conBotones ? moviendo === seccion.id : undefined} {...arrastreSecciones.manija(seccion.id)}>
                           <Manija />
                         </button>
                       )}
@@ -534,7 +612,7 @@ function MateriaPropia({ propia }) {
                     }}
                   >
                     <button type="button" className="boton boton--secundario boton--chico" onClick={() => { setOpcionesDe(null); setRenombrando(seccion.id); }}>Cambiar nombre</button>
-                    {grupos.length > 1 && (
+                    {grupos.length > 1 && (conBotones || !conManija) && (
                       <>
                         <button type="button" className="boton boton--secundario boton--chico" disabled={lugar <= 0} onClick={() => moverSeccion(seccion, -1)}>Subir</button>
                         <button type="button" className="boton boton--secundario boton--chico" disabled={lugar >= grupos.length - 1} onClick={() => moverSeccion(seccion, 1)}>Bajar</button>
@@ -599,7 +677,27 @@ function MateriaPropia({ propia }) {
             </details>
           )}
         </div>
-        <aside className="materia__lateral" aria-label="Compartir">
+        <aside id="lo-tuyo" tabIndex={-1} className="materia__lateral" aria-label="Lo tuyo en esta materia">
+          {marcarVistos && <Avance titulo="Visto" hechos={visibles.filter((i) => i.visto).length} total={visibles.length} />}
+          {marcarVistos && <Avance titulo="Para el parcial" hechos={delParcial.filter((i) => i.visto).length} total={delParcial.length} />}
+          <Panel titulo="Para hacer" abierto>
+            <Tareas key={propia.id} materiaId={propia.id} tareas={marcas.tareas} />
+          </Panel>
+          <Panel titulo="Anotaciones" abierto={Boolean(marcas.nota)}>
+            <Anotaciones key={propia.id} materiaId={propia.id} nota={marcas.nota} santo={resumen} />
+          </Panel>
+          <Panel titulo="Fechas" abierto={marcas.fechas.length > 0}>
+            <FechasSumadas materiaId={propia.id} fechas={marcas.fechas} />
+            <PanelFechas materia={comoMateria} items={visibles} />
+          </Panel>
+          {paraFusionar.length > 1 && seccionesTuyas.length > 0 && (
+            <Panel titulo="Fusionar en un PDF">
+              <FusionarApuntes materia={comoMateria} items={paraFusionar} secciones={seccionesTuyas} onGuardar={guardarFusion} />
+            </Panel>
+          )}
+          <Panel titulo="Bajar en un ZIP">
+            <BajarMateria materia={comoMateria} items={visibles} />
+          </Panel>
           <CompartirPropia propia={propia} />
           {enVivo?.sesion && (
             <details className="panel" open>

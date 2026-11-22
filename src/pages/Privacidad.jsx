@@ -104,7 +104,7 @@ export default function Privacidad() {
       <h2>Google Calendar</h2>
       {CLIENTE_GOOGLE && (
         <>
-          <p>Si vinculás Google Calendar desde Calendario, Super CVG crea en tu Google un calendario «Super CVG». Los dos funcionan como uno. Le pasa las fechas del campus de los próximos 60 días, las del calendario académico de la facultad y las tuyas. De cada una va qué es, el día, la hora, la materia y el link al campus. Lo que escribís o cambiás en ese calendario vuelve a Super CVG como fecha tuya. Va y viene entre tu navegador y Google, sin pasar por nosotros.</p>
+          <p>Si vinculás Google Calendar desde Calendario, Super CVG crea en tu Google un calendario «Super CVG». Los dos funcionan como uno. Le pasa las fechas del campus de los próximos 60 días, las del calendario académico de la facultad y las tuyas. De cada una va qué es, el día, la hora, la materia y el link al campus. De los finales en los que te anotaste en Sysacad van la materia, el día y la hora. Lo que escribís o cambiás en ese calendario vuelve a Super CVG como fecha tuya. Va y viene entre tu navegador y Google, sin pasar por nosotros.</p>
           <p>Super CVG ve solo los calendarios que creó, nunca los tuyos. Para que tus otros dispositivos lo encuentren, anota cuál es en la carpeta oculta de tu Google Drive.</p>
           <p>Mientras está vinculado, ese navegador guarda para tu usuario del campus el número de tu cuenta de Google. De cada fecha del calendario guarda su número y cuándo cambió. Así sabe de qué lado cambió algo. Queda aunque toques Salir. Desvincular lo borra, junto con el calendario «Super CVG» y todas sus fechas. Las fechas de Super CVG quedan.</p>
         </>
@@ -153,10 +153,10 @@ export default function Privacidad() {
       <p>La llave va solo en el link del mensaje, después del #, y los navegadores no la mandan a ningún servidor. Al campus va tu mensaje con el nombre del archivo, cuánto pesa y ese link.</p>
       <p>Quien tenga el link puede abrir el archivo en Super CVG, también si se lo pasan a otro. Se abre en la memoria de la pestaña y no se guarda en el disco.</p>
       <h2>Lo que llega de Sysacad</h2>
-      <p>Sysacad Lindo es la extensión de Luta Studios para Sysacad. Si la tenés, Super CVG le pregunta si está vinculada y le pide tus notas finales y la copia de cada pestaña de Sysacad que abriste. Se las pasa dentro de tu navegador, sin ningún servidor en el medio.</p>
-      <p>Cada copia trae solo el texto de la pestaña y cuándo la viste. Viene con el nombre que figura en Sysacad, para mostrarla solo si es el de tu cuenta del campus.</p>
-      <p>Lo que llega de Sysacad Lindo queda solo en la memoria de la pestaña, para mostrarlo en Sysacad y en Tu carrera. No se guarda ni sale de tu navegador.</p>
-      <p>Las copias las guarda Sysacad Lindo en tu navegador. Las borra cuando tocás Salir o cuando apagás el guardado en sus ajustes.</p>
+      <p>Sysacad Lindo es la extensión de Luta Studios para Sysacad. Si la tenés, Super CVG le pregunta si está vinculada. Le pide tus notas finales, los exámenes en los que te anotaste y la copia de cada pestaña que abriste. Se las pasa dentro de tu navegador, sin ningún servidor en el medio.</p>
+      <p>Cada copia trae solo el texto de la pestaña y cuándo la viste. De cada examen llegan la materia, el día, las horas, el turno y el tribunal. El turno y el tribunal no se usan. Las copias y los exámenes vienen con el nombre que figura en Sysacad, para mostrarlos solo si es el de tu cuenta del campus.</p>
+      <p>Lo que llega de Sysacad Lindo queda solo en la memoria de la pestaña, para mostrarlo en Sysacad, Tu carrera y Calendario. No se guarda. Si vinculaste Google Calendar, los exámenes van a tu calendario «Super CVG». El resto no sale de tu navegador.</p>
+      <p>Las copias las guarda Sysacad Lindo en tu navegador. Las borra cuando tocás Salir o cuando apagás el guardado en sus ajustes. Los exámenes, Sysacad Lindo los guarda hasta que la desvinculás.</p>
       <h2>Si opinás</h2>
       <p>Si mandás una opinión desde Opinar, le llega a Luta Studios lo que escribiste. Se guarda solo ese texto y el día. Se borra a los 12 meses.</p>
       <p>No va tu cuenta, ni nada del campus, ni cookies. Tu conexión se usa un momento para frenar envíos en cadena y no se guarda.</p>

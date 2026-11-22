@@ -9,7 +9,7 @@ import FilaEditable from '../components/FilaEditable';
 import { Cargando, ErrorConReintento, esDeTipo, FilaItem, FiltroDeMateria, IconoDeFiltro } from '../components/Filas';
 import IndiceSecciones, { useIndiceAlCostado } from '../components/IndiceSecciones';
 import ListaConMas from '../components/ListaConMas';
-import { Anotaciones, FechasSumadas, Panel, Tareas } from '../components/MisCosas';
+import { Anotaciones, Avance, FechasSumadas, Panel, Tareas } from '../components/MisCosas';
 import PanelFechas from '../components/PanelFechas';
 import { Manija, Mas, Puntos, RenombrarSeccion, SumarSeccion, TituloDeSeccion } from '../components/Secciones';
 import Simbolo from '../components/Simbolo';
@@ -37,6 +37,7 @@ import { tituloDe, useSeo } from '../lib/seo';
 import { useDesplazarAlArrastrar } from '../lib/autoDesplazar';
 import { useArrastreDeSecciones } from '../lib/useArrastreDeSecciones';
 import { useMoverConManija, usePliegue } from '../lib/useSecciones';
+import { useBotonesSinMouse } from '../lib/sinMouse';
 import { useCampusDePropia } from '../lib/useCampusDePropia';
 import { useConsulta } from '../lib/useConsulta';
 import { useMarcarVistos } from '../lib/vistos';
@@ -99,16 +100,6 @@ function ordenar(grupos, agregada, conVacias) {
   const porId = new Map(grupos.map((g) => [g.id, g]));
   const tuyas = seccionesTuyas(agregada).map((c) => porId.get(`p${c.id}`) ?? { id: `p${c.id}`, nombre: c.nombre, items: [] });
   return [...grupos.filter((g) => !esTuya(g.id)), ...tuyas.filter((g) => conVacias || g.items.length)];
-}
-
-function Avance({ titulo, hechos, total }) {
-  if (!total) return null;
-  return (
-    <div className="avance">
-      <p className="avance__texto">{titulo}, {hechos} de {total}</p>
-      <progress className="avance__barra" max={total} value={hechos} aria-label={titulo} />
-    </div>
-  );
 }
 
 function Cambios({ cambios, onRevisado }) {
@@ -288,6 +279,7 @@ export default function Materia() {
   };
   // The section whose «Subir» and «Bajar» are open, from a tap on its handle; and the button to focus once it moved.
   const { moviendo, setMoviendo, enfocarMover } = useMoverConManija(idDeManija);
+  const conBotones = useBotonesSinMouse();
   const arrastreSecciones = useArrastreDeSecciones({
     alTocar: (id) => setMoviendo((m) => (m === id ? null : id)),
     ids: grupos.map((g) => g.id),
@@ -581,7 +573,7 @@ export default function Materia() {
 
             <p role="status" className="materia__sin-nada">{visibles.length > 0 && !grupos.length ? (soloParcial && !delParcial.length ? 'Todavía no sumaste nada al parcial. Abrí las opciones de un ítem.' : 'No hay nada para mostrar acá. Probá con otro filtro o mirá lo que ocultaste.') : ''}</p>
             <p role="status" className="solo-lectores">{anuncio}</p>
-            <p id="mover-ayuda" hidden>Arrastrala, movela con las flechas arriba y abajo, o tocala para subirla o bajarla.</p>
+            <p id="mover-ayuda" hidden>{conBotones ? 'Arrastrala, movela con las flechas arriba y abajo, o tocala para subirla o bajarla.' : 'Arrastrala o movela con las flechas arriba y abajo.'}</p>
 
             {grupos.map((seccion, lugar) => {
               const claves = hayFiltro || lectura ? null : seccion.items.map((i) => i.clave);
@@ -646,7 +638,7 @@ export default function Materia() {
                     ) : (
                       <div className="seccion__titular">
                         {conManija && (
-                          <button id={idDeManija(seccion.id)} type="button" className="seccion__manija" aria-label={`Mover ${seccion.nombre}`} aria-describedby="mover-ayuda" aria-expanded={moviendo === seccion.id} {...arrastreSecciones.manija(seccion.id)}>
+                          <button id={idDeManija(seccion.id)} type="button" className="seccion__manija" aria-label={`Mover ${seccion.nombre}`} aria-describedby="mover-ayuda" aria-expanded={conBotones ? moviendo === seccion.id : undefined} {...arrastreSecciones.manija(seccion.id)}>
                             <Manija />
                           </button>
                         )}
@@ -709,7 +701,7 @@ export default function Materia() {
                       }}
                     >
                       <button type="button" className="boton boton--secundario boton--chico" onClick={() => { setOpcionesDe(null); setRenombrando(seccion.id); }}>Cambiar nombre</button>
-                      {grupos.length > 1 && !hayFiltro && (
+                      {grupos.length > 1 && !hayFiltro && (conBotones || !conManija) && (
                         <>
                           <button type="button" className="boton boton--secundario boton--chico" disabled={lugar <= 0} onClick={() => moverSeccion(seccion, -1)}>Subir</button>
                           <button type="button" className="boton boton--secundario boton--chico" disabled={lugar >= grupos.length - 1} onClick={() => moverSeccion(seccion, 1)}>Bajar</button>

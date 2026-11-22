@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { guardarArchivo } from '../lib/archivos';
 import { buscar, peso } from '../lib/datos';
+import { useBotonesSinMouse } from '../lib/sinMouse';
 import { AL_MISMO_TIEMPO, AVISO_BYTES, errorDePaginas, fusionar, motivoDe, nombreDeFusion, revisarArchivo } from '../lib/fusion';
 import Campo from './Campo';
 import { datoDe } from './Filas';
@@ -49,6 +50,8 @@ function Hoja({ materia, items, secciones, onGuardar, onCerrar }) {
   const [sobre, setSobre] = useState(null);
   // Only the number of a row starts a drag: the rest of the row has a field to write in.
   const [agarrando, setAgarrando] = useState(null);
+  // Mover arriba and abajo do what dragging a row does: only with «Modo sin mouse» (sinMouse.js).
+  const conBotones = useBotonesSinMouse();
   // Each chosen file is brought and looked at right away: { estado: 'revisando' | 'listo' | 'error', tipo, paginas,
   // blob, motivo }. The merge then uses what was already brought.
   const [revisados, setRevisados] = useState(() => new Map());
@@ -331,8 +334,8 @@ function Hoja({ materia, items, secciones, onGuardar, onCerrar }) {
                         {estado.estado === 'error' && estado.reintentar && <button type="button" className="seccion__ocultar" onClick={() => revisar(item)}>Probar de nuevo</button>}
                       </div>
                       <div className="fusion__acciones">
-                        <button type="button" className="seccion__ocultar" data-boton="subir" disabled={trabajando || n === 0} aria-label={`Mover arriba ${quien}`} onClick={() => mover(o.id, n - 1, 'subir')}>Mover arriba</button>
-                        <button type="button" className="seccion__ocultar" data-boton="bajar" disabled={trabajando || n === elegidos.length - 1} aria-label={`Mover abajo ${quien}`} onClick={() => mover(o.id, n + 1, 'bajar')}>Mover abajo</button>
+                        {conBotones && <button type="button" className="seccion__ocultar" data-boton="subir" disabled={trabajando || n === 0} aria-label={`Mover arriba ${quien}`} onClick={() => mover(o.id, n - 1, 'subir')}>Mover arriba</button>}
+                        {conBotones && <button type="button" className="seccion__ocultar" data-boton="bajar" disabled={trabajando || n === elegidos.length - 1} aria-label={`Mover abajo ${quien}`} onClick={() => mover(o.id, n + 1, 'bajar')}>Mover abajo</button>}
                         <button type="button" className="seccion__ocultar" data-boton="sacar" disabled={trabajando} aria-label={`Sacar ${quien}`} onClick={() => sacar(item, n)}>Sacar</button>
                       </div>
                     </li>

@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
 import { desplazarHacia } from './autoDesplazar';
 import { sinMovimiento } from './movimiento';
+import { botonesSinMouse } from './sinMouse';
 
 // How far a press goes before it becomes a drag (a tap only gives the handle the focus). Near the top or the bottom of
 // the screen the page goes by itself (autoDesplazar.js).
@@ -49,7 +50,8 @@ function seguir(g, de) {
  * first pointer), or with the arrows up and down on the handle, one place at a time.
  * `ids`: the sections on screen, in order. `elDe(id)`: its element. `manijaDe(id)`: its handle. `alMover(id, lugar)`:
  * the section goes to place `lugar` among them (0 is the first). `alTocar(id)`: the handle was touched or clicked without
- * dragging, or pressed with Enter or Space, for those who can't drag (the page offers to move it up or down).
+ * dragging, or pressed with Enter or Space, for those who can't drag (the page offers to move it up or down): only with
+ * «Modo sin mouse» or on a device without a mouse (sinMouse.js).
  * While a drag lasts, `arrastrada` is its id: the page folds every section to its title, so the whole list fits; the
  * dragged one follows the pointer and the others move aside (a transform) to open its place. Dropped, it settles into
  * that place, everything opens again, the page goes to it and the focus to its handle. Escape, or the browser taking
@@ -108,7 +110,7 @@ export function useArrastreDeSecciones({ ids, elDe, manijaDe, alMover, alTocar }
       soltarLaManija(g);
       g.manija.focus({ preventScroll: true });
       if (g.empezado) cerrar(g, false);
-      else ultimo.current.alTocar?.(g.id);
+      else if (botonesSinMouse()) ultimo.current.alTocar?.(g.id);
       return;
     }
     g.soltando = true;
@@ -226,7 +228,7 @@ export function useArrastreDeSecciones({ ids, elDe, manijaDe, alMover, alTocar }
     },
     // Enter or Space: a click with no pointer behind it (a touch or a mouse already went through onPointerUp).
     onClick: (e) => {
-      if (e.detail === 0) ultimo.current.alTocar?.(id);
+      if (e.detail === 0 && botonesSinMouse()) ultimo.current.alTocar?.(id);
     },
     onKeyDown: (e) => {
       const salto = { ArrowUp: -1, ArrowDown: 1 }[e.key];

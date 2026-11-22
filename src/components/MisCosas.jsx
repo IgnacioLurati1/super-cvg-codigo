@@ -19,6 +19,17 @@ function borrarConFoco(evento, pregunta, confirmar, borrar) {
   });
 }
 
+/** How much of a course is seen, or of what goes to the exam, as a bar. */
+export function Avance({ titulo, hechos, total }) {
+  if (!total) return null;
+  return (
+    <div className="avance">
+      <p className="avance__texto">{titulo}, {hechos} de {total}</p>
+      <progress className="avance__barra" max={total} value={hechos} aria-label={titulo} />
+    </div>
+  );
+}
+
 export function Panel({ titulo, abierto = false, children }) {
   return (
     <details className="panel" open={abierto || undefined}>

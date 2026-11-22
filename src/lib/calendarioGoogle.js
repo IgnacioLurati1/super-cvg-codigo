@@ -33,6 +33,7 @@ const tituloDe = (evento) => {
   return materia ? `${titulo} (${materia})` : titulo;
 };
 const detalleDe = (evento) => {
+  if (evento.propio === 'sysacad') return 'Te anotaste en Sysacad, desde Super CVG';
   if (evento.propio === 'facultad') return 'Calendario académico, desde Super CVG';
   const tipo = tipoDe(evento);
   return tipo === 'otro' ? 'Desde Super CVG' : `${textoDeTipo(tipo)}, desde Super CVG`;
@@ -53,11 +54,13 @@ export function agregarAGoogle(evento) {
 // Google takes an event id of 5 to 1024 characters among 0-9 and a-v. The campus' ones are numbers; the student's own
 // ones («e12», «f3-4», «t3-5») go as the hex of their letters, which are among those too. One that came from Google keeps
 // Google's id (`gid`). The academic calendar's, by their day and title: the same date keeps its id when the faculty's
-// calendar is written again with dates added or moved around it.
+// calendar is written again with dates added or moved around it. An exam of Sysacad, by its day and subject.
 const hex = (texto) => [...new TextEncoder().encode(texto)].map((b) => b.toString(16).padStart(2, '0')).join('');
 /** The id of a date in the calendar «Super CVG»: always the same for the same date, from any device. */
 export const idEnGoogle = (evento) => {
   if (evento.gid) return evento.gid;
+  // «mesa» and not «sysacad»: Google takes no «y».
+  if (evento.propio === 'sysacad') return `mesa${hex(`${evento.dia} ${evento.materiaSysacad}`)}`;
   if (evento.propio === 'facultad') return `facultad${hex(`${claveDia(evento.cuando)} ${evento.titulo}`)}`;
   return evento.propio ? `propio${hex(String(evento.id))}` : `campus${evento.id}`;
 };
@@ -122,6 +125,7 @@ export function eventoParaGoogle(evento) {
 }
 
 function fuenteDe(evento) {
+  if (evento.propio === 'sysacad') return 'sysacad';
   if (evento.propio === 'facultad') return 'facultad';
   return evento.propio ? 'propio' : 'campus';
 }
@@ -175,11 +179,12 @@ export function deGoogle(e, { nombres = {}, materia = null } = {}) {
 
 // The dates that only go: the campus' and the faculty's academic calendar. Which one an event is, by what Super CVG wrote
 // in it or, with nothing on either side, by its id.
-const DE_IDA = new Set(['campus', 'facultad']);
+const DE_IDA = new Set(['campus', 'facultad', 'sysacad']);
 const fuenteEscrita = (e) => (e?.extendedProperties?.private?.cvg === '1' ? e.extendedProperties.private.fuente : null);
 const fuenteDelId = (id) => {
   if (/^campus\d+$/.test(id)) return 'campus';
-  return /^facultad(?:[0-9a-f]{2})+$/.test(id) ? 'facultad' : null;
+  if (/^facultad(?:[0-9a-f]{2})+$/.test(id)) return 'facultad';
+  return /^mesa(?:[0-9a-f]{2})+$/.test(id) ? 'sysacad' : null;
 };
 
 /** Both sides as one calendar. `deseados` is what Super CVG has (built with eventoParaGoogle), `existentes` what the
@@ -189,11 +194,12 @@ const fuenteDelId = (id) => {
  * campus is not changed from here. One the student deleted or changed in Google stays that way until the campus
  * changes it, and one the course took out is deleted from `desde` on, unless the student changed it. Without
  * `conCampus`, the campus' ones are left as they are. The faculty's academic calendar goes the same way as the campus',
- * always: it ships with the site. Repeating events of Google stay only there.
+ * always: it ships with the site. The exams of Sysacad go that way too; without `conSysacad` (Sysacad Lindo did not
+ * say them for this student here), they are left as they are. Repeating events of Google stay only there.
  * Returns what to write (`poner`, new; `cambiar`, over what is there), what to delete (`quitar`), what to bring here
  * (`traer`: { id, como: 'nuevo' | 'cambio' | 'borrado', remoto }) and the new `base` (a null «here» is filled in once
  * what came is saved). `fuera` are own dates that are not in the calendar on purpose (a task done). */
-export function planear({ deseados, existentes, base = {}, tocado = {}, desde = 0, conCampus = true, fuera = new Set() }) {
+export function planear({ deseados, existentes, base = {}, tocado = {}, desde = 0, conCampus = true, conSysacad = true, fuera = new Set() }) {
   const remotos = new Map();
   for (const e of existentes) {
     if (e && typeof e.id === 'string' && e.status !== 'cancelled' && !e.recurrence && !e.recurringEventId) remotos.set(e.id, e);
@@ -217,7 +223,7 @@ export function planear({ deseados, existentes, base = {}, tocado = {}, desde = 
     const alla = remoto ? huellaGoogle(remoto) : null;
     const fuente = local ? fuenteEscrita(local) : remoto ? fuenteEscrita(remoto) : fuenteDelId(id);
     if (DE_IDA.has(fuente)) {
-      if (!conCampus && fuente === 'campus') {
+      if ((!conCampus && fuente === 'campus') || (!conSysacad && fuente === 'sysacad')) {
         if (b) anotar(id, ...b);
       } else if (local && remoto) {
         if (b ? aca !== b[0] : aca !== alla) escribir(local, false);

@@ -1,6 +1,7 @@
 import { useSyncExternalStore } from 'react';
 import { normalizar } from './datos';
 import { resumenDe } from './santoResumen';
+import { leerExamenes } from './sysacadExamenes';
 import { leerPestanas } from './sysacadPestanas';
 
 // Sysacad Lindo, the browser extension of Luta Studios for Sysacad, hands this page the final grade of each passed
@@ -10,7 +11,8 @@ import { leerPestanas } from './sysacadPestanas';
 //   page to extension   { fuente: 'super-cvg', pide: 'sysacad' | 'vincular' | 'desvincular' }
 //   extension to page   { fuente: 'sysacad-lindo', para: 'super-cvg', v: 1, vinculada, fecha?, finales?: [{ nombre, nota }] }
 // `fecha` and `finales` come only once it is linked and has read Estado académico. Anything else is ignored.
-// Since 2.4.0 it also answers `pide: 'pestanas'` with its copies of the tabs of Sysacad (v: 2, sysacadPestanas.js).
+// Since 2.4.0 it also answers `pide: 'pestanas'` with its copies of the tabs of Sysacad (v: 2, sysacadPestanas.js), and
+// since 2.5.0 `pide: 'examenes'` with the exams the student signed up for (v: 3, sysacadExamenes.js).
 
 export const SYSACAD = 'https://alumnos.frro.utn.edu.ar/';
 export const SYSACAD_LINDO = 'https://lutastudios.com/utn/sysacad-lindo.html';
@@ -139,8 +141,9 @@ export const notaComoTexto = (n) => n.toLocaleString('es-AR', { maximumFractionD
 // What is known about the extension, in memory. `estado`: 'buscando' (no answer yet), 'sin-extension', 'sin-vincular'
 // or 'vinculada'. `pidio`: the student touched «Vincular» in this tab. `copias`: what it said of the tabs of Sysacad
 // ({ vinculada, guarda, alumno, pestanas }), null until it does; `sinCopias`: a moment went by and it did not (with an
-// answer to the finals, it is a version from before 2.4.0).
-const INICIAL = { estado: 'buscando', fecha: null, finales: null, pidio: false, copias: null, sinCopias: false };
+// answer to the finals, it is a version from before 2.4.0). `examenes`: what it said of the exams ({ vinculada, alumno,
+// fecha, examenes }), null until it does (one from before 2.5.0 never does).
+const INICIAL = { estado: 'buscando', fecha: null, finales: null, pidio: false, copias: null, sinCopias: false, examenes: null };
 let actual = INICIAL;
 const avisados = new Set();
 function poner(cambios) {
@@ -151,11 +154,14 @@ function poner(cambios) {
 /** What is known now. A screen uses useSysacad, which redraws when it changes. */
 export const estadoSysacad = () => actual;
 
+/** Calls `f` on every change of what is known. Returns how to stop. */
+export function escucharSysacad(f) {
+  avisados.add(f);
+  return () => avisados.delete(f);
+}
+
 export function useSysacad() {
-  return useSyncExternalStore((f) => {
-    avisados.add(f);
-    return () => avisados.delete(f);
-  }, estadoSysacad, () => INICIAL);
+  return useSyncExternalStore(escucharSysacad, estadoSysacad, () => INICIAL);
 }
 
 let oido = false;
@@ -168,6 +174,7 @@ const pedir = (pide) => window.postMessage({ fuente: 'super-cvg', pide }, window
 export function preguntarSysacad() {
   pedir('sysacad');
   pedir('pestanas');
+  pedir('examenes');
   if (oido && oidoCopias) return;
   clearTimeout(reloj);
   reloj = setTimeout(() => {
@@ -180,12 +187,21 @@ function recibir(e) {
   if (e.source !== window || e.origin !== window.location.origin) return;
   const m = leerMensaje(e.data);
   if (m) {
-    // The extension answers this one on its own once it loads, but not the tabs: asked before it was listening, they
-    // are asked again now.
-    if (!oido && !oidoCopias) pedir('pestanas');
+    // The extension answers this one on its own once it loads, but not the tabs or the exams: asked before it was
+    // listening, they are asked again now.
+    if (!oido && !oidoCopias) {
+      pedir('pestanas');
+      pedir('examenes');
+    }
     oido = true;
     if (oidoCopias) clearTimeout(reloj);
     poner({ estado: m.vinculada ? 'vinculada' : 'sin-vincular', fecha: m.fecha, finales: m.finales });
+    return;
+  }
+  const examenes = leerExamenes(e.data);
+  if (examenes) {
+    // Sysacad may write a subject all in capitals: it goes as the campus writes them.
+    poner({ examenes: { ...examenes, examenes: examenes.examenes.map((x) => ({ ...x, materia: nombreParaMostrar(x.materia) })) } });
     return;
   }
   const copias = leerPestanas(e.data);
@@ -216,17 +232,20 @@ export function vincularSysacad() {
 }
 
 const SIN_COPIAS = { vinculada: false, guarda: false, alumno: null, pestanas: [] };
+const SIN_EXAMENES = { vinculada: false, alumno: null, fecha: null, examenes: [] };
 
-/** «Desvincular»: the extension forgets the link (and with it, the copies of the tabs), and the grades leave memory. */
+/** «Desvincular»: the extension forgets the link (and with it, the copies of the tabs and the exams), and the grades
+ * leave memory. */
 export function desvincularSysacad() {
   pedir('desvincular');
-  poner({ estado: 'sin-vincular', fecha: null, finales: null, pidio: false, ...(actual.copias && { copias: SIN_COPIAS }) });
+  poner({ estado: 'sin-vincular', fecha: null, finales: null, pidio: false, ...(actual.copias && { copias: SIN_COPIAS }), ...(actual.examenes && { examenes: SIN_EXAMENES }) });
 }
 
-/** Drops the grades and the copies of the tabs from memory. The next answer of the extension brings them back. */
+/** Drops the grades, the exams and the copies of the tabs from memory. The next answer of the extension brings them
+ * back. */
 export function olvidarSysacad() {
-  if (actual.finales || actual.fecha || actual.copias?.pestanas.length || actual.copias?.alumno) {
-    poner({ fecha: null, finales: null, ...(actual.copias && { copias: { ...actual.copias, alumno: null, pestanas: [] } }) });
+  if (actual.finales || actual.fecha || actual.copias?.pestanas.length || actual.copias?.alumno || actual.examenes) {
+    poner({ fecha: null, finales: null, examenes: null, ...(actual.copias && { copias: { ...actual.copias, alumno: null, pestanas: [] } }) });
   }
 }
 

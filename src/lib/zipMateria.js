@@ -61,7 +61,7 @@ const unaLinea = (t) => String(t ?? '').replace(/[\p{Cc}\p{Cf}]/gu, ' ').replace
 /** Everything that goes in the ZIP, decided before asking the campus for anything. */
 export function planDeZip(items, materia) {
   const carpetas = new Map();
-  const conArchivos = (items ?? []).filter((i) => i.tipo === 'archivo' && i.direccion);
+  const conArchivos = (items ?? []).filter((i) => i.tipo === 'archivo' && (i.direccion || i.traer));
   for (const item of conArchivos) {
     const clave = item.seccionId ?? item.seccion ?? '';
     if (!carpetas.has(clave)) carpetas.set(clave, { nombre: nombreSeguro(item.seccion || 'General', MAX_CARPETA), usados: new Set() });

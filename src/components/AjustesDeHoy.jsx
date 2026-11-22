@@ -8,6 +8,7 @@ import { cargarMaterias, cargarPerfil } from '../lib/campus';
 import { BLOQUES_DE_HOY, CUENTAN_EN_HOY, DIAS_DE_HOY, SEMANAS_DE_HOY, cuentaEnHoy, diasDeHoy, fueraDeHoy, moverBloque, ordenDeHoy, semanaDeHoy } from '../lib/hoy';
 import { contarEnHoy, diasEnHoy, materiaEnHoy, mostrarEnHoy, ordenarHoy, semanaEnHoy, useMio } from '../lib/mio';
 import { useArrastreDeSecciones } from '../lib/useArrastreDeSecciones';
+import { useBotonesSinMouse } from '../lib/sinMouse';
 import { useConsulta } from '../lib/useConsulta';
 import './ajustesDeHoy.css';
 
@@ -40,6 +41,7 @@ function Columna({ columna, claves, ocultos, ayudaManija, alAnunciar, alArrastra
   const mio = useMio();
   const { avisar } = useUI();
   const [moviendo, setMoviendo] = useState(null);
+  const conBotones = useBotonesSinMouse();
   const enfocar = useRef(null);
   const titulo = useId();
 
@@ -103,7 +105,7 @@ function Columna({ columna, claves, ocultos, ayudaManija, alAnunciar, alArrastra
                   className="orden-hoy__manija"
                   aria-label={`Mover ${NOMBRE[clave]}`}
                   aria-describedby={ayudaManija}
-                  aria-expanded={moviendo === clave}
+                  aria-expanded={conBotones ? moviendo === clave : undefined}
                   {...arrastre.manija(clave)}
                   onKeyDown={(e) => {
                     // Left and right: to the other column.
@@ -170,6 +172,7 @@ export function AjustesDeHoy() {
   const mio = useMio();
   const { avisar } = useUI();
   const ayudaManija = useId();
+  const conBotones = useBotonesSinMouse();
   const [anuncio, setAnuncio] = useState('');
   const orden = ordenDeHoy(mio);
   // A row dragged out of its column, over the other one: `recibe` lights that column; dropped there, it goes in at the
@@ -235,7 +238,7 @@ export function AjustesDeHoy() {
       <fieldset className="ajustes__grupo">
         <legend className="ajustes__leyenda">Bloques</legend>
         <p className="ajustes__ayuda">Arrastralos para ordenarlos o pasarlos de columna. Apagá los que no usás.</p>
-        <p id={ayudaManija} hidden>Arrastralo, movelo con las flechas, o tocalo para subirlo, bajarlo o pasarlo de columna.</p>
+        <p id={ayudaManija} hidden>{conBotones ? 'Arrastralo, movelo con las flechas, o tocalo para subirlo, bajarlo o pasarlo de columna.' : 'Arrastralo o movelo con las flechas.'}</p>
         <div className="orden-hoy__columnas">
           {COLUMNAS.map((c) => (
             <Columna

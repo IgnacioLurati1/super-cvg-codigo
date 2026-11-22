@@ -690,6 +690,17 @@ const FOTO_HOJA = await (async () => {
   return imagen;
 })();
 const contexto = await navegador.newContext({ viewport: { width: 1280, height: 860 }, acceptDownloads: true, permissions: ['clipboard-read', 'clipboard-write'] });
+// The flows go through the buttons that do what a drag does (Subir, Bajar, «Pasar a otra sección», Consultron's size),
+// and those show without a mouse (src/lib/sinMouse.js): the page is told there's none. A test that wants the mouse
+// back sets `flujos-con-mouse` in localStorage before loading.
+await contexto.addInitScript(() => {
+  const original = window.matchMedia.bind(window);
+  window.matchMedia = (q) => {
+    if (q !== '(any-pointer: fine)' || localStorage.getItem('flujos-con-mouse')) return original(q);
+    const nada = () => {};
+    return { matches: false, media: q, onchange: null, addEventListener: nada, removeEventListener: nada, addListener: nada, removeListener: nada, dispatchEvent: () => false };
+  };
+});
 const pagina = await contexto.newPage();
 
 const pedidos = [];
@@ -6750,6 +6761,36 @@ try {
       assert.deepEqual((await orden()).slice(0, 4), ['consultron', 'materias', 'hoy', 'calendario']);
       await pagina.keyboard.press('Escape');
       await mover.waitFor({ state: 'detached' });
+
+      // With a mouse, «Subir» and «Bajar» wait for «Modo sin mouse» (Teclado): the tap gives nothing, the arrows still work.
+      await pagina.evaluate(() => localStorage.setItem('flujos-con-mouse', '1'));
+      try {
+        await pagina.reload();
+        await pagina.getByRole('tab', { name: 'Menú', exact: true, selected: true }).waitFor();
+        await manija('Hoy').click();
+        await pagina.waitForTimeout(200);
+        assert.equal(await mover.count(), 0, 'con mouse, el toque no ofrece Subir y Bajar');
+        assert.equal(await manija('Hoy').getAttribute('aria-expanded'), null, 'sin botones, la manija no dice que abre algo');
+        await pagina.keyboard.press('ArrowUp');
+        assert.deepEqual((await orden()).slice(0, 3), ['consultron', 'hoy', 'materias'], 'las flechas andan igual');
+        await ir('configuracion#sin-mouse');
+        const modo = pagina.getByRole('switch', { name: 'Modo sin mouse' });
+        assert.equal(await modo.isChecked(), false, 'apagado de entrada');
+        await modo.check();
+        assert.equal(await pagina.evaluate(() => JSON.parse(localStorage.getItem('cl.ajustes')).sinMouse), true);
+        await ir('configuracion#menu');
+        await pagina.getByRole('tab', { name: 'Menú', exact: true, selected: true }).waitFor();
+        await manija('Hoy').click();
+        await mover.getByRole('button', { name: 'Bajar' }).click();
+        assert.deepEqual((await orden()).slice(0, 4), ['consultron', 'materias', 'hoy', 'calendario'], 'prendido, vuelven Subir y Bajar');
+        await pagina.keyboard.press('Escape');
+        await mover.waitFor({ state: 'detached' });
+        await pagina.evaluate(() => localStorage.setItem('cl.ajustes', JSON.stringify({ ...JSON.parse(localStorage.getItem('cl.ajustes')), sinMouse: false })));
+      } finally {
+        await pagina.evaluate(() => localStorage.removeItem('flujos-con-mouse'));
+        await pagina.reload();
+      }
+      await pagina.getByRole('tab', { name: 'Menú', exact: true, selected: true }).waitFor();
       assert.deepEqual(await fallasAxe('.lugares-menu'), [], 'la lista para ordenar');
       await fin('menu-ordenado');
 

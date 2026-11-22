@@ -3,7 +3,7 @@ import { resolve } from 'node:path';
 import { act, createElement } from 'react';
 import { createRoot } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { ALINEACIONES_DEL_MENU, ANCHOS_DEL_MENU, EN_EL_MENU, POSICIONES_DEL_MENU, movimientoDe, ordenarMenu, ordenValido, ponerPosicionDelMenu } from './ajustes';
+import { ALINEACIONES_DEL_MENU, ANCHOS_DEL_MENU, EN_EL_MENU, aparienciaQueViaja, conApariencia, POSICIONES_DEL_MENU, movimientoDe, ordenarMenu, ordenValido, ponerPosicionDelMenu } from './ajustes';
 import { APARIENCIA_CONSULTRON, LAB_TAMANO, LETRAS_DE_CODIGO, SIEMPRE_OSCUROS, cambioDeBordes, cambioDeEstilo, ALTO_CONSULTRON, BRILLO_PDF, CLAVE_AJUSTES, OPCIONES, ORIGINALES, PANEL_CONSULTRON, PANEL_PDF, PDF_CLAROS, RINCON_CONSULTRON, VISTAS, ajustesActuales, alternarPdfOscuro, cambiarAjustes, contraste, cuestaLeerSobre, elegirVista, normalizar, pdfOscuro, textoSobre, useVista, volverAjustesOriginales } from './ajustes';
 import { ESTILOS_DE_TARJETA } from './tarjetas';
 
@@ -247,6 +247,7 @@ describe('leer los ajustes', () => {
       calSoloVencimientos: false,
       calMateria: '',
       atajos: true,
+      sinMouse: false,
       velocidadVoz: 1,
       anchoPanelPdf: 280,
       anchoConsultron: 380,
@@ -332,6 +333,13 @@ describe('leer los ajustes', () => {
   it('el calendario académico y los atajos de una tecla: prendidos salvo que se apaguen', () => {
     expect(normalizar({ facultad: false, atajos: false })).toMatchObject({ facultad: false, atajos: false });
     for (const raro of ['false', 0, null, {}]) expect(normalizar({ facultad: raro, atajos: raro })).toMatchObject({ facultad: true, atajos: true });
+  });
+
+  it('el modo sin mouse: apagado salvo que se prenda, y no viaja a otro dispositivo', () => {
+    expect(normalizar({ sinMouse: true }).sinMouse).toBe(true);
+    for (const raro of ['true', 1, null, {}]) expect(normalizar({ sinMouse: raro }).sinMouse).toBe(false);
+    expect(aparienciaQueViaja({ sinMouse: true })).not.toHaveProperty('sinMouse');
+    expect(conApariencia(normalizar({ sinMouse: true }), {}).sinMouse).toBe(true);
   });
 
   it('los filtros del calendario: solo vencimientos si es true, la materia solo con su número', () => {

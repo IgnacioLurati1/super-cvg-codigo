@@ -8,9 +8,9 @@ import SumarCosas, { FormEnlace, FormTexto } from '../components/SumarCosas';
 import { useUI } from '../components/ui';
 import { dominioDe } from '../lib/datos';
 import { useGoogle } from '../lib/google';
-import { materiaDe, useMio } from '../lib/mio';
+import { alternarEn, alternarSeccion, materiaDe, renombrarSeccion, useMio } from '../lib/mio';
 import {
-  agregarBloques, agregarCategoria, borrarBloque, borrarCategoria, borrarPropia, cambiarBloque, esAgregada, moverBloque, moverCategoria, pasarBloque, propiaDe, renombrarCategoria, renombrarPropia,
+  agregarBloques, agregarCategoria, borrarBloque, borrarCategoria, borrarPropia, cambiarBloque, esAgregada, moverBloque, pasarBloque, propiaDe, renombrarCategoria, renombrarPropia,
 } from '../lib/propias';
 import { esDelSantoResumen, LIMITES } from '../lib/propiasSaneo';
 import { resumenDe } from '../lib/santoResumen';
@@ -18,6 +18,7 @@ import { faltaDe, iconoSinCampus, itemDeCampus, nombreSinCampus, primeraLinea, T
 import { simboloDeItem, tonoDeItem } from '../lib/simbolos';
 import { tituloDe, useSeo } from '../lib/seo';
 import { useCampusDePropia } from '../lib/useCampusDePropia';
+import { useSeccionesDePropia } from '../lib/useSeccionesDePropia';
 import './panel.css';
 import './propias.css';
 
@@ -144,7 +145,7 @@ function Bloque({ propia, categoria, bloque, lugar, total, campus, anunciar, onB
   );
 }
 
-function Categoria({ propia, categoria, lugar, campus, nueva }) {
+function Categoria({ propia, categoria, lugar, total, onMover, campus, nueva }) {
   const materias = campus.materias ?? [];
   const mio = useMio();
   const google = useGoogle();
@@ -156,7 +157,6 @@ function Categoria({ propia, categoria, lugar, campus, nueva }) {
   const subir = useRef(null);
   const bajar = useRef(null);
   const idNombre = useId();
-  const total = propia.categorias.length;
   // The campus course it was made from.
   const desde = propia.base;
 
@@ -172,7 +172,7 @@ function Categoria({ propia, categoria, lugar, campus, nueva }) {
   };
 
   const mover = (salto, ref, par) => {
-    moverCategoria(propia.id, categoria.id, salto);
+    if (!onMover(salto)) return;
     setAnuncio(`${categoria.nombre} quedó en el lugar ${lugar + salto + 1} de ${total}`);
     enfocarLuego(ref, par);
   };
@@ -250,6 +250,81 @@ function Categoria({ propia, categoria, lugar, campus, nueva }) {
   );
 }
 
+function Tema({ propia, tema, items, oculta, lugar, total, onMover }) {
+  const { avisar } = useUI();
+  const [nombre, setNombre] = useState(tema.nombre);
+  const [anuncio, setAnuncio] = useState('');
+  const subir = useRef(null);
+  const bajar = useRef(null);
+  const idNombre = useId();
+  const renombrada = tema.nombre !== tema.original;
+
+  const cambiarNombre = (valor) => {
+    setNombre(valor);
+    if (valor.trim()) renombrarSeccion(propia.id, tema.id, valor);
+  };
+  const volverAlNombre = () => {
+    renombrarSeccion(propia.id, tema.id, '');
+    setNombre(tema.original);
+  };
+  const mover = (salto, ref, par) => {
+    if (!onMover(salto)) return;
+    setAnuncio(`${tema.nombre} quedó en el lugar ${lugar + salto + 1} de ${total}`);
+    enfocarLuego(ref, par);
+  };
+  const alternar = () => {
+    alternarSeccion(propia.id, tema.id);
+    avisar(oculta ? `${tema.nombre} vuelve a verse en la materia` : `Ocultaste ${tema.nombre}`);
+  };
+
+  return (
+    <section className="editor__categoria" aria-labelledby={`${idNombre}-titulo`} data-oculta={oculta || undefined}>
+      <h2 id={`${idNombre}-titulo`} tabIndex={-1} className="solo-lectores">{tema.nombre}</h2>
+      <div className="editor__cabeza">
+        <div className="campo editor__nombre">
+          <label className="campo__etiqueta" htmlFor={idNombre}>Tema de Classroom</label>
+          <input
+            id={idNombre}
+            className="campo__control"
+            value={nombre}
+            maxLength={LIMITES.nombre}
+            autoComplete="off"
+            onChange={(e) => cambiarNombre(e.target.value)}
+            onBlur={() => { if (!nombre.trim()) setNombre(tema.nombre); }}
+          />
+        </div>
+        <div className="editor__acciones">
+          <button ref={subir} type="button" className="boton boton--secundario boton--chico" disabled={lugar <= 0} aria-label={`Subir ${tema.nombre}`} onClick={() => mover(-1, subir, bajar)}>Subir</button>
+          <button ref={bajar} type="button" className="boton boton--secundario boton--chico" disabled={lugar >= total - 1} aria-label={`Bajar ${tema.nombre}`} onClick={() => mover(1, bajar, subir)}>Bajar</button>
+          <button type="button" className="boton boton--secundario boton--chico" aria-label={`${oculta ? 'Mostrar' : 'Ocultar'} ${tema.nombre}`} onClick={alternar}>{oculta ? 'Mostrar' : 'Ocultar'}</button>
+        </div>
+      </div>
+      {renombrada && <p className="editor__vacia">En Classroom se llama {tema.original}. <button type="button" className="enlace-carpeta" onClick={volverAlNombre}>Volver a ese nombre</button></p>}
+      {oculta ? (
+        <p className="editor__vacia">Oculto en la materia.</p>
+      ) : (
+        <ul className="lista">
+          {items.map((i) => (
+            <li key={i.clave} className="fila fila--editable editor__bloque">
+              <div className="fila__linea">
+                <div className="fila__principal editor__resumen">
+                  <Icono nombre={simboloDeItem(i)} tono={tonoDeItem(i)} tamano="tipo" />
+                  <span className="fila__texto">
+                    <span className="fila__nombre">{i.nombre}</span>
+                    <span className="fila__dato">{i.clase ?? 'De Classroom'}</span>
+                  </span>
+                </div>
+                <button type="button" className="boton boton--secundario boton--chico" aria-label={`Ocultar ${i.nombre}`} onClick={() => { alternarEn(propia.id, 'ocultos', i.clave); avisar(`Ocultaste ${i.nombre}`); }}>Ocultar</button>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+      <p className="solo-lectores" role="status">{anuncio}</p>
+    </section>
+  );
+}
+
 function NombrePropia({ propia }) {
   const [nombre, setNombre] = useState(propia.nombre);
   const [error, setError] = useState('');
@@ -278,15 +353,8 @@ function NombrePropia({ propia }) {
 
 export default function EditarPropia() {
   const { id } = useParams();
-  const navegar = useNavigate();
-  const { confirmar, avisar } = useUI();
   const propia = propiaDe(useMio(), id);
-  // The category just added: its name gets the focus.
-  const [nueva, setNueva] = useState(null);
-  const [errorCategoria, setErrorCategoria] = useState('');
   useSeo({ titulo: tituloDe('Editar materia'), noindex: true });
-
-  const campus = useCampusDePropia(propia);
 
   if (!propia) {
     return (
@@ -300,6 +368,30 @@ export default function EditarPropia() {
 
   // The student's own sections of a campus course are edited right there.
   if (esAgregada(propia)) return <Navigate to={`/materias/${propia.de}`} replace />;
+  return <Editor propia={propia} />;
+}
+
+function Editor({ propia }) {
+  const navegar = useNavigate();
+  const { confirmar, avisar } = useUI();
+  // The category just added: its name gets the focus.
+  const [nueva, setNueva] = useState(null);
+  const [errorCategoria, setErrorCategoria] = useState('');
+  const campus = useCampusDePropia(propia);
+  const { deClassroom, temas, ordenTodo, marcas, mover } = useSeccionesDePropia(propia);
+
+  // Every section in the order of the course: the categories, and the topics of Classroom with something in them (or
+  // hidden, to show them again).
+  const secciones = ordenTodo.map((sid) => {
+    const categoria = propia.categorias.find((c) => `p${c.id}` === sid);
+    if (categoria) return { id: sid, categoria };
+    const tema = temas.find((t) => t.id === sid);
+    if (!tema) return null;
+    const oculta = marcas.secciones.includes(sid);
+    const items = deClassroom.filter((i) => i.seccionId === sid && !marcas.ocultos.includes(i.clave));
+    return oculta || items.length ? { id: sid, tema, oculta, items } : null;
+  }).filter(Boolean);
+  const ids = secciones.map((s) => s.id);
 
   const sumarCategoria = () => {
     setErrorCategoria('');
@@ -328,9 +420,11 @@ export default function EditarPropia() {
         <CursoDePropia propia={propia} />
       </div>
 
-      {propia.categorias.map((c, i) => (
-        <Categoria key={c.id} propia={propia} categoria={c} lugar={i} campus={campus} nueva={c.id === nueva} />
-      ))}
+      {secciones.map((s, i) => (s.categoria ? (
+        <Categoria key={s.id} propia={propia} categoria={s.categoria} lugar={i} total={ids.length} onMover={(salto) => mover(s.id, i + salto, ids)} campus={campus} nueva={s.categoria.id === nueva} />
+      ) : (
+        <Tema key={s.id} propia={propia} tema={s.tema} items={s.items} oculta={s.oculta} lugar={i} total={ids.length} onMover={(salto) => mover(s.id, i + salto, ids)} />
+      )))}
 
       {errorCategoria && <div className="mensaje mensaje--error" role="alert"><p>{errorCategoria}</p></div>}
       <div className="editor__pie">

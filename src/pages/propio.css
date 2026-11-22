@@ -255,6 +255,25 @@
   gap: 6px;
 }
 
+/* Narrower sides, so Renombrar, Sumar al parcial and Ocultar fit in one line of a card. */
+.fila__botones .boton--chico {
+  padding-inline: 10px;
+}
+
+/* Ocultar and Borrar: red only on the border and the letters. */
+.fila__botones .boton--peligro {
+  background: transparent;
+  border-color: var(--error);
+  color: var(--error);
+}
+
+@media (hover: hover) {
+  .fila__botones .boton--peligro:hover {
+    background: var(--error);
+    color: var(--error-texto);
+  }
+}
+
 .fila__renombrar {
   display: grid;
   gap: 8px;

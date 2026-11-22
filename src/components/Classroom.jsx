@@ -9,6 +9,7 @@ import Campo from './Campo';
 import { Cargando, datoDe, ErrorConReintento, FilaItem } from './Filas';
 import ListaConMas from './ListaConMas';
 import PasarA from './PasarA';
+import { useBotonesSinMouse } from '../lib/sinMouse';
 import { useAbrirPrevia } from './Previa';
 import { Icono, IconoDeItem } from './Simbolo';
 import './classroom.css';
@@ -99,7 +100,7 @@ export function FilasClassroom({ items, revisado = null, nombre }) {
         return (
           <li className="fila" key={i.id} data-marca={nuevo ? '' : undefined}>
             <a className="fila__principal" href={i.url} target="_blank" rel="noreferrer">
-              <Icono nombre={i.icono} tono={i.tono} tamano="tipo" />
+              <Icono nombre={i.icono} tono={i.tono} enlazado={i.enlazado} tamano="tipo" />
               <span className="fila__texto">
                 <span className="fila__nombre">{i.nombre}</span>
                 <span className="fila__dato">{nuevo ? `Nuevo, ${i.dato}` : i.dato}<span className="solo-lectores">, se abre en otra pestaña</span></span>
@@ -327,6 +328,8 @@ function FilaDeClassroom({ item, marca, secciones, onPasar, onOcultar, arrastre,
     if (enfocar) principal.current?.focus();
   }, [enfocar]);
   const marcarVistos = useMarcarVistos();
+  // «Pasar a otra sección» does what dragging the row does: only with «Modo sin mouse» (sinMouse.js).
+  const conBotones = useBotonesSinMouse();
   const dato = [marca, datoDe(item), item.nombreOriginal ? 'Renombrado' : null, marcarVistos && item.visto ? 'Visto' : null].filter(Boolean).join(', ');
   return (
     <li
@@ -352,9 +355,9 @@ function FilaDeClassroom({ item, marca, secciones, onPasar, onOcultar, arrastre,
       </div>
       {abierta && !lectura && (
         <div className="fila__panel">
-          <PasarA item={item} secciones={secciones} onPasar={onPasar} />
+          {conBotones && <PasarA item={item} secciones={secciones} onPasar={onPasar} />}
           <div className="fila__botones">
-            <button type="button" className="boton boton--secundario boton--chico" onClick={() => onOcultar(item)}>Ocultar</button>
+            <button type="button" className="boton boton--secundario boton--chico boton--peligro" onClick={() => onOcultar(item)}>Ocultar</button>
           </div>
         </div>
       )}

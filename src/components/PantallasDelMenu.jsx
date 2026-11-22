@@ -3,6 +3,7 @@ import { EN_EL_MENU, ordenarMenu, ponerEnElMenu, useAjustes } from '../lib/ajust
 import { pantallasConAtajo } from '../lib/atajos';
 import { useArrastreDeSecciones } from '../lib/useArrastreDeSecciones';
 import { useMoverConManija } from '../lib/useSecciones';
+import { useBotonesSinMouse } from '../lib/sinMouse';
 import { IconoMenu, PANTALLAS_DEL_MENU } from '../layouts/Menu';
 import './pantallasDelMenu.css';
 
@@ -25,10 +26,11 @@ const Manija = () => (
 function Pantalla({ m, lugar, numero, agarrada, moviendo, puesto, total, manija, alElegir, alMover }) {
   const id = useId();
   const opciones = m.clave === 'configuracion' ? LUGARES.slice(0, 2) : LUGARES;
+  const conBotones = useBotonesSinMouse();
   return (
     <li id={idDeFila(m.clave)} className="lugar-menu" data-agarrada={agarrada || undefined}>
       <span className="lugar-menu__agarre">
-        <button id={idDeManija(m.clave)} type="button" className="lugar-menu__manija" aria-label={`Mover ${m.texto}`} aria-describedby="mover-pantalla-ayuda" aria-expanded={moviendo} {...manija}>
+        <button id={idDeManija(m.clave)} type="button" className="lugar-menu__manija" aria-label={`Mover ${m.texto}`} aria-describedby="mover-pantalla-ayuda" aria-expanded={conBotones ? moviendo : undefined} {...manija}>
           <Manija />
         </button>
         {moviendo && (
@@ -82,6 +84,7 @@ export default function PantallasDelMenu({ alFallar }) {
   const comoVino = ids.join() === EN_EL_MENU.join();
   const [anuncio, setAnuncio] = useState('');
   const { moviendo, setMoviendo, enfocarMover } = useMoverConManija(idDeManija);
+  const conBotones = useBotonesSinMouse();
 
   const mover = (clave, lugar) => {
     const desde = ids.indexOf(clave);
@@ -109,7 +112,7 @@ export default function PantallasDelMenu({ alFallar }) {
     <div className="ajustes__grupo">
       <h3 className="ajustes__leyenda">Qué pantallas aparecen</h3>
       <p className="ajustes__ayuda">Arrastralas para ordenarlas. Alt y un número siguen este orden. Las que van en «Más» quedan a un toque. Las ocultas, en la compu, se abren igual con Alt y su número.</p>
-      <p id="mover-pantalla-ayuda" hidden>Arrastrala, movela con las flechas arriba y abajo, o tocala para subirla o bajarla.</p>
+      <p id="mover-pantalla-ayuda" hidden>{conBotones ? 'Arrastrala, movela con las flechas arriba y abajo, o tocala para subirla o bajarla.' : 'Arrastrala o movela con las flechas arriba y abajo.'}</p>
       <p role="status" className="solo-lectores">{anuncio}</p>
       <ul className="lugares-menu" data-arrastrando={arrastrada !== null || undefined}>
         {pantallas.map((m, i) => (

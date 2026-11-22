@@ -6,6 +6,7 @@ import Campo from './Campo';
 import { datoDe } from './Filas';
 import { useAbrirPrevia } from './Previa';
 import PasarA from './PasarA';
+import { useBotonesSinMouse } from '../lib/sinMouse';
 import { FormEnlace, FormTexto } from './SumarCosas';
 import { IconoDeItem } from './Simbolo';
 import TextoConFormato from './TextoConFormato';
@@ -66,6 +67,8 @@ export default function FilaEditable({ item, claves, marca, onOcultar, onBorrar 
     if (enfocar) (principal.current ?? opciones.current)?.focus();
   }, [enfocar]);
   const lugar = claves ? claves.indexOf(item.clave) : -1;
+  // Subir, Bajar and «Pasar a otra sección» do what dragging the row does: only with «Modo sin mouse» (sinMouse.js).
+  const conBotones = useBotonesSinMouse() || !arrastre || enLinea;
 
   const mover = (salto, boton) => {
     if (onMover) onMover(item, salto);
@@ -148,18 +151,18 @@ export default function FilaEditable({ item, claves, marca, onOcultar, onBorrar 
                   ? <button type="button" className="boton boton--secundario boton--chico" onClick={() => setCambiando(true)}>{bloque.tipo === 'texto' ? 'Cambiar el texto' : 'Cambiar el enlace'}</button>
                   : <button type="button" className="boton boton--secundario boton--chico" onClick={() => setRenombrando(true)}>Renombrar</button>}
                 {!enLinea && <button type="button" className="boton boton--secundario boton--chico" aria-pressed={item.parcial} onClick={() => alternarEn(item.materiaId, 'parcial', item.clave)}>{item.parcial ? 'Sacar del parcial' : 'Sumar al parcial'}</button>}
-                {claves && (
+                {claves && conBotones && (
                   <>
                     <button ref={subir} type="button" className="boton boton--secundario boton--chico" disabled={lugar <= 0} onClick={() => mover(-1, subir)}>Subir</button>
                     <button ref={bajar} type="button" className="boton boton--secundario boton--chico" disabled={lugar >= claves.length - 1} onClick={() => mover(1, bajar)}>Bajar</button>
                   </>
                 )}
                 {onBorrar
-                  ? <button type="button" className="boton boton--secundario boton--chico" onClick={() => onBorrar(item)}>Borrar</button>
-                  : <button type="button" className="boton boton--secundario boton--chico" onClick={() => onOcultar(item)}>Ocultar</button>}
+                  ? <button type="button" className="boton boton--secundario boton--chico boton--peligro" onClick={() => onBorrar(item)}>Borrar</button>
+                  : <button type="button" className="boton boton--secundario boton--chico boton--peligro" onClick={() => onOcultar(item)}>Ocultar</button>}
               </div>
           )}
-          {!renombrando && !cambiando && onPasar && <PasarA item={item} secciones={secciones} onPasar={onPasar} />}
+          {!renombrando && !cambiando && onPasar && conBotones && <PasarA item={item} secciones={secciones} onPasar={onPasar} />}
           <p className="solo-lectores" role="status">{aviso}</p>
         </div>
       )}

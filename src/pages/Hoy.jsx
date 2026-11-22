@@ -25,11 +25,14 @@ import { claveDeHecha, conHechas, estaHecha, hechaDe, hechasEnTexto } from '../l
 import { bloquesVisibles, cuentaEnHoy, diasDeHoy, fueraDeHoy, semanaDeHoy, tipoDePendiente } from '../lib/hoy';
 import { anotarVacios } from '../lib/hoyVacios';
 import {
-  alternarTarea, conCorrecciones, desmarcarHecha, estaOculto, eventosPropios, guardarFoto, marcarHecha, materiaDe, personalizar, revisadoClassroom, useMio, volverHecha,
+  alternarTarea, conCorrecciones, desmarcarHecha, estaOculto, eventosPropios, guardarFoto, marcarHecha, materiaDe, personalizar, revisadoClassroom, useMio, volverHecha, materiaDeMarcas,
 } from '../lib/mio';
-import { vaciarCache } from '../lib/sesion';
+import { tokenActual, vaciarCache } from '../lib/sesion';
 import { textoDeTipo } from '../lib/tipos';
 import { useConsulta } from '../lib/useConsulta';
+import { esDemo } from '../lib/modoDemo';
+import { useSysacad } from '../lib/sysacad';
+import { eventosDeExamenes, examenesDelAlumno } from '../lib/sysacadExamenes';
 import { cargarClassroomUnido } from '../lib/classroomUnido';
 
 // The academic calendar's dates, as the Calendario shows them: the same for everyone, made once.
@@ -366,20 +369,28 @@ export default function Hoy() {
   const buscandoEntregas = pendientes.cargando || classroom.cargando;
   // Classroom's tasks with a date, as the Calendario lists them: only in the week, «Vencimientos» has its own.
   const deClassroom = useMemo(() => conHechas((classroom.datos ?? []).filter((u) => !fuera.has(Number(u.materia.id))).flatMap((u) => fechasDe(u.datos, u.entregadas, u.materia)), mio), [classroom.datos, fuera, mio]);
+  // The exams the student signed up for in Sysacad, from Sysacad Lindo: only when Sysacad's name is this account's.
+  const { examenes: deLaExtension } = useSysacad();
+  const deSysacad = useMemo(() => eventosDeExamenes(examenesDelAlumno(deLaExtension, perfil.datos?.completo)), [deLaExtension, perfil.datos]);
+  // The demo has no extension: its made-up answer comes through the same window and the same check.
+  useEffect(() => {
+    if (!import.meta.env.DEV || !esDemo(tokenActual())) return;
+    import('../lib/demoSysacad').then(({ examenesDeEjemplo }) => window.postMessage(examenesDeEjemplo(), window.location.origin));
+  }, []);
   // The week counts what the Calendario lists on each day, with its filters: the faculty's dates, only deadlines, a
   // course. A course no longer among the dates counts as all of them, as in the Calendario.
   const eventosPorDia = useMemo(() => {
-    const todas = [...fechasTodas, ...deClassroom, ...(conFacultad ? DE_LA_FACULTAD : [])];
+    const todas = [...fechasTodas, ...deClassroom, ...deSysacad, ...(conFacultad ? DE_LA_FACULTAD : [])];
     const materia = todas.some((e) => e.materiaId && String(e.materiaId) === calMateria) ? calMateria : '';
     return porDia(todas.filter((e) => (!materia || String(e.materiaId) === materia) && (!calSoloVencimientos || e.vencimiento)));
-  }, [fechasTodas, deClassroom, conFacultad, calMateria, calSoloVencimientos]);
+  }, [fechasTodas, deClassroom, deSysacad, conFacultad, calMateria, calSoloVencimientos]);
   const proximasFechas = useMemo(() => {
     const yaListadas = new Set(todosPendientes.map((e) => e.id));
-    return fechasTodas
+    return [...fechasTodas, ...deSysacad]
       .filter((e) => e.cuando >= ahora && e.cuando < ahora + dias * 86_400 && !yaListadas.has(e.id) && !e.hecha)
       .sort((a, b) => a.cuando - b.cuando)
       .slice(0, 8);
-  }, [fechasTodas, todosPendientes, ahora, dias]);
+  }, [fechasTodas, deSysacad, todosPendientes, ahora, dias]);
 
   const cambiosPorMateria = useMemo(() => {
     const grupos = new Map();
@@ -444,8 +455,8 @@ export default function Hoy() {
 
   const conCambios = cambiosPorMateria.filter((g) => g.nuevos + g.cambiados + g.borrados > 0 && !fuera.has(Number(g.id)));
   const tareas = useMemo(() => Object.entries(mio.materias)
-    .filter(([id]) => !fuera.has(Number(id)))
-    .flatMap(([id, m]) => m.tareas.filter((t) => !t.hecha).map((t) => ({ ...t, materiaId: Number(id), materia: calendario.datos?.nombres?.[id] ?? 'Materia' })))
+    .filter(([id]) => !fuera.has(Number(id)) && materiaDeMarcas(mio, id).materiaId !== null)
+    .flatMap(([id, m]) => m.tareas.filter((t) => !t.hecha).map((t) => ({ ...t, ...materiaDeMarcas(mio, id, calendario.datos?.nombres) })))
     .sort((a, b) => (a.fecha ?? '9999').localeCompare(b.fecha ?? '9999')), [mio, calendario.datos, fuera]);
   const cargando = pendientes.cargando || avisos.cargando || novedades.cargando || calendario.cargando || classroom.cargando;
 

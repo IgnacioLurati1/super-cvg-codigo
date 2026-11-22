@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { simboloDe, simboloDeDepartamento, simboloDeItem, tonoDeItem } from './simbolos';
+import { dibujoDeItem, simboloDe, simboloDeDepartamento, simboloDeItem, tonoDeItem } from './simbolos';
 
 describe('simboloDe', () => {
   it.each([
@@ -68,5 +68,28 @@ describe('simboloDeItem', () => {
     expect(simboloDeItem({ tipo: 'enlace', video: 'abc' })).toBe('video');
     expect(simboloDeItem({ tipo: 'enlace', video: null })).toBe('enlace');
     expect(simboloDeItem({ tipo: 'actividad' })).toBe('actividad');
+  });
+});
+
+describe('un link a un archivo de Drive', () => {
+  const ID = '1AbCdEfGhIjKlMnOpQrStUv';
+  const enlace = (destino, extra = {}) => dibujoDeItem({ tipo: 'enlace', destino, ...extra });
+
+  it('se dibuja como el archivo que es, con el simbolito de link, y no como una carpeta', () => {
+    expect(enlace(`https://drive.google.com/file/d/${ID}/view`, { nombre: 'Bolton', tituloEnDrive: 'Bolton.pdf' })).toEqual({ simbolo: 'documento', tono: 'pdf', enlace: true });
+    expect(enlace(`https://drive.google.com/file/d/${ID}/view?usp=sharing`, { nombre: 'Notas.xlsx' })).toEqual({ simbolo: 'planilla', tono: 'planilla', enlace: true });
+    expect(enlace(`https://drive.google.com/open?id=${ID}`, { nombre: 'Foto.jpg' })).toEqual({ simbolo: 'imagen', tono: 'imagen', enlace: true });
+    expect(enlace(`https://docs.google.com/presentation/d/${ID}/edit`, { nombre: 'Clase 3' })).toEqual({ simbolo: 'presentacion', tono: 'presentacion', enlace: true });
+  });
+
+  it('sin extensión, una hoja con el color de Drive', () => {
+    expect(enlace(`https://drive.google.com/file/d/${ID}/view`, { nombre: 'Ingeniería de Control. Bolton. Edicion 2' })).toEqual({ simbolo: 'documento', tono: 'drive', enlace: true });
+  });
+
+  it('una carpeta sigue siendo carpeta, y lo que no es de Drive no lleva el simbolito', () => {
+    expect(enlace(`https://drive.google.com/drive/folders/${ID}`, { nombre: 'TP.pdf' })).toEqual({ simbolo: 'carpeta', tono: 'drive', enlace: false });
+    expect(enlace('https://example.org/apunte.pdf', { nombre: 'apunte.pdf' })).toEqual({ simbolo: 'enlace', tono: 'enlace', enlace: false });
+    expect(enlace('https://docs.google.com/forms/d/e/x/viewform')).toEqual({ simbolo: 'formulario', tono: 'formulario', enlace: false });
+    expect(dibujoDeItem({ tipo: 'archivo', archivo: 'a.pdf' }).enlace).toBe(false);
   });
 });

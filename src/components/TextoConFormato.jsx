@@ -1,15 +1,15 @@
 import { Fragment } from 'react';
 import { dominioDe } from '../lib/datos';
 import { leerFormato } from '../lib/formato';
-import { esCarpetaDeDrive, useAbrirCarpeta } from './carpetaEnHoja';
+import { seAbreAca, useAbrirCarpeta } from './carpetaEnHoja';
 
 function Partes({ partes }) {
   const abrirCarpeta = useAbrirCarpeta();
   return partes.map((p, i) => {
     if (p.tipo === 'negrita') return <strong key={i}>{p.texto}</strong>;
     if (p.tipo === 'cursiva') return <em key={i}>{p.texto}</em>;
-    // A Drive folder opens here (carpetaEnHoja.js).
-    if (p.tipo === 'enlace' && abrirCarpeta && esCarpetaDeDrive(p.url)) {
+    // A Drive folder opens here, and on a page also a file of Drive, in the viewer (carpetaEnHoja.js).
+    if (p.tipo === 'enlace' && seAbreAca(abrirCarpeta, p.url)) {
       return <button key={i} type="button" className="enlace-carpeta" aria-haspopup="dialog" onClick={() => abrirCarpeta({ destino: p.url, texto: p.texto })}>{p.texto}</button>;
     }
     // The text of a link does not say where it goes: its site shows on hover.

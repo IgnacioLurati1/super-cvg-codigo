@@ -193,3 +193,26 @@ export function mensajeDeEjemplo(ahora = Date.now()) {
     ],
   };
 }
+
+// The day `dias` from `ahora`, as Sysacad Lindo writes it (AAAA-MM-DD, local).
+const diaEn = (ahora, dias) => {
+  const d = new Date(ahora + dias * DIA);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+};
+
+/** What Sysacad Lindo would answer about the exams the demo's student signed up for. */
+export function examenesDeEjemplo(ahora = Date.now()) {
+  return {
+    fuente: 'sysacad-lindo',
+    para: 'super-cvg',
+    v: 3,
+    tipo: 'examenes',
+    vinculada: true,
+    alumno: 'Rodríguez, Ejemplo Martín',
+    fecha: ahora - 3 * HORA,
+    examenes: [
+      { materia: 'ANÁLISIS MATEMÁTICO II', dia: diaEn(ahora, 6), turno: 'Tarde', teorico: '15:00', practico: null, tribunal: 'Ejemplo' },
+      { materia: 'FÍSICA II', dia: diaEn(ahora, 13), turno: 'Mañana', teorico: '08:00', practico: '10:30', tribunal: null },
+    ],
+  };
+}

@@ -12,7 +12,7 @@ import { useUI } from '../components/ui';
 import { cambiarAjustes, useAjustes, useVista } from '../lib/ajustes';
 import { useAtajosDePagina } from '../lib/atajos';
 import { guardarArchivo } from '../lib/archivos';
-import { cargarMes, cargarNombres } from '../lib/campus';
+import { cargarMes, cargarNombres, cargarPerfil } from '../lib/campus';
 import { eventosDeLaFacultad, marcaDelDia } from '../lib/facultad';
 import { armarIcs, armarMes, claveDeFecha, claveDia, diaEnTexto, esClaveDeDia, fecha, fechaDeClave, mesEnTexto, porDia } from '../lib/datos';
 import {
@@ -27,6 +27,10 @@ import { useConsulta } from '../lib/useConsulta';
 import { fechasDe } from '../lib/classroom';
 import { cargarClassroomUnido } from '../lib/classroomUnido';
 import { useGoogle } from '../lib/google';
+import { esDemo } from '../lib/modoDemo';
+import { tokenActual } from '../lib/sesion';
+import { useSysacad } from '../lib/sysacad';
+import { eventosDeExamenes, examenesDelAlumno } from '../lib/sysacadExamenes';
 import './panel.css';
 
 // The academic calendar's dates: the same for everyone, made once.
@@ -234,10 +238,21 @@ export default function Calendario() {
   const classroom = useConsulta(async () => (google.conectado ? cargarClassroomUnido() : []), [google.conectado]);
   const deClassroom = useMemo(() => (classroom.datos ?? []).flatMap((u) => fechasDe(u.datos, u.entregadas, u.materia)), [classroom.datos]);
 
+  // The exams the student signed up for in Sysacad, from Sysacad Lindo: only when Sysacad's name is this account's.
+  const { examenes: deLaExtension } = useSysacad();
+  const conAlumno = Boolean(deLaExtension?.vinculada && deLaExtension.alumno);
+  const perfil = useConsulta(async () => (conAlumno ? cargarPerfil() : null), [conAlumno]);
+  const deSysacad = useMemo(() => eventosDeExamenes(examenesDelAlumno(deLaExtension, perfil.datos?.completo)), [deLaExtension, perfil.datos]);
+  // The demo has no extension: its made-up answer comes through the same window and the same check.
+  useEffect(() => {
+    if (!import.meta.env.DEV || !esDemo(tokenActual())) return;
+    import('../lib/demoSysacad').then(({ examenesDeEjemplo }) => window.postMessage(examenesDeEjemplo(), window.location.origin));
+  }, []);
+
   // The campus' dates as the student left them: corrected or deleted here, the campus stays as it is.
   const todos = useMemo(
-    () => [...conHechas([...conCorrecciones(datos?.eventos ?? [], mio, datos?.nombres), ...deClassroom], mio), ...eventosPropios(mio, datos?.nombres), ...(conFacultad ? DE_LA_FACULTAD : [])].filter((e) => enRango(e) && !fuera.has(Number(e.materiaId))),
-    [datos, deClassroom, mio, enRango, conFacultad, fuera],
+    () => [...conHechas([...conCorrecciones(datos?.eventos ?? [], mio, datos?.nombres), ...deClassroom], mio), ...eventosPropios(mio, datos?.nombres), ...deSysacad, ...(conFacultad ? DE_LA_FACULTAD : [])].filter((e) => enRango(e) && !fuera.has(Number(e.materiaId))),
+    [datos, deClassroom, mio, enRango, conFacultad, fuera, deSysacad],
   );
   const borradas = useMemo(() => borradasDelCampus(datos?.eventos ?? [], mio).filter((e) => enRango(e) && !fuera.has(Number(e.materiaId))).sort((a, b) => a.cuando - b.cuando), [datos, mio, enRango, fuera]);
 
@@ -311,7 +326,7 @@ export default function Calendario() {
       const [resultados, nombres] = await Promise.all([Promise.allSettled(meses.map((d) => cargarMes(d.getFullYear(), d.getMonth() + 1))), cargarNombres()]);
       const listas = resultados.filter((m) => m.status === 'fulfilled').map((m) => m.value);
       const faltan = resultados.length - listas.length;
-      const queVienen = [...conHechas([...conCorrecciones(listas.flat(), mio, nombres), ...deClassroom], mio), ...eventosPropios(mio, nombres), ...(conFacultad ? DE_LA_FACULTAD : [])]
+      const queVienen = [...conHechas([...conCorrecciones(listas.flat(), mio, nombres), ...deClassroom], mio), ...eventosPropios(mio, nombres), ...deSysacad, ...(conFacultad ? DE_LA_FACULTAD : [])]
         .filter((e) => e.cuando >= desde && !fuera.has(Number(e.materiaId)) && (!materiaActiva || String(e.materiaId) === materiaActiva) && (!soloVencimientos || e.vencimiento))
         .sort((a, b) => a.cuando - b.cuando);
       const unicos = [...new Map(queVienen.map((e) => [e.id, e])).values()];

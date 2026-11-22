@@ -1,4 +1,5 @@
 import { idDeYoutube, normalizar } from './datos';
+import { leerEnlace } from './drivePublico';
 
 // Each course gets a symbol from its name, and the same one on every screen.
 // The order matters: «Algoritmos Genéticos» has to find «genetic» before «algoritmo».
@@ -92,18 +93,38 @@ export function iconoDeEnlace(destino, video = idDeYoutube(destino)) {
   return hallado ? { simbolo: hallado[0], tono: hallado[1] } : { simbolo: 'enlace', tono: 'enlace' };
 }
 
-export function simboloDeItem(item) {
-  if (item.tipo === 'archivo') return DIBUJO_DE_ARCHIVO[claseDeArchivo(item)] ?? 'documento';
-  if (item.tipo === 'enlace') return iconoDeEnlace(item.destino, item.video).simbolo;
-  if (item.tipo === 'texto') return 'texto';
-  return 'actividad';
+// Google's own documents, by their address: drawn as the file they are, not as a service.
+const DOCUMENTOS_DE_GOOGLE = new Set(['documento', 'planilla', 'presentacion']);
+
+/** The drawing and color of a link to a file in Drive, as the file it is: by the extension of its name in Drive
+ * (`titulo`, else the name shown) or, if a Google document, by its address. `enlace` says to draw it with the
+ * link badge, so it is not taken for a file of the course. A folder or any other link: null. `esArchivo`: Classroom
+ * already said it is a file, whatever the address looks like. */
+export function dibujoDeArchivoEnlazado(destino, titulo, esArchivo = false) {
+  const servicio = iconoDeEnlace(destino);
+  if (DOCUMENTOS_DE_GOOGLE.has(servicio.simbolo)) return { simbolo: servicio.simbolo, tono: servicio.tono, enlace: true };
+  const enDrive = leerEnlace(destino);
+  if (esArchivo ? enDrive?.carpeta : !enDrive || enDrive.carpeta) return null;
+  const clase = claseDeArchivo({ nombre: titulo });
+  return { simbolo: DIBUJO_DE_ARCHIVO[clase] ?? 'documento', tono: clase ?? 'drive', enlace: true };
 }
+
+/** The drawing, color and link badge of an item. A link to a file in Drive is drawn as that file, with the badge. */
+export function dibujoDeItem(item) {
+  if (item.tipo === 'archivo') return { simbolo: DIBUJO_DE_ARCHIVO[claseDeArchivo(item)] ?? 'documento', tono: claseDeArchivo(item), enlace: false };
+  if (item.tipo === 'enlace') {
+    if (!item.video) {
+      const archivo = dibujoDeArchivoEnlazado(item.destino, item.tituloEnDrive ?? item.nombre, Boolean(item.tituloEnDrive));
+      if (archivo) return archivo;
+    }
+    return { ...iconoDeEnlace(item.destino, item.video), enlace: false };
+  }
+  if (item.tipo === 'texto') return { simbolo: 'texto', tono: 'texto', enlace: false };
+  return { simbolo: 'actividad', tono: 'actividad', enlace: false };
+}
+
+export const simboloDeItem = (item) => dibujoDeItem(item).simbolo;
 
 /** The color of an item's symbol, so a PDF, a spreadsheet, a link or a task are told apart at a glance. A file of an
  * unknown kind has none. */
-export function tonoDeItem(item) {
-  if (item.tipo === 'archivo') return claseDeArchivo(item);
-  if (item.tipo === 'enlace') return iconoDeEnlace(item.destino, item.video).tono;
-  if (item.tipo === 'texto') return 'texto';
-  return 'actividad';
-}
+export const tonoDeItem = (item) => dibujoDeItem(item).tono;

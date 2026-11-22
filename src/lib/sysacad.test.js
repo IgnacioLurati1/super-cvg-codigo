@@ -173,14 +173,14 @@ describe('hablar con la extensión', () => {
     const enviados = [];
     vi.spyOn(window, 'postMessage').mockImplementation((m, origen) => enviados.push([m, origen]));
     s.iniciarSysacad();
-    expect(enviados).toEqual([[{ fuente: 'super-cvg', pide: 'sysacad' }, window.location.origin], [{ fuente: 'super-cvg', pide: 'pestanas' }, window.location.origin]]);
+    expect(enviados).toEqual(['sysacad', 'pestanas', 'examenes'].map((pide) => [{ fuente: 'super-cvg', pide }, window.location.origin]));
     expect(snapshot(s)).toMatchObject({ estado: 'buscando', copias: null, sinCopias: false });
     vi.advanceTimersByTime(s.ESPERA_MS + 10);
     expect(snapshot(s)).toMatchObject({ estado: 'sin-extension', copias: null, sinCopias: true });
     // Back to the tab: it asks again, and an answer then still counts.
     Object.defineProperty(document, 'visibilityState', { value: 'visible', configurable: true });
     document.dispatchEvent(new Event('visibilitychange'));
-    expect(enviados).toHaveLength(4);
+    expect(enviados).toHaveLength(6);
     llega({ fuente: 'sysacad-lindo', para: 'super-cvg', v: 1, vinculada: false });
     expect(snapshot(s).estado).toBe('sin-vincular');
   });
@@ -193,9 +193,9 @@ describe('hablar con la extensión', () => {
     s.iniciarSysacad();
     // Sysacad Lindo loads after the page asked: it says hello on its own, never the tabs.
     llega({ fuente: 'sysacad-lindo', para: 'super-cvg', v: 1, vinculada: true });
-    expect(enviados).toEqual(['sysacad', 'pestanas', 'pestanas']);
+    expect(enviados).toEqual(['sysacad', 'pestanas', 'examenes', 'pestanas', 'examenes']);
     llega({ fuente: 'sysacad-lindo', para: 'super-cvg', v: 1, vinculada: true });
-    expect(enviados).toHaveLength(3);
+    expect(enviados).toHaveLength(5);
     vi.advanceTimersByTime(s.ESPERA_MS + 10);
     // Late or not, the tabs count.
     llega({ fuente: 'sysacad-lindo', para: 'super-cvg', v: 2, tipo: 'pestanas', vinculada: true, guarda: true, alumno: 'PEREZ, Juan', pestanas: [] });
@@ -227,7 +227,7 @@ describe('hablar con la extensión', () => {
     llega(bien({ fecha: Date.now() }));
     expect(snapshot(s).finales).toHaveLength(1);
     s.desvincularSysacad();
-    expect(enviados).toEqual(['sysacad', 'pestanas', 'pestanas', 'vincular', 'desvincular']);
+    expect(enviados).toEqual(['sysacad', 'pestanas', 'examenes', 'pestanas', 'examenes', 'vincular', 'desvincular']);
     expect(snapshot(s)).toMatchObject({ estado: 'sin-vincular', fecha: null, finales: null });
   });
 
@@ -274,6 +274,30 @@ describe('hablar con la extensión', () => {
     expect(snapshot(s).copias).toEqual({ vinculada: false, guarda: false, alumno: null, pestanas: [] });
   });
 
+  const examenes = (extra = {}) => ({
+    fuente: 'sysacad-lindo', para: 'super-cvg', v: 3, tipo: 'examenes', vinculada: true, alumno: 'PEREZ, Juan', fecha: Date.now() - 60_000,
+    examenes: [{ materia: 'ANÁLISIS MATEMÁTICO II', dia: '2026-12-10', turno: 'Tarde', teorico: '15:00', practico: null, tribunal: 'Ferreyra' }],
+    ...extra,
+  });
+
+  it('los exámenes llegan aparte, con el nombre como lo escribe el campus; Salir y desvincular los sacan de la memoria', async () => {
+    const { s } = await cargar();
+    vi.spyOn(window, 'postMessage').mockImplementation(() => {});
+    s.iniciarSysacad();
+    expect(snapshot(s).examenes).toBeNull();
+    llega(examenes());
+    expect(snapshot(s).examenes).toEqual({ vinculada: true, alumno: 'PEREZ, Juan', fecha: expect.any(Number), examenes: [{ materia: 'Análisis Matemático II', dia: '2026-12-10', teorico: '15:00', practico: null }] });
+    // Neither the finals nor the tabs change with them, and one that does not pass the check changes nothing.
+    expect(snapshot(s)).toMatchObject({ estado: 'buscando', finales: null, copias: null });
+    llega(examenes({ examenes: [{ materia: 'Física I', dia: '2026-02-30', turno: null, teorico: null, practico: null, tribunal: null }] }));
+    expect(snapshot(s).examenes.examenes).toHaveLength(1);
+    s.olvidarSysacad();
+    expect(snapshot(s).examenes).toBeNull();
+    llega(examenes());
+    s.desvincularSysacad();
+    expect(snapshot(s).examenes).toEqual({ vinculada: false, alumno: null, fecha: null, examenes: [] });
+  });
+
   it('nada queda en el navegador', async () => {
     const { s } = await cargar();
     vi.spyOn(window, 'postMessage').mockImplementation(() => {});
@@ -282,6 +306,7 @@ describe('hablar con la extensión', () => {
     s.iniciarSysacad();
     llega(bien({ fecha: Date.now() }));
     llega(copias());
+    llega(examenes());
     expect(localStorage.length + sessionStorage.length).toBe(0);
   });
 });

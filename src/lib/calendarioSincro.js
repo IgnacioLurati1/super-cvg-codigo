@@ -1,7 +1,8 @@
 // «Vincular Google Calendar»: Super CVG creates a calendar called «Super CVG» in the student's Google Calendar (gcal.js)
 // and both work as one calendar (calendarioGoogle.js plans it). The campus' dates of the next 60 days, the faculty's
-// academic calendar from today on (while it shows in Calendario) and the student's own dates go there; what the student
-// writes, changes or deletes there comes back as a date of their own. The campus' and the faculty's dates only go.
+// academic calendar from today on (while it shows in Calendario), the exams the student signed up for in Sysacad (from
+// Sysacad Lindo, from today on) and the student's own dates go there; what the student writes, changes or deletes there
+// comes back as a date of their own. The campus', the faculty's and Sysacad's dates only go.
 // Nothing goes through Luta Studios, and there is no server. The campus is asked once per visit; Google, a few seconds
 // after the student changes a date of their own, on coming back to the tab and every few minutes while it is in view.
 // Which calendar is the student's goes in a small file of the hidden folder of Super CVG in their Drive, so another
@@ -11,7 +12,7 @@
 import { useSyncExternalStore } from 'react';
 import { ajustesActuales, escucharAjustes } from './ajustes';
 import { deGoogle, eventoParaGoogle, huellaGoogle, idDeGoogle, idEnGoogle, materiaEnTitulo, origenDeId, planear, ZONA } from './calendarioGoogle';
-import { cargarMes, cargarNombres } from './campus';
+import { cargarMes, cargarNombres, cargarPerfil } from './campus';
 import { claveDia, huella } from './datos';
 import { clienteDrive } from './drive';
 import { clienteCalendario } from './gcal';
@@ -20,6 +21,8 @@ import { conectarGoogle, cuentaGoogle, disponibleGoogle, escucharGoogle, mailGoo
 import { cambiarMio, conCorrecciones, escucharMio, eventosPropios, materiaDe, mioActual, usuarioActual } from './mio';
 import { eventosDeLaFacultad } from './facultad';
 import { esDemo } from './modoDemo';
+import { escucharSysacad, estadoSysacad } from './sysacad';
+import { eventosDeExamenes, examenesDelAlumno } from './sysacadExamenes';
 import { tokenActual } from './sesion';
 
 export const NOMBRE = 'Super CVG';
@@ -213,8 +216,18 @@ function propiosAhora(nombres) {
   return { eventos, origenes, fuera };
 }
 
+// The exams of Sysacad of the student signed in, or null when Sysacad Lindo did not say them here (or they are someone
+// else's): then the ones already in Google stay as they are.
+async function examenesAhora() {
+  const leidos = estadoSysacad().examenes;
+  if (!leidos?.vinculada || !leidos.alumno) return null;
+  const perfil = await cargarPerfil().catch(() => null);
+  return examenesDelAlumno(leidos, perfil?.completo);
+}
+
 /** What Super CVG has now: the campus' dates from today on, for DIAS days (only `conCampus`), the academic calendar
- * from today on (if it shows in Calendario) and every own date. */
+ * from today on (if it shows in Calendario), the exams of Sysacad from today on (`conSysacad` says whether they are
+ * known) and every own date. */
 export async function deseadosAhora({ ahora = new Date(), conCampus = true } = {}) {
   const hoy = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate());
   const desde = hoy.getTime() / 1000;
@@ -241,8 +254,15 @@ export async function deseadosAhora({ ahora = new Date(), conCampus = true } = {
       facultad.set(evento.id, evento);
     }
   }
+  const examenes = await examenesAhora();
+  const sysacad = new Map();
+  for (const e of eventosDeExamenes(examenes)) {
+    if (e.cuando < desde) continue;
+    const evento = eventoParaGoogle(e);
+    sysacad.set(evento.id, evento);
+  }
   const propios = propiosAhora(nombres);
-  return { deseados: [...campus, ...facultad.values(), ...propios.eventos.values()], desde, nombres, ...propios };
+  return { deseados: [...campus, ...facultad.values(), ...sysacad.values(), ...propios.eventos.values()], desde, nombres, conSysacad: examenes !== null, ...propios };
 }
 
 const enMateria = (mio, id, fn) => ({ ...mio, materias: { ...mio.materias, [id]: fn(materiaDe(mio, id)) } });
@@ -301,9 +321,9 @@ export async function unaVuelta(alumno, cal, { conCampus = true } = {}) {
     if (e.codigo === 'no-existe') throw falla(BORRADO, 'borrado');
     throw e;
   }
-  const { deseados, desde, nombres, origenes, fuera } = await deseadosAhora({ conCampus });
+  const { deseados, desde, nombres, origenes, fuera, conSysacad } = await deseadosAhora({ conCampus });
   if (usuarioActual() !== alumno || !leerMarcas(alumno)?.prendido) return;
-  const plan = planear({ deseados, existentes, base: marcas.base, tocado: marcas.tocado, desde, conCampus, fuera });
+  const plan = planear({ deseados, existentes, base: marcas.base, tocado: marcas.tocado, desde, conCampus, conSysacad, fuera });
   const base = { ...plan.base };
   // One Google doesn't take, or that went away meanwhile, is looked at again next time; the rest goes on.
   const salvo = (id) => (e) => {
@@ -520,6 +540,17 @@ export function arrancarCalendario() {
   escucharAjustes(() => {
     if (ajustesActuales().facultad === conFacultad) return;
     conFacultad = ajustesActuales().facultad;
+    if (!leerMarcas(usuarioActual())?.prendido || estado.fase === 'reconectar') return;
+    if (corriendo) otraVez = true;
+    else programar(ESPERA_CAMBIOS_MS);
+  });
+  // Sysacad Lindo said other exams (or said them for the first time in this visit): they go to Google too.
+  const huellaExamenes = () => huella(JSON.stringify(estadoSysacad().examenes));
+  let examenesVistos = huellaExamenes();
+  escucharSysacad(() => {
+    const ahora = huellaExamenes();
+    if (ahora === examenesVistos) return;
+    examenesVistos = ahora;
     if (!leerMarcas(usuarioActual())?.prendido || estado.fase === 'reconectar') return;
     if (corriendo) otraVez = true;
     else programar(ESPERA_CAMBIOS_MS);

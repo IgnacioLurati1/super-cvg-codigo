@@ -3,11 +3,12 @@ import { NOMBRES_DE_LENGUAJE } from '../../lib/laboratorio/adivinar';
 import { nombreEnProyecto } from '../../lib/laboratorio/guardado';
 import { IDS_DE_LENGUAJE, LENGUAJES } from '../../lib/laboratorio/lenguajes';
 import { EXTENSIONES } from '../../lib/laboratorio/saneo';
+import { useBotonesSinMouse } from '../../lib/sinMouse';
 
 // The lab's files, on the left as in an editor: the draft first, then by course the projects (folders with their files)
 // and the files on their own. What the last run wrote goes under the place it ran, marked with the highlighter. Each row
 // opens with a click; «Opciones» (or the right click, Shift+F10 and the menu key) opens what else it can do, beside it.
-// Names are written in place. A file goes to another project by dragging it, or with «Mover a» from the keyboard.
+// Names are written in place. A file goes to another project by dragging it, or with «Mover a» (Modo sin mouse).
 
 const DIBUJOS = {
   carpeta: 'M3 6.5A1.5 1.5 0 0 1 4.5 5H9l2 2h8.5A1.5 1.5 0 0 1 21 8.5v9a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 17.5z',
@@ -287,6 +288,8 @@ function Opciones({ nombre, menu, acciones }) {
 export default function Explorador({ archivos, proyectos, materias, mesa, abierto, proyecto, escritos, verEscrito, acc, encabezado = true, titulo = 'Tus archivos' }) {
   const id = useId();
   const menuDe = (clave) => `${id}-menu-${clave}`;
+  // «Mover a…» does what dragging a file does: only with «Modo sin mouse» (sinMouse.js).
+  const conBotones = useBotonesSinMouse();
   // Which name is being written, or where a file is going: one at a time.
   const [editando, setEditando] = useState(null);
   const [plegados, setPlegados] = useState(() => new Set());
@@ -476,7 +479,7 @@ export default function Explorador({ archivos, proyectos, materias, mesa, abiert
               acciones={[
                 ext === LENGUAJES[p.lenguaje].extension && !esPrincipal && { texto: 'Que corra este', hacer: () => acc.elegirPrincipal(p.id, a.id) },
                 { texto: 'Cambiar el nombre', hacer: () => setEditando({ clave }) },
-                destinosDe(a).length > 0 && moverA(a, nombre),
+                conBotones && destinosDe(a).length > 0 && moverA(a, nombre),
                 { texto: 'Bajar', hacer: () => acc.bajarArchivo(a) },
                 { texto: 'Borrar', peligro: true, hacer: () => acc.borrarArchivo(a) },
               ]}
@@ -612,7 +615,7 @@ export default function Explorador({ archivos, proyectos, materias, mesa, abiert
               acciones={[
                 { texto: 'Pasar a un proyecto', hacer: () => acc.aProyecto(a) },
                 { texto: 'Cambiar el nombre', hacer: () => setEditando({ clave }) },
-                destinosDe(a).length > 0 && moverA(a, `${a.nombre}.${ext}`),
+                conBotones && destinosDe(a).length > 0 && moverA(a, `${a.nombre}.${ext}`),
                 { texto: 'Bajar', hacer: () => acc.bajarArchivo(a) },
                 { texto: 'Borrar', peligro: true, hacer: () => acc.borrarArchivo(a) },
               ]}

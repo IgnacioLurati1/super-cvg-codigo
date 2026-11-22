@@ -4,6 +4,39 @@
 // Older updates keep `cambios` ([kind, text]), shown the same way. In the student's words: nothing technical.
 export const NOVEDADES = [
   {
+    fecha: '2026-11-21',
+    titulo: 'Tus materias, como las del campus',
+    funciones: [
+      {
+        tipo: 'mejora',
+        nombre: 'Materias tuyas',
+        texto: 'Tienen todo lo que tiene una materia del campus.',
+        puntos: [
+          'Buscador y filtros: archivos, enlaces, sin ver y para el parcial.',
+          'Para hacer, anotaciones, fechas, fusionar en un PDF y bajar en un ZIP.',
+          'Las tareas y fechas que anotás salen en Hoy y en el calendario con el nombre de la materia.',
+          'Editar muestra también los temas de Classroom: cambiales el nombre, movelos u ocultalos.',
+        ],
+      },
+      {
+        tipo: 'nuevo',
+        nombre: 'Tus exámenes de Sysacad',
+        texto: 'Las mesas a las que te anotaste en Sysacad salen en el calendario, en Hoy y en tu Google Calendar. Necesitás Sysacad Lindo 2.5.0 o más nueva.',
+      },
+      {
+        tipo: 'nuevo',
+        nombre: 'Modo sin mouse',
+        texto: 'Con mouse, las secciones se mueven y Consultron se agranda arrastrando. Los botones para hacerlo sin mouse salen si lo prendés en Configuración, Teclado.',
+      },
+    ],
+    arreglos: [
+      'Ocultar una sección o algo de una materia tuya ya no te lleva arriba de todo, y se deshace con un toque.',
+      'Un link de Drive dentro de un texto se abre en el visor.',
+      'Un link a un archivo de Drive muestra el ícono de lo que es, con un simbolito de link. Ya no parece una carpeta.',
+      'En las opciones de un archivo, Ocultar va en rojo y entra en el mismo renglón que los otros botones.',
+    ],
+  },
+  {
     fecha: '2026-11-19',
     titulo: 'Foros, temas y la facu en 3D',
     funciones: [

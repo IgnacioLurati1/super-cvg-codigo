@@ -1,5 +1,5 @@
 import { useColorDeMateria } from '../lib/colores';
-import { simboloDe, simboloDeItem, tonoDeItem } from '../lib/simbolos';
+import { dibujoDeItem, simboloDe } from '../lib/simbolos';
 
 // Line icons drawn for this site, on a 24 grid. They never carry meaning alone: the course name is always next to them.
 const DIBUJOS = {
@@ -57,16 +57,31 @@ const DIBUJOS = {
   sobre: <><rect x="3" y="5.5" width="18" height="13" rx="2" /><path d="M3.8 7l8.2 6.2L20.2 7" /></>,
 };
 
-export function Icono({ nombre, tamano, color, tono }) {
+// The link badge, in the lower corner: a file that lives elsewhere (in Drive) and opens there, not a file of the course.
+const ENLAZADO = (
+  <g className="simbolo__enlazado">
+    <circle cx="19" cy="19" r="7" />
+    <path transform="translate(19 19) scale(.44) translate(-12 -12)" d="M10 14a4 4 0 0 0 6 0l3-3a4 4 0 0 0-6-6l-1 1M14 10a4 4 0 0 0-6 0l-3 3a4 4 0 0 0 6 6l1-1" />
+  </g>
+);
+
+export function Icono({ nombre, tamano, color, tono, enlazado }) {
   return (
-    <span className={`simbolo${tamano ? ` simbolo--${tamano}` : ''}`} data-simbolo={nombre} data-materia={color} data-tono={tono ?? undefined} aria-hidden="true">
-      <svg viewBox="0 0 24 24" focusable="false">{DIBUJOS[nombre] ?? DIBUJOS.libro}</svg>
+    <span className={`simbolo${tamano ? ` simbolo--${tamano}` : ''}`} data-simbolo={nombre} data-materia={color} data-tono={tono ?? undefined} data-enlazado={enlazado || undefined} aria-hidden="true">
+      <svg viewBox="0 0 24 24" focusable="false">
+        {DIBUJOS[nombre] ?? DIBUJOS.libro}
+        {enlazado && ENLAZADO}
+      </svg>
     </span>
   );
 }
 
-/** The symbol of a file, a link, a text or an activity, with the color of its kind. */
-export const IconoDeItem = ({ item }) => <Icono nombre={simboloDeItem(item)} tono={tonoDeItem(item)} tamano="tipo" />;
+/** The symbol of a file, a link, a text or an activity, with the color of its kind. A link to a file in Drive, as that
+ * file with the link badge. */
+export function IconoDeItem({ item }) {
+  const { simbolo, tono, enlace } = dibujoDeItem(item);
+  return <Icono nombre={simbolo} tono={tono} enlazado={enlace} tamano="tipo" />;
+}
 
 /** The symbol of a course (or of a subject added from the schedules), with its color. Without one: `sinMateria`. */
 export default function Simbolo({ id, nombre, tamano, sinMateria }) {

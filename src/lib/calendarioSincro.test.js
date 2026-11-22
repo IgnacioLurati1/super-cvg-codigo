@@ -106,7 +106,12 @@ vi.mock('./campus', () => ({
     return d.getFullYear() === anio && d.getMonth() + 1 === mes;
   }),
   cargarNombres: async () => ({ 7: 'Física I' }),
+  cargarPerfil: async () => ({ id: 5, nombre: 'Juan', completo: 'Juan Pérez' }),
 }));
+
+// What Sysacad Lindo said of the exams: nothing unless a test puts it.
+let deSysacad = null;
+vi.mock('./sysacad', async (original) => ({ ...(await original()), estadoSysacad: () => ({ examenes: deSysacad }), escucharSysacad: () => () => {} }));
 
 // The faculty's academic calendar: none unless a test puts some.
 let deLaFacultad = [];
@@ -157,6 +162,7 @@ beforeEach(async () => {
   mio.fijarUsuario(5);
   delCampus = [deCampus(1, enDias(2)), deCampus(2, enDias(30)), deCampus(3, enDias(75))];
   deLaFacultad = [];
+  deSysacad = null;
 });
 
 afterEach(() => {
@@ -445,5 +451,35 @@ describe('el calendario académico', () => {
     cambiarAjustes({ facultad: true });
     await s.correr();
     expect(deLaFacultadEn(id)).toHaveLength(2);
+  });
+});
+
+describe('los exámenes de Sysacad', () => {
+  const examen = (dias, materia, teorico = '15:00') => ({ materia, dia: claveDia(enDias(dias)), teorico, practico: null });
+  const dijo = (examenes, alumno = 'PEREZ, Juan') => ({ vinculada: true, alumno, fecha: Date.now(), examenes });
+  const deSysacadEn = (id) => g.vivos(id).filter((e) => e.extendedProperties?.private?.fuente === 'sysacad');
+
+  it('van de hoy en adelante, a su hora, y se van cuando Sysacad ya no los dice', async () => {
+    deSysacad = dijo([examen(-2, 'Química'), examen(5, 'Física II'), examen(9, 'Álgebra', null)]);
+    await (await s.vincularCalendario()).listo;
+    const id = unico();
+    expect(deSysacadEn(id).map((e) => e.summary).sort()).toEqual(['Final de Física II', 'Final de Álgebra']);
+    expect(deSysacadEn(id).find((e) => e.summary === 'Final de Álgebra').start).toEqual({ date: claveDia(enDias(9)) });
+    deSysacad = dijo([examen(5, 'Física II')]);
+    await s.correr();
+    expect(deSysacadEn(id).map((e) => e.summary)).toEqual(['Final de Física II']);
+    expect(mio.mioActual().eventos).toEqual([]);
+  });
+
+  it('sin la extensión acá, o con otro alumno en Sysacad, los de Google quedan', async () => {
+    deSysacad = dijo([examen(5, 'Física II')]);
+    await (await s.vincularCalendario()).listo;
+    const id = unico();
+    deSysacad = null;
+    await s.correr();
+    expect(deSysacadEn(id)).toHaveLength(1);
+    deSysacad = dijo([], 'GÓMEZ, María');
+    await s.correr();
+    expect(deSysacadEn(id)).toHaveLength(1);
   });
 });

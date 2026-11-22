@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { ALTO_CONSULTRON, cambiarAjustes, PANEL_CONSULTRON, useAjustes } from '../../lib/ajustes';
+import { useBotonesSinMouse } from '../../lib/sinMouse';
 
 // How wide Consultron is when it stands beside something (the pages of a PDF, a summary, a calculator): the student
 // drags its left edge, or moves it with the keyboard or with its two buttons, and the width stays for this device
@@ -189,8 +190,10 @@ export function BordeDeAlto({ de, medida }) {
   );
 }
 
-/** Its two buttons, for the header of the corner: shorter and taller. */
+/** Its two buttons, for the header of the corner: shorter and taller. Only with «Modo sin mouse» (sinMouse.js): the
+ * edge does the same. */
 export function BotonesDeAlto({ medida }) {
+  if (!useBotonesSinMouse()) return null;
   return (
     <>
       <button type="button" className="flotante__accion" aria-label="Consultron más bajo" title="Más bajo" aria-disabled={!medida.masBajo || undefined} onClick={() => medida.masBajo?.()}>
@@ -203,8 +206,9 @@ export function BotonesDeAlto({ medida }) {
   );
 }
 
-/** Its two buttons, for the header: narrower and wider. */
+/** Its two buttons, for the header: narrower and wider. Only with «Modo sin mouse», like the ones of the height. */
 export function BotonesDeAncho({ medida }) {
+  if (!useBotonesSinMouse()) return null;
   return (
     <>
       <button type="button" className="flotante__accion" aria-label="Consultron más angosto" title="Más angosto" aria-disabled={!medida.masAngosto || undefined} onClick={() => medida.masAngosto?.()}>
