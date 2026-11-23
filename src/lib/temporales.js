@@ -12,7 +12,7 @@
 // Asking the service: `POST ?a=cvg-temporal` with { bytes } gives { id, subida, vence }, `subida` being a one-time
 // address of its storage where the locked bytes go with a PUT; `GET ?a=cvg-temporal&id=` gives { url, bytes, vence },
 // a short-lived address to bring them. No cookies, no referrer, nothing of the campus.
-import { sanearNombre } from './adjuntos';
+import { sanearNombre } from './nombreArchivo';
 import { esDemo } from './modoDemo';
 import { mimeDe } from './propiasSaneo';
 import { SERVICIO } from './santoResumen';

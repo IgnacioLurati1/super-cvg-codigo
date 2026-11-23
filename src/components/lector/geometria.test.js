@@ -38,6 +38,20 @@ describe('el lugar de cada página', () => {
     expect(con.izquierdas).toEqual(sin.izquierdas);
   });
 
+  it('con Consultron al costado, las páginas quedan donde estaban mientras entran, y si no, se corren lo justo', () => {
+    // Without Consultron the view was 700 wide: the 300 page went at 200. With it (300 wide) the view is 400.
+    const sin = armarLayout([[300, 200], [200, 100]], 1, 700);
+    const con = armarLayout([[300, 200], [200, 100]], 1, 400, BORDE, 0, 300);
+    expect(sin.izquierdas).toEqual([200, 250]);
+    // Room: 400 - 300 - BORDE = 84 at most to the right of centered (50), so it stops against Consultron.
+    expect(con.izquierdas).toEqual([400 - 300 - BORDE, 400 - 300 - BORDE + 50]);
+    // A narrow panel beside a wide view: exactly where it was.
+    const ancha = armarLayout([[300, 200]], 1, 1000, BORDE, 0, 200);
+    expect(ancha.izquierdas[0]).toBe(armarLayout([[300, 200]], 1, 1200).izquierdas[0]);
+    // Pages as wide as the view: nothing to keep, they stay centered.
+    expect(armarLayout([[400, 200]], 1, 300, BORDE, 0, 300).izquierdas).toEqual([BORDE]);
+  });
+
   it('sabe qué página se lee y cuáles dibujar', () => {
     const l = armarLayout(Array.from({ length: 10 }, () => [100, 100]), 1, 200);
     expect(paginaEn(l.tops, 0)).toBe(0);

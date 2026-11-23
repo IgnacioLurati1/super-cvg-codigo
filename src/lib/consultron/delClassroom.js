@@ -1,10 +1,10 @@
 // What Consultron takes from Classroom: the tasks not turned in, for «¿qué tengo?», and what each course says in words
 // (tasks, materials and messages of the stream), to look for answers there. Only if the student already connected
 // their Google account: Consultron never asks for it. What a file attached there says never comes: Classroom gives its
-// name and its link, nothing else. Everything stays in memory (classroom.js), like the rest of Classroom.
+// name and its link, nothing else. It stays where the rest of Classroom does (classroom.js): offline, what was kept.
 import { cargarMaterias, cargarPerfil } from '../campus.js';
 import { cargarCursos, cargarDatosCurso, cargarEntregas, cursoParecido, pendientesDe, textosDeCurso } from '../classroom.js';
-import { permisoGoogle } from '../google.js';
+import { guardadoSinRed, permisoGoogle } from '../google.js';
 import { materiaDe, mioActual } from '../mio.js';
 import { documentoDeTexto } from './adjuntar.js';
 
@@ -33,9 +33,10 @@ export function unirCursos(enCurso, cursos, mio) {
   return [...unidos.values()];
 }
 
-/** The student's Classroom courses with what each has, or [] without the permission. A course that fails is left out. */
+/** The student's Classroom courses with what each has, or [] without the permission (offline, what was kept). A course
+ * that fails is left out. */
 export async function cargarUnidos() {
-  if (!permisoGoogle('classroom')) return [];
+  if (!permisoGoogle('classroom') && !guardadoSinRed('classroom')) return [];
   await cargarPerfil();
   const [{ enCurso }, cursos] = await Promise.all([cargarMaterias(), cargarCursos()]);
   const unidos = unirCursos(enCurso, cursos, mioActual());

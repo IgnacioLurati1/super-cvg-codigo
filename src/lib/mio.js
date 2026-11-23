@@ -23,7 +23,7 @@ const LIMITES = { nombre: 200, nota: 20_000, tarea: 200, titulo: 200, lista: 300
 
 const A_MANO_VACIO = Object.freeze({ cursos: Object.freeze({}), extras: Object.freeze({}) });
 const HORARIO_VACIO = Object.freeze({ extras: Object.freeze([]), aMano: A_MANO_VACIO });
-const VACIO = Object.freeze({ materias: Object.freeze({}), eventos: Object.freeze([]), propias: Object.freeze([]), cursos: Object.freeze({}), campus: Object.freeze({}), horario: HORARIO_VACIO, lecturas: Object.freeze({}), hechas: Object.freeze({}), laboratorio: Object.freeze([]), proyectosLab: Object.freeze([]), escritos: Object.freeze([]), repaso: Object.freeze([]), hoy: HOY_VACIO, avisosOcultos: Object.freeze([]), drive: DRIVE_VACIO, apariencia: null });
+const VACIO = Object.freeze({ materias: Object.freeze({}), eventos: Object.freeze([]), propias: Object.freeze([]), cursos: Object.freeze({}), campus: Object.freeze({}), horario: HORARIO_VACIO, lecturas: Object.freeze({}), hechas: Object.freeze({}), laboratorio: Object.freeze([]), proyectosLab: Object.freeze([]), escritos: Object.freeze([]), repaso: Object.freeze([]), hoy: HOY_VACIO, avisosOcultos: Object.freeze([]), sysacadSuyo: Object.freeze([]), drive: DRIVE_VACIO, apariencia: null, sinDescargar: Object.freeze({}) });
 const MATERIA_VACIA = Object.freeze({
   secciones: [], ocultos: [], nombres: {}, orden: {}, vistos: [], parcial: [], nota: '', tareas: [], fechas: [], descartes: [], foto: null, classroom: null, lugares: {},
   ordenSecciones: [], plegadas: [], comision: null, aulas: {},
@@ -61,11 +61,24 @@ const esSeccion = esSeccionOTema;
 const esRenombrable = (s) => (Number.isInteger(s) && s >= 0) || esTema(s);
 const seccionDeClave = (k) => (/^\d+$/.test(k) ? Number(k) : k);
 const texto = (t, limite) => (typeof t === 'string' ? t.slice(0, limite) : '');
+const esHuellaDeNombres = (h) => typeof h === 'string' && /^[0-9a-z]{1,7}$/.test(h);
 const lista = (x, valida) => (Array.isArray(x) ? [...new Set(x.filter(valida))].slice(0, LIMITES.lista) : []);
 const esFecha = (f) => typeof f === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(f) && !Number.isNaN(fechaDeClave(f).getTime());
 // A commission as the faculty writes it («3K02», «3EK01»), or «ninguna» for a course the student doesn't take in any.
 export const esComision = (c) => typeof c === 'string' && /^[1-6][EA]?[A-Z]\d{2}$/.test(c);
 const comisionValida = (c) => esComision(c) || c === 'ninguna';
+// The sections of the campus the night download skips (descargas.js): by course and section number, nothing else.
+const MAX_CURSOS_SIN_DESCARGAR = 200;
+const esSeccionDeNumero = (s) => Number.isSafeInteger(s) && s > 0;
+function sanearSinDescargar(x) {
+  const r = {};
+  if (!x || typeof x !== 'object' || Array.isArray(x)) return r;
+  for (const [id, secciones] of Object.entries(x).slice(0, MAX_CURSOS_SIN_DESCARGAR)) {
+    const limpias = esMateriaId(id) && Array.isArray(secciones) ? [...new Set(secciones.filter(esSeccionDeNumero))].sort((a, b) => a - b).slice(0, MAX_SECCIONES) : [];
+    if (limpias.length) r[id] = limpias;
+  }
+  return r;
+}
 const MAX_AULA = 40;
 const esDia = (d) => Number.isInteger(d) && d >= 1 && d <= 6;
 // The classrooms the student wrote for a course, by day of the week (1 is Monday).
@@ -269,10 +282,14 @@ export function sanearMio(datos) {
     hoy: sanearHoy(datos?.hoy),
     // The kinds of campus notification the student doesn't want to see (avisos.js): only their keys.
     avisosOcultos: lista(datos?.avisosOcultos, esGrupoDeAviso),
+    // Pairs of names (Sysacad's and the campus's) the student said are theirs (sysacadPestanas.js): fingerprints only.
+    sysacadSuyo: lista(datos?.sysacadSuyo, esHuellaDeNombres),
     // The Drive folders added, the career's taken away and what was hidden in them (drivePublico.js): ids and names.
     drive: sanearDriveMio(datos?.drive),
     // The look the student chose (ajustes.js): what differs from the default. Null until this device put its own.
     apariencia: datos?.apariencia && typeof datos.apariencia === 'object' ? aparienciaQueViaja(datos.apariencia) : null,
+    // The sections each campus course skips in the night downloads (descargas.js): only numbers.
+    sinDescargar: sanearSinDescargar(datos?.sinDescargar),
   };
 }
 
@@ -331,7 +348,7 @@ function migrar(id) {
 function sembrarApariencia() {
   const datos = leer();
   const aca = aparienciaQueViaja(ajustesActuales());
-  if (datos.apariencia !== null || !Object.keys(aca).length) return;
+  if (datos.apariencia !== null || !Object.keys(aca).length || !ajustesActuales().mismaEnTodos) return;
   try {
     localStorage.setItem(PREFIJO + usuario, JSON.stringify({ ...datos, apariencia: aca }));
   } catch {
@@ -795,6 +812,9 @@ export const materiaEnHoy = (id, si) => cambiarHoy((h) => ({ ...h, fuera: conSin
 export const verAvisos = (clave, ver) =>
   cambiarMio((mio) => ({ ...mio, avisosOcultos: ver ? mio.avisosOcultos.filter((c) => c !== clave) : [...mio.avisosOcultos, clave] }));
 
+/** The student says the copies of Sysacad with another name are theirs (huellaDelPar). False if it couldn't be saved. */
+export const sonMiasLasDeSysacad = (h) => cambiarMio((mio) => ({ ...mio, sysacadSuyo: [...mio.sysacadSuyo, h] }));
+
 // ---------- Materias: pinned, archived and the look of each card (tarjetas.js) ----------
 
 /** Up with the pinned ones ('fijada'), away with the archived ones ('archivada'), or back to its group (null). Works
@@ -803,3 +823,13 @@ export const ponerEnLista = (id, lugar) => cambiarMateria(id, (m) => ({ ...m, en
 
 /** The look of one course's card, or null for the one of every course. */
 export const ponerTarjeta = (id, estilo) => cambiarMateria(id, (m) => ({ ...m, tarjeta: esEstiloDeTarjeta(estilo) ? estilo : null }));
+
+// ---------- Descargas inteligentes (descargas.js) ----------
+
+/** Whether the night download brings the files of a section of a campus course. Skipping one later deletes nothing that
+ * was already kept. False if it could not be saved. */
+export const descargarSeccion = (materiaId, seccionId, si) =>
+  cambiarMio((mio) => {
+    const antes = mio.sinDescargar?.[materiaId] ?? [];
+    return { ...mio, sinDescargar: { ...mio.sinDescargar, [materiaId]: si ? antes.filter((s) => s !== seccionId) : [...antes, seccionId] } };
+  });

@@ -18,7 +18,7 @@ export function ChipEstado({ clave }) {
  * read whole and handed in. `onIr` closes the preview, which stays mounted across pages. */
 export default function TareaPrevia({ item, onIr }) {
   const { materiaId, cmid } = item.tarea;
-  const { datos, error, cargando } = useConsulta(() => cargarTarea(materiaId, cmid), [materiaId, cmid]);
+  const { datos, error, cargando } = useConsulta(() => cargarTarea(materiaId, cmid), [materiaId, cmid], { alInstante: true });
   const [ahora] = useState(() => Date.now() / 1000);
   const tarea = datos?.tarea;
   const estado = datos?.estado;

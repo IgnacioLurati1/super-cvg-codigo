@@ -548,6 +548,38 @@
   --sombra: rgb(0 0 0 / 0.9);
 }
 
+/* Violeta cósmico: el espacio de noche, con nebulosas violetas y fucsias. El cielo con estrellas está en estilos.css. */
+:root[data-tema='oscuro'][data-paleta='cosmico'] {
+  --fondo: #0b0717;
+  --superficie: #150e26;
+  --superficie-2: #211640;
+  --texto: #f1ebff;
+  --texto-suave: #c3b6e6;
+  --borde: #3b2c66;
+  --borde-control: #9282c4;
+  --accion: #7c3aed;
+  --accion-hover: #6a2bd4;
+  --accion-fin: #a21caf;
+  --accion-texto: #ffffff;
+  --foco: #f0abfc;
+  --fondo-aviso: #2e1f3a;
+  --brillo: 192 132 252;
+  --tinta: 233 213 255;
+  --titulo-fin: #f0abfc;
+  --cielo: #140b2b;
+  --cabecera-1: #22163f;
+  --cabecera-2: #130c26;
+  --renglon: #2a1d4a;
+  --margen-rojo: #d946ef;
+  --plano-luz: #2e1f55;
+  --plano-cabecera: #07040f;
+  --luz-1: rgb(var(--brillo) / 0.24);
+  --luz-1-donde: 15% -10%;
+  --luz-2: rgb(217 70 239 / 0.16);
+  --luz-tarjeta: rgb(255 255 255 / 0.07);
+  --sombra: rgb(0 0 0 / 0.9);
+}
+
 :root[data-tema='claro'][data-paleta='lavanda'] {
   --fondo: #f4f0fb;
   --superficie: #ffffff;
@@ -651,6 +683,20 @@
 }
 
 :root[data-estilo='batman'][data-paleta='glaciar'] {
+  --fondo: #0c0d10;
+  --superficie: #16181d;
+  --superficie-2: #21242b;
+  --texto: #eeeeee;
+  --texto-suave: #a9adb5;
+  --borde: #2d3139;
+  --borde-control: #80858f;
+  --cielo: #121317;
+  --cabecera-1: #1b1d22;
+  --cabecera-2: #0f1013;
+  --filo: var(--brillo);
+}
+
+:root[data-estilo='batman'][data-paleta='cosmico'] {
   --fondo: #0c0d10;
   --superficie: #16181d;
   --superficie-2: #21242b;
@@ -772,6 +818,16 @@
   --texto-suave: #d6e8f0;
   --borde: #8fb3c4;
   --borde-control: #bcd5e0;
+}
+
+:root[data-tema='oscuro'][data-paleta='cosmico'][data-contraste='alto'] {
+  --fondo: #06030d;
+  --superficie: #0d0819;
+  --superficie-2: #181030;
+  --texto: #ffffff;
+  --texto-suave: #e4dcf7;
+  --borde: #a596d0;
+  --borde-control: #c9bde8;
 }
 
 :root[data-tema='claro'][data-paleta='lavanda'][data-contraste='alto'] {

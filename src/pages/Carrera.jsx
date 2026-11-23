@@ -11,6 +11,7 @@ import { tituloDe, useSeo } from '../lib/seo';
 import { tokenActual } from '../lib/sesion';
 import { notaComoTexto, SYSACAD, useSysacad } from '../lib/sysacad';
 import { mismoAlumno, vistoHace } from '../lib/sysacadPestanas';
+import { useMio } from '../lib/mio';
 import { useConsulta } from '../lib/useConsulta';
 import './panel.css';
 import './carrera.css';
@@ -402,8 +403,8 @@ const AbrirSysacad = () => (
 
 export default function Carrera() {
   useSeo({ titulo: tituloDe('Tu carrera'), noindex: true });
-  const { copias, sinCopias, finales } = useSysacad();
-  const perfil = useConsulta(() => cargarPerfil());
+  const { copias, sinCopias, finales, buscandoDrive } = useSysacad();
+  const perfil = useConsulta(() => cargarPerfil(), [], { alInstante: true });
 
   // The demo has no extension: its made-up answer comes through the same window and the same check.
   useEffect(() => {
@@ -411,6 +412,8 @@ export default function Carrera() {
     import('../lib/demoSysacad').then(({ mensajeDeEjemplo }) => window.postMessage(mensajeDeEjemplo(), window.location.origin));
   }, []);
 
+  // What the student confirmed in Sysacad changes whose the copies are.
+  useMio();
   const nombre = perfil.datos?.completo ?? '';
   const suyas = Boolean(copias?.alumno && nombre.trim() && mismoAlumno(copias.alumno, nombre));
   const carrera = useMemo(() => (suyas ? armarCarrera(copias.pestanas, finales) : null), [suyas, copias, finales]);
@@ -418,6 +421,8 @@ export default function Carrera() {
   let contenido;
   if (!copias && !sinCopias) {
     contenido = <Cargando texto="Buscando Sysacad Lindo" cuantas={3} />;
+  } else if (!copias && buscandoDrive) {
+    contenido = <Cargando texto="Buscando en tu Drive" cuantas={3} />;
   } else if (!copias?.vinculada || !copias.guarda || !copias.pestanas.length || !copias.alumno) {
     contenido = (
       <Estado titulo="Primero, Sysacad Lindo" accion={<IrASysacad />}>
@@ -430,8 +435,8 @@ export default function Carrera() {
     contenido = <Cargando texto="Buscando tu cuenta" cuantas={3} />;
   } else if (!suyas) {
     contenido = (
-      <Estado titulo="Las copias no son tuyas" accion={<IrASysacad />}>
-        Lo que guardó Sysacad Lindo en este navegador es de otra cuenta.
+      <Estado titulo="¿Son tuyas?" accion={<IrASysacad />}>
+        Las copias de Sysacad tienen otro nombre. Confirmalo en la pantalla Sysacad.
       </Estado>
     );
   } else if (!carrera.tiene.cursar && !carrera.tiene.estado) {

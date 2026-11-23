@@ -645,7 +645,7 @@ export default function Horario() {
     await cargarPerfil();
     const [{ enCurso }, horarios] = await Promise.all([cargarMaterias(), cargarHorarios()]);
     return { cursos: enCurso, horarios };
-  });
+  }, [], { alInstante: true });
   // Without the campus, the week still has the subjects added from the schedules, and their classes can be changed.
   const sinCampus = Boolean(error && !datos);
   const { datos: horariosSolos } = useConsulta(() => (sinCampus ? cargarHorarios() : null), [sinCampus]);

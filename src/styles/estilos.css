@@ -286,7 +286,7 @@ html[data-estilo='pizarron'] .cabecera {
   background: linear-gradient(180deg, var(--pizarron-cab-1), var(--pizarron-cab-2));
   color: var(--pizarron-cab-texto);
   box-shadow:
-    0 3px 0 var(--pizarron-bandeja),
+    0 3px 0 var(--bandeja-elegida, var(--pizarron-bandeja)),
     0 5px 8px -2px var(--pizarron-sombra);
 }
 

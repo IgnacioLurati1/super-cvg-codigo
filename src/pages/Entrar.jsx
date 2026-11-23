@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef, useState, useSyncExternalStore } from 'react';
 import Campo from '../components/Campo';
+import { vaACompartir } from '../components/ConSesion';
 import Cuaderno3D from '../components/cuaderno3d/Cuaderno3D';
 import Entrada3D from '../components/entrada3d/Entrada3D';
 import { textoError } from '../lib/errores';
@@ -32,6 +33,13 @@ export default function Entrar() {
   const volverAlBoton = useRef(false);
   const ayudaRecordar = useId();
   const enCelu = useCelu();
+  // Something shared from another app waits for whoever signs in (ConSesion.jsx).
+  const [aCompartir] = useState(vaACompartir);
+  const formulario = useRef(null);
+  // On a phone the form is below the fold: it comes into sight with the reason to sign in.
+  useEffect(() => {
+    if (aCompartir) formulario.current?.scrollIntoView({ block: 'start' });
+  }, [aCompartir]);
 
   useEffect(() => {
     if (conGoogle || !volverAlBoton.current) return;
@@ -85,7 +93,7 @@ export default function Entrar() {
         <input type="checkbox" checked={recordar} onChange={(e) => setRecordar(e.target.checked)} aria-describedby={ayudaRecordar} />
         Seguir conectado en este dispositivo
       </label>
-      <p id={ayudaRecordar} className="entrar__recordar-ayuda">{CLIENTE_GOOGLE && 'Vale también para Entrar con Google. '}Si no lo marcás, cada pestaña nueva te pide entrar otra vez.</p>
+      <p id={ayudaRecordar} className="entrar__recordar-ayuda">{CLIENTE_GOOGLE && 'Vale también para Entrar con Google. '}También ves tus materias y los archivos que abriste sin internet. Si no lo marcás, cada pestaña nueva te pide entrar otra vez.</p>
     </div>
   );
 
@@ -103,8 +111,9 @@ export default function Entrar() {
           <li>No es una página oficial de UTN. Si preferís, seguí usando <a href={CAMPUS} target="_blank" rel="noreferrer">el campus</a>.</li>
         </ul>
       </div>
-      <form className="entrar__formulario" onSubmit={entrar} noValidate>
+      <form ref={formulario} className="entrar__formulario" onSubmit={entrar} noValidate>
         <h2>Entrá con tu cuenta del campus</h2>
+        {aCompartir && <p className="mensaje">Entrá para seguir con lo que compartiste.</p>}
         <Campo etiqueta="Usuario" error={faltantes.usuario}>
           <input ref={campoUsuario} className="campo__control" name="username" autoComplete="username" autoCapitalize="none" spellCheck="false" value={usuario} onChange={(e) => setUsuario(e.target.value)} />
         </Campo>

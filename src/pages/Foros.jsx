@@ -229,7 +229,7 @@ function llevarA(el, donde) {
 }
 
 function Hilo({ id, discusion, vistaAntes, ahora, onLeida }) {
-  const { datos, error, cargando, recargar } = useConsulta(() => cargarHilo(id), [id]);
+  const { datos, error, cargando, recargar } = useConsulta(() => cargarHilo(id), [id], { alInstante: true });
   const titulo = useRef(null);
   const campo = useRef(null);
   // The post being answered (null: the discussion), what the student published here, and the one to go to once it
@@ -381,7 +381,7 @@ export default function Foros() {
   else if (id && alumno !== null && !(id in estado.antes)) setEstado((e) => ({ ...e, antes: { ...e.antes, [id]: e.vistas[id] ?? 0 } }));
   const vistas = estado;
   const [fresco, setFresco] = useState(0);
-  const { datos, error, cargando, recargar } = useConsulta(() => cargarTodosLosForos({ fresco: fresco > 0 }), [fresco]);
+  const { datos, error, cargando, recargar } = useConsulta(() => cargarTodosLosForos({ fresco: fresco > 0 }), [fresco], { alInstante: fresco === 0 });
 
   useEffect(() => {
     // The first visit starts counting from now.

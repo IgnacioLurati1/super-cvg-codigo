@@ -7,7 +7,7 @@ import { armarMapa, CARRERA, clienteDrivePublico, contenidoDe, enlaceDe, esDeGoo
 import { textoError } from './errores';
 import { esDemo } from './modoDemo';
 import { cambiarMio, mioActual, usuarioActual } from './mio';
-import { falla } from './paquete';
+import { falla } from './falla';
 import { tokenActual } from './sesion';
 
 const BASE = 'super-cvg-drive';

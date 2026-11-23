@@ -185,7 +185,7 @@ function Resumen({ c, intento, revision, campus }) {
 
 export default function RevisionCuestionario() {
   const { id, cuestionario: cmid, intento: intentoId } = useParams();
-  const { datos, error, cargando, recargar } = useConsulta(() => cargarIntento(Number(id), Number(cmid), Number(intentoId)), [id, cmid, intentoId]);
+  const { datos, error, cargando, recargar } = useConsulta(() => cargarIntento(Number(id), Number(cmid), Number(intentoId)), [id, cmid, intentoId], { alInstante: true });
   // Fixed title: the browser history keeps it even after leaving.
   useSeo({ titulo: tituloDe('Revisión'), noindex: true });
   const abierto = `${CAMPUS}/mod/quiz/view.php?id=${Number(cmid)}`;

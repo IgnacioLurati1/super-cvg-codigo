@@ -151,8 +151,8 @@ html[data-estilo='batman'] {
 
 @media (prefers-reduced-motion: no-preference) {
   /* The beam: a yellow light over the screen that fades out. The page's circle clips it, so it lights only what the
-     signal has reached. Behind the content, and gone when it ends. */
-  html[data-estilo='batman']:not([data-movimiento='reducido'], [data-movimiento='ninguno']) main .contenedor.pagina::after {
+     signal has reached. Behind the content, and gone when it ends. «Fogonazo amarillo» in Configuración turns it off. */
+  html[data-estilo='batman']:not([data-movimiento='reducido'], [data-movimiento='ninguno'], [data-fogonazo='no']) main .contenedor.pagina::after {
     content: '';
     position: fixed;
     inset: 0;

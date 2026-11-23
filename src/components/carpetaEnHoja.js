@@ -18,3 +18,10 @@ export const esDeDrive = (url) => Boolean(leerEnlace(url));
 /** Whether the link of a text opens here: a folder always; a file of Drive too, on a page (its sheet opens with the
  * viewer), not inside a sheet that is already showing something. */
 export const seAbreAca = (abrir, url) => Boolean(abrir) && (esCarpetaDeDrive(url) || (abrir.archivos === true && esDeDrive(url)));
+
+// The name a folder link of a text gives it: its text, unless that is only the address or its site («drive.google.com»).
+// Without one, CarpetaDeDrive asks Drive for it.
+export function nombreDeLink(texto, destino) {
+  const t = String(texto ?? '').trim();
+  return !t || t === destino || /^(https?:\/\/)?[\w.-]+\.[a-z]{2,}(\/\S*)?$/i.test(t) ? '' : t[0].toUpperCase() + t.slice(1);
+}

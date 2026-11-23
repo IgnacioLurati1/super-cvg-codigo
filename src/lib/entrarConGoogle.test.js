@@ -6,7 +6,7 @@ vi.stubGlobal('Blob', BlobDeNode);
 // Who is inside and which Google account, set by each test.
 const estado = { alumno: 5, token: 'a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4', cuenta: '100000000000000000001', permiso: true, usos: ['drive'] };
 vi.mock('./mio', () => ({ usuarioActual: () => estado.alumno, escucharMio: () => () => {} }));
-vi.mock('./sesion', () => ({ tokenActual: () => estado.token, iniciarSesion: vi.fn() }));
+vi.mock('./sesion', () => ({ tokenActual: () => estado.token, iniciarSesion: vi.fn(), alHidratar: () => () => {} }));
 vi.mock('./google', () => ({
   conectarGoogle: vi.fn(async () => {}),
   cuentaGoogle: () => estado.cuenta,

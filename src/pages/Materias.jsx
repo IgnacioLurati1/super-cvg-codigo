@@ -5,6 +5,7 @@ import DetallesAnimados from '../components/DetallesAnimados';
 import { Cargando, ErrorConReintento } from '../components/Filas';
 import { Puntos } from '../components/Secciones';
 import Simbolo from '../components/Simbolo';
+import { simbolosDeTuyas } from '../lib/simbolos';
 import { useUI } from '../components/ui';
 import { useAjustes } from '../lib/ajustes';
 import { cargarMaterias, cargarPerfil } from '../lib/campus';
@@ -145,7 +146,7 @@ function Tarjeta({ m, abierta, alAbrir, alCerrar }) {
   return (
     <li className="materias__item" data-tarjeta={marcas.tarjeta ?? ajustes.tarjeta} data-materia={color} data-con-opciones={conOpciones || undefined}>
       <Link className="materias__enlace" to={m.a}>
-        <Simbolo id={m.base} nombre={m.nombre} tamano="grande" sinMateria={m.propia ? 'estrella' : undefined} />
+        <Simbolo id={m.base} nombre={m.nombre} tamano="grande" sinMateria={m.propia ? m.simbolo : undefined} />
         <span className="materias__texto">
           <span className="materias__nombre">{marcas.enLista === 'fijada' && <Chinche />}{m.nombre}</span>
           {m.dato && <span className="materias__dato">{m.dato}</span>}
@@ -185,18 +186,19 @@ export default function Materias() {
   const { datos, error, cargando, recargar } = useConsulta(async () => {
     await cargarPerfil();
     return cargarMaterias();
-  });
+  }, [], { alInstante: true });
 
   // The student's own sections of a campus course are not a course of their own: they show inside it.
-  const propias = mio.propias
-    .filter((p) => p.de === null)
-    .map((p) => ({ id: p.id, nombre: p.nombre, a: `/propias/${p.id}`, base: p.base, dato: resumenDePropia(p), propia: true }));
+  const propias = mio.propias.filter((p) => p.de === null);
+  // Without a campus course to take it from, each one of its own symbol, different from the others.
+  const simbolosTuyos = simbolosDeTuyas(propias.filter((p) => !p.base).map((p) => p.id));
+  const tuyas = propias.map((p) => ({ id: p.id, nombre: p.nombre, a: `/propias/${p.id}`, base: p.base, dato: resumenDePropia(p), propia: true, simbolo: simbolosTuyos.get(p.id) }));
   const delCampus = (lista) => (lista ?? []).map((c) => ({ id: c.id, nombre: c.nombre, a: `/materias/${c.id}`, base: c.id, dato: resumen(materiaDe(mio, c.id), marcarVistos) }));
   const enCurso = delCampus(datos?.enCurso);
   const otras = delCampus(datos?.otras);
   const lugar = (m) => materiaDe(mio, m.id).enLista;
   const sueltas = (lista) => lista.filter((m) => !lugar(m));
-  const todas = [...propias, ...enCurso, ...otras];
+  const todas = [...tuyas, ...enCurso, ...otras];
   const fijadas = todas.filter((m) => lugar(m) === 'fijada');
   const archivadas = todas.filter((m) => lugar(m) === 'archivada');
   const grupo = { abierta, setAbierta };
@@ -212,7 +214,7 @@ export default function Materias() {
         </div>
       </div>
       <Grupo titulo="Fijadas" materias={fijadas} {...grupo} />
-      <Grupo titulo="Tuyas" materias={sueltas(propias)} {...grupo} />
+      <Grupo titulo="Tuyas" materias={sueltas(tuyas)} {...grupo} />
       {error && !datos && <ErrorConReintento texto={error} recargar={recargar} />}
       {cargando && !datos && <Cargando texto="Buscando tus materias" forma={vista === 'lista' ? 'filas' : 'tarjetas'} />}
       {datos && !datos.enCurso.length && !datos.otras.length && <p>No tenés materias en el campus.</p>}

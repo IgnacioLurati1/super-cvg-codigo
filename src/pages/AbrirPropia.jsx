@@ -77,7 +77,7 @@ function Revision({ llegada, alCambiar }) {
     await cargarPerfil();
     const { enCurso, otras } = await cargarMaterias();
     return new Set([...enCurso, ...otras].map((m) => m.id));
-  });
+  }, [], { alInstante: true });
   const ajenas = suyas ? r.materiasDelCampus.filter((m) => !suyas.has(m)).length : 0;
 
   useEffect(() => {

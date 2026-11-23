@@ -1,10 +1,11 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState, useSyncExternalStore } from 'react';
+import { useAhorro } from '../../lib/ahorro';
 import { movimientoDe, useAjustes } from '../../lib/ajustes';
 import { puede3D } from '../cuaderno3d/soporte';
 import './Entrada3D.css';
 
 // The faculty's entrance in 3D (escena.js). «fondo»: behind the sign-in, only with hardware acceleration (puede3D)
-// and never with «Sin animaciones»; decorative, hidden from screen readers. «sola»: the screen of its own (/entrada),
+// and never with «Sin animaciones» nor saving data (ahorro.js); decorative, hidden from screen readers. «sola»: the screen of its own (/entrada),
 // turned with mouse, finger or keyboard. three.js arrives with import() when the browser is idle. Light theme: day;
 // dark theme: night.
 
@@ -23,19 +24,21 @@ export const DESCRIPCION =
 /** Whether this device draws the entrance: WebGL 2 on a real graphics card. */
 export const puedeEntrada = () => puede3D();
 
-const Entrada3D = forwardRef(function Entrada3D({ modo = 'fondo', alFallar }, ref) {
+const Entrada3D = forwardRef(function Entrada3D({ modo = 'fondo', alFallar, alEstarLista }, ref) {
   const movimiento = movimientoDe(useAjustes());
   const reducido = useSyncExternalStore(seguirSistema, sistemaQuieto, () => false);
-  if (modo === 'fondo' && movimiento === 'ninguno') return null;
-  return <Escena ref={ref} modo={modo} quieto={movimiento !== 'sistema' || reducido} alFallar={alFallar} />;
+  const ahorro = useAhorro();
+  if (modo === 'fondo' && (movimiento === 'ninguno' || ahorro)) return null;
+  return <Escena ref={ref} modo={modo} quieto={movimiento !== 'sistema' || reducido} alFallar={alFallar} alEstarLista={alEstarLista} />;
 });
 export default Entrada3D;
 
-const Escena = forwardRef(function Escena({ modo, quieto, alFallar }, ref) {
+const Escena = forwardRef(function Escena({ modo, quieto, alFallar, alEstarLista }, ref) {
   const nodo = useRef(null);
   const api = useRef(null);
   const quietoAhora = useRef(quieto);
   const fallar = useRef(alFallar);
+  const lista = useRef(alEstarLista);
   const [estado, setEstado] = useState(() => (puede3D() ? 'espera' : 'sin3d'));
   const sola = modo === 'sola';
 
@@ -43,10 +46,12 @@ const Escena = forwardRef(function Escena({ modo, quieto, alFallar }, ref) {
 
   useEffect(() => {
     fallar.current = alFallar;
-  }, [alFallar]);
+    lista.current = alEstarLista;
+  }, [alFallar, alEstarLista]);
 
   useEffect(() => {
     if (estado === 'sin3d') fallar.current?.();
+    if (estado === 'lista') lista.current?.();
   }, [estado]);
 
   useEffect(() => {

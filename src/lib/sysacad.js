@@ -142,8 +142,10 @@ export const notaComoTexto = (n) => n.toLocaleString('es-AR', { maximumFractionD
 // or 'vinculada'. `pidio`: the student touched «Vincular» in this tab. `copias`: what it said of the tabs of Sysacad
 // ({ vinculada, guarda, alumno, pestanas }), null until it does; `sinCopias`: a moment went by and it did not (with an
 // answer to the finals, it is a version from before 2.4.0). `examenes`: what it said of the exams ({ vinculada, alumno,
-// fecha, examenes }), null until it does (one from before 2.5.0 never does).
-const INICIAL = { estado: 'buscando', fecha: null, finales: null, pidio: false, copias: null, sinCopias: false, examenes: null };
+// fecha, examenes }), null until it does (one from before 2.5.0 never does). `deDrive`: when the copy in the student's
+// Drive was saved, while what is shown came from there and not from the extension (sysacadEnDrive.js); null otherwise.
+// `buscandoDrive`: that copy is on its way.
+const INICIAL = { estado: 'buscando', fecha: null, finales: null, pidio: false, copias: null, sinCopias: false, examenes: null, deDrive: null, buscandoDrive: false };
 let actual = INICIAL;
 const avisados = new Set();
 function poner(cambios) {
@@ -164,6 +166,13 @@ export function useSysacad() {
   return useSyncExternalStore(escucharSysacad, estadoSysacad, () => INICIAL);
 }
 
+// The last message of each kind the extension sent, exactly as it came and already checked: what sysacadEnDrive.js
+// saves in the student's Drive. In memory only, like the rest.
+const SIN_CRUDOS = { finales: null, pestanas: null, examenes: null };
+let crudos = SIN_CRUDOS;
+/** The last checked message of each kind from the extension, or null. */
+export const crudosSysacad = () => crudos;
+
 let oido = false;
 let oidoCopias = false;
 let reloj = null;
@@ -183,10 +192,14 @@ export function preguntarSysacad() {
   }, ESPERA_MS);
 }
 
+// What came from Drive leaves as soon as the extension says anything: from then on, only what it says.
+const sinLoDeDrive = () => (actual.deDrive ? { deDrive: null, estado: oido ? actual.estado : 'sin-extension', fecha: null, finales: null, copias: null, examenes: null } : {});
+
 function recibir(e) {
   if (e.source !== window || e.origin !== window.location.origin) return;
   const m = leerMensaje(e.data);
   if (m) {
+    crudos = { ...crudos, finales: structuredClone(e.data) };
     // The extension answers this one on its own once it loads, but not the tabs or the exams: asked before it was
     // listening, they are asked again now.
     if (!oido && !oidoCopias) {
@@ -195,20 +208,22 @@ function recibir(e) {
     }
     oido = true;
     if (oidoCopias) clearTimeout(reloj);
-    poner({ estado: m.vinculada ? 'vinculada' : 'sin-vincular', fecha: m.fecha, finales: m.finales });
+    poner({ estado: m.vinculada ? 'vinculada' : 'sin-vincular', fecha: m.fecha, finales: m.finales, ...(actual.deDrive && { deDrive: null, copias: null, examenes: null }) });
     return;
   }
   const examenes = leerExamenes(e.data);
   if (examenes) {
+    crudos = { ...crudos, examenes: structuredClone(e.data) };
     // Sysacad may write a subject all in capitals: it goes as the campus writes them.
-    poner({ examenes: { ...examenes, examenes: examenes.examenes.map((x) => ({ ...x, materia: nombreParaMostrar(x.materia) })) } });
+    poner({ ...sinLoDeDrive(), examenes: { ...examenes, examenes: examenes.examenes.map((x) => ({ ...x, materia: nombreParaMostrar(x.materia) })) } });
     return;
   }
   const copias = leerPestanas(e.data);
   if (!copias) return;
+  crudos = { ...crudos, pestanas: structuredClone(e.data) };
   oidoCopias = true;
   if (oido) clearTimeout(reloj);
-  poner({ copias, sinCopias: false });
+  poner({ ...sinLoDeDrive(), copias, sinCopias: false });
 }
 
 let iniciado = false;
@@ -244,9 +259,35 @@ export function desvincularSysacad() {
 /** Drops the grades, the exams and the copies of the tabs from memory. The next answer of the extension brings them
  * back. */
 export function olvidarSysacad() {
+  crudos = SIN_CRUDOS;
+  if (actual.deDrive) {
+    // Nothing of it came from this browser: back to what the extension said, which is nothing.
+    poner({ estado: 'sin-extension', fecha: null, finales: null, examenes: null, copias: null, sinCopias: true, deDrive: null });
+    return;
+  }
   if (actual.finales || actual.fecha || actual.copias?.pestanas.length || actual.copias?.alumno || actual.examenes) {
     poner({ fecha: null, finales: null, examenes: null, ...(actual.copias && { copias: { ...actual.copias, alumno: null, pestanas: [] } }) });
   }
+}
+
+/** While sysacadEnDrive.js looks for the copy in Drive. */
+export function buscandoEnDrive(si) {
+  if (actual.buscandoDrive !== si) poner({ buscandoDrive: si });
+}
+
+/** What the copy in the student's Drive says (sysacadEnDrive.js), shown as if the extension had said it, only where it is
+ * not there. Each piece was read with the same checks as the extension's messages. */
+export function ponerDesdeDrive({ guardado, finales, copias, examenes }) {
+  if (oido || oidoCopias || crudos.examenes || actual.estado !== 'sin-extension') return;
+  poner({
+    estado: finales ? 'vinculada' : 'sin-extension',
+    fecha: finales?.fecha ?? null,
+    finales: finales?.finales ?? null,
+    copias,
+    sinCopias: !copias,
+    examenes: examenes ? { ...examenes, examenes: examenes.examenes.map((x) => ({ ...x, materia: nombreParaMostrar(x.materia) })) } : null,
+    deDrive: guardado,
+  });
 }
 
 /** Salir, or «Borrar las copias» when they are someone else's: the extension deletes its copies of the tabs, and they leave

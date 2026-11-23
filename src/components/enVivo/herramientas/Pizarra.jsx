@@ -351,13 +351,16 @@ export default function Pizarra({ mesa }) {
         return { ...t, p: [...t.p, wx, wy] };
       });
     } else if (g.tipo === 'figura') {
+      Object.assign(g, { x2: wx, y2: wy });
       setEnCurso((t) => t && { ...t, x2: wx, y2: wy });
     } else if (g.tipo === 'goma') {
       borrarEn(wx, wy, g);
       Object.assign(g, { x: wx, y: wy });
     } else if (g.tipo === 'mover') {
-      setArrastre((a) => a && { ...a, dx: wx - g.sx, dy: wy - g.sy });
+      Object.assign(g, { dx: wx - g.sx, dy: wy - g.sy });
+      setArrastre((a) => a && { ...a, dx: g.dx, dy: g.dy });
     } else if (g.tipo === 'rectangulo') {
+      Object.assign(g, { x2: wx, y2: wy });
       setRectangulo((r) => r && { ...r, x2: wx, y2: wy });
     }
   };
@@ -370,14 +373,17 @@ export default function Pizarra({ mesa }) {
       return;
     }
     gesto.current = null;
+    // Where the pointer last went is in the gesture: the state of the last moves may not be drawn yet when it's let go
+    // (a busy phone), and the shape, the move or the rectangle would end short.
     if (g?.tipo === 'lapiz' && enCurso) {
       agregar(datos, { ...enCurso, p: recortar(enCurso.p) }, origen);
     } else if (g?.tipo === 'figura' && enCurso) {
-      if (Math.hypot(enCurso.x2 - enCurso.x1, enCurso.y2 - enCurso.y1) * camRef.current.z > 4) agregar(datos, enCurso, origen);
-    } else if (g?.tipo === 'mover' && arrastre && (arrastre.dx || arrastre.dy)) {
-      moverVarios(datos, arrastre.ids, arrastre.dx, arrastre.dy, origen);
+      const figura = 'x2' in g ? { ...enCurso, x2: g.x2, y2: g.y2 } : enCurso;
+      if (Math.hypot(figura.x2 - figura.x1, figura.y2 - figura.y1) * camRef.current.z > 4) agregar(datos, figura, origen);
+    } else if (g?.tipo === 'mover' && arrastre && (g.dx || g.dy)) {
+      moverVarios(datos, arrastre.ids, g.dx, g.dy, origen);
     } else if (g?.tipo === 'rectangulo' && rectangulo) {
-      const adentro = dentroDe(elementos, rectangulo.x1, rectangulo.y1, rectangulo.x2, rectangulo.y2).map((el) => el.id);
+      const adentro = dentroDe(elementos, rectangulo.x1, rectangulo.y1, g.x2 ?? rectangulo.x2, g.y2 ?? rectangulo.y2).map((el) => el.id);
       setElegidos(g.sumar ? [...new Set([...g.antes, ...adentro])] : adentro);
     }
     setEnCurso(null);

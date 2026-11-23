@@ -1,0 +1,250 @@
+/* Pantalla /compartir (Compartir.jsx): lo que otra app compartió con Super CVG y a dónde va. Todo con `recibido`: la
+   clase `compartir` ya es del desplegable de una materia (compartido.css). */
+.recibido > * {
+  max-width: 44rem;
+}
+
+.recibido h1 {
+  width: fit-content;
+}
+
+.recibido h1:focus {
+  outline: none;
+}
+
+.recibido__bajada {
+  margin-block: 0 20px;
+  color: var(--texto-suave);
+}
+
+.recibido__pila {
+  display: grid;
+  gap: 12px;
+  margin-block-end: 28px;
+}
+
+/* Las fotos, cuadradas como en la galería del celu: tres por fila en el celu, más con lugar. */
+.recibido__fotos {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(30%, 9rem), 1fr));
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.recibido__ver-foto {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radio-control);
+  background: var(--superficie-2);
+  cursor: zoom-in;
+  overflow: hidden;
+}
+
+.recibido__ver-foto:active {
+  opacity: 0.8;
+}
+
+.recibido__foto {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+}
+
+.recibido__lista {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Un PDF o un link: una hoja con su ícono, su nombre y un dato. */
+.recibido__hoja {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: 12px;
+  align-items: center;
+  width: 100%;
+  min-height: 56px;
+  padding: 10px 14px;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-bloque);
+  background: var(--superficie);
+  color: var(--texto);
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.recibido__hoja .simbolo {
+  grid-row: span 2;
+}
+
+.recibido__hoja--quieta {
+  cursor: default;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .recibido__hoja:not(.recibido__hoja--quieta):hover {
+    border-color: var(--borde-control);
+  }
+}
+
+.recibido__hoja:not(.recibido__hoja--quieta):active {
+  background: var(--superficie-2);
+}
+
+.recibido__nombre {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.recibido__dato {
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+  overflow-wrap: anywhere;
+}
+
+.recibido__texto {
+  margin: 0;
+  padding: 12px 16px;
+  border-inline-start: 4px solid var(--borde-control);
+  border-radius: var(--radio-control);
+  background: var(--superficie);
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+.recibido__texto p {
+  margin: 0;
+}
+
+.recibido__texto p + p {
+  margin-block-start: 8px;
+}
+
+.recibido__titulo {
+  font-weight: 600;
+}
+
+.recibido__fuera {
+  margin-block-end: 28px;
+}
+
+.recibido__fuera ul {
+  margin: 6px 0 0;
+  padding-inline-start: 1.2em;
+  color: var(--texto);
+}
+
+.recibido__fuera ul + p {
+  margin-block-start: 8px;
+}
+
+.recibido__donde h2 {
+  margin-block: 0 12px;
+  font-size: var(--t-h3);
+}
+
+/* Las dos salidas: una debajo de la otra en el celu, lado a lado con lugar. */
+.recibido__opciones {
+  display: grid;
+  gap: 10px;
+}
+
+@media (min-width: 36rem) {
+  .recibido__opciones {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.recibido__opcion {
+  display: grid;
+  gap: 4px;
+  align-content: start;
+  min-height: 72px;
+  padding: 14px 16px;
+  border: 2px solid var(--accion);
+  border-radius: var(--radio-bloque);
+  background: var(--superficie);
+  color: var(--texto);
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.recibido__opcion:first-child {
+  background: var(--accion);
+  color: var(--accion-texto);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .recibido__opcion:hover {
+    border-color: var(--accion-hover);
+  }
+  .recibido__opcion:first-child:hover {
+    background: var(--accion-hover);
+  }
+}
+
+.recibido__opcion:active {
+  transform: scale(0.98);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .recibido__opcion {
+    transition: transform 120ms ease-out, background-color 150ms ease-out, border-color 150ms ease-out;
+  }
+}
+
+.recibido__opcion-titulo {
+  font-size: 1.0625rem;
+  font-weight: 700;
+}
+
+.recibido__opcion-texto {
+  font-size: var(--t-chica);
+  opacity: 0.85;
+}
+
+.recibido__descartar {
+  margin-block-start: 16px;
+}
+
+.recibido__form {
+  display: grid;
+  gap: 16px;
+  max-width: 28rem;
+}
+
+.recibido__botones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.recibido__hecho {
+  margin-block-end: 20px;
+}
+
+.recibido__hecho:empty {
+  margin: 0;
+}
+
+.recibido__aviso-campus {
+  margin: 0;
+}
+
+.recibido__hecho p {
+  margin: 0;
+}
+
+.recibido__aviso {
+  margin-block-start: 8px;
+  color: var(--aviso);
+}

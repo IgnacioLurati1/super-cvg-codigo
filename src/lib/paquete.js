@@ -23,11 +23,9 @@ const OTRA_VERSION = 'Este orden se armó con una versión que no conocemos.';
 const MUY_GRANDE = 'Este orden pesa demasiado.';
 const SIN_GUARDAR = 'No se pudo guardar en este navegador.';
 
-export function falla(mensaje) {
-  const error = new Error(mensaje);
-  error.conocido = true; // `textoError` shows it as is.
-  return error;
-}
+import { falla } from './falla';
+
+export { falla };
 
 const esPlano = (x) => Boolean(x) && typeof x === 'object' && !Array.isArray(x);
 const esLista = (x) => (Array.isArray(x) ? x : []);

@@ -118,7 +118,7 @@ function Intentos({ c, datos, ahora }) {
 
 export default function Cuestionario() {
   const { id, cuestionario: cmid } = useParams();
-  const { datos, error, cargando, recargar } = useConsulta(() => cargarCuestionario(Number(id), Number(cmid)), [id, cmid]);
+  const { datos, error, cargando, recargar } = useConsulta(() => cargarCuestionario(Number(id), Number(cmid)), [id, cmid], { alInstante: true });
   // Fixed title: the browser history keeps it even after leaving.
   useSeo({ titulo: tituloDe('Cuestionario'), noindex: true });
   const [ahora, setAhora] = useState(() => Date.now() / 1000);

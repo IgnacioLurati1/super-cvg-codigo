@@ -984,6 +984,12 @@ html:has(.visor[open]) {
   margin-inline: auto;
 }
 
+/* With Consultron beside it (--lado-consultron, EnVisor.jsx), the text of a Word or a PowerPoint stays where it was
+   while it fits, and moves only what it takes to clear Consultron. An HTML does the same in VisorResumen.jsx. */
+.visor__cuerpo > :is(.visor__vista, .visor__afuera) {
+  margin-left: max(0px, min((100% + var(--lado-consultron, 0px) - 57.5rem) / 2, 100% - 57.5rem));
+}
+
 .visor__hoja {
   padding: clamp(18px, 4vw, 40px);
   border: 1px solid var(--borde);

@@ -6,8 +6,8 @@ import { anotarAlAbrir, leerAlAbrir } from './alAbrir';
 import { borrarCharla, guardarCharla, leerCharla } from './charlas';
 import { mensajeDeCarga, revisarCompu } from './compu';
 import urlTrabajador from './consultron.worker.js?worker&url';
-import { nubeEnElLugar, nubePara, porQueNoNube, preguntarNube, quedanHoy, sinCompu } from './nube';
-import { NO_ESTA, SISTEMA, SISTEMA_CHARLA, SISTEMA_GENERAL, SISTEMA_HUMOR, SISTEMA_SITIO, UNA_COSA, armarPedido, conCitaQueFalta, esPuntual, hastaLoEntero, noEsta, puedeSerNoEsta } from './pedido';
+import { contestoGroq, nubeEnElLugar, nubePara, nubeSinRed, porQueNoNube, preguntarNube, quedanHoy, sinCompu, usaGemini } from './nube';
+import { NO_ESTA, SISTEMA, SISTEMA_CHARLA, SISTEMA_GENERAL, SISTEMA_HUMOR, SISTEMA_SITIO, UNA_COSA, armarPedido, conCitaQueFalta, esPuntual, hastaLoEntero, noEsta, puedeSerNoEsta, respuestaSinRed } from './pedido';
 
 // Consultron on this side: its worker (consultron.worker.js), how the model is doing, and the questions of this visit.
 // One for the whole tab: leaving the screen doesn't stop a download or an answer. Once on this computer it loads as soon
@@ -68,6 +68,8 @@ let ultimaId = 0;
 const avisadosCharlas = new Set();
 let versionCharlas = 0;
 const terminada = (e) => e.estado !== 'leyendo' && e.estado !== 'escribiendo';
+// A practice question being corrected was already kept: it stays, as the question waiting (charlas.js).
+const paraGuardar = (e) => terminada(e) || (e.practica?.fase === 'corrigiendo' && Boolean(e.practica.pregunta));
 
 function guardarLuego() {
   if (hilo === escrito) return;
@@ -80,7 +82,7 @@ function guardarYa() {
   clearTimeout(porGuardar);
   escrito = hilo;
   const alumno = usuarioActual();
-  const listas = hilo.filter(terminada);
+  const listas = hilo.filter(paraGuardar);
   if (alumno === null || !listas.length || tokenActual() !== token) return;
   if (!charla) {
     ultimaId = Math.max(Date.now(), ultimaId + 1);
@@ -162,9 +164,15 @@ function alMensaje({ data: m }) {
     poner({ fase: m.fase, fraccion: m.fraccion ?? 0, mb, faltan });
   } else if (m.tipo === 'listo') {
     poner({ fase: 'listo', error: '' });
+    const esperando = [...alEstarListo.values()];
+    alEstarListo.clear();
+    for (const { hacer } of esperando) hacer();
     if (!leerAlAbrir()) anotarAlAbrir('listo');
     navigator.storage?.persist?.().catch(() => {});
   } else if (m.tipo === 'falla') {
+    const esperando = [...alEstarListo.values()];
+    alEstarListo.clear();
+    for (const { fallar } of esperando) fallar();
     apagar();
     poner({ fase: 'falla', error: mensajeDeCarga(m) });
   } else if (m.tipo === 'datos') {
@@ -237,7 +245,8 @@ export async function revisar() {
 /** As Super CVG opens (Layout.jsx): if the model is on this computer and that wasn't turned off, it loads in the
  * background. Never downloads: if the browser took it out, it waits for its screen. */
 export async function precalentar() {
-  if (leerAlAbrir() === 'a-mano' || estado.fase !== 'quieto' || !(await guardado())) return;
+  // With «Usar Gemini» it loads only when Gemini fails (`cuandoEsteListo`): 4 GB of the video card for nothing, else.
+  if (usaGemini() || leerAlAbrir() === 'a-mano' || estado.fase !== 'quieto' || !(await guardado())) return;
   // One tab loads it: another one open with Super CVG would put a second model on the video card. The one that asks
   // loads it anyway.
   if (!(await unaPestana())) return;
@@ -285,6 +294,28 @@ export const cargaAlAbrir = () => leerAlAbrir() !== 'a-mano';
 export function ponerCargaAlAbrir(si) {
   anotarAlAbrir(si ? 'listo' : 'a-mano');
   fijo = si;
+}
+
+/** Opening Consultron, a model already in the browser loads; with «Usar Gemini» on, it waits until Gemini fails. */
+export function cargarSiHaceFalta() {
+  if (!usaGemini()) cargar();
+}
+
+// What waits for the model to load, by entry: Gemini didn't answer and the model was in the browser. { hacer, fallar }.
+const alEstarListo = new Map();
+
+/** Does `hacer` with the model: at once if it's ready; if it's in the browser, once it loads (and it starts loading).
+ * Otherwise false, and nothing waits. `fallar`: if it can't load or the question is stopped meanwhile. */
+function cuandoEsteListo(id, hacer, fallar) {
+  if (conModelo()) {
+    hacer();
+    return true;
+  }
+  if (!['bajado', 'preparando'].includes(estado.fase)) return false;
+  alEstarListo.set(id, { hacer, fallar });
+  apurar();
+  if (estado.fase === 'bajado') cargar();
+  return true;
 }
 
 /** Downloads the model if it isn't in the browser, and loads it on the video card. */
@@ -375,10 +406,11 @@ export function responder(id, elegidos, charla = '', { soloSitio = false, humor 
     else enGeneral(id, humor, pedido, corto);
     return;
   }
-  // Summaries of El Santo Resumen or their career, with the student's permission: Gemini (nube.js), first even with the
-  // model ready, and on a computer that can't run it or hasn't got it yet.
+  // With «Usar Gemini» on, anything; with an older permission, the summaries of El Santo Resumen or their career:
+  // Gemini (nube.js), first even with the model ready, and on a computer that can't run it or hasn't got it yet.
   const nube = nubePara(elegidos);
   if (!nube && !conModelo()) {
+    if (sinRed() && !soloSitio && conLasPiezas(id, elegidos)) return;
     cambiarEntrada(id, { texto: sinCompu(estado.fase), estado: 'no-esta', donde: '' });
     return;
   }
@@ -387,7 +419,7 @@ export function responder(id, elegidos, charla = '', { soloSitio = false, humor 
   enviadas.add(id);
   const mensajes = [
     { role: 'system', content: !elegidos.length ? SISTEMA_CHARLA : soloSitio ? SISTEMA_SITIO : SISTEMA },
-    ...(sinCharla ? [] : charlaAntes(hilo, id, { sinPropias: !soloSitio, soloNube: Boolean(nube) })),
+    ...(sinCharla ? [] : charlaAntes(hilo, id, { sinPropias: !soloSitio, soloNube: Boolean(nube) && nube !== 'todo' })),
     { role: 'user', content: elegidos.length ? armarPedido(pedido ?? entrada.pregunta, elegidos, { puntual }) : charla },
   ];
   if (nube) porLaNube(id, mensajes, nube, puntual);
@@ -407,20 +439,57 @@ async function porLaNube(id, mensajes, cual, puntual) {
   // Stopped or cleared meanwhile.
   if (!e || e.estado !== 'leyendo') return;
   if (texto === null) {
-    // The computer answers, and the screen says Gemini didn't. Without the model ready, why Gemini didn't.
-    if (conModelo()) {
-      cambiarEntrada(id, { nubeFallo: true, ...(quedanHoy() === 0 ? { nubeTope: true } : {}) });
+    // The computer answers, and the screen says Gemini didn't; a model in the browser loads for it first. Without one,
+    // why Gemini didn't, or offline the pieces found.
+    const porque = porQueNoNube();
+    const offline = nubeSinRed();
+    const sinModelo = () => {
+      if (!offline || !conLasPiezas(id, e.elegidos)) cambiarEntrada(id, { texto: porque, estado: 'no-esta', donde: '' });
+    };
+    const contesta = cuandoEsteListo(
+      id,
+      () => {
+        if (hilo.find((x) => x.id === id)?.estado !== 'leyendo') return;
+        cambiarEntrada(id, { nubeFallo: true, ...(quedanHoy() === 0 ? { nubeTope: true } : {}) });
+        worker.postMessage({ tipo: 'preguntar', id, corto: puntual, mensajes });
+      },
+      () => {
+        if (hilo.find((x) => x.id === id)?.estado === 'leyendo') sinModelo();
+      },
+    );
+    if (!contesta) sinModelo();
+    return;
+  }
+  if (noEsta(texto) && !e.general) {
+    if (cual === 'todo') {
+      // With «Usar Gemini», Gemini answers again with what it knows, where that may be (as at the end of an answer).
+      if (!e.soloSitio && !e.enResumen && !e.adjuntos?.length) {
+        enGeneral(id);
+        return;
+      }
+    } else if (conModelo()) {
+      // Gemini says the pieces don't have it: the computer reads the same pieces before giving up.
       worker.postMessage({ tipo: 'preguntar', id, corto: puntual, mensajes });
-    } else cambiarEntrada(id, { texto: porQueNoNube(), estado: 'no-esta', donde: '' });
-    return;
+      return;
+    }
   }
-  // Gemini says the pieces don't have it: the computer reads the same pieces before giving up.
-  if (noEsta(texto) && conModelo()) {
-    worker.postMessage({ tipo: 'preguntar', id, corto: puntual, mensajes });
-    return;
-  }
-  cambiarEntrada(id, { nube: cual });
+  cambiarEntrada(id, { nube: cual, ...(contestoGroq() ? { groq: true } : {}) });
   escribirDeNube(id, texto);
+}
+
+const sinRed = () => typeof navigator !== 'undefined' && navigator.onLine === false;
+
+/** Offline, with no model on this device: the answer is the pieces found (pedido.js, `respuestaSinRed`), shown as they
+ * are in the notes. Not for a question about the site, a general one or one beside a live session. False if none. */
+function conLasPiezas(id, elegidos) {
+  const e = hilo.find((x) => x.id === id);
+  if (!e || e.general || e.soloSitio || e.enResumen === 'mesa' || !elegidos?.length) return false;
+  const donde = { archivo: 'este archivo' }[e.enResumen] ?? (e.enResumen ? 'este resumen' : 'tus apuntes');
+  const texto = respuestaSinRed(elegidos, donde);
+  if (!texto) return false;
+  enviadas.add(id);
+  cambiarEntrada(id, { elegidos, texto, estado: 'listo', donde: '' });
+  return true;
 }
 
 // Gemini's answer comes whole: it is written a few words at a time, like the computer's, in about two seconds at most.
@@ -458,23 +527,21 @@ function enGeneral(id, humor = false, pedido = null, corto = null) {
   // Asked again after the pieces didn't have it: as it was asked the first time.
   const mensaje = pedido ?? entrada.pedido ?? entrada.pregunta;
   const puntual = !humor && (corto ?? entrada.corto ?? esPuntual(entrada.pregunta));
+  // With «Usar Gemini» on, Gemini answers it, first even with the model ready.
+  const nube = nubePara([]) === 'todo' ? 'todo' : null;
   // Without the model ready: what Gemini said stays as it is; anything else, why this computer doesn't answer.
-  if (!conModelo()) {
+  if (!nube && !conModelo()) {
     cambiarEntrada(id, (e) => (e.nube
       ? { texto: e.texto + (e.guardado ?? ''), guardado: undefined, estado: 'no-esta' }
       : { texto: sinCompu(estado.fase), estado: 'no-esta' }));
     return;
   }
   // A joke asked for isn't «not in the notes»: it goes without that notice.
-  cambiarEntrada(id, { general: humor ? 'humor' : true, elegidos: [], texto: '', guardado: undefined, estado: 'leyendo', nube: undefined });
+  cambiarEntrada(id, { general: humor ? 'humor' : true, elegidos: [], texto: '', guardado: undefined, estado: 'leyendo', nube: undefined, nubeFallo: undefined, nubeTope: undefined });
   enviadas.add(id);
-  worker.postMessage({
-    tipo: 'preguntar',
-    id,
-    humor,
-    corto: puntual,
-    mensajes: [{ role: 'system', content: humor ? SISTEMA_HUMOR : SISTEMA_GENERAL }, ...charlaAntes(hilo, id, { sinPropias: true }), { role: 'user', content: puntual ? `${mensaje}\n${UNA_COSA}` : mensaje }],
-  });
+  const mensajes = [{ role: 'system', content: humor ? SISTEMA_HUMOR : SISTEMA_GENERAL }, ...charlaAntes(hilo, id, { sinPropias: true }), { role: 'user', content: puntual ? `${mensaje}\n${UNA_COSA}` : mensaje }];
+  if (nube) porLaNube(id, mensajes, nube, puntual);
+  else worker.postMessage({ tipo: 'preguntar', id, humor, corto: puntual, mensajes });
 }
 
 // Questions asked apart from this visit's talk (the session's Consultron, src/lib/enVivo/consultronMesa.js): they never
@@ -535,11 +602,50 @@ export function mostrarSoloEjemplo(id, ejemplo) {
  * the question was stopped, the model isn't loaded or it failed. */
 export function pedirDatos(id, mensajes, esquema) {
   const entrada = hilo.find((e) => e.id === id);
-  if (!worker || estado.fase !== 'listo' || !entrada || entrada.estado !== 'leyendo') return Promise.resolve(null);
+  if (!entrada || entrada.estado !== 'leyendo') return Promise.resolve(null);
+  if (nubePara([]) === 'todo') return datosDeLaNube(id, mensajes, esquema);
+  return datosDeLaCompu(id, mensajes, esquema);
+}
+
+function datosDeLaCompu(id, mensajes, esquema) {
   return new Promise((listo) => {
-    esperandoDatos.set(id, listo);
-    worker.postMessage({ tipo: 'extraer', id, mensajes, esquema });
+    const pedir = () => {
+      if (hilo.find((x) => x.id === id)?.estado !== 'leyendo') return listo(null);
+      esperandoDatos.set(id, listo);
+      worker.postMessage({ tipo: 'extraer', id, mensajes, esquema });
+      return undefined;
+    };
+    if (!cuandoEsteListo(id, pedir, () => listo(null))) listo(null);
   });
+}
+
+/** The JSON of a text that should be only that: Gemini sometimes wraps it in a block of code. Null if it isn't one. */
+export function soloJson(texto) {
+  const crudo = String(texto ?? '').trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '');
+  try {
+    const valor = JSON.parse(crudo);
+    return valor && typeof valor === 'object' ? crudo : null;
+  } catch {
+    return null;
+  }
+}
+
+/** The data of an exercise from Gemini, with «Usar Gemini» on: its JSON, as the model's. Without it (stopped, the day's
+ * limit, Google busy), the model of the computer, if it's ready. */
+async function datosDeLaNube(id, mensajes, esquema) {
+  const control = new AbortController();
+  enLaNube.set(id, control);
+  const ultimo = mensajes.at(-1);
+  const pedido = [
+    ...mensajes.slice(0, -1),
+    { ...ultimo, content: `${ultimo.content}\n\nContestá solo con un objeto JSON que cumpla este esquema, sin nada más:\n${JSON.stringify(esquema)}` },
+  ];
+  const texto = await preguntarNube(pedido, 'todo', { senal: control.signal });
+  enLaNube.delete(id);
+  const json = soloJson(texto);
+  if (json || control.signal.aborted) return json;
+  const entrada = hilo.find((e) => e.id === id);
+  return entrada?.estado === 'leyendo' ? datosDeLaCompu(id, mensajes, esquema) : null;
 }
 
 /** The answer is a calculator with the data of the exercise: { slug, nombre, filas, datos } (calculos.js). */
@@ -558,6 +664,14 @@ export function frenar() {
   worker?.postMessage({ tipo: 'frenar' });
   // Gemini's, while written: it stays where it got.
   for (const c of nubeEscribiendo.values()) c.frenado = true;
+  // The ones waiting for the model to load.
+  if (alEstarListo.size) {
+    const esperando = [...alEstarListo.entries()];
+    alEstarListo.clear();
+    hilo = hilo.map((e) => (esperando.some(([id]) => id === e.id) && e.estado === 'leyendo' ? { ...e, estado: 'frenado' } : e));
+    for (const [, { fallar }] of esperando) fallar();
+    avisar();
+  }
   // The ones on their way to Gemini.
   if (enLaNube.size) {
     for (const c of enLaNube.values()) c.abort();
@@ -677,4 +791,5 @@ export const useConsultron = () => useSyncExternalStore(escuchar, leer, leer);
 
 /** Whether questions can be asked: the model ready, or Gemini with a permission of the place on (`permisos`, `lugar`:
  * { enResumen }, nube.js), also while the model isn't there or is getting ready. Not while the computer is looked at. */
-export const sePuedePreguntar = (estado, permisos, lugar = {}) => estado.fase === 'listo' || (!['quieto', 'revisando', 'borrando'].includes(estado.fase) && nubeEnElLugar(permisos, lugar));
+// Where the computer can't run the model, also without «Usar Gemini»: the first question asks for it (Charla.jsx).
+export const sePuedePreguntar = (estado, permisos, lugar = {}) => ['listo', 'no-puede'].includes(estado.fase) || (!['quieto', 'revisando', 'borrando'].includes(estado.fase) && nubeEnElLugar(permisos, lugar));

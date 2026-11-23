@@ -17,7 +17,7 @@ export function useCampusDePropia(propia) {
     const crudos = new Map();
     await Promise.all(usa.filter((m) => suyas.has(m)).map(async (m) => crudos.set(m, await cargarContenido(suyas.get(m)))));
     return { materias, suyas, crudos };
-  }, [usa.join(',')]);
+  }, [usa.join(',')], { alInstante: true });
 
   const contenidos = useMemo(() => (datos ? new Map([...datos.crudos].map(([m, items]) => [m, personalizar(items, mio)])) : null), [datos, mio]);
   return { materias: datos?.materias ?? null, suyas: datos?.suyas ?? null, contenidos, error, cargando, recargar };

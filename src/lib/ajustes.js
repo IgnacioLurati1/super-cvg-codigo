@@ -27,7 +27,7 @@ export const OPCIONES = {
   // or dark, or black and yellow), an engineering blueprint, or the classroom's chalkboard. The last three are always dark
   // (public/ajustes.js). The looks are in tokens.css and estilos.css.
   estilo: ['original', 'hoja', 'profesional', 'batman', 'plano', 'pizarron'],
-  tema: ['sistema', 'claro', 'oscuro', 'rosa', 'bosque', 'cafe', 'lavanda', 'infierno', 'glaciar'],
+  tema: ['sistema', 'claro', 'oscuro', 'rosa', 'bosque', 'cafe', 'lavanda', 'infierno', 'glaciar', 'cosmico'],
   contraste: ['normal', 'alto'],
   daltonismo: ['ninguno', 'rojo-verde', 'azul-amarillo'],
   letra: ['normal', 'grande', 'mas-grande', 'enorme'],
@@ -52,6 +52,9 @@ export const APARIENCIA_CONSULTRON = {
 // right is its only way in. Apart from APARIENCIA_CONSULTRON: «Pasar tu estilo» reads those in a fixed order.
 export const APARICIONES_CONSULTRON = ['modal', 'lateral'];
 
+// The data saver (ahorro.js): on with the phone's own saver or a slow connection, always, or never.
+export const MODOS_AHORRO = ['auto', 'siempre', 'nunca'];
+
 // The styles that are always dark, whatever the theme says (public/ajustes.js does the same).
 export const SIEMPRE_OSCUROS = ['batman'];
 
@@ -61,7 +64,7 @@ export const CON_BORDES = ['hoja', 'plano'];
 
 /** What changes when a style is chosen. Another style also drops the header color chosen: the header goes back to the style's own. */
 export function cambioDeEstilo(ajustes, estilo) {
-  const color = estilo !== ajustes.estilo ? { cabecera: null } : {};
+  const color = estilo !== ajustes.estilo ? { cabecera: null, bandeja: null } : {};
   if (CON_BORDES.includes(estilo)) return ajustes.bordes ? { estilo, ...color } : { estilo, ...color, bordes: true, bordesDelEstilo: true };
   if (ajustes.bordesDelEstilo) return { estilo, ...color, bordes: false, bordesDelEstilo: false };
   return { estilo, ...color };
@@ -135,9 +138,9 @@ export const LAB_SANGRIAS = [4, 2];
 // Some screens start inside «Más» (`LUGAR_DE_ENTRADA`): the ones that came later, so the header the student had doesn't
 // grow, and Horario, which is looked at now and then. «A la vista» brings any of them back.
 export const ESTILOS_DE_MENU = ['texto', 'iconos', 'solo-iconos', 'pastillas'];
-export const EN_EL_MENU = ['hoy', 'materias', 'calendario', 'buscar', 'resumenes', 'horario', 'sysacad', 'carrera', 'mensajes', 'configuracion', 'laboratorio', 'calculadoras', 'repaso', 'consultron', 'envivo'];
+export const EN_EL_MENU = ['hoy', 'materias', 'calendario', 'buscar', 'resumenes', 'horario', 'sysacad', 'carrera', 'mensajes', 'configuracion', 'laboratorio', 'calculadoras', 'repaso', 'consultron', 'envivo', 'disenos'];
 export const LUGARES_EN_EL_MENU = ['vista', 'mas', 'oculta'];
-const LUGAR_DE_ENTRADA = { horario: 'mas', sysacad: 'mas', carrera: 'mas', laboratorio: 'mas', calculadoras: 'mas', repaso: 'mas', consultron: 'mas', envivo: 'mas' };
+const LUGAR_DE_ENTRADA = { horario: 'mas', sysacad: 'mas', carrera: 'mas', laboratorio: 'mas', calculadoras: 'mas', repaso: 'mas', consultron: 'mas', envivo: 'mas', disenos: 'mas' };
 const lugarValido = (clave, lugar) =>
   lugar === 'mas' || (lugar === 'oculta' && clave !== 'configuracion') || (lugar === 'vista' && clave in LUGAR_DE_ENTRADA);
 
@@ -170,16 +173,29 @@ function normalizarMenu(crudo) {
   };
 }
 
+/** The quality of the strong version's sky: the CSS one, painted, or painted with everything (src/lib/fondo). */
+export const CALIDADES_DEL_FONDO = ['baja', 'media', 'alta', 'ultra'];
+// The background's filters, with or without the strong version, only on what's behind the page (public/ajustes.js turns
+// them into CSS, styles/filtros.css applies it). Three that go together: a filter of the colors and how strong, a tone
+// in degrees, and a blur. All in steps of 5.
+export const FILTROS_DEL_FONDO = ['ninguno', 'grises', 'sepia', 'vivo', 'suave'];
+export const INTENSIDAD_DEL_FILTRO = { min: 0, max: 100, paso: 5, inicial: 60 };
+export const TONO_DEL_FILTRO = { min: 0, max: 355, paso: 5, inicial: 0 };
+export const DESENFOQUE_DEL_FONDO = { min: 0, max: 100, paso: 5, inicial: 0 };
+const enPasos = (valor, { min, max, paso, inicial }) =>
+  Number.isFinite(valor) ? Math.min(max, Math.max(min, Math.round(valor / paso) * paso)) : inicial;
+
 export const ORIGINALES = {
   claro: { accion: '#17324d', resaltador: '#ffe14d' },
   oscuro: { accion: '#3578bd', resaltador: '#ffe14d' },
-  // The palettes of tokens.css (`data-paleta`): Rosa oscuro, Verde bosque, Café, Infierno and Glaciar are dark, Lavanda is light.
+  // The palettes of tokens.css (`data-paleta`): Rosa oscuro, Verde bosque, Café, Infierno, Glaciar and Violeta cósmico are dark, Lavanda is light.
   rosa: { accion: '#c2306e', resaltador: '#ffe14d' },
   bosque: { accion: '#17805a', resaltador: '#ffe14d' },
   cafe: { accion: '#b8531a', resaltador: '#ffe14d' },
   lavanda: { accion: '#5b3fb0', resaltador: '#ffe14d' },
   infierno: { accion: '#c4320a', resaltador: '#ffe14d' },
   glaciar: { accion: '#0e7490', resaltador: '#ffe14d' },
+  cosmico: { accion: '#7c3aed', resaltador: '#ffe14d' },
   // Lavanda with an always-dark style: the same violet, lighter.
   'lavanda-oscuro': { accion: '#7456d0', resaltador: '#ffe14d' },
 };
@@ -211,6 +227,36 @@ const brilloValido = (valor) =>
     ? Math.round(Math.min(BRILLO_PDF.max, Math.max(BRILLO_PDF.min, valor)) * 100) / 100
     : BRILLO_PDF.porDefecto;
 
+// ---------- «Según la hora»: a design for the day and one for the night ----------
+
+/** What makes a design, the part that changes with the hour. The letter, color blindness, movement and the reader stay:
+ * they are what the student needs, not a look. public/ajustes.js has the same list. */
+export const CLAVES_DEL_DISENO = ['estilo', 'tema', 'contraste', 'accion', 'resaltador', 'cabecera', 'bandeja', 'bordes', 'bordesDelEstilo', 'potente', 'fondoMueve', 'fondoCalidad', 'fondoFiltro', 'fondoIntensidad', 'fondoTono', 'fondoDesenfoque', 'fogonazo'];
+/** When the night starts and ends, as the student hasn't chosen. Also the sun and the moon of Hoy in the menu. */
+export const NOCHE_POR_DEFECTO = { desde: '20:00', hasta: '07:00' };
+const ES_HORA = /^([01]\d|2[0-3]):[0-5]\d$/;
+const enMinutos = (hora) => Number(hora.slice(0, 2)) * 60 + Number(hora.slice(3));
+const disenoDe = (ajustes) => Object.fromEntries(CLAVES_DEL_DISENO.map((k) => [k, ajustes[k]]));
+
+/** Whether `ahora` is in the night that goes from `desde` to `hasta` (it may cross midnight). The same hours, never. */
+export function esDeNoche(ahora = new Date(), { desde, hasta } = NOCHE_POR_DEFECTO) {
+  const m = ahora.getHours() * 60 + ahora.getMinutes();
+  const [d, h] = [enMinutos(desde), enMinutos(hasta)];
+  if (d === h) return false;
+  return d < h ? m >= d && m < h : m >= d || m < h;
+}
+
+// Null, or the two designs and the hours of the night. Each design is whole (every key of CLAVES_DEL_DISENO, valid).
+function segunLaHoraValida(valor) {
+  if (!valor || typeof valor !== 'object' || !valor.dia || !valor.noche) return null;
+  return {
+    desde: ES_HORA.test(valor.desde) ? valor.desde : NOCHE_POR_DEFECTO.desde,
+    hasta: ES_HORA.test(valor.hasta) ? valor.hasta : NOCHE_POR_DEFECTO.hasta,
+    dia: disenoDe(normalizar(valor.dia)),
+    noche: disenoDe(normalizar(valor.noche)),
+  };
+}
+
 export function normalizar(crudo) {
   const datos = crudo && typeof crudo === 'object' ? crudo : {};
   const vistas = datos.vistas && typeof datos.vistas === 'object' ? datos.vistas : {};
@@ -224,6 +270,8 @@ export function normalizar(crudo) {
     resaltador: colorValido(datos.resaltador),
     // The header's own color, apart from the buttons' (public/ajustes.js). null: the style's.
     cabecera: colorValido(datos.cabecera),
+    // The color of the line under the header in Pizarrón, its chalk tray (public/ajustes.js). null: the wood's.
+    bandeja: colorValido(datos.bandeja),
     vistas: Object.fromEntries(Object.entries(VISTAS).map(([pantalla, lista]) => [pantalla, lista.includes(vistas[pantalla]) ? vistas[pantalla] : (VISTA_DE_ENTRADA[pantalla] ?? lista[0])])),
     // «Sensible a la luz», for photosensitivity: no jumps of brightness, softer whites, animated pictures still until
     // tapped, and everything still as with «Sin animaciones» (public/ajustes.js writes `data-luz`, styles/luz.css does
@@ -235,6 +283,19 @@ export function normalizar(crudo) {
     // Each block in a frame of its own, in any style. Off unless turned on: the site doesn't box everything, on purpose.
     bordes: datos.bordes === true,
     bordesDelEstilo: datos.bordes === true && datos.bordesDelEstilo === true,
+    // Batman's yellow beam each time the screen changes (animaciones.css). On unless turned off.
+    fogonazo: datos.fogonazo !== false,
+    // The theme's strong version: each theme with its own sky behind the page (estilos.css). Off unless turned on.
+    potente: datos.potente === true,
+    // With the strong version: the sky moves (src/lib/fondo), and how elaborate it is (CALIDADES_DEL_FONDO). Off, low.
+    fondoMueve: datos.fondoMueve === true,
+    fondoCalidad: CALIDADES_DEL_FONDO.includes(datos.fondoCalidad) ? datos.fondoCalidad : 'media',
+    // The background's filters (FILTROS_DEL_FONDO), none unless chosen.
+    fondoFiltro: FILTROS_DEL_FONDO.includes(datos.fondoFiltro) ? datos.fondoFiltro : 'ninguno',
+    fondoIntensidad: enPasos(datos.fondoIntensidad, INTENSIDAD_DEL_FILTRO),
+    fondoTono: enPasos(datos.fondoTono, TONO_DEL_FILTRO),
+    fondoDesenfoque: enPasos(datos.fondoDesenfoque, DESENFOQUE_DEL_FONDO),
+    segunLaHora: segunLaHoraValida(datos.segunLaHora),
     // «Marcar lo que ya viste»: null until the student chooses (vistos.js decides then).
     vistos: typeof datos.vistos === 'boolean' ? datos.vistos : null,
     // The page of the live Documento, dark or light: null follows the theme of the site, until the student chooses.
@@ -250,6 +311,12 @@ export function normalizar(crudo) {
     atajos: datos.atajos !== false,
     // «Modo sin mouse» (sinMouse.js): the buttons that do what a drag does. Off unless turned on.
     sinMouse: datos.sinMouse === true,
+    // «Misma configuración en todos tus dispositivos» (apariencia.js): on unless this device turns it off.
+    mismaEnTodos: datos.mismaEnTodos !== false,
+    // «Ahorro de datos» (ahorro.js): what downloads without the student asking waits. Automatic unless chosen.
+    ahorro: entre(MODOS_AHORRO, datos.ahorro),
+    // «Descargas inteligentes» (descargas.js): the day's material with Super CVG closed, on wifi. Off unless turned on.
+    descargas: datos.descargas === true,
 
     // How fast the PDF reader reads aloud (voz.js): one of its steps, 1 until it's changed.
     velocidadVoz: normalizarVelocidad(datos.velocidadVoz),
@@ -322,16 +389,27 @@ function leer() {
   }
 }
 
-let actual = normalizar(leer());
+// Which design shows: the one of the hour, unless Configuración is showing the other one to edit it (editarDiseno).
+let forzado = null;
+const periodoDe = (ajustes, ahora = new Date()) => (esDeNoche(ahora, ajustes.segunLaHora ?? NOCHE_POR_DEFECTO) ? 'noche' : 'dia');
+const periodoQueSeVe = (ajustes) => forzado ?? periodoDe(ajustes);
+// With «Según la hora», the design of the hour over the rest (public/ajustes.js does the same before the first paint).
+const conElDeLaHora = (ajustes) => (ajustes.segunLaHora ? { ...ajustes, ...ajustes.segunLaHora[periodoQueSeVe(ajustes)] } : ajustes);
+
+let actual = conElDeLaHora(normalizar(leer()));
 const POR_DEFECTO = normalizar(null);
 
 // The sizes of the panels fit the screen of each device, and a mouse is in one device: they don't travel.
-const DE_ESTE_DISPOSITIVO = ['anchoPanelPdf', 'anchoConsultron', 'altoConsultron', 'anchoRincon', 'sinMouse'];
+// The data saver follows the connection of each device too.
+// And the night downloads are of the phone that has the app.
+const DE_ESTE_DISPOSITIVO = ['anchoPanelPdf', 'anchoConsultron', 'altoConsultron', 'anchoRincon', 'sinMouse', 'ahorro', 'mismaEnTodos', 'descargas'];
 
 /** The settings that travel with the student (mio.apariencia, joined through their Drive by union.js): only what differs
  * from the default, so a device where nothing was changed has nothing to send. */
 export function aparienciaQueViaja(crudo) {
-  const n = normalizar(crudo);
+  // With «Según la hora», the design of the hour: never the other one, shown here only to edit it (editarDiseno).
+  const sin = normalizar(crudo);
+  const n = sin.segunLaHora ? { ...sin, ...sin.segunLaHora[periodoDe(sin)] } : sin;
   const r = {};
   for (const [k, v] of Object.entries(n)) {
     if (!DE_ESTE_DISPOSITIVO.includes(k) && JSON.stringify(v) !== JSON.stringify(POR_DEFECTO[k])) r[k] = v;
@@ -343,8 +421,28 @@ export function aparienciaQueViaja(crudo) {
 export function conApariencia(ajustes, apariencia) {
   const r = normalizar(apariencia);
   for (const k of DE_ESTE_DISPOSITIVO) r[k] = ajustes[k];
-  return r;
+  // What travels is the design of the hour; here the one showing goes over it, so saving it changes neither.
+  return conElDeLaHora(r);
 }
+// A design tried in Diseños (disenos.js, verDiseno): the screens draw it (the menu too, from Layout), nothing is saved.
+// It is built over the saved settings (daltonismo, movimiento and Sensible a la luz stay), and again every time they
+// change, so nothing paints the saved ones over it while it lasts. Null goes back to what is saved.
+let armarPrevia = null;
+let previa = null;
+function pintar(ajustes) {
+  const a = armarPrevia?.(actual);
+  previa = a ? normalizar(a) : null;
+  // public/ajustes.js paints it too when it repaints on its own (the device's theme, another tab).
+  window.ajustesEnPrueba = previa ?? undefined;
+  window.aplicarAjustes?.(previa ?? ajustes);
+}
+/** A design over the saved settings: a function of them (called again when they change), settings, or null. */
+export function probarAjustes(armar) {
+  armarPrevia = typeof armar === 'function' ? armar : armar ? () => armar : null;
+  pintar(undefined);
+  avisar();
+}
+
 const avisados = new Set();
 const avisar = () => avisados.forEach((f) => f());
 
@@ -356,13 +454,15 @@ function suscribir(f) {
 if (typeof window !== 'undefined') {
   window.addEventListener('storage', (e) => {
     if (e.key !== CLAVE_AJUSTES && e.key !== null) return;
-    actual = normalizar(leer());
-    window.aplicarAjustes?.();
+    actual = conElDeLaHora(normalizar(leer()));
+    pintar(forzado ? actual : undefined);
     avisar();
   });
 }
 
 function guardar(ajustes) {
+  // What the student changes goes into the design they are looking at: the night's at night.
+  if (ajustes.segunLaHora) ajustes = { ...ajustes, segunLaHora: { ...ajustes.segunLaHora, [periodoQueSeVe(ajustes)]: disenoDe(ajustes) } };
   actual = ajustes;
   let guardado = true;
   try {
@@ -370,10 +470,78 @@ function guardar(ajustes) {
   } catch {
     guardado = false;
   }
-  window.aplicarAjustes?.(guardado ? undefined : ajustes);
+  // Showing the other design to edit it, the page gets it as it is: the saved one is read with the hour's.
+  pintar(guardado && !forzado ? undefined : ajustes);
   avisar();
   return guardado;
 }
+
+/** Turns «Según la hora» on (the night starts as this design, dark) or off (what shows now stays). */
+export function cambiarSegunLaHora(si) {
+  if (!si) return cambiarAjustes({ segunLaHora: null });
+  const dia = disenoDe(actual);
+  const oscuro = ['sistema', 'claro', 'lavanda'].includes(dia.tema) && !SIEMPRE_OSCUROS.includes(dia.estilo) ? { tema: 'oscuro' } : {};
+  const ahora = periodoDe({ segunLaHora: NOCHE_POR_DEFECTO });
+  const noche = { ...dia, ...oscuro };
+  return guardar(normalizar({ ...actual, ...(ahora === 'noche' ? noche : dia), segunLaHora: { ...NOCHE_POR_DEFECTO, dia, noche } }));
+}
+
+/** The hours of the night, 'HH:MM'. The design shows the one of the new hours. */
+export function horasDeLaNoche(desde, hasta) {
+  if (!actual.segunLaHora) return false;
+  const segun = segunLaHoraValida({ ...actual.segunLaHora, desde, hasta });
+  return guardar(conElDeLaHora({ ...actual, segunLaHora: segun }));
+}
+
+/** Configuración shows the design of 'dia' or 'noche' to edit it, whatever the hour; null goes back to the hour's. */
+export function editarDiseno(periodo) {
+  const nuevo = periodo === 'dia' || periodo === 'noche' ? periodo : null;
+  if (nuevo === forzado) return;
+  forzado = nuevo;
+  if (!actual.segunLaHora) return;
+  actual = conElDeLaHora(actual);
+  pintar(forzado ? actual : undefined);
+  avisar();
+}
+
+/** 'dia' or 'noche': the design showing, with «Según la hora». */
+export const disenoQueSeVe = () => periodoQueSeVe(actual);
+
+// ---------- The hour ----------
+
+// Once a minute (and on coming back to the tab): whether it is night, for the sun or the moon of Hoy, and the design
+// of the hour when it changes.
+let deNoche = periodoDe(actual) === 'noche';
+const relojes = new Set();
+function mirarLaHora() {
+  const ahora = periodoDe(actual) === 'noche';
+  if (actual.segunLaHora && !forzado && actual.segunLaHora[periodoDe(actual)] && JSON.stringify(disenoDe(actual)) !== JSON.stringify(actual.segunLaHora[periodoDe(actual)])) {
+    guardar(conElDeLaHora(actual));
+  }
+  if (ahora === deNoche) return;
+  deNoche = ahora;
+  relojes.forEach((f) => f());
+}
+if (typeof window !== 'undefined') {
+  setInterval(mirarLaHora, 60_000);
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') mirarLaHora();
+  });
+}
+/** Whether it is night now: the hours of «Según la hora», or 20 to 7. */
+export const useDeNoche = () =>
+  useSyncExternalStore(
+    (f) => {
+      relojes.add(f);
+      avisados.add(f);
+      return () => {
+        relojes.delete(f);
+        avisados.delete(f);
+      };
+    },
+    () => periodoDe(actual) === 'noche',
+    () => false,
+  );
 
 /** False when the browser refused to save: the change still lasts until the tab closes. */
 export const cambiarAjustes = (cambio) => guardar(normalizar({ ...actual, ...cambio }));
@@ -381,8 +549,16 @@ export const cambiarAjustes = (cambio) => guardar(normalizar({ ...actual, ...cam
 export const elegirVista = (pantalla, vista) => cambiarAjustes({ vistas: { ...actual.vistas, [pantalla]: vista } });
 
 export function volverAjustesOriginales() {
-  // «Sensible a la luz» stays: whoever needs it shouldn't get the flashes back by starting over.
-  const queda = actual.luz ? { luz: true } : null;
+  // «Sensible a la luz» stays: whoever needs it shouldn't get the flashes back by starting over. The data saver isn't
+  // visual: it stays too, and so does a device that keeps its own look (starting over shouldn't take the student's).
+  const quedan = {
+    ...(actual.luz ? { luz: true } : {}),
+    ...(actual.ahorro !== POR_DEFECTO.ahorro ? { ahorro: actual.ahorro } : {}),
+    // Nor is the night download.
+    ...(actual.descargas ? { descargas: true } : {}),
+    ...(actual.mismaEnTodos ? {} : { mismaEnTodos: false }),
+  };
+  const queda = Object.keys(quedan).length ? quedan : null;
   actual = queda ? normalizar(queda) : POR_DEFECTO;
   try {
     if (queda) localStorage.setItem(CLAVE_AJUSTES, JSON.stringify(queda));
@@ -390,14 +566,19 @@ export function volverAjustesOriginales() {
   } catch {
     // Nothing was stored in the first place, or it can't be: the choice still applies to this tab.
   }
-  window.aplicarAjustes?.(actual);
+  pintar(actual);
   avisar();
 }
 
 /** How much moves on this device: «Sensible a la luz» keeps everything still, whatever Movimiento says. */
 export const movimientoDe = (ajustes) => (ajustes.luz ? 'ninguno' : ajustes.movimiento);
 
-export const useAjustes = () => useSyncExternalStore(suscribir, () => actual, () => POR_DEFECTO);
+/** What the screens draw: the design being tried, if there is one, or the saved settings. */
+export const ajustesQueSeVen = () => previa ?? actual;
+export const useAjustes = () => useSyncExternalStore(suscribir, ajustesQueSeVen, () => POR_DEFECTO);
+
+/** Only the saved settings, while a design is tried (Diseños compares and builds on these). */
+export const useAjustesGuardados = () => useSyncExternalStore(suscribir, () => actual, () => POR_DEFECTO);
 
 /** The settings now, and their changes, outside the screens (calendarioSincro.js follows the academic calendar). */
 export const ajustesActuales = () => actual;
@@ -429,7 +610,7 @@ const suscribirTema = (avisar) => {
   return () => observador.disconnect();
 };
 
-/** Whether the site shows dark now: public/ajustes.js marks it in <html>, also when the device changes («Del sistema»). */
+/** Whether the site shows dark now: public/ajustes.js marks it in <html>, also when the device changes («Seguir a tu dispositivo»). */
 export const useTemaOscuro = () => useSyncExternalStore(suscribirTema, () => document.documentElement.dataset.tema === 'oscuro', () => false);
 
 /** Whether the pages of the PDF reader look dark: chosen, or as the theme of the site (`temaOscuro`, useTemaOscuro). */
@@ -449,6 +630,8 @@ export function colorActual(ajustes, clave) {
   // Consultron's own color starts as the main one.
   if (clave === 'consultronColor') return ajustes.consultronColor ?? ajustes.accion ?? ORIGINALES[tema].accion;
   // The header's starts as the one on screen, the one public/ajustes.js gives the browser's bar.
+  // Pizarrón's tray starts as the one on screen.
+  if (clave === 'bandeja') return ajustes.bandeja ?? (getComputedStyle(document.documentElement).getPropertyValue('--pizarron-bandeja').trim() || '#6f5236');
   if (clave === 'cabecera') return ajustes.cabecera ?? document.querySelector('meta[name="theme-color"]')?.getAttribute('content') ?? ORIGINALES[tema].accion;
   return ajustes[clave] ?? ORIGINALES[tema][clave];
 }

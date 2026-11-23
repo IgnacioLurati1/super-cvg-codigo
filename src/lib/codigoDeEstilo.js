@@ -1,5 +1,5 @@
 import {
-  ALINEACIONES_DEL_MENU, ALTO_CONSULTRON, ANCHOS_DEL_MENU, APARIENCIA_CONSULTRON, BRILLO_PDF, CONTENIDOS, EN_EL_MENU, ESTILOS_DE_MENU, LUGARES_EN_EL_MENU, OPCIONES, PANEL_CONSULTRON, PANEL_PDF,
+  ALINEACIONES_DEL_MENU, ALTO_CONSULTRON, ANCHOS_DEL_MENU, CALIDADES_DEL_FONDO, DESENFOQUE_DEL_FONDO, FILTROS_DEL_FONDO, INTENSIDAD_DEL_FILTRO, TONO_DEL_FILTRO, APARIENCIA_CONSULTRON, BRILLO_PDF, CONTENIDOS, EN_EL_MENU, ESTILOS_DE_MENU, LUGARES_EN_EL_MENU, OPCIONES, PANEL_CONSULTRON, PANEL_PDF,
   PDF_CLAROS, POSICIONES_DEL_MENU, RINCON_CONSULTRON, VISTAS, normalizar,
 } from './ajustes';
 import { GRUPOS_DE_AVISOS } from './avisos';
@@ -19,9 +19,16 @@ import { VELOCIDADES } from './voz';
 
 // Version 2 added what a course looks like inside (`contenido`): a code of version 1 still reads, without it. Version 3
 // added where the screens of the bar on top go and how wide it is. Version 4, the header's own color, after the others.
-const VERSION = '4';
-const VERSIONES = ['1', '2', '3', '4'];
+// Version 5 came with Diseños, a screen more in the menu: its order and places take more characters. A code of an older
+// version, or of 5 made before Diseños, still reads with the screens it had then, and Diseños where it starts. Version 6,
+// the background's filters (its strength, the tone and the blur), after the others. Version 7, the color of the line
+// under the header in Pizarrón, after the colors. Version 8, Batman's yellow beam (`fogonazo`), after the others: an older
+// code reads it on, as it always was.
+const VERSION = '8';
+const VERSIONES = ['1', '2', '3', '4', '5', '6', '7', '8'];
 const PREFIJO = 'CVG';
+// The longest a typed code can be (the field in Configuración takes this much too): far more than any code is.
+export const MAX_ESCRITO = 200;
 const ABC = '0123456789abcdefghjkmnpqrstvwxyz';
 const SIN_COLOR = 'z';
 
@@ -65,12 +72,30 @@ const deBase3 = (n, cuantos) => Array.from({ length: cuantos }, () => {
   return v;
 });
 
+// The screens of the menu before Diseños: `menu: 'antes'` reads them (never written), `menu: 'ahora'` writes and reads all.
+const ANTES_DE_DISENOS = EN_EL_MENU.filter((s) => s !== 'disenos');
+
+/** The order of the menu and where each screen is, for the screens of `lista`, in `orden` and `lugares` characters. */
+const delMenu = (lista, { orden, lugares, menu }) => [
+  { ancho: orden, menu, de: (a) => rangoDe(a.menu.orden, lista), a: (n, c) => { c.ajustes.menu.orden = ordenDe(n, lista); }, tope: factorial(lista.length) },
+  {
+    ancho: lugares,
+    menu,
+    de: (a) => enBase3(lista.map((s) => LUGARES_EN_EL_MENU.indexOf(a.menu.lugares[s] ?? 'vista'))),
+    a: (n, c) => {
+      const donde = deBase3(n, lista.length);
+      c.ajustes.menu.lugares = Object.fromEntries(lista.map((s, i) => [s, LUGARES_EN_EL_MENU[donde[i]]]));
+    },
+    tope: 3 ** lista.length,
+  },
+];
+
 const BLOQUES = BLOQUES_DE_HOY.map((b) => b.clave);
 const COLUMNA_DE_ENTRADA = Object.fromEntries(BLOQUES_DE_HOY.map((b) => [b.clave, b.columna]));
 const CUENTAN = ['entregas', 'cuestionarios', 'classroom', 'propias'];
 const AVISOS = GRUPOS_DE_AVISOS.map((g) => g.clave);
 const NULO_SI = [null, true, false];
-const COLORES = [{ clave: 'accion' }, { clave: 'resaltador' }, { clave: 'consultronColor' }, { clave: 'cabecera', desde: '4' }];
+const COLORES = [{ clave: 'accion' }, { clave: 'resaltador' }, { clave: 'consultronColor' }, { clave: 'cabecera', desde: '4' }, { clave: 'bandeja', desde: '7' }];
 
 const eleccion = (clave, lista) => ({
   ancho: 1,
@@ -108,16 +133,8 @@ const CAMPOS = [
   // The menu: how it looks, where it goes, its order and where each screen is.
   { ancho: 1, de: (a) => ESTILOS_DE_MENU.indexOf(a.menu.estilo), a: (n, c) => { c.ajustes.menu.estilo = ESTILOS_DE_MENU[n]; }, tope: ESTILOS_DE_MENU.length },
   { ancho: 1, de: (a) => POSICIONES_DEL_MENU.indexOf(a.menu.posicion), a: (n, c) => { c.ajustes.menu.posicion = POSICIONES_DEL_MENU[n]; }, tope: POSICIONES_DEL_MENU.length },
-  { ancho: 8, de: (a) => rangoDe(a.menu.orden, EN_EL_MENU), a: (n, c) => { c.ajustes.menu.orden = ordenDe(n, EN_EL_MENU); }, tope: factorial(EN_EL_MENU.length) },
-  {
-    ancho: 5,
-    de: (a) => enBase3(EN_EL_MENU.map((s) => LUGARES_EN_EL_MENU.indexOf(a.menu.lugares[s] ?? 'vista'))),
-    a: (n, c) => {
-      const lugares = deBase3(n, EN_EL_MENU.length);
-      c.ajustes.menu.lugares = Object.fromEntries(EN_EL_MENU.map((s, i) => [s, LUGARES_EN_EL_MENU[lugares[i]]]));
-    },
-    tope: 3 ** EN_EL_MENU.length,
-  },
+  ...delMenu(ANTES_DE_DISENOS, { orden: 8, lugares: 5, menu: 'antes' }),
+  ...delMenu(EN_EL_MENU, { orden: 9, lugares: 6, menu: 'ahora' }),
   // Hoy, from mio: its blocks in order, the column of each, the hidden ones, what enters «Vencimientos» and how far it looks.
   {
     ancho: 5,
@@ -139,6 +156,12 @@ const CAMPOS = [
   { ...eleccion('contenido', CONTENIDOS), desde: '2' },
   { ancho: 1, de: (a) => ALINEACIONES_DEL_MENU.indexOf(a.menu.alineacion), a: (n, c) => { c.ajustes.menu.alineacion = ALINEACIONES_DEL_MENU[n]; }, tope: ALINEACIONES_DEL_MENU.length, desde: '3' },
   { ancho: 1, de: (a) => ANCHOS_DEL_MENU.indexOf(a.menu.ancho), a: (n, c) => { c.ajustes.menu.ancho = ANCHOS_DEL_MENU[n]; }, tope: ANCHOS_DEL_MENU.length, desde: '3' },
+  { ancho: 1, de: (a) => (a.potente ? 1 : 0) + (a.fondoMueve ? 2 : 0) + CALIDADES_DEL_FONDO.indexOf(a.fondoCalidad) * 4, a: (n, c) => { c.ajustes.potente = (n & 1) > 0; c.ajustes.fondoMueve = (n & 2) > 0; c.ajustes.fondoCalidad = CALIDADES_DEL_FONDO[n >> 2]; }, tope: 16, desde: '5' },
+  { ...eleccion('fondoFiltro', FILTROS_DEL_FONDO), desde: '6' },
+  { ancho: 1, de: (a) => a.fondoIntensidad / INTENSIDAD_DEL_FILTRO.paso, a: (n, c) => { c.ajustes.fondoIntensidad = n * INTENSIDAD_DEL_FILTRO.paso; }, tope: INTENSIDAD_DEL_FILTRO.max / INTENSIDAD_DEL_FILTRO.paso + 1, desde: '6' },
+  { ancho: 2, de: (a) => a.fondoTono / TONO_DEL_FILTRO.paso, a: (n, c) => { c.ajustes.fondoTono = n * TONO_DEL_FILTRO.paso; }, tope: TONO_DEL_FILTRO.max / TONO_DEL_FILTRO.paso + 1, desde: '6' },
+  { ancho: 1, de: (a) => a.fondoDesenfoque / DESENFOQUE_DEL_FONDO.paso, a: (n, c) => { c.ajustes.fondoDesenfoque = n * DESENFOQUE_DEL_FONDO.paso; }, tope: DESENFOQUE_DEL_FONDO.max / DESENFOQUE_DEL_FONDO.paso + 1, desde: '6' },
+  { ancho: 1, de: (a) => (a.fogonazo ? 0 : 1), a: (n, c) => { c.ajustes.fogonazo = n === 0; }, tope: 2, desde: '8' },
 ];
 
 // Each place weighs differently (all odd), so one wrong character or most swaps change it.
@@ -149,7 +172,7 @@ const control = (texto) => ABC[[...texto].reduce((t, c, i) => t + ABC.indexOf(c)
 export function codigoDeEstilo(ajustes, mio) {
   const a = normalizar(ajustes);
   let texto = VERSION;
-  for (const campo of CAMPOS) texto += aTexto(campo.de(a, mio), campo.ancho);
+  for (const campo of CAMPOS) if (campo.menu !== 'antes') texto += aTexto(campo.de(a, mio), campo.ancho);
   for (const { clave: c } of COLORES) texto += a[c] ? a[c].slice(1) : SIN_COLOR;
   texto += control(texto);
   return `${PREFIJO}-${texto.toUpperCase().match(/.{1,5}/g).join('-')}`;
@@ -159,7 +182,7 @@ export function codigoDeEstilo(ajustes, mio) {
  * stay as in `actuales`), and `hoy` and `avisosOcultos` for mio. Takes it as typed: with or without «CVG», dashes or
  * spaces, in any case. */
 export function leerCodigoDeEstilo(escrito, actuales) {
-  if (typeof escrito !== 'string' || escrito.length > 200) return null;
+  if (typeof escrito !== 'string' || escrito.length > MAX_ESCRITO) return null;
   let texto = escrito.toLowerCase().replace(/[\s-]/g, '');
   if (texto.startsWith(PREFIJO.toLowerCase())) texto = texto.slice(PREFIJO.length);
   texto = texto.replace(/o/g, '0').replace(/[il]/g, '1');
@@ -168,7 +191,18 @@ export function leerCodigoDeEstilo(escrito, actuales) {
   const cuerpo = texto.slice(0, -1);
   if (control(cuerpo) !== texto.at(-1)) return null;
 
+  // A code of version 5 has the menu with Diseños, or without it if it was made before. Never both: the two differ
+  // by 2 characters and the colors take 1 or 6 each, so only one ends where the code ends. From 6 on, always with it.
   const base = normalizar(actuales);
+  const menus = version === '5' ? ['ahora', 'antes'] : version > '5' ? ['ahora'] : ['antes'];
+  for (const menu of menus) {
+    const cambio = leer(cuerpo, version, menu, base);
+    if (cambio) return cambio;
+  }
+  return null;
+}
+
+function leer(cuerpo, version, menu, base) {
   const cambio = {
     ajustes: { vistas: { ...base.vistas }, menu: { ...base.menu } },
     hoy: {},
@@ -176,7 +210,7 @@ export function leerCodigoDeEstilo(escrito, actuales) {
   };
   let i = 1;
   for (const campo of CAMPOS) {
-    if (campo.desde > version) continue;
+    if (campo.desde > version || (campo.menu && campo.menu !== menu)) continue;
     const pedazo = cuerpo.slice(i, i + campo.ancho);
     i += campo.ancho;
     if (pedazo.length !== campo.ancho) return null;
@@ -200,6 +234,7 @@ export function leerCodigoDeEstilo(escrito, actuales) {
     }
   }
   if (i !== cuerpo.length) return null;
+  if (version < '8') cambio.ajustes.fogonazo = true;
   cambio.ajustes.pdfBrillo = Math.round(cambio.ajustes.pdfBrillo * 100) / 100;
   return cambio;
 }

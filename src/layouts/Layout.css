@@ -379,7 +379,7 @@
   align-items: stretch;
   gap: 0;
   max-height: calc(100dvh - var(--alto-cabecera));
-  padding: 8px var(--margen) 16px;
+  padding: 8px var(--margen) max(16px, env(safe-area-inset-bottom));
   overflow-y: auto;
   overscroll-behavior: contain;
   border-bottom: 1px solid currentColor;
@@ -388,6 +388,54 @@
 
 .cabecera[data-compacta] .cabecera__menu[data-abierto] {
   display: flex;
+}
+
+/* While the header measures whether its links fit (Layout.jsx, on loading or when the menu changes), they don't show
+   and nothing slides: it may unfold for a frame before it folds. */
+.cabecera[data-midiendo] .cabecera__menu {
+  visibility: hidden;
+  transition: none !important;
+}
+
+/* It drops from the bar and goes back up, faster than it came; `display` waits for the slide to end. */
+@media (prefers-reduced-motion: no-preference) {
+  .cabecera[data-compacta] .cabecera__menu {
+    opacity: 0;
+    transform: translateY(-8px);
+    transition: opacity 140ms ease-out, transform 140ms ease-out, display 140ms allow-discrete;
+  }
+
+  .cabecera[data-compacta] .cabecera__menu[data-abierto] {
+    opacity: 1;
+    transform: none;
+    transition-duration: 200ms;
+    transition-timing-function: cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  @starting-style {
+    .cabecera[data-compacta] .cabecera__menu[data-abierto] {
+      opacity: 0;
+      transform: translateY(-8px);
+    }
+  }
+}
+
+/* With less motion, only the fade. */
+@media (prefers-reduced-motion: reduce) {
+  .cabecera[data-compacta] .cabecera__menu {
+    opacity: 0;
+    transition: opacity 120ms ease-out, display 120ms allow-discrete;
+  }
+
+  .cabecera[data-compacta] .cabecera__menu[data-abierto] {
+    opacity: 1;
+  }
+
+  @starting-style {
+    .cabecera[data-compacta] .cabecera__menu[data-abierto] {
+      opacity: 0;
+    }
+  }
 }
 
 /* A button, not a bar across the panel. */
@@ -633,7 +681,9 @@ main:focus {
   outline: none;
 }
 
+/* Its last line stays over the phone's gesture bar. */
 .pie {
+  padding-bottom: env(safe-area-inset-bottom);
   border-top: 1px solid var(--borde);
   color: var(--texto-suave);
   font-size: var(--t-chica);
@@ -695,6 +745,17 @@ main:focus {
   html[data-menu-lado='izquierda'] .sitio[data-con-menu] > :is(main, .pie) {
     grid-column: 2;
     min-width: 0;
+  }
+
+  /* The page stays where it is with the menu on top while the column leaves it room, and moves only what it takes to
+     clear it. Its widest comes from Layout.jsx (`--ancho-pagina`, quieto.js); without it, against the column. The
+     footer goes with it. */
+  html[data-menu-lado='izquierda'] .sitio[data-con-menu] > main > .contenedor {
+    margin-left: max(0px, (100% - var(--ancho-lateral) - var(--ancho-pagina, 100%)) / 2);
+  }
+
+  html[data-menu-lado='izquierda'] .sitio[data-con-menu] > .pie > .contenedor {
+    margin-left: max(0px, (100% - var(--ancho-lateral) - var(--ancho)) / 2);
   }
 
   html[data-menu-lado='izquierda'] .sitio[data-con-menu] > .saltar:focus {
@@ -836,8 +897,10 @@ main:focus {
     text-align: center;
   }
 
+  /* Without «Alt K» beside it, the magnifier goes in the middle of its box. */
   html .cabecera[data-lateral][data-estilo='solo-iconos'] .cabecera__rapido {
     justify-self: center;
+    justify-content: center;
     padding: 0;
   }
 
@@ -908,7 +971,7 @@ main:focus {
 
   html[data-estilo='pizarron'] .cabecera[data-lateral] {
     box-shadow:
-      3px 0 0 var(--pizarron-bandeja),
+      3px 0 0 var(--bandeja-elegida, var(--pizarron-bandeja)),
       5px 0 8px -2px var(--pizarron-sombra);
   }
 }

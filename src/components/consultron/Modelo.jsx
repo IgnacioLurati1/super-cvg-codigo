@@ -21,7 +21,7 @@ export function Anuncio({ estado }) {
 /** Before the first question: whether this computer can, the download and the loading. `nivel`: of its heading.
  * `lugar`: { enResumen }, where Gemini may answer (nube.js). With its permission on, Gemini answers already and this
  * is short; off, beside the model, the offer to turn it on. */
-export function Arranque({ estado, nivel = 2, lugar = {} }) {
+export function Arranque({ estado, nivel = 2, lugar = {}, sinCerrar = false }) {
   const { confirmar } = useUI();
   const permisos = usePermisosNube();
   const conGemini = nubeEnElLugar(permisos, lugar);
@@ -31,23 +31,18 @@ export function Arranque({ estado, nivel = 2, lugar = {} }) {
     const seguir = await confirmar({ titulo: `¿Bajar ${gb(TOTAL_MB)} GB?`, texto: 'Conviene estar con wifi. Si se corta, sigue desde donde quedó.', boton: 'Bajar' });
     if (seguir) cargar();
   };
-  // Gemini off: its offer beside the model. Before downloading anything, first: it's the better one, and at once.
+  // «Usar Gemini» off: its offer beside the model. Before downloading anything, first: it's the better one, and at once.
   const conOfertas = (modelo, { primero = false } = {}) => {
-    if (conGemini) return modelo;
-    const ofertas = permisosDelLugar(lugar).map((c) => <OfertaNube key={c} cual={c} />);
-    return <div className="consultron__opciones">{primero ? [...ofertas, modelo] : [modelo, ...ofertas]}</div>;
+    if (permisos.todo) return modelo;
+    const oferta = <OfertaNube key="todo" cual="todo" />;
+    return <div className="consultron__opciones">{primero ? [oferta, modelo] : [modelo, oferta]}</div>;
   };
   if (estado.fase === 'quieto' || estado.fase === 'revisando') return <p className="consultron__estado">Revisando tu compu…</p>;
-  // This computer can't: Gemini still answers about the summaries and their career, with its permission.
-  if (estado.fase === 'no-puede') {
-    return (
-      <div className="consultron__sin-compu">
-        <div className="mensaje mensaje--error" role="alert"><p>{MOTIVOS[estado.motivo] ?? MOTIVOS['sin-webgpu']}</p></div>
-        <p>Gemini, de Google, puede contestar igual sobre los resúmenes de El Santo Resumen y tu carrera.</p>
-        <PermisosNube sinModelo />
-      </div>
-    );
-  }
+  // This computer (or a phone) can't: Gemini answers. Nothing to show: without «Usar Gemini», the first question asks
+  // for it (Charla.jsx, Ignacio 22/11/2026).
+  if (estado.fase === 'no-puede') return null;
+  // In the browser and not loading: with «Usar Gemini» it loads only when Gemini fails.
+  if (estado.fase === 'bajado' && permisos.todo) return null;
   if (estado.fase === 'falla') return conOfertas(<ErrorConReintento key="modelo" texto={estado.error} recargar={cargar} />);
   // «bajado»: it was already in the browser and it's about to load by itself.
   if (estado.fase === 'bajando' || estado.fase === 'preparando' || estado.fase === 'bajado') {
@@ -70,13 +65,14 @@ export function Arranque({ estado, nivel = 2, lugar = {} }) {
   // sin-bajar. Gemini answers already: the model, for what Gemini doesn't take.
   if (conGemini) {
     if (!avisoBajarConsultron) return null;
-    const sobre = permisosDelLugar(lugar).filter((c) => permisos[c]).map((c) => SOBRE[c]).join(' y ');
+    const sobre = permisosDelLugar(lugar).filter((c) => permisos[c] && SOBRE[c]).map((c) => SOBRE[c]).join(' y ');
     return (
       <section className="consultron__arranque consultron__arranque--corto" aria-label="Consultron en tu compu">
-        <p>{lugar.enResumen ? 'Contesta Gemini. Si no puede, contesta Consultron en tu compu, si lo bajás.' : `Gemini contesta sobre ${sobre}. Para lo demás, bajá Consultron.`}</p>
+        <p>{permisos.todo || lugar.enResumen ? 'Contesta Gemini. Si no puede, contesta Consultron en tu compu, si lo bajás.' : `Gemini contesta sobre ${sobre}. Para lo demás, bajá Consultron.`}</p>
         <div className="consultron__fila">
           <button type="button" className="boton boton--secundario boton--chico" onClick={bajar}>Bajar Consultron</button>
-          <button type="button" className="boton boton--secundario boton--chico" onClick={() => cambiarAjustes({ avisoBajarConsultron: false })}>Cerrar</button>
+          {/* In «Ajustes» its own X closes the window: a second «Cerrar» would be a different one. */}
+          {!sinCerrar && <button type="button" className="boton boton--secundario boton--chico" onClick={() => cambiarAjustes({ avisoBajarConsultron: false })}>Cerrar</button>}
         </div>
       </section>
     );
@@ -93,9 +89,11 @@ export function Arranque({ estado, nivel = 2, lugar = {} }) {
 }
 
 const SOBRE = { resumenes: 'los resúmenes', carrera: 'tu carrera' };
+const OFERTA = { todo: 'Gemini, de Google, contesta mejor que Consultron en tu compu.', resumenes: 'Gemini, de Google, contesta mejor sobre los resúmenes.', carrera: 'Gemini, de Google, contesta mejor sobre tu carrera.' };
 
 // What goes to Google with each permission, in a line (the whole of it, in NUBE).
 const VA = {
+  todo: 'Tu pregunta, lo último que hablaron y lo que hace falta de tus apuntes, PDF, adjuntos, Classroom, fechas, carrera y la pantalla donde estás van a Google, que puede usarlos para mejorar sus productos. Si Gemini no puede, van a Groq.',
   resumenes: 'Tu pregunta y lo que hace falta del resumen van a Google, que puede usarlos para mejorar sus productos.',
   carrera: 'Tu pregunta y lo que hace falta de tu Sysacad (materias, notas y correlativas) van a Google, que puede usarlos para mejorar sus productos.',
 };
@@ -106,7 +104,7 @@ export function OfertaNube({ cual }) {
   const id = useId();
   return (
     <section className="consultron__oferta" aria-labelledby={`${id}-titulo`}>
-      <p id={`${id}-titulo`} className="consultron__oferta-titulo">Gemini, de Google, contesta mejor sobre {SOBRE[cual]}.</p>
+      <p id={`${id}-titulo`} className="consultron__oferta-titulo">{OFERTA[cual]}</p>
       <p id={`${id}-va`}>{VA[cual]} Tenés {POR_DIA} preguntas por día.</p>
       <button type="button" className="boton boton--chico" aria-describedby={`${id}-va`} onClick={() => permitirNube(cual, true)}>{NUBE[cual].nombre}</button>
     </section>
@@ -131,8 +129,15 @@ function CargaAlAbrir() {
   );
 }
 
-// Each permission says what goes to Google before it turns on. Turning it off doesn't ask.
+// Each permission says what goes to Google before it turns on. Turning it off doesn't ask. `todo` is the one offered;
+// the other two stay for whoever had them on.
 const NUBE = {
+  todo: {
+    nombre: 'Usar Gemini',
+    ayuda: 'Contesta Gemini, de Google.',
+    titulo: '¿Usar Gemini?',
+    texto: `Tu pregunta, lo último que hablaron y lo que hace falta de tus apuntes, PDF, adjuntos, Classroom, fechas, carrera y la pantalla donde estás van a Google. Google puede usarlos para mejorar sus productos. Si Gemini no puede, van a Groq. Tenés ${POR_DIA} preguntas por día.`,
+  },
   resumenes: {
     nombre: 'Usar Gemini con los resúmenes',
     ayuda: 'Las preguntas sobre los resúmenes de El Santo Resumen las contesta Gemini, de Google.',
@@ -159,6 +164,11 @@ export async function cambiarNube(confirmar, cual, si, { sinModelo = false } = {
   const texto = sinModelo ? p.texto : `${p.texto} Después contesta Consultron en tu compu.`;
   if (si && !(await confirmar({ titulo: p.titulo, texto, boton: 'Usar Gemini' }))) return false;
   permitirNube(cual, si);
+  // «Usar Gemini» is the only switch: off, the older permissions go too.
+  if (cual === 'todo' && !si) {
+    permitirNube('resumenes', false);
+    permitirNube('carrera', false);
+  }
   return true;
 }
 
@@ -183,30 +193,32 @@ function PermisosNube({ sinModelo = false }) {
   const quedan = quedanHoy(permisos);
   return (
     <>
-      <PermisoNube cual="resumenes" prendido={Boolean(permisos.resumenes)} sinModelo={sinModelo} />
-      <PermisoNube cual="carrera" prendido={Boolean(permisos.carrera)} sinModelo={sinModelo} />
+      <PermisoNube cual="todo" prendido={Boolean(permisos.todo)} sinModelo={sinModelo} />
       {/* Always in the page, so screen readers announce the count when it appears. */}
       <p className="consultron__nota" role="status">
-        {(permisos.resumenes || permisos.carrera) && quedan !== null
+        {(permisos.todo || permisos.resumenes || permisos.carrera) && quedan !== null
           && (quedan ? `Te ${quedan === 1 ? 'queda 1 pregunta' : `quedan ${quedan} preguntas`} con Gemini hoy.` : `Por hoy no te quedan preguntas con Gemini.${sinModelo ? '' : ' Contesta Consultron en tu compu.'}`)}
       </p>
     </>
   );
 }
 
-/** The settings of this computer, under everything. */
-export function Pie({ ocupado }) {
+/** The settings of this computer: in Consultron's window of settings. `nivel`: of its heading. */
+export function Pie({ ocupado, sinModelo = false, nivel = 2 }) {
   const { confirmar } = useUI();
+  const { todo } = usePermisosNube();
+  const Titulo = `h${nivel}`;
   const sacar = async () => {
     const seguro = await confirmar({ titulo: '¿Borrar Consultron de esta compu?', texto: `Libera ${gb(TOTAL_MB)} GB. Para usarlo otra vez, lo bajás de nuevo.`, boton: 'Borrar', peligro: true });
     if (seguro) borrar();
   };
   return (
     <section className="consultron__pie" aria-labelledby="consultron-pie">
-      <h2 id="consultron-pie">En esta compu</h2>
-      <CargaAlAbrir />
-      <PermisosNube />
-      <button type="button" className="boton boton--secundario boton--chico" disabled={ocupado} onClick={sacar}>Borrar Consultron de esta compu</button>
+      <Titulo id="consultron-pie">En esta compu</Titulo>
+      {/* With «Usar Gemini» it loads only when Gemini fails: nothing to choose. */}
+      {!todo && !sinModelo && <CargaAlAbrir />}
+      <PermisosNube sinModelo={sinModelo} />
+      {!sinModelo && <button type="button" className="boton boton--secundario boton--chico" disabled={ocupado} onClick={sacar}>Borrar Consultron de esta compu</button>}
     </section>
   );
 }

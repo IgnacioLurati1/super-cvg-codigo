@@ -5,10 +5,10 @@
 
 const carpeta = (nombre) => new URL(`${import.meta.env.BASE_URL}pdfjs/${nombre}/`, globalThis.location?.href ?? 'http://localhost/').href;
 
-/** The options of `getDocument` for these bytes. */
+/** The options of `getDocument` for these bytes; without them, for a file that comes by parts (VisorPdf.jsx). */
 export function opcionesPdf(pdfjs, data) {
   return {
-    data,
+    ...(data ? { data } : {}),
     isEvalSupported: false,
     verbosity: pdfjs.VerbosityLevel.ERRORS,
     wasmUrl: carpeta('wasm'),

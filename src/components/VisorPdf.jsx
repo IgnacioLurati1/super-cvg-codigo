@@ -13,6 +13,7 @@ import { esLenguaje } from '../lib/laboratorio/lenguajes';
 import { borradorEscrito, llevarAlLaboratorio } from '../lib/laboratorio/pendiente';
 import { mioActual, useMio } from '../lib/mio';
 import { opcionesPdf } from '../lib/opcionesPdf';
+import { TROZO, transportePara } from '../lib/pdfPartes';
 import { borrarResaltado, cambiarResaltado, lecturaDe, nombrarSenalador, recordarPagina, resaltar, sacarSenalador, senalar } from '../lib/resaltados';
 import { useUI } from './ui';
 import { IconoMenu } from '../layouts/Menu';
@@ -29,6 +30,7 @@ import { codigoDeRango } from './lector/codigoDeSeleccion';
 import { BarraSeleccion, Globo } from './lector/Resaltar';
 import { BotonSenalar, useSenaladores } from './lector/Senaladores';
 import { BarraVoz, BotonVoz, useVoz } from './lector/Voz';
+import { useSobreTeclado } from './lector/sobreTeclado';
 import './lector/lector.css';
 
 pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
@@ -115,17 +117,26 @@ const Teclas = ({ atajo: a }) => (a.con ?? a.teclas).map((t, i) => <span key={t}
  * LectorCompartido.jsx): its highlights, notes and bookmarks are the table's (`notas`, `lectura`, each with its
  * `autor`), it says where it is (`mover`), goes where the one it follows is (`guia`, gliding with `desplazar(marco,
  * top)`) and stops following when the student moves on their own (`soltar`). `capa(layout)` draws over the pages,
- * `barra` goes in the bar, and `alAbrir` gets the text of the pages. Nothing of it goes to `doc`, which comes null. */
-export default function VisorPdf({ blob, nombre = 'documento.pdf', doc = null, inicio = null, origen = null, fuente = null, resumen = null, compartido = null, cabeza = null }) {
+ * `barra` goes in the bar, and `alAbrir` gets the text of the pages. Nothing of it goes to `doc`, which comes null.
+ * `partes`: in place of `blob`, a big campus PDF coming by parts (pdfPartes.js): pdf.js asks only for what the pages
+ * drawn need. Finding in it, Consultron beside it and printing bring the rest of the file in one request. */
+export default function VisorPdf({ blob, partes = null, nombre = 'documento.pdf', doc = null, inicio = null, origen = null, fuente = null, resumen = null, compartido = null, cabeza = null }) {
   const [estado, setEstado] = useState({ pdf: null, base: null, error: null });
+  const red = useRedDePartes(partes);
 
   useEffect(() => {
     let vivo = true;
     let tarea = null;
     (async () => {
       try {
-        const data = new Uint8Array(await blob.arrayBuffer());
-        tarea = pdfjs.getDocument(opcionesPdf(pdfjs, data));
+        if (partes && !partes.blob) {
+          const range = await transportePara(pdfjs.PDFDataRangeTransport, partes);
+          if (!vivo) return range.abort();
+          tarea = pdfjs.getDocument({ ...opcionesPdf(pdfjs), range, length: partes.largo, rangeChunkSize: TROZO, disableAutoFetch: true });
+        } else {
+          const data = new Uint8Array(await (partes?.blob ?? blob).arrayBuffer());
+          tarea = pdfjs.getDocument(opcionesPdf(pdfjs, data));
+        }
         const pdf = await tarea.promise;
         const primera = (await pdf.getPage(1)).getViewport({ scale: 1 });
         if (vivo) setEstado({ pdf, base: [primera.width, primera.height], error: null });
@@ -137,7 +148,7 @@ export default function VisorPdf({ blob, nombre = 'documento.pdf', doc = null, i
       vivo = false;
       tarea?.destroy();
     };
-  }, [blob]);
+  }, [blob, partes]);
 
   if (estado.error) {
     return (
@@ -149,11 +160,31 @@ export default function VisorPdf({ blob, nombre = 'documento.pdf', doc = null, i
       </>
     );
   }
-  if (!estado.pdf) return <>{cabeza}<EsperaLector /></>;
-  return <Lector pdf={estado.pdf} base={estado.base} nombre={nombre} doc={doc} inicio={inicio} origen={origen} fuente={fuente} resumen={resumen} compartido={compartido} cabeza={cabeza} />;
+  if (!estado.pdf) {
+    // A PDF by parts that can't open without connection: it opens by itself when the connection comes back.
+    if (red.sinRed) return <>{cabeza}<p className="previa__aviso lector__error" role="status">Este PDF no quedó guardado. Abrilo con internet.</p></>;
+    return <>{cabeza}<EsperaLector /></>;
+  }
+  return <Lector pdf={estado.pdf} base={estado.base} partes={partes} nombre={nombre} doc={doc} inicio={inicio} origen={origen} fuente={fuente} resumen={resumen} compartido={compartido} cabeza={cabeza} />;
 }
 
-function Lector({ pdf, base, nombre, doc, inicio, origen, fuente, resumen, compartido, cabeza }) {
+// For a PDF by parts (pdfPartes.js): whether some part waits for the connection, and how many times it came back.
+function useRedDePartes(partes) {
+  const [red, setRed] = useState({ partes, sinRed: Boolean(partes?.sinRed), vuelta: 0 });
+  useEffect(() => partes?.escuchar({
+    alCambiar: () => setRed((r) => ({ partes, sinRed: partes.sinRed, vuelta: (r.partes === partes ? r.vuelta : 0) + (partes.sinRed ? 0 : 1) })),
+  }), [partes]);
+  return red.partes === partes ? red : { partes, sinRed: Boolean(partes?.sinRed), vuelta: 0 };
+}
+
+// Whether the whole file is here: always, but for a PDF still coming by parts (pdfPartes.js).
+function useEntero(partes) {
+  const [entero, setEntero] = useState(() => !partes || Boolean(partes.blob));
+  useEffect(() => partes?.escuchar({ alTerminar: () => setEntero(true) }), [partes]);
+  return entero || !partes || Boolean(partes.blob);
+}
+
+function Lector({ pdf, base, partes, nombre, doc, inicio, origen, fuente, resumen, compartido, cabeza }) {
   const total = pdf.numPages;
   const id = useId();
   const { confirmar } = useUI();
@@ -195,7 +226,7 @@ function Lector({ pdf, base, nombre, doc, inicio, origen, fuente, resumen, compa
   const [tactil] = useState(() => window.matchMedia?.('(pointer: coarse)').matches ?? false);
 
   const [tamanos, setTamanos] = useState(() => Array.from({ length: total }, () => base));
-  const [vista, setVista] = useState({ ancho: 0, alto: 0, raiz: 0 });
+  const [vista, setVista] = useState({ ancho: 0, alto: 0, raiz: 0, lado: 0 });
   // 'auto': the width of the view, up to a size that reads well on a big screen; 'ancho': the width, whatever it is.
   const [zoom, setZoom] = useState({ modo: 'auto', escala: 1 });
   const [arriba, setArriba] = useState(0);
@@ -223,7 +254,7 @@ function Lector({ pdf, base, nombre, doc, inicio, origen, fuente, resumen, compa
   // Only in its box (Configuración, «Aparición»): down on the right, opened from its button there; at the table of a
   // live session, the table's box is the one.
   const soloEnCaja = useSoloEnCaja();
-  const hayConsultron = useHayConsultron({ resumen: Boolean(resumen) }) && !(soloEnCaja && compartido);
+  const hayConsultron = useHayConsultron() && !(soloEnCaja && compartido);
   const conConsultron = useEnVisor() && hayConsultron;
   const [marcado, setMarcado] = useState(null);
   const botonConsultron = useRef(null);
@@ -244,7 +275,7 @@ function Lector({ pdf, base, nombre, doc, inicio, origen, fuente, resumen, compa
   const [techo, setTecho] = useState(0);
   const flotante = tactil && angosto && panel === null && !conConsultron;
   const techoPaginas = flotante ? techo : 0;
-  const layout = useMemo(() => armarLayout(tamanos, escala, vista.ancho, BORDE, techoPaginas), [tamanos, escala, vista.ancho, techoPaginas]);
+  const layout = useMemo(() => armarLayout(tamanos, escala, vista.ancho, BORDE, techoPaginas, vista.lado), [tamanos, escala, vista.ancho, techoPaginas, vista.lado]);
   // The zoom as a live session shares it: 'auto', 'ancho' or the percent.
   const zoomCompartido = zoom.modo === 'libre' ? porcentaje(escala) : zoom.modo;
   const altoVista = vista.alto || 700;
@@ -366,6 +397,11 @@ function Lector({ pdf, base, nombre, doc, inicio, origen, fuente, resumen, compa
   // Resumen gives, if it does.
   const [delPdf, setDelPdf] = useState(undefined);
   const leerParaConsultron = useEnVisor() && hayConsultron;
+  // Finding in it and Consultron beside it read every page: a PDF coming by parts brings the rest in one request, rather
+  // than a part for each page.
+  useEffect(() => {
+    if (partes && (busqueda.abierta || leerParaConsultron)) partes.completar().catch(() => {});
+  }, [partes, busqueda.abierta, leerParaConsultron]);
   useEffect(() => {
     if (!leerParaConsultron) return undefined;
     let vivo = true;
@@ -472,15 +508,28 @@ function Lector({ pdf, base, nombre, doc, inicio, origen, fuente, resumen, compa
         if (u.lugar) ancla.current = u.lugar;
       } else if (u.inicial) anclar(0, 0);
       if (el.clientWidth && el.clientWidth !== u.anchoVista) preverArriba(u.zoom, el.clientWidth);
-      setVista({ ancho: el.clientWidth, alto: el.clientHeight, raiz: caja.clientWidth });
+      // Consultron beside the pages (EnVisor.jsx says how wide): they stay where they were without it while they fit.
+      const lado = parseFloat(getComputedStyle(el).getPropertyValue('--lado-consultron')) || 0;
+      setVista({ ancho: el.clientWidth, alto: el.clientHeight, raiz: caja.clientWidth, lado });
     });
     ro.observe(el);
     ro.observe(caja);
     return () => ro.disconnect();
   }, [anclar, preverArriba]);
 
-  // The sizes of the other pages, in the background: most PDFs have them all equal and nothing moves.
+  // The sizes of the other pages, in the background: most PDFs have them all equal and nothing moves. A PDF still coming
+  // by parts would bring most of the file for them: then each page says its size when it is drawn (medir).
+  const entero = useEntero(partes);
+  const red = useRedDePartes(partes);
+  const esperarDatos = useMemo(() => (partes && !entero ? (promesa) => partes.mientrasHaya(promesa) : null), [partes, entero]);
+  const medir = useCallback((n, ancho, alto) => {
+    const [a, b] = ultimo.current.tamanos?.[n - 1] ?? [];
+    if (Math.abs(a - ancho) <= 0.5 && Math.abs(b - alto) <= 0.5) return;
+    anclar(0, 0);
+    setTamanos((t) => t.map((x, i) => (i === n - 1 ? [ancho, alto] : x)));
+  }, [anclar]);
   useEffect(() => {
+    if (!entero) return undefined;
     let vivo = true;
     (async () => {
       const nuevos = [base];
@@ -502,7 +551,7 @@ function Lector({ pdf, base, nombre, doc, inicio, origen, fuente, resumen, compa
     return () => {
       vivo = false;
     };
-  }, [pdf, base, total, anclar]);
+  }, [pdf, base, total, anclar, entero]);
 
   useEffect(() => {
     let vivo = true;
@@ -541,6 +590,8 @@ function Lector({ pdf, base, nombre, doc, inicio, origen, fuente, resumen, compa
   const seguirConBarras = (u, y, alto) => {
     const dy = y - (u.yBarras ?? y);
     u.yBarras = y;
+    // Writing a note, the keyboard opening moves the scroll: that isn't reading.
+    if (document.activeElement?.closest?.('.lector__globo')) return;
     if (y <= u.techo) {
       u.corrido = 0;
       mostrarBarras(true);
@@ -970,6 +1021,9 @@ function Lector({ pdf, base, nombre, doc, inicio, origen, fuente, resumen, compa
 
   const resaltadoDe = (rid) => lectura.resaltados.find((r) => r.id === rid) ?? null;
   const abierto = globo ? resaltadoDe(globo.id) : null;
+  // On a phone the bubble is a sheet at the foot of the reader: writing its note, it rises over the keyboard.
+  const hojaGlobo = useRef(null);
+  useSobreTeclado(hojaGlobo, Boolean(abierto && angosto && globo?.editando));
 
   const cambiarColor = (r, c) => {
     notas.cambiar(r.id, { color: c }, Date.now());
@@ -1098,6 +1152,8 @@ function Lector({ pdf, base, nombre, doc, inicio, origen, fuente, resumen, compa
     impresion.current = { control, limpiar: null };
     setImprimiendo({ n: 0, total });
     try {
+      // Every page is printed: a PDF coming by parts brings the rest in one request.
+      partes?.completar().catch(() => {});
       const limpiar = await imprimir(pdf, { alAvanzar: (n, t) => setImprimiendo({ n, total: t }), senal: control.signal });
       if (impresion.current) impresion.current.limpiar = limpiar;
     } catch (e) {
@@ -1312,6 +1368,9 @@ function Lector({ pdf, base, nombre, doc, inicio, origen, fuente, resumen, compa
         actual={actual?.pagina === n ? actual : null}
         fuente={marcaVigente?.pagina === n ? marcaVigente : null}
         onUbicar={ubicar}
+        alMedir={entero ? null : medir}
+        esperarDatos={esperarDatos}
+        vuelta={red.vuelta}
       />,
     );
   }
@@ -1608,7 +1667,7 @@ function Lector({ pdf, base, nombre, doc, inicio, origen, fuente, resumen, compa
             />
           </Suspense>
         )}
-        {abierto && angosto && <div className="lector__hoja-globo">{globoVista}</div>}
+        {abierto && angosto && <div ref={hojaGlobo} className="lector__hoja-globo">{globoVista}</div>}
         {ayuda && (
           <div ref={cajaAyuda} className="lector__ayuda" role="dialog" aria-labelledby={`${id}-ayuda`}>
             <div className="lector__ayuda-cabeza">

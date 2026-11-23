@@ -5,14 +5,14 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build && node scripts/prerender.mjs",
+    "build": "vite build && node scripts/prerender.mjs && node scripts/trabajador.mjs",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:flujos": "vite build --mode flujos --logLevel warn && node scripts/flujos.mjs",
+    "test:flujos": "vite build --mode flujos --logLevel warn && node scripts/flujos-en-paralelo.mjs",
     "lint": "eslint src scripts",
     "facultad": "node scripts/facultad/actualizar.mjs",
     "calculadoras:fotos": "node scripts/calculadoras/fotos.mjs",
-    "check": "vite build --logLevel warn && node scripts/prerender.mjs && node scripts/check.mjs",
+    "check": "vite build --logLevel warn && node scripts/prerender.mjs && node scripts/trabajador.mjs && node scripts/check.mjs",
     "drive": "node scripts/drive/carrera.mjs"
   },
   "dependencies": {

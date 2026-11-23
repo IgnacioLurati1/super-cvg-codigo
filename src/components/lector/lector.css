@@ -841,6 +841,7 @@ dialog:has(.lector[data-pantalla='css']) {
   right: 0;
   bottom: 0;
   left: 0;
+  overscroll-behavior: contain;
 }
 
 .lector__hoja-globo .lector__globo {
@@ -1243,6 +1244,26 @@ dialog:has(.lector[data-pantalla='css']) {
 
 .lector__error {
   margin: 16px;
+}
+
+/* A page whose data isn't here, without connection (a PDF by parts, pdfPartes.js): said on the paper, which turns with
+   the page like its drawing would. */
+.lector__hoja-sin-datos {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 10%;
+  background: var(--hoja);
+  color: rgb(23 50 77);
+  font-size: var(--t-chica);
+  text-align: center;
+}
+
+.lector__hoja-sin-datos p {
+  max-width: 30ch;
+  margin: 0;
 }
 
 /* ---------- Consultron (consultron/EnVisor.jsx) ---------- */

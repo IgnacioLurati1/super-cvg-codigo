@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { charlaAntes } from './motor';
-import { citasDe, conCitaQueFalta, noEsta, objeta, pideOtraVez, preguntaObjetada, puedeSerNoEsta } from './pedido';
+import { citasDe, conCitaQueFalta, LARGO_SIN_RED, leerRespuesta, noEsta, objeta, pideOtraVez, preguntaObjetada, puedeSerNoEsta, respuestaSinRed } from './pedido';
 
 const trozo = (texto) => ({ trozo: { doc: 'd', pagina: 1, texto, fuente: { tipo: 'propia', clase: 'texto', nombre: 'Servo SG90' } } });
 const servo = trozo('## Servo SG90\nEl servo SG90 del robot gira 180 grados y se alimenta con 5 volts.\nSu señal de control es PWM de 50 Hz.');
@@ -112,5 +112,25 @@ describe('pideOtraVez', () => {
   it('no un tema nuevo', () => {
     for (const q of ['no entiendo las derivadas', 'no entiendo cómo se calcula el promedio ponderado'])
       expect(pideOtraVez(q), q).toBe(false);
+  });
+});
+
+describe('respuestaSinRed', () => {
+  it('one line and the pieces as a list, each with its number, so «De dónde sale» names them all', () => {
+    const texto = respuestaSinRed([trozo('3 procesos comparten $x$ con `wait` [4]'), trozo('# Título\n- El servo gira 180°.')]);
+    expect(texto).toBe('Sin internet. Esto encontré en tus apuntes:\n\n- 3 procesos comparten x con wait [1]\n- Título - El servo gira 180°. [2]');
+    const bloques = leerRespuesta(texto, 2);
+    expect(bloques.map((b) => b.tipo)).toEqual(['parrafo', 'lista']);
+    expect(citasDe(texto, 2)).toEqual([1, 2]);
+  });
+
+  it('a long piece is cut at a word; an empty one is left out; none gives nothing', () => {
+    const largo = 'palabra '.repeat(100);
+    const [, , linea] = respuestaSinRed([trozo(largo)], 'este resumen').split('\n');
+    expect(linea.length).toBeLessThan(LARGO_SIN_RED + 10);
+    expect(linea).toMatch(/palabra… \[1\]$/);
+    expect(respuestaSinRed([trozo('  '), trozo('Algo.')])).toMatch(/- Algo\. \[2\]$/);
+    expect(respuestaSinRed([])).toBe('');
+    expect(respuestaSinRed([trozo('Algo.')], 'este resumen')).toMatch(/^Sin internet\. Esto encontré en este resumen:/);
   });
 });

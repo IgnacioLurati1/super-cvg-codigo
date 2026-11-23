@@ -464,7 +464,7 @@ function DelAlumno({ alumno }) {
 
 export default function Resumenes() {
   useSeo({ titulo: tituloDe('Resúmenes'), noindex: true });
-  const { datos, error, recargar } = useConsulta(cargarPerfil);
+  const { datos, error, recargar } = useConsulta(cargarPerfil, [], { alInstante: true });
   const alumno = datos?.id ?? null;
 
   let cuerpo;

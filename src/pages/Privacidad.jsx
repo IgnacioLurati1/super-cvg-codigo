@@ -15,7 +15,13 @@ export default function Privacidad() {
       <p>Queda solo en tu navegador. En una compu compartida tocá Salir, porque cerrar la pestaña no alcanza para borrarla del disco.</p>
       <p>Si elegís seguir conectado, queda en ese dispositivo hasta que toques Salir. Usá esa opción solo en un dispositivo tuyo.</p>
       <h2>Tus datos del campus</h2>
-      <p>Tus materias, entregas, cuestionarios y notas quedan solo en la memoria de esa pestaña, para no repetir pedidos al campus. No se guardan en el disco. Se borran al recargar, al cerrarla o al tocar Salir.</p>
+      <p>Tus materias, entregas, cuestionarios y notas quedan en la memoria de las pestañas de Super CVG que tengas abiertas, para no repetir pedidos al campus. Se borran al cerrarlas.</p>
+      <p>Si elegís seguir conectado, también quedan en ese navegador, sin cifrar, junto con los archivos de tus materias que abriste. También lo que trajo Classroom y lo que abriste de El Santo Resumen. Así Super CVG anda sin internet o con el campus caído. Salir los borra.</p>
+      <h2>Descargas inteligentes</h2>
+      <p>Se prende en Configuración. Con Super CVG cerrado, el celu baja solo el material de las materias que cursás ese día según tu horario. De noche, las del día siguiente. Chrome elige el momento, más o menos una vez por día. Solo anda con Super CVG instalado en Android y con seguir conectado.</p>
+      <p>Baja solo con wifi o cable. Con datos del celu, o si el navegador no dice qué conexión es, no baja nada. Respeta el ahorro de datos y para en 200 MB por día. Le pide al campus solo el contenido de esas materias y sus archivos. Nunca escribe nada en el campus.</p>
+      <p>Lo que baja queda en ese navegador, junto con lo que abriste. Lo que guardaste vos no se toca ni se reemplaza. Las secciones que salteás quedan entre tus cosas, solo como números.</p>
+      <p>Para bajar con Super CVG cerrado, la clave del campus queda también en una base de ese navegador. Va cifrada con una llave que no sale de él. Solo este sitio la lee. Se borra al apagar Descargas inteligentes, al tocar Salir y cuando entrás de nuevo.</p>
       <h2>Inscribirte a una materia</h2>
       <p>Si buscás una materia para inscribirte, tu navegador le pide al campus sus departamentos y áreas. También le pide las materias que coinciden con lo que escribiste y quiénes las dan. Lo que trae queda en la memoria de la pestaña, como el resto.</p>
       <p>Te inscribe solo cuando tocás Inscribirme y lo confirmás. Si la materia pide una clave de inscripción, va directo al campus y no se guarda.</p>
@@ -26,8 +32,9 @@ export default function Privacidad() {
       <p>Lo hace solo cuando tocás Entregar, Guardar borrador o Enviar para calificar y lo confirmás. Lo que escribís queda solo en la página. No se guarda en ningún lado y se pierde si la recargás antes de entregarla.</p>
       <h2>Tus mensajes</h2>
       <p>En Mensajes, tu navegador le pide al campus tus conversaciones y sus fotos de perfil. Si buscás a alguien para escribirle, le pide las personas con ese nombre.</p>
-      <p>Mientras tenés Super CVG abierto, cada dos minutos le pregunta cuántas conversaciones tenés sin leer. Todo queda en la memoria de la pestaña y no se guarda en el disco.</p>
+      <p>Mientras tenés Super CVG abierto, cada dos minutos le pregunta cuántas conversaciones tenés sin leer. Todo queda en la memoria de la pestaña y, si elegiste seguir conectado, en ese navegador hasta que toques Salir.</p>
       <p>Manda un mensaje solo cuando lo escribís y tocás Mandar. Va directo al campus, como si lo mandaras desde ahí. Lo que escribiste y no mandaste se pierde si recargás la página.</p>
+      <p>Si no hay señal, el mensaje espera y sale solo cuando vuelve. Mientras espera, el texto y a quién va quedan en la memoria de la pestaña o, si elegiste seguir conectado, en ese navegador. Salir los borra.</p>
       <p>Cuando abrís una conversación con mensajes nuevos, la marca como leída en el campus, igual que si la abrieras ahí.</p>
       {CLIENTE_GOOGLE ? (
         <p>Si mandás un archivo, va por tu Google Drive. Sin Drive, lo guarda El Santo Resumen 45 días. Más abajo está el detalle.</p>
@@ -54,13 +61,18 @@ export default function Privacidad() {
       <p>Los horarios de cursada y el calendario académico vienen con el sitio, sacados de las páginas públicas de la facultad. Para mostrarlos no se le pide nada a nadie. Los enlaces a las páginas de los departamentos abren la página de la facultad en otra pestaña.</p>
       <h2>Cómo elegís que se vea</h2>
       <p>El tema, los colores, la letra y las vistas se guardan en ese navegador. Quedan para cualquiera que lo use y no dicen nada de tu cuenta.</p>
+      <h2>Diseños</h2>
+      <p>Un diseño es tu código de estilo. Lleva tema, colores, letra, vistas, menú y cómo ordenás Hoy. No lleva nada del campus ni datos tuyos. Tampoco daltonismo, movimiento ni Sensible a la luz.</p>
+      <p>Para ver los diseños, tu navegador le pide la lista a El Santo Resumen. Si publicás uno, puntuás, comentás o denunciás, va con la llave de tu cuenta vinculada y sale con tu nombre de usuario de ahí. Lo que publicás lo ve cualquiera en Super CVG, y lo borrás cuando quieras.</p>
+      <p>Para frenar abusos, el servicio guarda unos días una huella de tu conexión que no dice cuál es.</p>
+      <p>Si usás uno, ese navegador guarda tu estilo de antes para volver a él.</p>
       <h2>Buscar en tus archivos y bajar una materia</h2>
       <p>Si buscás fechas en los documentos, buscás adentro de los PDF o bajás una materia en un ZIP, tu navegador baja esos archivos del campus. Se leen y se arman en tu dispositivo. No se mandan a nadie.</p>
-      <p>De los PDF que se leen queda solo el texto en ese navegador, para tu usuario. Salir lo borra.</p>
+      <p>De los PDF que se leen queda el texto en ese navegador, para tu usuario. Si elegiste seguir conectado, también los archivos que abriste. Salir los borra.</p>
       <h2>Carpetas de Drive</h2>
       <p>La pestaña Drive de Buscar lee carpetas compartidas con cualquiera que tenga el link, como el Drive de la carrera. Tu navegador se las pide directo a Google con una clave de Super CVG, sin tu cuenta. Lo mismo pasa al abrir un link a un archivo o a una carpeta de Drive, para mostrarlo acá. Lo de una carpeta queda en la memoria de la pestaña. Si Google frena las descargas, el archivo se ve con el visor de Google, que se carga desde Google.</p>
       <p>Las carpetas que sumás y lo que escondés quedan en ese navegador{CLIENTE_GOOGLE ? ', y en tu Google Drive si lo prendés' : ''}. El mapa de cada carpeta queda en ese navegador y Salir lo borra. No recibimos nada de eso.</p>
-      <p>Consultron lee los archivos de Drive solo con tu computadora, nunca con Gemini.</p>
+      <p>Consultron lee los archivos de Drive con tu computadora. Con «Usar Gemini», lo que hace falta de ellos para contestarte va a Google.</p>
       <h2>Leer en voz alta</h2>
       <p>El lector de PDF lee en voz alta solo con las voces que trae tu dispositivo, así el texto no sale de él. Se guarda solo la velocidad que elegís, en ese navegador.</p>
       <h2>Compartir el orden de una materia</h2>
@@ -73,6 +85,8 @@ export default function Privacidad() {
       <p>Las materias que armás, con sus archivos, textos y enlaces, quedan en ese navegador{CLIENTE_GOOGLE ? ', y en tu Google Drive si lo prendés' : ''}. No las recibimos.</p>
       <p>Si pasás una, quien la tenga ve todo lo que tiene, archivos incluidos. Lo del campus va solo como referencia, y cada uno lo abre con su cuenta.</p>
       <p>Si recibís una, ves qué trae antes de guardarla. Los archivos los subió otro alumno y nadie los revisa.</p>
+      <h2>Compartir desde otra app</h2>
+      <p>Lo que compartís con Super CVG desde otra app del celu queda en ese navegador hasta que elegís dónde va. No nos llega. Se borra al guardarlo, al mandarlo a Consultron, al descartarlo, a la media hora o al tocar Salir.</p>
       <h2>Repaso</h2>
       <p>Las tarjetas que escribís o guardás de Consultron quedan en ese navegador{CLIENTE_GOOGLE ? ', y en tu Google Drive si lo prendés' : ''}, junto con cuándo te toca cada una. No las recibimos.</p>
       <h2>Laboratorio</h2>
@@ -85,8 +99,9 @@ export default function Privacidad() {
       <p>Consultron responde con un modelo de inteligencia artificial que corre en tu compu. Tus preguntas, lo que lee de tus PDF y lo que lee de tu pantalla en Tu carrera, Repaso, las calculadoras y el Laboratorio no salen del navegador, salvo lo que mandes a Gemini o a Groq. Las fotos y los archivos que le adjuntás se leen en tu navegador y quedan solo en la memoria de la pestaña.</p>
       <p>Para responder también con El Santo Resumen, tu navegador le pide el texto de los resúmenes publicados de tus materias. Le llega de qué materia, nunca tu pregunta.</p>
       <p>La primera vez que lo bajás, tu navegador le pide el modelo a Hugging Face (huggingface.co), un sitio que guarda modelos abiertos. Hugging Face recibe tu conexión, pero no tu cuenta del campus ni lo que preguntás. El modelo queda en ese navegador hasta que lo borrás desde Consultron.</p>
-      <p>Si prendés «Usar Gemini con los resúmenes» o «Usar Gemini con tu carrera», en «En esta compu» de Consultron o donde Consultron te lo ofrece, esas preguntas las contesta Gemini, de Google, también si tu compu puede correr Consultron. Le llegan tu pregunta y lo que hace falta del resumen o de tu Sysacad (materias, notas y correlativas). Con el plan gratis que usamos, Google puede usarlos para mejorar sus productos. Pasan por el panel de Luta Studios, que no los guarda.</p>
-      <p>Para contar tus 15 preguntas por día, el panel guarda un número al azar de tu navegador, que no dice quién sos, durante 2 días. Los archivos del campus, tus PDF, Classroom y tus fechas nunca van a Gemini, salvo lo que esté en la mesa de una sesión en vivo.</p>
+      <p>Podés prender «Usar Gemini» en «Ajustes» de Consultron o donde Consultron te lo ofrece. Con eso, todo lo que le preguntes lo contesta Gemini, de Google, aunque tu compu pueda correr Consultron. Le llegan tu pregunta, lo último que hablaron y lo que hace falta para contestarte. Eso puede salir de tus apuntes, tus PDF, lo que adjuntaste, Classroom, tus fechas, tu Sysacad (materias, notas y correlativas) o la pantalla donde preguntás. Con el plan gratis que usamos, Google puede usarlos para mejorar sus productos. Si Gemini no puede contestar, van a Groq. Pasan por un servicio de El Santo Resumen, que no los guarda.</p>
+      <p>Si antes prendiste «Usar Gemini con los resúmenes» o «Usar Gemini con tu carrera», siguen valiendo para eso hasta que los apagues.</p>
+      <p>Para contar tus 15 preguntas por día, ese servicio guarda un número al azar de tu navegador, que no dice quién sos, durante 2 días. Sin «Usar Gemini», los archivos del campus, tus PDF, Classroom y tus fechas no van a Gemini, salvo lo que esté en la mesa de una sesión en vivo.</p>
       <p>En una sesión en vivo, el Consultron de la mesa lee solo el texto de sus pestañas, nunca tus datos del campus ni tus charlas. Contesta el navegador de quien pregunta. Si elegiste que conteste Gemini, a Google le llegan tu pregunta y lo que hace falta de la mesa, aunque lo haya puesto otro. Usa tus preguntas del día. La pregunta y la respuesta las ven todos los de la sesión.</p>
             <p>Para tus fechas y tus clases usa lo que Super CVG ya trajo del campus y tu horario. No le pide nada nuevo a nadie.</p>
       <p>Escuchar una respuesta usa las voces de tu compu. El dictado aparece solo si tu navegador reconoce la voz en tu compu. La primera vez baja el idioma por su cuenta. Tu voz no sale de la compu.</p>
@@ -112,9 +127,10 @@ export default function Privacidad() {
       <p>Si agregás una fecha tuya de a una, Google recibe qué es, el día y la materia.</p>
       <h2>Apuntes y consejos de El Santo Resumen</h2>
       <p>El Santo Resumen también es de Luta Studios. Si buscás sus apuntes o consejos desde acá, tu navegador le pide la lista. Le dice de qué materia y, si buscás en el banco, las palabras que escribiste. Cada resumen del banco se muestra con la foto de su primera página, que tu navegador baja de El Santo Resumen. No va tu cuenta ni nada del campus, y lo que buscás no se guarda.</p>
+      <p>Si elegís seguir conectado, las listas que viste y los resúmenes que abriste quedan en ese navegador para verlos sin internet. Salir los borra.</p>
       <p>Lo que sumás queda como cualquier anotación o enlace tuyo, solo en ese navegador.</p>
       <h2>Tus resúmenes de El Santo Resumen</h2>
-      <p>Si vinculás tu cuenta de El Santo Resumen, ese navegador guarda una llave de la cuenta y tu nombre de usuario. Con ella, Super CVG lee los resúmenes que subiste y los que mandaste desde el banco. Lo que trae queda en la memoria de la pestaña.</p>
+      <p>Si vinculás tu cuenta de El Santo Resumen, ese navegador guarda una llave de la cuenta y tu nombre de usuario. Con ella, Super CVG lee los resúmenes que subiste y los que mandaste desde el banco. Lo que trae queda en la memoria de la pestaña. Si elegís seguir conectado, esas listas también quedan en ese navegador, sin la llave. Desvincular y Salir las borran.</p>
       <p>Si le das me gusta a un resumen del banco, queda en tu cuenta de El Santo Resumen, como si lo hicieras ahí. Si quitás uno de los que mandaste, sale de esa lista y sigue en el banco.</p>
       <p>La llave queda aunque toques Salir, guardada para tu usuario del campus. Desvincular la borra de tu navegador y la anula en El Santo Resumen.</p>
       <p>Los resúmenes en HTML que traen sus propios scripts se abren dentro de Super CVG con el lector de El Santo Resumen, que llega de demo.lutastudios.com. Va en un marco aislado que no ve nada de Super CVG ni de tu sesión. En Estudiar en vivo recibe además dónde señala cada uno dentro del resumen, con un número en vez del nombre, y no lo puede mandar a ningún lado.</p>
@@ -123,16 +139,18 @@ export default function Privacidad() {
           <h2>Classroom</h2>
           <p>Si conectás Classroom, Google te pregunta si Super CVG puede leer tus cursos, sus temas, materiales, tareas y avisos, y qué tareas entregaste. También tu dirección de mail, para mostrarte con qué cuenta entraste. Es solo lectura. No entrega, no publica y no ve tus mails ni tus archivos de Drive, salvo la carpeta oculta de la copia si la prendés y los archivos que mandás por Mensajes.</p>
           <p>Tu navegador le pide todo directo a Google, sin pasar por nosotros. El permiso dura una hora y se renueva solo mientras usás Super CVG. Queda en la pestaña, junto con tu dirección de mail.</p>
+          <p>Un archivo de Classroom compartido solo con el curso se ve con el visor de Google, que se carga desde Google con tu sesión de ese navegador. Le pasa tu mail para abrirlo con la cuenta conectada.</p>
           <p>Si elegiste seguir conectado, el permiso queda en ese navegador hasta que vence, así no se corta al cerrar la pestaña.</p>
           <p>Para renovarlo sin preguntarte, tu navegador guarda el número de tu cuenta de Google junto a tu sesión del campus. Salir borra el permiso y ese número, y Desconectar también. Si guardás en tu Drive, Desconectar deja el permiso y el número queda aunque salgas.</p>
-          <p>Lo que trae Classroom queda en la memoria de la pestaña. En el navegador se guardan solo números. Dicen qué curso va con cada materia, cuándo revisaste cada curso y qué cosas de Classroom pasaste a otra sección u ocultaste.</p>
+          <p>Lo que trae Classroom queda en la memoria de la pestaña. Si elegís seguir conectado, también queda en ese navegador para verlo sin internet, solo con la misma cuenta de Google. Desconectar y Salir lo borran.</p>
+          <p>Fuera de eso, en el navegador se guardan solo números. Dicen qué curso va con cada materia, cuándo revisaste cada curso y qué cosas de Classroom pasaste a otra sección u ocultaste.</p>
           <p>Si compartís una materia tuya unida a Classroom, viaja ese número y nada más. Cada uno ve el curso con su cuenta.</p>
           <p>El uso de la información que llega de las API de Google cumple con la <a href="https://developers.google.com/terms/api-services-user-data-policy" target="_blank" rel="noreferrer">Política de datos del usuario de los servicios de API de Google<span className="solo-lectores">, se abre en otra pestaña</span></a>, incluidos sus requisitos de uso limitado. Podés sacarle el permiso a Super CVG cuando quieras desde <a href="https://myaccount.google.com/permissions" target="_blank" rel="noreferrer">tu cuenta de Google<span className="solo-lectores">, se abre en otra pestaña</span></a>.</p>
           <h2>Tu Google Drive</h2>
           <p>Si prendés «Guardar en tu Google Drive», Google te pregunta si Super CVG puede usar una carpeta oculta de tu Drive. Super CVG ve solo esa carpeta, nunca tus otros archivos.</p>
           <p>Ahí se guarda una copia de lo que agregás vos y de los archivos de tus materias. Así la ves en tus otros dispositivos con la misma cuenta de Google. Tu navegador la manda directo a Google y no pasa por Luta Studios.</p>
           <p>Mientras guardás en tu Drive, el número de tu cuenta de Google queda en ese navegador para tu usuario del campus, aunque toques Salir. Así, al volver a entrar, el permiso se renueva sin preguntarte. Dejar de guardar borra ese número.</p>
-          <p>Va también tu configuración, como el tema, los colores, las vistas y el menú. El tamaño de los paneles queda en cada dispositivo.</p>
+          <p>Va también tu configuración, como el tema, los colores, las vistas y el menú. El tamaño de los paneles queda en cada dispositivo. Con «Misma configuración en todos tus dispositivos» apagado, la de ese dispositivo no va.</p>
           <p>La copia se borra desde Configuración, con «Borrar la copia de tu Drive», o desde la configuración de Google Drive, en Administrar apps. Dejar de guardar deja la copia y lo de este navegador como estaban.</p>
           <h2>Entrar con Google</h2>
           <p>Si lo prendés en Configuración, tu sesión del campus queda en la carpeta oculta de tu Google Drive, junto con tu vínculo con El Santo Resumen y qué tenés conectado de Google. Así entrás en cualquier dispositivo con tu cuenta de Google, sin la contraseña del campus. Tu navegador lo manda directo a Google y no pasa por Luta Studios.</p>
@@ -155,7 +173,11 @@ export default function Privacidad() {
       <h2>Lo que llega de Sysacad</h2>
       <p>Sysacad Lindo es la extensión de Luta Studios para Sysacad. Si la tenés, Super CVG le pregunta si está vinculada. Le pide tus notas finales, los exámenes en los que te anotaste y la copia de cada pestaña que abriste. Se las pasa dentro de tu navegador, sin ningún servidor en el medio.</p>
       <p>Cada copia trae solo el texto de la pestaña y cuándo la viste. De cada examen llegan la materia, el día, las horas, el turno y el tribunal. El turno y el tribunal no se usan. Las copias y los exámenes vienen con el nombre que figura en Sysacad, para mostrarlos solo si es el de tu cuenta del campus.</p>
-      <p>Lo que llega de Sysacad Lindo queda solo en la memoria de la pestaña, para mostrarlo en Sysacad, Tu carrera y Calendario. No se guarda. Si vinculaste Google Calendar, los exámenes van a tu calendario «Super CVG». El resto no sale de tu navegador.</p>
+      <p>Lo que llega de Sysacad Lindo queda solo en la memoria de la pestaña, para mostrarlo en Sysacad, Tu carrera y Calendario. Si vinculaste Google Calendar, los exámenes van a tu calendario «Super CVG».</p>
+      <p>Con «Guardar en tu Google Drive» prendido, Super CVG guarda una copia en la carpeta oculta de Super CVG en tu Drive. Solo si las copias tienen tu nombre del campus o dijiste que son tuyas. Nada pasa por Luta Studios.</p>
+      <p>Desde ahí lo ves en el celu o en otra compu sin la extensión. Queda en la memoria de la pestaña y, con «Seguir conectado», también en el navegador para verlo sin internet, hasta que tocás Salir.</p>
+      <p>La copia se borra de tu Drive si desvinculás Sysacad Lindo en la compu o con «Borrar la copia de tu Drive». Con «Guardar en tu Google Drive» apagado, lo de Sysacad no sale de tu navegador.</p>
+      <p>Si tu nombre en Sysacad y en el campus no coinciden, te preguntamos si las copias son tuyas. Tu respuesta queda con tus cosas como una huella de los dos nombres, sin los nombres.</p>
       <p>Las copias las guarda Sysacad Lindo en tu navegador. Las borra cuando tocás Salir o cuando apagás el guardado en sus ajustes. Los exámenes, Sysacad Lindo los guarda hasta que la desvinculás.</p>
       <h2>Si opinás</h2>
       <p>Si mandás una opinión desde Opinar, le llega a Luta Studios lo que escribiste. Se guarda solo ese texto y el día. Se borra a los 12 meses.</p>

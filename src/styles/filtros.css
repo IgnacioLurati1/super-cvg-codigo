@@ -1,0 +1,57 @@
+/* The background's filters (Configuración, «Cómo se ve»; src/lib/ajustes.js, FILTROS_DEL_FONDO), with or without the
+   strong version. public/ajustes.js writes them in --fondo-filtro and turns on data-fondo-filtro; only what's behind
+   the page gets them. The blur is half on a phone, and the blurred layer grows a little so its faded edges stay out. */
+
+html {
+  --fondo-desenfoque: var(--fondo-desenfoque-px, 0px);
+}
+
+@media (max-width: 40rem) {
+  html {
+    --fondo-desenfoque: calc(var(--fondo-desenfoque-px, 0px) / 2);
+  }
+}
+
+html[data-fondo-filtro='si'] body::before,
+html[data-fondo-filtro='si'] .fondo-potente {
+  filter: var(--fondo-filtro, none);
+}
+
+/* Without the strong version, the page's own background goes into a layer fixed to the window, as the sky does
+   (styles/potentes.css), and only that layer gets the filter. The body still paints it under everything, unseen. */
+html[data-potente='no'][data-fondo-filtro='si'] body::before {
+  content: '';
+  position: fixed;
+  inset: 0 auto auto 0;
+  width: 100vw;
+  height: 100vh;
+  height: 100lvh;
+  z-index: -1;
+  pointer-events: none;
+  background: inherit;
+}
+
+/* Hoja: its lines scroll with the page, so they stay on the body, and the layer paints only the paper. */
+html[data-potente='no'][data-fondo-filtro='si'][data-estilo='hoja'] {
+  background: var(--fondo);
+}
+
+html[data-potente='no'][data-fondo-filtro='si'][data-estilo='hoja'] body {
+  background: repeating-linear-gradient(to bottom, transparent 0 calc(var(--renglon-alto) - 1px), var(--renglon) 0 var(--renglon-alto));
+}
+
+html[data-potente='no'][data-fondo-filtro='si'][data-estilo='hoja'] body::before {
+  background: var(--fondo);
+}
+
+/* The blurred layer goes past the window by three times the blur, so its faded edges stay out. A scale zoomed the sky in
+   as soon as the blur was above 0 (Ignacio, 23/11): this grows only as much as the blur. Last, so it wins over the
+   page's own layer above. */
+html[data-fondo-filtro='si'][data-fondo-desenfoque='si'] body::before,
+html[data-fondo-filtro='si'][data-fondo-desenfoque='si'] .fondo-potente {
+  top: calc(-3 * var(--fondo-desenfoque));
+  left: calc(-3 * var(--fondo-desenfoque));
+  width: calc(100vw + 6 * var(--fondo-desenfoque));
+  height: calc(100vh + 6 * var(--fondo-desenfoque));
+  height: calc(100lvh + 6 * var(--fondo-desenfoque));
+}

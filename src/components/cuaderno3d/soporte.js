@@ -7,14 +7,15 @@ const SOFTWARE = /swiftshader|llvmpipe|softpipe|lavapipe|software|basic render/i
 export const esPorSoftware = (renderizador) => SOFTWARE.test(renderizador ?? '');
 
 let puede;
-/** WebGL 2 (three.js needs it) on a real GPU, no data saver and some memory. Checked once.
+/** WebGL 2 (three.js needs it) on a real GPU and some memory. Checked once. The data saver is apart (ahorro.js): it
+ * changes while the page is open.
  * On software rendering (SwiftShader, llvmpipe) the scene is drawn on the CPU and freezes the page for seconds, so the
  * sign-in screen goes without it. `failIfMajorPerformanceCaveat` alone doesn't catch it: Chrome hands out SwiftShader
  * anyway when it's allowed, so the renderer's name is checked too. */
 export function puede3D() {
   if (puede !== undefined) return puede;
   try {
-    if (typeof window === 'undefined' || navigator.connection?.saveData) return (puede = false);
+    if (typeof window === 'undefined') return (puede = false);
     if (navigator.deviceMemory && navigator.deviceMemory < 2) return (puede = false);
     const gl = document.createElement('canvas').getContext('webgl2', { failIfMajorPerformanceCaveat: true });
     const info = gl?.getExtension('WEBGL_debug_renderer_info');

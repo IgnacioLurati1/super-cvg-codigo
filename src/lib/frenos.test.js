@@ -12,13 +12,26 @@ const como = (lista) => lista.map((f) => [f.clave, f.abre, f.frena]);
 
 describe('ordenarFrenos', () => {
   it('counts the whole chain once, and that changes the order', () => {
+    // r lacks q and k; s, t and u lack r. v and w lack p and k.
+    const lados = [
+      lado('r', [R('q'), R('k')]), lado('s', [R('r')]), lado('t', [R('r')]), lado('u', [R('r')]),
+      lado('v', [R('p'), R('k')]), lado('w', [R('p'), R('k')]),
+    ];
+    // Only the direct ones, p (v, w) went before q (r).
+    expect(como(ordenarFrenos(lados, de(['p', 'q'])))).toEqual([['q', 0, 4], ['p', 0, 2]]);
+  });
+
+  it('what is nearer weighs more: each step down the chain counts half', () => {
     // a frees b, b frees c, c frees d; e lacks a and x. x frees y; z lacks x and w.
     const lados = [
       lado('b', [R('a')]), lado('c', [R('b')]), lado('d', [R('c')]), lado('e', [R('a'), R('x')]),
       lado('y', [R('x')]), lado('z', [R('x'), R('w')]),
     ];
-    // Only the direct ones, x (y, z, e) went before a (b, e).
-    expect(como(ordenarFrenos(lados, de(['x', 'a'])))).toEqual([['a', 1, 4], ['x', 1, 3]]);
+    // a holds back more (b, c, d, e), but c and d are far: 1 + ½ + ¼ + 1 is less than x's three that ask for it.
+    expect(como(ordenarFrenos(lados, de(['a', 'x'])))).toEqual([['x', 1, 3], ['a', 1, 4]]);
+    // Started to passed in the same subject is no step: m asks for a passed, as near as b.
+    const pasada = [lado('b', [R('a')]), lado('m', [A('a')]), lado('n', [R('y')]), lado('o', [R('y')])];
+    expect(como(ordenarFrenos(pasada, de(['a', 'y'])))).toEqual([['a', 2, 2], ['y', 2, 2]]);
   });
 
   it('first what opens right away, a subject that asks for two things only when it has both', () => {

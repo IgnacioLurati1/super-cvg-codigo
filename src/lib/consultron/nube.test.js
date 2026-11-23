@@ -52,7 +52,7 @@ describe('preguntar a Gemini', () => {
     const pedir = responde({ ok: true, texto: 'Para experimentar [1].', quedan: 14 });
     expect(await preguntarNube(mensajes, 'resumenes', { pedir })).toBe('Para experimentar [1].');
     const [url, opciones] = pedir.mock.calls[0];
-    expect(url).toBe('https://spltnoksgdkbaamskuau.supabase.co/functions/v1/supercvg-consultron');
+    expect(url).toBe('https://lomhlulbgfovtnljbqzp.supabase.co/functions/v1/supercvg-consultron');
     expect(opciones.credentials).toBe('omit');
     const cuerpo = JSON.parse(opciones.body);
     expect(Object.keys(cuerpo).sort()).toEqual(['dispositivo', 'mensajes']);
@@ -122,40 +122,67 @@ describe('quién contesta', () => {
 
   it('cada lugar con sus permisos: al lado de un resumen, el de los resúmenes; al lado de otro archivo, ninguno', async () => {
     const { nubeEnElLugar, permisosDelLugar } = await nube();
-    expect(permisosDelLugar({ enResumen: true })).toEqual(['resumenes']);
-    expect(permisosDelLugar({ enResumen: 'archivo' })).toEqual([]);
-    expect(permisosDelLugar()).toEqual(['resumenes', 'carrera']);
+    expect(permisosDelLugar({ enResumen: true })).toEqual(['todo', 'resumenes']);
+    expect(permisosDelLugar({ enResumen: 'archivo' })).toEqual(['todo']);
+    expect(permisosDelLugar()).toEqual(['todo', 'resumenes', 'carrera']);
     expect(nubeEnElLugar({ carrera: true }, { enResumen: true }), 'su carrera no contesta al lado de un resumen').toBe(false);
     expect(nubeEnElLugar({ resumenes: true }, { enResumen: 'archivo' }), 'un PDF del campus no va a Gemini').toBe(false);
     expect(nubeEnElLugar({ carrera: true })).toBe(true);
+    expect(nubeEnElLugar({ todo: true }, { enResumen: 'archivo' }), 'con «Usar Gemini», también al lado de un PDF').toBe(true);
+  });
+
+  it('con «Usar Gemini», todo va a Gemini: apuntes, notas, fechas, la charla y lo que sabe en general', async () => {
+    const { nubePara, permitirNube, conNube } = await nube();
+    permitirNube('todo', true);
+    expect(conNube()).toBe(true);
+    for (const elegidos of [[apunte], [nota], [cursada], [resumen(1), apunte], [carrera], []]) expect(nubePara(elegidos)).toBe('todo');
+    permitirNube('todo', false);
+    expect(nubePara([apunte])).toBe(null);
+    // Kept in the browser, with the others.
+    permitirNube('todo', true);
+    expect((await nube()).nubePara([apunte])).toBe('todo');
+  });
+
+  it('con «Usar Gemini» y sin preguntas por hoy, contesta la compu', async () => {
+    const { nubePara, permitirNube, preguntarNube } = await nube();
+    permitirNube('todo', true);
+    await preguntarNube([{ role: 'user', content: 'x' }], 'todo', { pedir: vi.fn(async () => new Response(JSON.stringify({ ok: false, motivo: 'tope_alumno', quedan: 0 }), { status: 429 })) });
+    expect(nubePara([apunte])).toBe(null);
   });
 
   it('se puede preguntar con Gemini prendido aunque el modelo no esté, y sin él solo con el modelo listo', async () => {
     const { sePuedePreguntar } = await import('./motor');
     const con = { resumenes: true };
-    for (const fase of ['sin-bajar', 'bajando', 'preparando', 'bajado', 'falla', 'no-puede']) {
+    for (const fase of ['sin-bajar', 'bajando', 'preparando', 'bajado', 'falla']) {
       expect(sePuedePreguntar({ fase }, con, { enResumen: true }), fase).toBe(true);
       expect(sePuedePreguntar({ fase }, {}, { enResumen: true }), fase).toBe(false);
       expect(sePuedePreguntar({ fase }, con, { enResumen: 'archivo' }), `${fase}, un PDF del campus`).toBe(false);
     }
     for (const fase of ['quieto', 'revisando', 'borrando']) expect(sePuedePreguntar({ fase }, con), fase).toBe(false);
     expect(sePuedePreguntar({ fase: 'listo' }, {}, { enResumen: 'archivo' })).toBe(true);
+    // Where the computer can't run it, always: the first question asks for «Usar Gemini» (Charla.jsx).
+    expect(sePuedePreguntar({ fase: 'no-puede' }, {})).toBe(true);
   });
 
   it('sin Gemini ni el modelo, dice por qué', async () => {
     const { permitirNube, porQueNoNube, preguntarNube, sinCompu } = await nube();
-    expect(sinCompu('no-puede')).toMatch(/^Esta compu no puede correr Consultron\./);
+    expect(sinCompu('no-puede')).toBe('Acá Consultron contesta con Gemini. Prendé «Usar Gemini» para preguntarle.');
     expect(sinCompu('sin-bajar')).toBe('Esto lo contesta Consultron en tu compu. Bajalo para preguntarle.');
     expect(sinCompu('preparando')).toBe('Consultron todavía se está preparando en tu compu.');
     permitirNube('resumenes', true);
     const responde = (cuerpo, status) => vi.fn(async () => new Response(JSON.stringify(cuerpo), { status }));
     const m = [{ role: 'user', content: 'x' }];
     await preguntarNube(m, 'resumenes', { pedir: responde({ ok: false, motivo: 'agotado' }, 429) });
-    expect(porQueNoNube()).toBe('Gemini ya no contesta por hoy en todo el sitio. Probá mañana.');
+    expect(porQueNoNube()).toBe('Gemini y Groq ya no contestan por hoy en todo el sitio. Probá mañana.');
     await preguntarNube(m, 'resumenes', { pedir: responde({ ok: false, motivo: 'ocupado' }, 503) });
-    expect(porQueNoNube()).toBe('Gemini no contestó. Probá de nuevo en un rato.');
+    expect(porQueNoNube()).toBe('Gemini no responde. Probá de nuevo en un rato.');
+    // With a connection, a failed request is the service not answering, not «sin internet».
+    await preguntarNube(m, 'resumenes', { pedir: vi.fn(async () => { throw new TypeError('Failed to fetch'); }) });
+    expect(porQueNoNube()).toBe('Gemini no responde. Probá de nuevo en un rato.');
+    const enLinea = vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false);
     await preguntarNube(m, 'resumenes', { pedir: vi.fn(async () => { throw new TypeError('Failed to fetch'); }) });
     expect(porQueNoNube()).toBe('Sin internet, Gemini no puede contestar.');
+    enLinea.mockRestore();
     await preguntarNube(m, 'resumenes', { pedir: responde({ ok: false, motivo: 'tope_alumno', quedan: 0 }, 429) });
     expect(porQueNoNube()).toBe('Por hoy no te quedan preguntas con Gemini.');
     expect(sinCompu('sin-bajar')).toBe('Por hoy no te quedan preguntas con Gemini. Esto lo contesta Consultron en tu compu. Bajalo para preguntarle.');

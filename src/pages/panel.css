@@ -1708,7 +1708,7 @@ html:has(.previa[open]) {
   align-content: start;
   gap: 12px;
   min-height: 100%;
-  padding: 20px var(--margen) 32px;
+  padding: 20px var(--margen) max(32px, calc(16px + env(safe-area-inset-bottom)));
 }
 
 .previa__cabeza {

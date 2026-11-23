@@ -218,7 +218,7 @@ export default function Calendario() {
       cargarNombres(),
     ]);
     return { eventos: listas.flat(), nombres };
-  }, [meses.join()]);
+  }, [meses.join()], { alInstante: true });
   // The skeleton stands in for the calendar only until its first answer, never next to it: an empty grid under it read
   // as a second calendar. Later loads (another month) keep what's on screen, and after an error the grid stays, with
   // the student's own dates.
@@ -241,7 +241,7 @@ export default function Calendario() {
   // The exams the student signed up for in Sysacad, from Sysacad Lindo: only when Sysacad's name is this account's.
   const { examenes: deLaExtension } = useSysacad();
   const conAlumno = Boolean(deLaExtension?.vinculada && deLaExtension.alumno);
-  const perfil = useConsulta(async () => (conAlumno ? cargarPerfil() : null), [conAlumno]);
+  const perfil = useConsulta(async () => (conAlumno ? cargarPerfil() : null), [conAlumno], { alInstante: true });
   const deSysacad = useMemo(() => eventosDeExamenes(examenesDelAlumno(deLaExtension, perfil.datos?.completo)), [deLaExtension, perfil.datos]);
   // The demo has no extension: its made-up answer comes through the same window and the same check.
   useEffect(() => {

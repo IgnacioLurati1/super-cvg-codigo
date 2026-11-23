@@ -28,18 +28,22 @@ export function siguientePaso(escala, dir) {
 
 /** Every page with its place: { tops, izquierdas, anchos, altos, ancho, alto } in CSS pixels. `tamanos`: [w, h] of
  * each page in points. The pages go one under the other, centered, and the whole is at least as wide as the view.
- * `techo`: room left over the first page, for bars that float over the pages (a phone). */
-export function armarLayout(tamanos, escala, anchoVista, borde = BORDE, techo = 0) {
+ * `techo`: room left over the first page, for bars that float over the pages (a phone). `lado`: what a panel beside the
+ * view, on its right, took from it (Consultron): the pages stay where they were without it while they fit, and move
+ * only what it takes to clear it. */
+export function armarLayout(tamanos, escala, anchoVista, borde = BORDE, techo = 0, lado = 0) {
   const anchos = tamanos.map(([w]) => Math.max(1, Math.round(w * escala)));
   const altos = tamanos.map(([, h]) => Math.max(1, Math.round(h * escala)));
-  const ancho = Math.max(anchoVista, Math.max(0, ...anchos) + 2 * borde);
+  const mayor = Math.max(0, ...anchos);
+  const ancho = Math.max(anchoVista, mayor + 2 * borde);
+  const corrido = Math.max(0, Math.min(lado / 2, (ancho - mayor) / 2 - borde));
   const tops = [];
   let y = borde + techo;
   for (const alto of altos) {
     tops.push(y);
     y += alto + ENTRE;
   }
-  const izquierdas = anchos.map((w) => Math.round((ancho - w) / 2));
+  const izquierdas = anchos.map((w) => Math.round((ancho - w) / 2 + corrido));
   return { tops, izquierdas, anchos, altos, ancho, alto: y - ENTRE + borde };
 }
 

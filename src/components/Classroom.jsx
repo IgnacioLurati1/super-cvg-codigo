@@ -22,7 +22,7 @@ export const nombreDeCurso = (c) => (c.seccion ? `${c.nombre} (${c.seccion})` : 
  * `cuenta`: once connected it stays, as «Usar otra cuenta» and «Desconectar», so a wrong account is changed right
  * there. It has to stay in the same place of the screen while connected or not: it keeps its wait and its error. */
 export function BotonConectar({ texto = 'Conectar Classroom', secundario = false, alConectar, enfocar = false, cuenta = false }) {
-  const { conectado, email, renovando } = useGoogle();
+  const { conectado, email, renovando, sinRed } = useGoogle();
   const [esperando, setEsperando] = useState(false);
   const [error, setError] = useState('');
   const [volver, setVolver] = useState(enfocar ? 1 : 0);
@@ -66,6 +66,8 @@ export function BotonConectar({ texto = 'Conectar Classroom', secundario = false
       </div>
     );
   }
+  // Offline Google can't be reached: what was kept shows, and the connection comes back with the network.
+  if (sinRed && !conectado && !esperando) return null;
   // Coming back by itself (a new tab, or the hour ended): no button meanwhile, it would ask for the account again.
   if (renovando && !esperando) {
     return (
@@ -221,9 +223,9 @@ export function ClassroomDePropia({ curso, onIndice }) {
   return (
     <section className="bloque classroom" aria-labelledby="classroom-titulo">
       <Titulo titulo={titulo} />
-      {!google.conectado && !google.renovando && <p className="classroom__bajada">Conectá Classroom y ves acá sus temas y materiales, al día.</p>}
+      {!google.conectado && !google.renovando && !google.sinRed && <p className="classroom__bajada">Conectá Classroom y ves acá sus temas y materiales, al día.</p>}
       <BotonConectar cuenta alConectar={() => titulo.current?.focus()} />
-      {google.conectado && <CursoFijo key={curso} id={curso} onIndice={onIndice} temas={false} />}
+      {(google.conectado || google.sinRed) && <CursoFijo key={curso} id={curso} onIndice={onIndice} temas={false} />}
     </section>
   );
 }
@@ -235,7 +237,7 @@ export function ClassroomDePropia({ curso, onIndice }) {
 export function useClassroomDePropia(propia) {
   const google = useGoogle();
   const mio = useMio();
-  const curso = google.disponible && google.conectado ? propia.classroom : null;
+  const curso = google.disponible && (google.conectado || google.sinRed) ? propia.classroom : null;
   const datos = useConsulta(() => (curso ? cargarDatosCurso(curso) : Promise.resolve(null)), [curso]);
   const crudos = curso ? datos.datos : null;
   const { id, nombre } = propia;
@@ -292,7 +294,7 @@ export function useClassroomDeMateria(materia) {
   const mio = useMio();
   const unido = materia ? materiaDe(mio, materia.id).classroom : null;
   const ninguno = unido === SIN_CLASSROOM;
-  const activo = Boolean(materia) && google.conectado;
+  const activo = Boolean(materia) && (google.conectado || google.sinRed);
   const cursos = useConsulta(() => (activo ? cargarCursos() : Promise.resolve(null)), [activo]);
   const lista = activo ? cursos.datos ?? null : null;
   const guardado = lista?.find((c) => c.id === unido) ?? null;

@@ -7,7 +7,7 @@
   var CLAVE = 'cl.ajustes';
   var LISTAS = {
     estilo: ['original', 'hoja', 'profesional', 'batman', 'plano', 'pizarron'],
-    tema: ['sistema', 'claro', 'oscuro', 'rosa', 'bosque', 'cafe', 'lavanda', 'infierno', 'glaciar'],
+    tema: ['sistema', 'claro', 'oscuro', 'rosa', 'bosque', 'cafe', 'lavanda', 'infierno', 'glaciar', 'cosmico'],
     contraste: ['normal', 'alto'],
     daltonismo: ['ninguno', 'rojo-verde', 'azul-amarillo'],
     letra: ['normal', 'grande', 'mas-grande', 'enorme'],
@@ -41,9 +41,9 @@
   var ES_COLOR = /^#[0-9a-f]{6}$/i;
   var BLANCO = '#ffffff';
   var OSCURO = '#0f1c28';
-  var BARRA = { claro: '#17324d', oscuro: '#3578bd', rosa: '#c2306e', bosque: '#17805a', cafe: '#b8531a', lavanda: '#5b3fb0', 'lavanda-oscuro': '#7456d0', infierno: '#c4320a', glaciar: '#0e7490' };
+  var BARRA = { claro: '#17324d', oscuro: '#3578bd', rosa: '#c2306e', bosque: '#17805a', cafe: '#b8531a', lavanda: '#5b3fb0', 'lavanda-oscuro': '#7456d0', infierno: '#c4320a', glaciar: '#0e7490', cosmico: '#7c3aed' };
   // The palettes of tokens.css: each one is a theme (the one `data-tema` says) with its own colors (`data-paleta`).
-  var PALETAS = { rosa: 'oscuro', bosque: 'oscuro', cafe: 'oscuro', lavanda: 'claro', infierno: 'oscuro', glaciar: 'oscuro' };
+  var PALETAS = { rosa: 'oscuro', bosque: 'oscuro', cafe: 'oscuro', lavanda: 'claro', infierno: 'oscuro', glaciar: 'oscuro', cosmico: 'oscuro' };
   // The header of these styles doesn't take the theme's action color: the browser's bar takes the header's own. A header
   // color the student chose paints every header (`data-cabecera`), and the bar with it.
   var BARRA_DEL_ESTILO = { hoja: { claro: '#fcfdfe', oscuro: '#171c27' }, profesional: { claro: '#ffffff', oscuro: '#111a30' }, batman: { oscuro: '#141519' }, plano: { claro: '#ebe5d1', oscuro: '#0a2647' }, pizarron: { claro: '#c9cfd5', oscuro: '#7f5f3f' } };
@@ -57,8 +57,43 @@
     'lavanda-oscuro': { hoja: '#17121f', profesional: '#2a2040' },
     infierno: { hoja: '#170806', profesional: '#2c120b', plano: '#100403' },
     glaciar: { hoja: '#07121a', profesional: '#12232f', plano: '#040c11' },
+    cosmico: { hoja: '#0b0717', profesional: '#22163f', plano: '#07040f' },
   };
   var SIEMPRE_OSCUROS = ['batman'];
+  // The quality of the strong version's sky (src/lib/ajustes.js, CALIDADES_DEL_FONDO). Without one, «media».
+  var CALIDADES_DEL_FONDO = ['baja', 'media', 'alta', 'ultra'];
+  var calidadDelFondo = function (datos) {
+    return CALIDADES_DEL_FONDO.indexOf(datos.fondoCalidad) >= 0 ? datos.fondoCalidad : 'media';
+  };
+  // The background's filters (src/lib/ajustes.js, FILTROS_DEL_FONDO; styles/filtros.css applies them), with or without
+  // the strong version: the colors, a tone and a blur, together. The blur goes by its own variable: on a phone it's half.
+  var FILTROS_DEL_FONDO = ['ninguno', 'grises', 'sepia', 'vivo', 'suave'];
+  var enPasos = function (valor, max, inicial) {
+    return typeof valor === 'number' && isFinite(valor) ? Math.min(max, Math.max(0, Math.round(valor / 5) * 5)) : inicial;
+  };
+  var r = function (x) {
+    return Math.round(x * 100) / 100;
+  };
+  var filtroDelFondo = function (datos) {
+    var filtro = entre(FILTROS_DEL_FONDO, datos.fondoFiltro);
+    var n = enPasos(datos.fondoIntensidad, 100, 60) / 100;
+    var tono = enPasos(datos.fondoTono, 355, 0);
+    var desenfoque = enPasos(datos.fondoDesenfoque, 100, 0);
+    var partes = [];
+    if (filtro !== 'ninguno' && n > 0) {
+      partes.push({
+        grises: 'grayscale(' + n + ')',
+        sepia: 'sepia(' + n + ')',
+        vivo: 'saturate(' + r(1 + n) + ') contrast(' + r(1 + n * 0.15) + ')',
+        suave: 'saturate(' + r(1 - n * 0.7) + ') contrast(' + r(1 - n * 0.35) + ')',
+      }[filtro]);
+    }
+    // A gray turned is still gray, but a grayscale under 100 % keeps some color: with it, the tone doesn't count (as
+    // Configuración says).
+    if (tono > 0 && filtro !== 'grises') partes.push('hue-rotate(' + tono + 'deg)');
+    if (desenfoque > 0) partes.push('blur(var(--fondo-desenfoque))');
+    return { css: partes.length ? partes.join(' ') : null, desenfoque: desenfoque > 0 ? r(desenfoque * 0.16) + 'px' : null };
+  };
   var CAMBIA_AL_PASAR = 0.18;
 
   var canales = function (color) {
@@ -108,10 +143,34 @@
     return mezclar(color, hacia, CAMBIA_AL_PASAR);
   };
 
+  // «Según la hora» (src/lib/ajustes.js, CLAVES_DEL_DISENO and esDeNoche): the design of the hour over the rest.
+  var CLAVES_DEL_DISENO = ['estilo', 'tema', 'contraste', 'accion', 'resaltador', 'cabecera', 'bandeja', 'bordes', 'bordesDelEstilo', 'potente', 'fondoMueve', 'fondoCalidad', 'fondoFiltro', 'fondoIntensidad', 'fondoTono', 'fondoDesenfoque', 'fogonazo'];
+  var ES_HORA = /^([01]\d|2[0-3]):[0-5]\d$/;
+  var enMinutos = function (hora) {
+    return Number(hora.slice(0, 2)) * 60 + Number(hora.slice(3));
+  };
+  var esDeNoche = function (ahora, segun) {
+    var m = ahora.getHours() * 60 + ahora.getMinutes();
+    var d = enMinutos(ES_HORA.test(segun.desde) ? segun.desde : '20:00');
+    var h = enMinutos(ES_HORA.test(segun.hasta) ? segun.hasta : '07:00');
+    if (d === h) return false;
+    return d < h ? m >= d && m < h : m >= d || m < h;
+  };
+  var conElDeLaHora = function (datos) {
+    var segun = datos.segunLaHora;
+    if (!segun || typeof segun !== 'object' || !segun.dia || !segun.noche) return datos;
+    var diseno = esDeNoche(new Date(), segun) ? segun.noche : segun.dia;
+    if (!diseno || typeof diseno !== 'object') return datos;
+    CLAVES_DEL_DISENO.forEach(function (clave) {
+      if (clave in diseno) datos[clave] = diseno[clave];
+    });
+    return datos;
+  };
+
   var leer = function () {
     try {
       var datos = JSON.parse(localStorage.getItem(CLAVE));
-      return datos && typeof datos === 'object' ? datos : {};
+      return datos && typeof datos === 'object' ? conElDeLaHora(datos) : {};
     } catch {
       return {};
     }
@@ -166,6 +225,17 @@
     var luz = datos.luz === true;
     raiz.setAttribute('data-estilo', estilo);
     raiz.setAttribute('data-bordes', datos.bordes === true ? 'si' : 'no');
+    // Batman's yellow beam on each screen (animaciones.css): on unless turned off.
+    raiz.setAttribute('data-fogonazo', datos.fogonazo === false ? 'no' : 'si');
+    // The theme's strong version (src/lib/ajustes.js): its own sky behind the page, in estilos.css.
+    raiz.setAttribute('data-potente', datos.potente === true ? 'si' : 'no');
+    // Its movement and its high quality, only with the strong version on (src/lib/fondo/fondo.js draws them).
+    raiz.setAttribute('data-fondo-mueve', datos.potente === true && datos.fondoMueve === true ? 'si' : 'no');
+    raiz.setAttribute('data-fondo-calidad', datos.potente === true ? calidadDelFondo(datos) : 'baja');
+    var filtro = filtroDelFondo(datos);
+    raiz.setAttribute('data-fondo-filtro', filtro.css ? 'si' : 'no');
+    raiz.setAttribute('data-fondo-desenfoque', filtro.desenfoque ? 'si' : 'no');
+    ponerVariables(raiz.style, { '--fondo-filtro': filtro.css, '--fondo-desenfoque-px': filtro.desenfoque });
     raiz.setAttribute('data-tema', tema);
     // Everything that reads `data-tema` keeps working: a palette is the light or the dark theme with other colors.
     if (paleta) raiz.setAttribute('data-paleta', paleta);
@@ -184,6 +254,7 @@
     var accion = colorValido(datos.accion);
     var resaltador = colorValido(datos.resaltador);
     var cabecera = colorValido(datos.cabecera);
+    var bandeja = colorValido(datos.bandeja);
     ponerVariables(raiz.style, {
       '--accion': accion,
       '--accion-hover': accion && alPasar(accion),
@@ -200,6 +271,8 @@
       '--cabecera-elegida': cabecera,
       '--cabecera-elegida-hover': cabecera && alPasar(cabecera),
       '--cabecera-elegida-texto': cabecera && textoSobre(cabecera),
+      // The line under the header in Pizarrón (estilos.css).
+      '--bandeja-elegida': bandeja,
     });
     if (cabecera) raiz.setAttribute('data-cabecera', 'propia');
     else raiz.removeAttribute('data-cabecera');
@@ -257,6 +330,7 @@
       raiz.getAttribute('data-tema') !== temaDe(datos, estilo) ||
       (raiz.getAttribute('data-paleta') || null) !== paletaDe(datos) ||
       raiz.getAttribute('data-estilo') !== estilo ||
+      (raiz.getAttribute('data-potente') === 'si') !== (datos.potente === true) ||
       raiz.getAttribute('data-contraste') !== entre(LISTAS.contraste, datos.contraste) ||
       antes !== (datos.luz === true)
     );
@@ -264,7 +338,8 @@
 
   // `elegido` is only for when localStorage refuses to save: the choice still applies to this tab.
   var aplicar = function (elegido) {
-    var datos = elegido || leer();
+    // A design being tried in Diseños (src/lib/ajustes.js) stays over the saved settings until it ends.
+    var datos = elegido || window.ajustesEnPrueba || leer();
     var raiz = document.documentElement;
     if (typeof document.startViewTransition !== 'function' || document.visibilityState !== 'visible' || !cambiaLaLuz(datos)) {
       poner(datos);

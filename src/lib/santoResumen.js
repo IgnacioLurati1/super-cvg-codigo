@@ -1,4 +1,5 @@
 import { normalizar } from './datos';
+import { conRespaldo } from './respaldo';
 
 // Each campus course with its summary in El Santo Resumen (Luta Studios), by name. The list is a copy of the
 // subjects of that site (scripts/utn/materias.json in Luta Studios's repo): it ships with the site, so finding the
@@ -156,7 +157,7 @@ const MARCA_CIERRA = '\u0003';
 export const limpio = (v, max) => (typeof v === 'string' ? v.replace(/[\u0000-\u0009\u000b-\u001f\u007f]/g, ' ').slice(0, max).trim() : '');
 const numero = (v) => (Number.isFinite(v) && v >= 0 ? v : 0);
 
-const falla = (texto) => Object.assign(new Error(texto), { conocido: true });
+const falla = (texto, codigo = '') => Object.assign(new Error(texto), { conocido: true, codigo });
 export const SIN_RESPUESTA = 'El Santo Resumen no responde ahora. Probá de nuevo en un rato.';
 export const SIN_RED = 'No se pudo llegar a El Santo Resumen. Revisá internet y probá de nuevo.';
 
@@ -165,7 +166,7 @@ async function pedirJson(url, opciones = {}) {
   try {
     r = await fetch(url, { credentials: 'omit', referrerPolicy: 'no-referrer', ...opciones });
   } catch {
-    throw falla(SIN_RED);
+    throw falla(SIN_RED, 'red');
   }
   if (!r.ok) throw falla(SIN_RESPUESTA);
   try {
@@ -176,10 +177,25 @@ async function pedirJson(url, opciones = {}) {
 }
 
 // Once per tab: the index weighs about 1 MB and changes only when El Santo Resumen publishes. A failure is not kept,
-// so trying again asks again.
+// so trying again asks again. With «Seguir conectado» what came is kept as it came (respaldo.js), and offline that
+// shows, read here again by `leer` like a fresh answer; then the tab does not hold it, so the network asks again.
 const guardados = new Map();
-function unaVez(clave, fn) {
-  if (!guardados.has(clave)) guardados.set(clave, fn().catch((e) => { guardados.delete(clave); throw e; }));
+function unaVez(clave, url, leer) {
+  if (!guardados.has(clave)) {
+    let vino = false;
+    const traer = async () => {
+      const datos = await pedirJson(url);
+      vino = true;
+      return datos;
+    };
+    guardados.set(clave, conRespaldo(`santo.${clave}`, traer).then((datos) => {
+      if (!vino) guardados.delete(clave);
+      return leer(datos);
+    }, (e) => {
+      guardados.delete(clave);
+      throw e;
+    }));
+  }
   return guardados.get(clave);
 }
 export const olvidarSanto = () => guardados.clear();
@@ -210,7 +226,7 @@ export function leerIndice(datos) {
     });
 }
 
-export const cargarIndice = () => unaVez('indice', async () => leerIndice(await pedirJson(INDICE)));
+export const cargarIndice = () => unaVez('indice', INDICE, leerIndice);
 
 /** The pages of a subject, without searching: its study pages first, then its exercises, one item per page. */
 export function paginasDe(indice, slug) {
@@ -318,10 +334,13 @@ export function leerTextos(datos) {
   });
 }
 
-export const cargarTextos = (slug) => unaVez(`textos:${slug}`, async () => leerTextos(await pedirJson(`${SERVICIO}?a=textos&materia=${slug}`)));
+// The subject goes in the address only with its shape checked.
+const deMateria = (slug) => (SLUG.test(slug) ? slug : null);
+
+export const cargarTextos = (slug) => (deMateria(slug) ? unaVez(`textos:${slug}`, `${SERVICIO}?a=textos&materia=${slug}`, leerTextos) : Promise.resolve([]));
 
 export const cargarBanco = (slug = '') =>
-  unaVez(`banco:${slug}`, async () => leerBanco(await pedirJson(`${SERVICIO}?a=banco${slug ? `&materia=${slug}` : ''}`)));
+  slug && !deMateria(slug) ? Promise.resolve([]) : unaVez(`banco:${slug}`, `${SERVICIO}?a=banco${slug ? `&materia=${slug}` : ''}`, leerBanco);
 
 /** A fragment of the service as pieces of text, with what was found marked. Never HTML. */
 export function partesDe(fragmento) {
@@ -387,7 +406,7 @@ export function leerConsejos(datos) {
 }
 
 export const cargarConsejos = (slug) =>
-  unaVez(`consejos:${slug}`, async () => leerConsejos(await pedirJson(`${SERVICIO}?a=consejos&materia=${slug}`)));
+  deMateria(slug) ? unaVez(`consejos:${slug}`, `${SERVICIO}?a=consejos&materia=${slug}`, leerConsejos) : Promise.resolve([]);
 
 export const urlDeConsejos = (slug) => `${SANTO}/consejos.html?materia=${slug}`;
 

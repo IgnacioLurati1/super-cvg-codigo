@@ -590,7 +590,7 @@ const CURSO_SO = {
     { id: '901', topicId: '801', title: 'Teoría de procesos', state: 'PUBLISHED', creationTime: haceDias(20), updateTime: haceDias(20), alternateLink: 'https://classroom.google.com/c/NzAwMDAx/m/OTAx', materials: [drive('procesos', 'Procesos.pdf'), { link: { url: 'https://pages.cs.wisc.edu/~remzi/OSTEP/', title: 'OSTEP' } }] },
   ] },
   courseWork: { courseWork: [
-    { id: '902', topicId: '802', title: 'TP 1: Semáforos', state: 'PUBLISHED', creationTime: haceDias(2), updateTime: haceDias(2), alternateLink: 'https://classroom.google.com/c/NzAwMDAx/a/OTAy', dueDate: enDias(5), dueTime: { hours: 15 }, materials: [drive('consigna', 'Consigna TP 1.pdf')] },
+    { id: '902', topicId: '802', title: 'TP 1: Semáforos', state: 'PUBLISHED', creationTime: haceDias(2), updateTime: haceDias(2), alternateLink: 'https://classroom.google.com/c/NzAwMDAx/a/OTAy', dueDate: enDias(5), dueTime: { hours: 15 }, materials: [drive('consignaSoloCurso01', 'Consigna TP 1.pdf')] },
     { id: '905', topicId: '802', title: 'TP 0: Repaso', state: 'PUBLISHED', creationTime: haceDias(20), updateTime: haceDias(20), alternateLink: 'https://classroom.google.com/c/NzAwMDAx/a/OTA1', dueDate: enDias(3) },
   ] },
   announcements: { announcements: [
@@ -655,24 +655,34 @@ const ARCHIVOS_PUBLICOS = new Set(['archivoPublicoPrueba1', ...MAPA_CARRERA.nodo
 
 // FLUJOS_SOLO=<parte del nombre>[|<otra>] corre solo esas pruebas, desde la entrada (las que dependen de otras pueden fallar).
 const SOLO = process.env.FLUJOS_SOLO;
+// Run by flujos-en-paralelo.mjs: FLUJOS_LISTA has the exact names of one batch (a test and the ones that follow it with
+// pruebaQueSigue), FLUJOS_BASE the dist its worker serves, and FLUJOS_REGISTRO where to leave the results and what the
+// batch sent. FLUJOS_REGISTROS is the folder with every batch's, for «durante todo el recorrido».
+const LISTA = process.env.FLUJOS_LISTA ? JSON.parse(process.env.FLUJOS_LISTA) : null;
 const resultados = [];
+let orden = 0;
 async function prueba(nombre, fn) {
-  if (SOLO && !SOLO.split('|').some((parte) => nombre.includes(parte))) return;
-  if (SOLO) await ir('');
+  orden += 1;
+  if (LISTA ? !LISTA.includes(nombre) : SOLO && !SOLO.split('|').some((parte) => nombre.includes(parte))) return;
+  if (LISTA ? nombre === LISTA[0] : SOLO) await ir('');
+  const desde = Date.now();
   try {
     await fn();
-    resultados.push(true);
+    resultados.push({ nombre, ok: true, ms: Date.now() - desde });
     console.log(`ok    ${nombre}`);
   } catch (e) {
-    resultados.push(false);
-    await pagina.screenshot({ path: path.join(CAPTURAS, `falla-${resultados.length}.png`) }).catch(() => {});
-    console.log(`      en ${pagina.url().slice(0, 80)}`);
-    console.log(`FALLA ${nombre}\n      ${String(e.message).split('\n').slice(0, 6).join('\n      ')}`);
+    resultados.push({ nombre, ok: false, ms: Date.now() - desde });
+    await pagina.screenshot({ path: path.join(CAPTURAS, `falla-${orden}.png`) }).catch(() => {});
+    console.log(`      en ${pagina.url().slice(0, 80)}\nFALLA ${nombre}\n      ${String(e.message).split('\n').slice(0, 6).join('\n      ')}`);
   }
 }
+// A test that starts where the one before left (signed in, on its screen, with what it saved): in parallel they go together.
+const pruebaQueSigue = prueba;
+// One that needs what an earlier one saved (`previa`, the start of its name): in parallel it goes with that one's batch.
+const pruebaTras = (previa, nombre, fn) => prueba(nombre, fn);
 
 const { chromium } = await import('playwright-core');
-const { base, cerrar } = await servirDist(RAIZ);
+const { base, cerrar } = process.env.FLUJOS_BASE ? { base: process.env.FLUJOS_BASE, cerrar: () => {} } : await servirDist(RAIZ);
 const navegador = await chromium.launch(opcionesNavegador(buscarChrome()));
 const FOTO_HOJA = await (async () => {
   const taller = await navegador.newPage({ viewport: { width: 480, height: 679 } });
@@ -705,9 +715,60 @@ const pagina = await contexto.newPage();
 
 const pedidos = [];
 const errores = [];
+// «durante todo el recorrido» in parallel: what every batch sent, and its console errors.
+if (process.env.FLUJOS_REGISTROS) {
+  for (const archivo of fs.readdirSync(process.env.FLUJOS_REGISTROS)) {
+    const otro = JSON.parse(fs.readFileSync(path.join(process.env.FLUJOS_REGISTROS, archivo), 'utf8'));
+    pedidos.push(...otro.pedidos);
+    errores.push(...otro.errores);
+    for (const f of otro.sinSimular) sinSimular.add(f);
+  }
+}
 let sesionVencida = false;
 pagina.on('pageerror', (e) => errores.push(e.message));
-pagina.on('console', (m) => { if (m.type() === 'error') errores.push(m.text()); });
+// Chrome reports an inline handler (on…) as blocked by the CSP as soon as it parses one into an inert document
+// (DOMParser, also with the Sanitizer API), though nothing of it ever runs there: El Santo Resumen's summary carries an
+// onerror on purpose (SANTO_HTML), and the app reads it apart (verResumen.js, VisorResumen.jsx). The page says when it
+// parses (marcarInertes, before it loads) and only what Chrome reports meanwhile is marked, so «durante todo el
+// recorrido» lets that through and still sees a handler anywhere else (in the page, or in a sandboxed frame).
+const HANDLER_BLOQUEADO = /^Executing inline event handler violates the following Content Security Policy directive/;
+const INERTE = ['flujos: documento inerte, empieza', 'flujos: documento inerte, termina'];
+function marcarInertes([empieza, termina]) {
+  const original = DOMParser.prototype.parseFromString;
+  DOMParser.prototype.parseFromString = function parseFromString(texto, tipo) {
+    if (tipo !== 'text/html') return original.call(this, texto, tipo);
+    console.debug(empieza);
+    try {
+      return original.call(this, texto, tipo);
+    } finally {
+      console.debug(termina);
+    }
+  };
+}
+// Each page's console errors, with what was reported while parsing an inert document marked.
+function escucharConsola(p) {
+  let inerte = false;
+  p.on('console', (m) => {
+    if (m.type() === 'debug' && INERTE.includes(m.text())) inerte = m.text() === INERTE[0];
+    else if (m.type() === 'error') errores.push(inerte && HANDLER_BLOQUEADO.test(m.text()) ? `inerte: ${m.text()}` : m.text());
+  });
+}
+// The connection, fixed as a fast one: Chrome estimates it from how long answers take, and with several browsers at once
+// the local server is slow enough to read as 3G, which turns on the automatic data saver (ahorro.js) halfway through a
+// test (no 3D in the entrance, no photos on the cards). The saver itself is tested in ahorro.test.js and
+// ahorro.test.jsx.
+function conexionRapida() {
+  if (typeof NetworkInformation === 'undefined') return;
+  const fija = { effectiveType: '4g', rtt: 50, downlink: 10, saveData: false };
+  for (const [clave, valor] of Object.entries(fija)) Object.defineProperty(NetworkInformation.prototype, clave, { configurable: true, get: () => valor });
+}
+// Every context of the flows: the connection fixed, and inert documents told apart in the console.
+async function prepararContexto(c) {
+  await c.addInitScript(conexionRapida);
+  await c.addInitScript(marcarInertes, INERTE);
+}
+await prepararContexto(contexto);
+escucharConsola(pagina);
 
 // Consultron's worker, faked: the test browser has no model and nothing may go to Hugging Face. It speaks the same
 // messages as src/lib/consultron/consultron.worker.js. Its answer names the first piece it got, with its file and page,
@@ -1148,6 +1209,13 @@ const ir = (ruta) => pagina.goto(base + ruta);
 // Consultron comes as a bubble by default; the flows that test the side panel ask for it (call it with the page on the site).
 const aLado = () => pagina.evaluate(() => localStorage.setItem('cl.ajustes', JSON.stringify({ ...JSON.parse(localStorage.getItem('cl.ajustes') ?? '{}'), consultronAparicion: 'lateral' })));
 const boton = (nombre, exacto = true) => pagina.getByRole('button', { name: nombre, exact: exacto });
+// Consultron's window of settings, in its screen (Consultron.jsx): opened if it isn't.
+const ajustesConsultron = async () => {
+  const ventana = pagina.getByRole('dialog', { name: 'Ajustes' });
+  if (!(await ventana.isVisible())) await pagina.getByRole('button', { name: /^Ajustes/ }).click();
+  await ventana.waitFor();
+  return ventana;
+};
 const fila = (nombre) => pagina.locator('.fila__principal', { hasText: nombre });
 const fin = (nombre) => pagina.screenshot({ path: path.join(CAPTURAS, `${nombre}.png`), fullPage: true });
 // What is in sight, for what is fixed on the screen (the page whole moves it).
@@ -1348,7 +1416,7 @@ try {
     await fin('entrar');
   });
 
-  await prueba('entrar guarda la clave solo en la pestaña y nunca la contraseña', async () => {
+  await pruebaQueSigue('entrar guarda la clave solo en la pestaña y nunca la contraseña', async () => {
     await pagina.getByLabel('Contraseña').fill(CONTRASENA);
     await boton('Entrar').click();
     await pagina.getByRole('heading', { name: 'Hola, Ana' }).waitFor();
@@ -1361,7 +1429,7 @@ try {
     assert.ok(!guardado.includes('privatetoken'));
   });
 
-  await prueba('Hoy muestra lo próximo, lo vencido, la semana, avisos y lo último', async () => {
+  await pruebaQueSigue('Hoy muestra lo próximo, lo vencido, la semana, avisos y lo último', async () => {
     await pagina.locator('.marcado', { hasText: 'TP próximo' }).waitFor();
     await pagina.getByRole('heading', { name: 'Vencidas' }).waitFor();
     await pagina.getByText('TP vencido').waitFor();
@@ -1378,7 +1446,7 @@ try {
     await fin('hoy');
   });
 
-  await prueba('una sección se oculta, se deshace y sigue oculta después de recargar', async () => {
+  await pruebaQueSigue('una sección se oculta, se deshace y sigue oculta después de recargar', async () => {
     await ir('materias/1');
     await pagina.getByRole('heading', { name: 'Notas 2023' }).waitFor();
     // From further down the page: hiding doesn't take it back to the top (the notice floats at the foot of the screen).
@@ -1401,7 +1469,7 @@ try {
     await fin('materia');
   });
 
-  await prueba('lo oculto queda fuera de la búsqueda salvo que se pida', async () => {
+  await pruebaQueSigue('lo oculto queda fuera de la búsqueda salvo que se pida', async () => {
     await ir('buscar');
     await pagina.getByLabel('Qué buscás').fill('notas');
     await pagina.getByText('No hay resultados').waitFor();
@@ -1411,7 +1479,7 @@ try {
     await pagina.getByText('Notas viejas').waitFor();
   });
 
-  await prueba('filtrar por tipo y buscar en una materia', async () => {
+  await pruebaQueSigue('filtrar por tipo y buscar en una materia', async () => {
     await ir('materias/1');
     await pagina.getByRole('heading', { name: 'Unidad 1' }).waitFor();
     await boton('Enlaces').click();
@@ -1422,7 +1490,7 @@ try {
     await pagina.getByLabel('Buscar en esta materia').fill('');
   });
 
-  await prueba('tocar un archivo muestra la previa y la clave no viaja en la URL', async () => {
+  await pruebaQueSigue('tocar un archivo muestra la previa y la clave no viaja en la URL', async () => {
     const antes = pedidos.length;
     await fila('Apunte uno').click();
     await pagina.getByRole('dialog').waitFor();
@@ -1453,7 +1521,7 @@ try {
     await fin('previa-pdf');
   });
 
-  await prueba('bajar usa el archivo ya cargado, y Escape devuelve el foco a la fila', async () => {
+  await pruebaQueSigue('bajar usa el archivo ya cargado, y Escape devuelve el foco a la fila', async () => {
     const antes = pedidos.length;
     const [descarga] = await Promise.all([pagina.waitForEvent('download'), boton('Bajar archivo').click()]);
     assert.equal(descarga.suggestedFilename(), 'apunte.pdf');
@@ -1463,7 +1531,7 @@ try {
     assert.match(await pagina.evaluate(() => document.activeElement.textContent), /Apunte uno/);
   });
 
-  await prueba('un Excel se ve como tabla, hoja por hoja', async () => {
+  await pruebaQueSigue('un Excel se ve como tabla, hoja por hoja', async () => {
     await fila('Planilla').click();
     const hoja = pagina.getByRole('dialog');
     const tabla = hoja.getByRole('region', { name: 'Hoja Notas' });
@@ -1481,7 +1549,7 @@ try {
     await boton('Cerrar').click();
   });
 
-  await prueba('el lector de PDF busca, resalta con nota y recuerda la página, sin guardar el texto', async () => {
+  await pruebaQueSigue('el lector de PDF busca, resalta con nota y recuerda la página, sin guardar el texto', async () => {
     await fila('Apunte uno').click();
     const hoja = pagina.getByRole('dialog');
     await hoja.locator('.lector__pagina[data-pagina="1"] .textLayer span').first().waitFor();
@@ -1572,7 +1640,7 @@ try {
     await hoja.waitFor({ state: 'detached' });
   });
 
-  await prueba('el lector de PDF: señaladores para saltar entre páginas, que siguen al recargar', async () => {
+  await pruebaQueSigue('el lector de PDF: señaladores para saltar entre páginas, que siguen al recargar', async () => {
     // Alone (FLUJOS_SOLO) it starts from the sign-in.
     await ir('materias/1');
     const usuario = pagina.getByLabel('Usuario');
@@ -1714,7 +1782,7 @@ try {
     await hoja.waitFor({ state: 'detached' });
   });
 
-  await prueba('buscar adentro de los PDF los lee solo a pedido y abre en la página', async () => {
+  await pruebaQueSigue('buscar adentro de los PDF los lee solo a pedido y abre en la página', async () => {
     await ir('buscar');
     const antes = pedidos.length;
     await pagina.getByLabel('Qué buscás').fill('monitor');
@@ -1791,7 +1859,7 @@ try {
     await ir('materias/1');
   });
 
-  await prueba('un video muestra título y miniatura, sin mandar la clave a YouTube', async () => {
+  await pruebaQueSigue('un video muestra título y miniatura, sin mandar la clave a YouTube', async () => {
     await fila('Clase grabada').click();
     await pagina.getByText('Video de la clase').waitFor();
     await pagina.getByText('Va a youtu.be').waitFor();
@@ -1802,20 +1870,20 @@ try {
     await boton('Cerrar').click();
   });
 
-  await prueba('un enlace inseguro avisa', async () => {
+  await pruebaQueSigue('un enlace inseguro avisa', async () => {
     await fila('Lectura').click();
     await pagina.getByText('Este enlace no usa conexión segura.').waitFor();
     await boton('Cerrar').click();
   });
 
-  await prueba('una actividad muestra descripción y fechas', async () => {
+  await pruebaQueSigue('una actividad muestra descripción y fechas', async () => {
     await fila('Parcial').click();
     await pagina.getByRole('dialog').getByText('Temas de la unidad').waitFor();
     await pagina.getByRole('dialog').getByText('Cierra', { exact: true }).waitFor();
     await boton('Cerrar').click();
   });
 
-  await prueba('renombrar: se ve el nombre nuevo, se busca por los dos y el original sigue a mano', async () => {
+  await pruebaQueSigue('renombrar: se ve el nombre nuevo, se busca por los dos y el original sigue a mano', async () => {
     await ir('materias/1');
     await boton('Opciones de Lectura').click();
     await boton('Renombrar').click();
@@ -1832,7 +1900,7 @@ try {
     assert.equal(await pagina.evaluate(() => Object.values(localStorage).join('').includes('Apunte uno')), false);
   });
 
-  await prueba('en el celular el contenido va primero y un enlace lleva a lo tuyo, sin recargar', async () => {
+  await pruebaQueSigue('en el celular el contenido va primero y un enlace lleva a lo tuyo, sin recargar', async () => {
     await pagina.setViewportSize({ width: 390, height: 860 });
     await ir('materias/1');
     await fila('Apunte uno').waitFor();
@@ -1850,7 +1918,7 @@ try {
     assert.ok(aire >= 16, `el título queda pegado al contenido (${aire} px)`);
   });
 
-  await prueba('reordenar con botones, con foco en su lugar, y con arrastre', async () => {
+  await pruebaQueSigue('reordenar con botones, con foco en su lugar, y con arrastre', async () => {
     const orden = () => pagina.locator('section').filter({ hasText: 'Unidad 1' }).locator('.fila__nombre').allTextContents();
     const antes = await orden();
     assert.equal(antes[0], 'Apunte uno');
@@ -1865,7 +1933,7 @@ try {
     assert.equal((await orden())[0], 'Parcial');
   });
 
-  await prueba('ocultar un ítem, deshacerlo y volver a mostrarlo desde la lista', async () => {
+  await pruebaQueSigue('ocultar un ítem, deshacerlo y volver a mostrarlo desde la lista', async () => {
     await boton('Opciones de Clase grabada').click();
     await boton('Ocultar').click();
     await fila('Clase grabada').waitFor({ state: 'detached' });
@@ -1879,7 +1947,7 @@ try {
     await fila('Clase grabada').waitFor();
   });
 
-  await prueba('visto y parcial: apagado de entrada, se prende en Configuración, se marcan, se filtran y suman al avance', async () => {
+  await pruebaQueSigue('visto y parcial: apagado de entrada, se prende en Configuración, se marcan, se filtran y suman al avance', async () => {
     // Off by default: no button, no «Sin ver», no progress.
     assert.equal(await pagina.locator('.fila__visto').count(), 0, 'sin marcar como visto de entrada');
     assert.equal(await boton('Sin ver').count(), 0);
@@ -1901,7 +1969,7 @@ try {
     await boton('Para el parcial').click();
   });
 
-  await prueba('Buscar en Drive: carpetas como en Drive, por nombre, escondidas, abiertas acá y mandadas a una materia', async () => {
+  await pruebaQueSigue('Buscar en Drive: carpetas como en Drive, por nombre, escondidas, abiertas acá y mandadas a una materia', async () => {
     // Alone (FLUJOS_SOLO) it starts from the sign-in.
     await ir('buscar');
     const usuario = pagina.getByLabel('Usuario');
@@ -1960,6 +2028,8 @@ try {
     assert.ok(aDrive.length && aDrive.every((p) => !p.cabeceras.authorization && new URL(p.url).searchParams.get('key') === CLAVE_DRIVE_PRUEBA));
     await hoja.getByRole('link', { name: 'Materia A' }).click();
     await hoja.waitFor({ state: 'detached' });
+    // The course's screen comes apart (App.jsx): until it's there, Buscar stays, with the same file in its rows.
+    await pagina.getByRole('heading', { name: 'Materia A', level: 1 }).waitFor();
     // In the course it opens here too, as the file.
     await fila('Primer parcial 2024.pdf').click();
     await pagina.locator('dialog.previa--pdf').waitFor();
@@ -2015,7 +2085,7 @@ try {
     await fin('drive');
   });
 
-  await prueba('Buscar: palabras para probar, por materia, con lo hallado marcado, y lo del parcial sin escribir', async () => {
+  await pruebaQueSigue('Buscar: palabras para probar, por materia, con lo hallado marcado, y lo del parcial sin escribir', async () => {
     await ir('buscar');
     const campo = pagina.getByLabel('Qué buscás');
     const estado = pagina.locator('.buscar__estado');
@@ -2065,7 +2135,7 @@ try {
     await ir('materias/1');
   });
 
-  await prueba('tarea y anotación: quedan guardadas, y la tarea aparece en Hoy y en el calendario', async () => {
+  await pruebaQueSigue('tarea y anotación: quedan guardadas, y la tarea aparece en Hoy y en el calendario', async () => {
     const dia = new Date(Date.now() + 2 * DIA * 1000);
     const clave = `${dia.getFullYear()}-${String(dia.getMonth() + 1).padStart(2, '0')}-${String(dia.getDate()).padStart(2, '0')}`;
     await pagina.getByLabel('Qué tenés que hacer').fill('Resolver la guía 4');
@@ -2086,7 +2156,7 @@ try {
     assert.ok(fs.readFileSync(await descarga.path(), 'utf8').includes('Resolver la guía 4'));
   });
 
-  await prueba('lo nuevo en una materia se avisa en Hoy y en la materia, hasta revisarlo', async () => {
+  await pruebaQueSigue('lo nuevo en una materia se avisa en Hoy y en la materia, hasta revisarlo', async () => {
     moduloNuevo = true;
     await ir('materias/1');
     await pagina.getByRole('heading', { name: 'Cambios desde tu última revisión' }).waitFor();
@@ -2106,7 +2176,7 @@ try {
   });
 
   // Hoy as each student arranges it (hoy.js), chosen in Configuración: only block keys and course numbers on disk.
-  await prueba('Hoy a gusto: bloques ordenados y ocultos, qué entra en «Vencimientos», hasta cuándo mirar y materias fuera de Hoy y el Calendario', async () => {
+  await pruebaQueSigue('Hoy a gusto: bloques ordenados y ocultos, qué entra en «Vencimientos», hasta cuándo mirar y materias fuera de Hoy y el Calendario', async () => {
     const enDisco = async () => JSON.parse((await pagina.evaluate(() => localStorage.getItem('cl.mio.5'))) ?? '{}');
     // A date of the student's own ten days ahead, «otra cosa»: it goes to «Próximas fechas», not to «Vencimientos». And a
     // task of theirs for the day after tomorrow.
@@ -2242,7 +2312,7 @@ try {
     }
   });
 
-  await prueba('calendario marca hoy, filtra, cambia de mes y baja el .ics', async () => {
+  await pruebaQueSigue('calendario marca hoy, filtra, cambia de mes y baja el .ics', async () => {
     await ir('calendario');
     await pagina.locator('.cal__chip').first().waitFor();
     await pagina.locator('.cal__dia[data-hoy]').waitFor();
@@ -2271,7 +2341,7 @@ try {
     await pagina.waitForURL(/\/materias\/1\/tareas\/1$/);
   });
 
-  await prueba('calendario: una fecha tuya con su tipo y su color, que se cambia y se borra', async () => {
+  await pruebaQueSigue('calendario: una fecha tuya con su tipo y su color, que se cambia y se borra', async () => {
     const axe = AXE;
     const fallasAxe = async () => {
       // Contrast is measured once what fades in has finished, and with nothing under the fixed bar on top.
@@ -2340,7 +2410,7 @@ try {
     assert.equal(await pagina.locator('.cal__detalle').getByText('Final de Física').count(), 0);
   });
 
-  await prueba('calendario: una fecha del campus se corrige, se borra y vuelve, solo en Super CVG', async () => {
+  await pruebaQueSigue('calendario: una fecha del campus se corrige, se borra y vuelve, solo en Super CVG', async () => {
     const axe = AXE;
     const fallasAxe = async () => {
       await pagina.waitForFunction(() => document.getAnimations().every((x) => x.playState !== 'running' || x.effect?.getComputedTiming().iterations === Infinity));
@@ -2409,7 +2479,7 @@ try {
     }
   });
 
-  await prueba('calendario: vincular Google Calendar pasa las fechas del campus y las tuyas, y desvincular borra el calendario', async () => {
+  await pruebaQueSigue('calendario: vincular Google Calendar pasa las fechas del campus y las tuyas, y desvincular borra el calendario', async () => {
     const manana = new Date(Date.now() + DIA * 1000);
     const clave = `${manana.getFullYear()}-${String(manana.getMonth() + 1).padStart(2, '0')}-${String(manana.getDate()).padStart(2, '0')}`;
     const aCalendario = () => pedidos.filter((p) => p.url.startsWith('https://www.googleapis.com/calendar/'));
@@ -2529,7 +2599,7 @@ try {
     }
   });
 
-  await prueba('una fecha tuya lleva «Agregar a Google Calendar» en el calendario y en Hoy, y las del campus no', async () => {
+  await pruebaQueSigue('una fecha tuya lleva «Agregar a Google Calendar» en el calendario y en Hoy, y las del campus no', async () => {
     const manana = new Date(Date.now() + DIA * 1000);
     const clave = `${manana.getFullYear()}-${String(manana.getMonth() + 1).padStart(2, '0')}-${String(manana.getDate()).padStart(2, '0')}`;
     await ir(`calendario?dia=${clave}`);
@@ -2588,7 +2658,7 @@ try {
     await pagina.getByText('Fecha borrada.').waitFor();
   });
 
-  await prueba('un área de texto del campus se ve con su texto y sus enlaces', async () => {
+  await pruebaQueSigue('un área de texto del campus se ve con su texto y sus enlaces', async () => {
     await ir('materias/2');
     const fila_ = fila('Materiales de la cátedra');
     await fila_.getByText('Texto con 2 enlaces').waitFor();
@@ -2616,7 +2686,7 @@ try {
     await hoja.getByRole('button', { name: 'Cerrar' }).click();
   });
 
-  await prueba('una materia tuya: se arma desde la original, se edita, se comparte y otro alumno la abre', async () => {
+  await pruebaQueSigue('una materia tuya: se arma desde la original, se edita, se comparte y otro alumno la abre', async () => {
     const axe = AXE;
     // Waits for the entrances: halfway through a fade the contrast is lower than it ends up.
     const fallasAxe = async () => {
@@ -2805,7 +2875,7 @@ try {
     }));
   });
 
-  await prueba('Notas ya no está: su dirección de antes lleva a Tu carrera, y nada pide las notas del campus', async () => {
+  await pruebaQueSigue('Notas ya no está: su dirección de antes lleva a Tu carrera, y nada pide las notas del campus', async () => {
     const antes = pedidos.length;
     await ir('notas');
     await pagina.waitForURL(/\/carrera$/);
@@ -2813,7 +2883,7 @@ try {
     assert.equal(pedidos.slice(antes).filter((p) => p.cuerpo.includes('gradereport')).length, 0);
   });
 
-  await prueba('Tu horario: una materia sin horarios se carga a mano con su error y su aula, se cambia, vuelve a la facultad, y no la curso', async () => {
+  await pruebaQueSigue('Tu horario: una materia sin horarios se carga a mano con su error y su aula, se cambia, vuelve a la facultad, y no la curso', async () => {
     await ir('horario');
     await pagina.getByRole('heading', { name: 'Tu horario', level: 1 }).waitFor();
     // The materias of the test aren't in the schedules of the faculty: their classes are loaded by hand.
@@ -2877,7 +2947,7 @@ try {
     await filaA.getByText('No está en los horarios de la facultad.').waitFor();
   });
 
-  await prueba('Tu horario: las materias de todas las carreras se suman de los horarios, con sus comisiones por carrera', async () => {
+  await pruebaQueSigue('Tu horario: las materias de todas las carreras se suman de los horarios, con sus comisiones por carrera', async () => {
     const fallasAxe = async () => {
       await pagina.evaluate(AXE);
       return pagina.evaluate(async () => (await window.axe.run(document, { runOnly: ['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa'] })).violations.map((v) => `${v.id}: ${v.nodes[0].target}`));
@@ -2911,7 +2981,7 @@ try {
     await fila.waitFor({ state: 'detached' });
   });
 
-  await prueba('calendario académico: se apaga y queda apagado, y los atajos de teclado', async () => {
+  await pruebaQueSigue('calendario académico: se apaga y queda apagado, y los atajos de teclado', async () => {
     await ir('calendario');
     const capa = pagina.getByLabel('Calendario académico');
     await capa.waitFor();
@@ -2982,7 +3052,7 @@ try {
     // «Más»: opens under its button, the arrows go through it, Esc gives the focus back, and going somewhere closes it.
     await mas.click();
     const lista = pagina.locator('.cabecera__panel-mas');
-    assert.deepEqual(await lista.getByRole('link').allInnerTexts(), ['Calendario', 'Horario', 'Sysacad', 'Laboratorio', 'Calculadoras', 'Repaso', 'Consultron', 'En vivo']);
+    assert.deepEqual(await lista.getByRole('link').allInnerTexts(), ['Calendario', 'Horario', 'Sysacad', 'Laboratorio', 'Calculadoras', 'Repaso', 'Consultron', 'En vivo', 'Diseños']);
     await pagina.evaluate(AXE);
     const fallas = await pagina.evaluate(async () => (await window.axe.run(document.querySelector('.cabecera'), { runOnly: ['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa'] })).violations.map((v) => `${v.id}: ${v.nodes[0].target}`));
     assert.deepEqual(fallas, [], 'la cabecera con «Más» abierto');
@@ -3034,7 +3104,7 @@ try {
     assert.equal(await pagina.locator('#menu .cabecera__ajustes').count(), 1, 'el engranaje va adentro del menú');
     assert.equal(await pagina.locator('#menu .cabecera__rapido').count(), 1, 'el menú rápido va adentro del menú');
     await pagina.locator('#menu .cabecera__grupo-boton').click();
-    assert.deepEqual(await grupo.getByRole('link').allInnerTexts(), ['Calendario', 'Horario', 'Sysacad', 'Laboratorio', 'Calculadoras', 'Repaso', 'Consultron', 'En vivo']);
+    assert.deepEqual(await grupo.getByRole('link').allInnerTexts(), ['Calendario', 'Horario', 'Sysacad', 'Laboratorio', 'Calculadoras', 'Repaso', 'Consultron', 'En vivo', 'Diseños']);
     await fin('menu-plegado-con-mas');
     await pagina.setViewportSize({ width: 1280, height: 860 });
 
@@ -3140,12 +3210,12 @@ try {
     await ir('');
   });
 
-  await prueba('leer en voz alta: la página o lo seleccionado, pausar, seguir y parar, y solo con una voz del dispositivo', async () => {
+  await pruebaQueSigue('leer en voz alta: la página o lo seleccionado, pausar, seguir y parar, y solo con una voz del dispositivo', async () => {
     const antes = await pagina.evaluate(() => localStorage.getItem('cl.ajustes'));
     // In a tab of its own, with the simulated voice from before the page loads.
     const tab = await contexto.newPage();
     tab.on('pageerror', (e) => errores.push(e.message));
-    tab.on('console', (m) => { if (m.type() === 'error') errores.push(m.text()); });
+    escucharConsola(tab);
     await tab.addInitScript(vozSimulada);
     try {
       // A new tab starts from the sign-in (the key lives in each tab), alone or not.
@@ -3279,7 +3349,7 @@ try {
     }
   });
 
-  await prueba('accesibilidad y ancho en las pantallas privadas', async () => {
+  await pruebaQueSigue('accesibilidad y ancho en las pantallas privadas', async () => {
     const axe = AXE;
     for (const ancho of [390, 1280]) {
       await pagina.setViewportSize({ width: ancho, height: 860 });
@@ -3454,13 +3524,16 @@ try {
     await pagina.getByRole('button', { name: /^Menú(,|$)/ }).click();
     await pagina.locator('#menu .cabecera__rapido').click();
     await pagina.locator('.paleta__campo').waitFor();
+    // It slides out before it goes.
+    await pagina.locator('#menu').waitFor({ state: 'hidden', timeout: 2000 }).catch(() => {});
     assert.equal(await pagina.locator('#menu').isVisible(), false, 'el menú se cierra al abrir el menú rápido');
     await pagina.keyboard.press('Escape');
     assert.equal(await pagina.evaluate(() => document.activeElement?.getAttribute('aria-controls')), 'menu', 'el foco vuelve a las tres rayas');
     await pagina.setViewportSize({ width: 1280, height: 860 });
   });
 
-  await prueba('compartir el orden: un compañero entra por el link, revisa, aplica y deshace', async () => {
+  // In parallel, with what «renombrar» and «tarea y anotación» left: the renamed item travels, the notes don't.
+  await pruebaTras('renombrar:', 'compartir el orden: un compañero entra por el link, revisa, aplica y deshace', async () => {
     await ir('materias/1');
     await fila('Texto de la clase 3').waitFor();
     await pagina.getByText('Compartir este orden').click();
@@ -3676,7 +3749,8 @@ try {
     await boton('Salir').click();
   });
 
-  await prueba('otro alumno en el mismo navegador no ve lo del anterior', async () => {
+  // In parallel, after «tarea y anotación»: there is something of Ana's not to see.
+  await pruebaTras('tarea y anotación:', 'otro alumno en el mismo navegador no ve lo del anterior', async () => {
     usuarioId = 6;
     await pagina.getByLabel('Usuario').fill('otro');
     await pagina.getByLabel('Contraseña').fill(CONTRASENA);
@@ -3848,6 +3922,9 @@ try {
     const fallasAxe = async () => {
       // Contrast is measured on the final colors: with reduced motion nothing is halfway through a fade while axe scrolls.
       await pagina.emulateMedia({ reducedMotion: 'reduce' });
+      // What was already moving finishes first: with the machine busy, a box caught halfway counts as too small or covered.
+      await pagina.evaluate(() => new Promise((listo) => requestAnimationFrame(() => requestAnimationFrame(listo))));
+      await pagina.waitForFunction(() => document.getAnimations().every((x) => x.playState !== 'running' || x.effect?.getComputedTiming().iterations === Infinity));
       await pagina.evaluate(axe);
       try {
         return await pagina.evaluate(async () => (await window.axe.run(document, { runOnly: ['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa'] })).violations.map((v) => `${v.id}: ${v.nodes[0].target}`));
@@ -3858,6 +3935,8 @@ try {
         await pagina.waitForFunction(() => document.getAnimations().every((x) => x.playState !== 'running' || x.effect?.getComputedTiming().iterations === Infinity));
       }
     };
+    // «Marcar lo que ya viste» on, as «visto y parcial» leaves it: the reading mode keeps the marks.
+    await pagina.evaluate(() => localStorage.setItem('cl.ajustes', JSON.stringify({ ...JSON.parse(localStorage.getItem('cl.ajustes') ?? '{}'), vistos: true })));
     await pagina.getByLabel('Usuario').fill('alumno');
     await pagina.getByLabel('Contraseña').fill(CONTRASENA);
     await boton('Entrar').click();
@@ -4022,7 +4101,8 @@ try {
     const titulo = () => seccion('Unidad 1').locator('button.seccion__titulo');
     await titulo().click();
     assert.equal(await titulo().getAttribute('aria-expanded'), 'false');
-    await seccion('Unidad 1').locator('.seccion__cuerpo').waitFor({ state: 'hidden' });
+    // Saved once it finished folding (useSecciones.js): then the body is hidden for real, not only 0 px tall.
+    await seccion('Unidad 1').locator('.seccion__cuerpo[hidden]').waitFor({ state: 'attached' });
     await pagina.reload();
     await seccion('Unidad 1').locator('button.seccion__titulo[aria-expanded="false"]').waitFor();
     await titulo().click();
@@ -4120,7 +4200,14 @@ try {
       assert.equal(await previa.getByRole('link', { name: 'Abrir en Classroom' }).getAttribute('href'), 'https://classroom.google.com/c/NzAwMDAx/a/OTAy');
       await pagina.keyboard.press('Escape');
       await previa.waitFor({ state: 'detached' });
-      await seccion.getByRole('button', { name: /^Consigna TP 1 Nuevo, Archivo de Drive, de la tarea «TP 1: Semáforos»/ }).waitFor();
+      // Shared only with the class: the site's key can't read it, so Google's viewer shows it with the linked account.
+      await seccion.getByRole('button', { name: /^Consigna TP 1 Nuevo, Archivo de Drive, de la tarea «TP 1: Semáforos»/ }).click();
+      await previa.getByText(`Está compartido solo con el curso. Lo ves con el visor de Google y tu cuenta ${GMAIL}.`).waitFor();
+      assert.equal(await previa.locator('iframe').getAttribute('src'), `https://drive.google.com/file/d/consignaSoloCurso01/preview?authuser=${encodeURIComponent(GMAIL)}`);
+      assert.equal(await previa.getByText('Este archivo ya no está en Drive o dejó de estar compartido.').count(), 0);
+      await fin('classroom-solo-del-curso');
+      await pagina.keyboard.press('Escape');
+      await previa.waitFor({ state: 'detached' });
       // The stream: the new message open and marked, with its text in the preview.
       await seccion.getByRole('button', { name: /^Mañana no hay clase\. Nuevo, / }).click();
       await previa.getByText('Nos vemos el jueves en el aula 3.').waitFor();
@@ -4505,7 +4592,8 @@ try {
     }
   });
 
-  await prueba('Guardar en tu Google Drive: prender, otro dispositivo recibe todo, conflicto, sin conexión, permiso vencido, borrar la copia y dejar de guardar', async () => {
+  // In parallel, after «tarea y anotación»: the computer has Ana's note to send.
+  await pruebaTras('tarea y anotación:', 'Guardar en tu Google Drive: prender, otro dispositivo recibe todo, conflicto, sin conexión, permiso vencido, borrar la copia y dejar de guardar', async () => {
     // Only the ones of this flow: Google Calendar's go to the same server, and its flow checks them.
     const antesDeDrive = pedidos.length;
     const axe = AXE;
@@ -4551,9 +4639,10 @@ try {
     const capturar = (p, nombre) => p.screenshot({ path: path.join(CAPTURAS, `${nombre}.png`), fullPage: true });
     const celuContexto = await navegador.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
     await celuContexto.route('**/*', atender);
+    await prepararContexto(celuContexto);
     const celu = await celuContexto.newPage();
     celu.on('pageerror', (e) => errores.push(e.message));
-    celu.on('console', (m) => { if (m.type() === 'error') errores.push(m.text()); });
+    escucharConsola(celu);
     try {
       // The computer, with what it had from before (saved before this existed, without times).
       await entrar(pagina);
@@ -4985,10 +5074,12 @@ try {
     assert.equal(new URL(pagina.url()).pathname + new URL(pagina.url()).search, '/sysacad');
     assert.equal(await pagina.title(), 'Sysacad | Super CVG');
 
-    // 8. Someone else's: nothing shows, and they can be deleted after a simple question.
+    // 8. Another name: nothing shows (nor whose they are) until the student says they are theirs, and they can be deleted
+    // after a simple question.
     await extension('nueva', { ...todas, alumno: 'PEREZ, Juan Ignacio' });
     await volver();
-    await titulo('Son de otra cuenta');
+    await titulo('¿Son tuyas?');
+    await estado.getByRole('button', { name: 'Sí, son mías' }).waitFor();
     assert.equal(await pagina.getByRole('tab').count(), 0);
     assert.equal(await pagina.locator('table').count(), 0);
     assert.ok(!(await pagina.locator('main').textContent()).includes('PEREZ'), 'no dice de quién son');
@@ -5149,7 +5240,7 @@ try {
     // 6. Someone else's copies: no map, and nothing of theirs on the page.
     await extension({ ...todas, alumno: 'PEREZ, Juan Ignacio' });
     await volver();
-    await estado.getByRole('heading', { name: 'Las copias no son tuyas' }).waitFor();
+    await estado.getByRole('heading', { name: '¿Son tuyas?' }).waitFor();
     assert.equal(await pagina.locator('.carrera-ficha').count(), 0);
     assert.ok(!(await pagina.locator('main').textContent()).includes('PEREZ'), 'no dice de quién son');
     assert.deepEqual(await fallasAxe(), [], 'carrera de otra cuenta');
@@ -5409,8 +5500,9 @@ try {
     const foto = async (nombre) => {
       for (const ancho of [1280, 390]) {
         await pagina.setViewportSize({ width: ancho, height: ancho === 390 ? 844 : 860 });
-        // Measured once the viewer finished coming in: halfway, its colors are still fading.
-        await pagina.evaluate(() => Promise.all(document.getAnimations().filter((a) => a.effect?.getComputedTiming().iterations !== Infinity).map((a) => a.finished)));
+        // Measured once the viewer finished coming in: halfway, its colors are still fading. One cut short also ends:
+        // going to 390 folds the header, and its menu's slide out is cut when the bar measures again.
+        await pagina.evaluate(() => Promise.all(document.getAnimations().filter((a) => a.effect?.getComputedTiming().iterations !== Infinity).map((a) => a.finished.catch(() => {}))));
         await pagina.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
         assert.equal(await seSale(), false, `${nombre} en ${ancho} se sale a lo ancho`);
         assert.deepEqual(await fallasAxe(), [], `${nombre} en ${ancho}`);
@@ -5867,7 +5959,8 @@ try {
     }
   });
 
-  await prueba('Cuestionarios: se abren desde Hoy y la materia, con intentos, nota y revisión, solo leyendo, y lo cerrado se dice', async () => {
+  // In parallel, after «una actividad muestra…», whose preview marked the graded quiz as done.
+  await pruebaTras('una actividad muestra', 'Cuestionarios: se abren desde Hoy y la materia, con intentos, nota y revisión, solo leyendo, y lo cerrado se dice', async () => {
     const axe = AXE;
     const fallasAxe = async () => {
       await pagina.evaluate(() => Promise.all(document.getAnimations().filter((a) => a.effect?.getComputedTiming().iterations !== Infinity).map((a) => a.finished.catch(() => {}))));
@@ -6750,7 +6843,7 @@ try {
       for (let i = 0; i < 13; i++) await pagina.keyboard.press('ArrowUp');
       await pagina.waitForFunction(() => document.querySelector('.lugares-menu > li')?.textContent.includes('Consultron'));
       assert.equal(await pagina.evaluate(() => document.activeElement?.getAttribute('aria-label')), 'Mover Consultron');
-      assert.equal(await anuncio.textContent(), 'Consultron quedó en el lugar 1 de 15');
+      assert.equal(await anuncio.textContent(), 'Consultron quedó en el lugar 1 de 16');
 
       // A tap on the handle, for whoever can't drag: «Subir» and «Bajar». Hoy goes down one.
       await manija('Hoy').click();
@@ -6926,7 +7019,7 @@ try {
     }
   });
 
-  await prueba('Inscripción: buscar sin tildes, por departamento, sin los años anteriores, una con clave, una sin inscripción propia, y siempre pregunta', async () => {
+  await pruebaQueSigue('Inscripción: buscar sin tildes, por departamento, sin los años anteriores, una con clave, una sin inscripción propia, y siempre pregunta', async () => {
     const axe = AXE;
     const fallasAxe = async () => {
       await pagina.evaluate(() => Promise.all(document.getAnimations().filter((a) => a.effect?.getComputedTiming().iterations !== Infinity).map((a) => a.finished.catch(() => {}))));
@@ -7224,10 +7317,11 @@ try {
     // Configuración, in a browser of its own: nothing of this touches the rest of the run.
     const app = await navegador.newContext({ viewport: { width: 1280, height: 860 } });
     await app.route('**/*', atender);
+    await prepararContexto(app);
     const pestana = async ({ ventanaPropia = false, iphone = false } = {}) => {
       const p = await app.newPage();
       p.on('pageerror', (e) => errores.push(e.message));
-      p.on('console', (m) => { if (m.type() === 'error') errores.push(m.text()); });
+      escucharConsola(p);
       if (iphone) {
         await p.setViewportSize({ width: 390, height: 844 });
         const cdp = await app.newCDPSession(p);
@@ -8711,6 +8805,10 @@ try {
       const caja = await pagina.locator('.cm-tooltip-autocomplete').boundingBox();
       const renglon = await main.locator('.cm-activeLine').boundingBox();
       assert.ok(caja.y >= renglon.y + renglon.height - 1 || caja.y + caja.height <= renglon.y + 1, 'no tapa la línea');
+      // With the machine busy (flows in parallel) the list may still be catching up with the last letter, and CodeMirror
+      // ignores Enter then, or right as the list opens (interactionDelay): a person sees it settle before pressing.
+      await pagina.locator('.cm-tooltip-autocomplete:not(.cm-tooltip-autocomplete-disabled)').waitFor();
+      await pagina.waitForTimeout(100);
       await pagina.keyboard.press('Enter');
       await sugerencias.waitFor({ state: 'detached' });
       assert.match(await main.innerText(), /^printf\("texto\\n"\);$/m);
@@ -8874,6 +8972,9 @@ try {
       const casos = pagina.getByRole('tabpanel', { name: 'Casos' });
       const sumarCaso = async (nombre, entrada, esperada) => {
         await casos.getByRole('button', { name: 'Sumar un caso' }).click();
+        // The new case puts the focus on its name a frame later: filling before that, with the machine busy, the focus
+        // would jump there in the middle of «Entrada».
+        await pagina.waitForFunction(() => document.activeElement?.labels?.[0]?.textContent === 'Nombre');
         await casos.getByLabel('Nombre').fill(nombre);
         await casos.getByLabel('Entrada').fill(entrada);
         await casos.getByLabel('Salida esperada').fill(esperada);
@@ -8921,7 +9022,7 @@ try {
     }
   });
 
-  await prueba('consultron: revisa la compu antes de bajar, responde con la página de donde sale y nada sale del navegador', async () => {
+  await pruebaQueSigue('consultron: revisa la compu antes de bajar, responde con la página de donde sale y nada sale del navegador', async () => {
     // A computer with WebGPU or without it, as the test says in localStorage (prueba-gpu), put in before the page loads.
     await pagina.addInitScript(() => {
       let modo = null;
@@ -8934,6 +9035,16 @@ try {
       const gpu = modo === 'sin' ? undefined : { requestAdapter: async () => ({ features: new Set(['shader-f16']) }) };
       Object.defineProperty(Navigator.prototype, 'gpu', { configurable: true, get: () => gpu });
     });
+    // Alone (FLUJOS_SOLO) it starts from the sign-in.
+    const usuario = pagina.getByLabel('Usuario');
+    const adentro = pagina.getByRole('button', { name: 'Salir' });
+    await Promise.race([usuario.waitFor().catch(() => {}), adentro.waitFor().catch(() => {})]);
+    if (await usuario.isVisible()) {
+      await usuario.fill('alumno');
+      await pagina.getByLabel('Contraseña').fill(CONTRASENA);
+      await boton('Entrar').click();
+      await pagina.getByRole('heading', { name: 'Hola, Ana' }).waitFor();
+    }
     const antes = pedidos.length;
     // Nothing of another run.
     await pagina.evaluate(async () => {
@@ -8941,11 +9052,19 @@ try {
       await caches.delete('prueba-consultron');
     });
 
-    // Without WebGPU it says why, before downloading anything.
+    // Without WebGPU, nothing to download and no text: the box to ask, and the first question asks for «Usar Gemini».
     await pagina.evaluate(() => localStorage.setItem('prueba-gpu', 'sin'));
     await ir('consultron');
-    await pagina.getByText('Este navegador no puede usar la placa de video.', { exact: false }).waitFor();
+    const sinPlaca = pagina.getByRole('textbox', { name: 'Tu pregunta' });
+    await sinPlaca.fill('¿Qué es un monitor?');
+    await sinPlaca.press('Enter');
+    const pide = pagina.getByRole('dialog').filter({ hasText: '¿Usar Gemini?' });
+    await pide.waitFor();
+    await pide.getByRole('button', { name: 'Volver' }).click();
+    assert.equal(await sinPlaca.inputValue(), '¿Qué es un monitor?', 'Volver no pregunta y deja lo escrito');
+    assert.equal(await pagina.getByText('Este navegador no puede usar la placa de video.', { exact: false }).count(), 0, 'sin texto de más');
     assert.equal(await boton('Bajar Consultron').count(), 0);
+    await sinPlaca.fill('');
 
     // With it: it asks before the 2,4 GB and shows how it goes. Nothing of the courses is read until something is asked.
     await pagina.evaluate(() => localStorage.setItem('prueba-gpu', 'con'));
@@ -9170,6 +9289,9 @@ try {
     await abrirRincon.click();
     const escribir = chico.getByRole('textbox', { name: 'Tu pregunta' });
     await escribir.waitFor();
+    // The course's screen may arrive after the box opened (it comes apart, App.jsx): it doesn't take the focus away.
+    await pagina.getByRole('heading', { name: 'Materia A', level: 1 }).waitFor();
+    await pagina.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
     assert.equal(await escribir.evaluate((c) => c === document.activeElement), true, 'abre en donde escribir');
     assert.equal(await chico.getByRole('combobox', { name: 'De qué materia' }).inputValue(), '1', 'en una materia, busca en esa');
     // Its top edge and its two buttons change how tall it is, and it stays that way.
@@ -9215,10 +9337,10 @@ try {
     await campo.waitFor();
     assert.equal(await pagina.locator('.consultron__entrada').count(), 11, 'la misma charla en su pantalla');
 
-    // «Charla nueva» starts another, and this one stays among the ones of before. «Borrar Consultron» asks first.
+    // «Charla nueva» starts another, and this one stays in the column of talks. «Borrar Consultron» asks first.
     await boton('Charla nueva').click();
     assert.equal(await pagina.locator('.consultron__entrada').count(), 0);
-    await pagina.getByRole('region', { name: 'Charlas anteriores' }).getByRole('button', { name: /^¿Qué es un monitor\?/ }).waitFor();
+    await pagina.getByRole('complementary', { name: 'Charlas' }).getByRole('button', { name: /^¿Qué es un monitor\?/ }).waitFor();
 
     // Once on this computer, it loads as Super CVG opens, without its screen, and it's ready on arrival.
     const llegar = () => pagina.evaluate(() => {
@@ -9234,16 +9356,18 @@ try {
     await campo.waitFor({ timeout: 15000 });
     assert.equal(arranquesConsultron, arranques + 1, 'la pantalla usa el que ya estaba');
 
-    // Turned off, it waits for its screen.
-    const alAbrir = pagina.getByRole('switch', { name: 'Cargarlo apenas abrís Super CVG' });
+    // Turned off, it waits for its screen. The switch is in «Ajustes».
+    const alAbrir = (await ajustesConsultron()).getByRole('switch', { name: 'Cargarlo apenas abrís Super CVG' });
     assert.equal(await alAbrir.isChecked(), true);
     await alAbrir.click();
+    await pagina.keyboard.press('Escape');
     arranques = arranquesConsultron;
     await ir('');
     await pagina.waitForTimeout(4500);
     assert.equal(arranquesConsultron, arranques, 'apagado, no arranca al abrir');
     await llegar();
     await campo.waitFor({ timeout: 15000 });
+    await ajustesConsultron();
     await alAbrir.click();
     assert.equal(await pagina.evaluate(() => localStorage.getItem('cl.consultron')), 'listo');
 
@@ -9581,7 +9705,7 @@ try {
       const gpu = modo === 'sin' ? undefined : { requestAdapter: async () => ({ features: new Set(['shader-f16']) }) };
       Object.defineProperty(Navigator.prototype, 'gpu', { configurable: true, get: () => gpu });
     });
-    const NUBE = 'https://spltnoksgdkbaamskuau.supabase.co/functions/v1/supercvg-consultron';
+    const NUBE = 'https://lomhlulbgfovtnljbqzp.supabase.co/functions/v1/supercvg-consultron';
     const aLaNube = [];
     // What the function answers: 'bien', 'ocupado' (Google busy) or 'tope' (their 15 of the day).
     let responde = 'bien';
@@ -9635,31 +9759,29 @@ try {
         await caches.delete('webllm/model');
       });
 
-      // In its screen, beside the download, the offer of each permission. Nothing turns on by itself.
+      // In its screen, beside the download, the offer of «Usar Gemini». Nothing turns on by itself.
       for (const ancho of [390, 1920]) {
         await pagina.setViewportSize(ancho === 390 ? { width: 390, height: 844 } : { width: 1920, height: 1080 });
         await ir('consultron');
         await boton('Bajar Consultron').waitFor();
-        await boton('Usar Gemini con los resúmenes').waitFor();
-        await boton('Usar Gemini con tu carrera').waitFor();
+        await pagina.getByRole('button', { name: 'Usar Gemini', exact: true }).waitFor();
         assert.equal(await pagina.getByRole('textbox', { name: 'Tu pregunta' }).count(), 0, 'nada se prende solo');
         await revisada(`la oferta en ${ancho}`);
         await fin(`consultron-gemini-oferta-${ancho}`);
       }
       assert.equal(aLaNube.length, 0, 'mostrarlo no le pregunta nada a Google');
 
-      // Beside a summary: only the summaries' permission, with what goes to Google.
+      // Beside a summary: the same offer, with what goes to Google.
       await ir('resumenes');
       await banco.getByRole('button', { name: 'Final con teoría', exact: true }).click();
       const visor = pagina.locator('dialog.visor');
       await pagina.frameLocator('dialog.visor iframe').getByRole('heading', { name: 'Semáforos y monitores' }).waitFor();
       await visor.getByRole('button', { name: 'Consultron', exact: true }).click();
       const panel = visor.getByRole('region', { name: 'Consultron', exact: true });
-      const usar = panel.getByRole('button', { name: 'Usar Gemini con los resúmenes' });
+      const usar = panel.getByRole('button', { name: 'Usar Gemini', exact: true });
       await usar.waitFor();
       await panel.getByRole('button', { name: 'Bajar Consultron' }).waitFor();
-      assert.equal(await panel.getByRole('button', { name: 'Usar Gemini con tu carrera' }).count(), 0, 'al lado de un resumen, solo el de los resúmenes');
-      assert.match(await panel.innerText(), /Tu pregunta y lo que hace falta del resumen van a Google, que puede usarlos para mejorar sus productos\./, 'dice qué va a Google');
+      assert.match(await panel.innerText(), /la pantalla donde estás van a Google, que puede usarlos para mejorar sus productos\./, 'dice qué va a Google');
       await revisada('la oferta al lado de un resumen');
       await pagina.screenshot({ path: path.join(CAPTURAS, 'consultron-gemini-oferta-resumen-1920.png') });
 
@@ -9685,7 +9807,7 @@ try {
 
       // Google busy and no model: why, short.
       responde = 'ocupado';
-      assert.match(await preguntar(), /Gemini no contestó\. Probá de nuevo en un rato\./, 'dice por qué');
+      assert.match(await preguntar(), /Gemini no responde\. Probá de nuevo en un rato\./, 'dice por qué');
       assert.equal(await alModelo(), 0, 'sin modelo, nada a la compu');
 
       // The model downloaded and ready: Gemini still first.
@@ -9725,11 +9847,28 @@ try {
       await pagina.screenshot({ path: path.join(CAPTURAS, 'consultron-gemini-oferta-modelo-listo-1920.png') });
       await usar.click();
       await usar.waitFor({ state: 'detached' });
-      assert.equal(await pagina.evaluate(() => JSON.parse(localStorage.getItem('cl.consultron.gemini')).resumenes), true, 'el botón prende el permiso');
+      assert.equal(await pagina.evaluate(() => JSON.parse(localStorage.getItem('cl.consultron.gemini')).todo), true, 'el botón prende el permiso');
       await visor.getByRole('button', { name: 'Cerrar', exact: true }).click();
       await visor.waitFor({ state: 'detached' });
 
-      // In the corner, with the model gone and the summaries' permission on: it asks at once, and says what Gemini takes.
+      // «Usar Gemini» on and the model in the browser: opening Super CVG and Consultron doesn't load it.
+      responde = 'bien';
+      await ir('consultron');
+      const aviso = pagina.locator('.consultron').getByRole('status').first();
+      const enPagina = pagina.getByRole('textbox', { name: 'Tu pregunta' });
+      await enPagina.waitFor();
+      await pagina.waitForTimeout(3000);
+      assert.notEqual(await aviso.textContent(), 'Consultron está listo.', 'con Gemini, el modelo no se carga solo');
+      assert.equal(await pagina.locator('.consultron__arranque').count(), 0, 'nada de «Preparando Consultron»');
+      // Gemini busy: now it loads, and answers.
+      responde = 'ocupado';
+      await enPagina.fill('¿Qué cuenta un semáforo?');
+      await enPagina.press('Enter');
+      await pagina.locator('.consultron__entrada[data-estado="listo"]').filter({ hasText: 'Gemini tardó demasiado. Contestó Consultron en tu compu.' }).waitFor({ timeout: 30000 });
+      assert.equal(await aviso.textContent(), 'Consultron está listo.', 'cuando Gemini falla, se carga');
+      responde = 'bien';
+
+      // In the corner, with the model gone and «Usar Gemini» on: it asks at once.
       await pagina.evaluate(async () => {
         localStorage.removeItem('cl.consultron');
         await caches.delete('prueba-consultron');
@@ -9739,7 +9878,7 @@ try {
       await pagina.locator('.flotante__boton').click();
       const rincon = pagina.locator('#consultron-panel');
       await rincon.getByRole('textbox', { name: 'Tu pregunta' }).waitFor();
-      await rincon.getByText('Gemini contesta sobre los resúmenes. Para lo demás, bajá Consultron.').waitFor();
+      await rincon.getByText('Contesta Gemini. Si no puede, contesta Consultron en tu compu, si lo bajás.').waitFor();
       await rincon.getByRole('button', { name: 'Bajar Consultron' }).waitFor();
       await revisada('el rincón con Gemini y sin el modelo');
       await pagina.screenshot({ path: path.join(CAPTURAS, 'consultron-gemini-rincon-1920.png') });
@@ -9860,14 +9999,15 @@ try {
     assert.equal(await pagina.evaluate(() => window.mensajesConsultron.at(-1)), 2, 'sin la charla de antes');
   });
 
-  await prueba('consultron con gemini: cada permiso con su aviso, su carrera va a la función y sus apuntes se quedan en la compu', async () => {
-    const NUBE = 'https://spltnoksgdkbaamskuau.supabase.co/functions/v1/supercvg-consultron';
+  await pruebaQueSigue('consultron con gemini: el permiso con su aviso, y con él su carrera, sus apuntes y lo marcado van a la función', async () => {
+    const NUBE = 'https://lomhlulbgfovtnljbqzp.supabase.co/functions/v1/supercvg-consultron';
     const aLaNube = [];
     let googleTarda = false;
+    let contestaGroq = false;
     await pagina.route(NUBE, async (r) => {
       aLaNube.push(JSON.parse(r.request().postData()));
       if (googleTarda) return r.fulfill({ status: 503, contentType: 'application/json', headers: { 'access-control-allow-origin': '*' }, body: JSON.stringify({ ok: false, motivo: 'ocupado' }) });
-      await r.fulfill({ status: 200, contentType: 'application/json', headers: { 'access-control-allow-origin': '*' }, body: JSON.stringify({ ok: true, texto: 'Para cursar Legislación no te falta nada [1].', quedan: 14 }) });
+      await r.fulfill({ status: 200, contentType: 'application/json', headers: { 'access-control-allow-origin': '*' }, body: JSON.stringify({ ok: true, texto: 'Para cursar Legislación no te falta nada [1].', quedan: 14, modelo: contestaGroq ? 'groq' : 'gemini' }) });
     });
 
     // The permission: off by default, and on only after saying what goes to Google.
@@ -9882,23 +10022,29 @@ try {
         return mandar.call(this, m, ...resto);
       };
     });
-    const carrera = pagina.getByRole('switch', { name: 'Usar Gemini con tu carrera' });
-    const resumenes = pagina.getByRole('switch', { name: 'Usar Gemini con los resúmenes' });
-    await carrera.waitFor();
-    assert.equal(await carrera.isChecked(), false, 'apagado de entrada');
-    assert.equal(await resumenes.isChecked(), false, 'el de los resúmenes también');
-    await carrera.click();
-    const aviso = pagina.getByRole('dialog');
-    await aviso.getByText('¿Usar Gemini con tu carrera?').waitFor();
+    // The switch is in «Ajustes». The model loads as Super CVG opens: once it's in the browser (the switch to load it on
+    // opening shows), Gemini failing goes to it. The test's worker says «bajando» while it loads, and that can't wait.
+    const ajustes = await ajustesConsultron();
+    await ajustes.getByRole('switch', { name: 'Cargarlo apenas abrís Super CVG' }).waitFor({ timeout: 15000 });
+    const gemini = ajustes.getByRole('switch', { name: 'Usar Gemini' });
+    await gemini.waitFor();
+    assert.equal(await gemini.isChecked(), false, 'apagado de entrada');
+    assert.equal(await pagina.getByRole('switch', { name: 'Usar Gemini con tu carrera' }).count(), 0, 'los permisos viejos no se ofrecen');
+    await gemini.click();
+    const aviso = pagina.getByRole('dialog').filter({ hasText: '¿Usar Gemini?' });
+    await aviso.getByText('¿Usar Gemini?').waitFor();
     await fin('consultron-gemini-aviso');
-    assert.match(await aviso.innerText(), /van a Google\. Google puede usarlos para mejorar sus productos/, 'dice qué va a Google');
+    assert.match(await aviso.innerText(), /la pantalla donde estás van a Google\. Google puede usarlos para mejorar sus productos/, 'dice qué va a Google');
     await aviso.getByRole('button', { name: 'Volver' }).click();
-    assert.equal(await carrera.isChecked(), false, 'Volver no lo prende');
-    await carrera.click();
-    await aviso.getByRole('button', { name: 'Usar Gemini' }).click();
-    await pagina.waitForFunction(() => document.querySelector('[role="switch"][aria-describedby="consultron-gemini-carrera-ayuda"]')?.checked);
 
-    // A question about their career: to the function, with the career and nothing else, and it says Gemini answered.
+    assert.equal(await gemini.isChecked(), false, 'Volver no lo prende');
+    await gemini.click();
+    await aviso.getByRole('button', { name: 'Usar Gemini' }).click();
+    await pagina.waitForFunction(() => document.querySelector('[role="switch"][aria-describedby="consultron-gemini-todo-ayuda"]')?.checked);
+    await pagina.keyboard.press('Escape');
+    await ajustes.waitFor({ state: 'hidden' });
+
+    // A question about their career: to the function, with the career, and it says Gemini answered.
     await pagina.evaluate((c) => {
       window.addEventListener('message', (e) => {
         if (e.source !== window || e.data?.fuente !== 'super-cvg') return;
@@ -9921,7 +10067,8 @@ try {
     assert.ok((await respuesta.innerText()).length > parcial.length, 'se escribe de a poco, no de golpe');
     assert.match(await respuesta.innerText(), /Para cursar Legislación no te falta nada/, 'la respuesta de Gemini');
     await respuesta.screenshot({ path: path.join(CAPTURAS, 'consultron-gemini-respuesta.png') });
-    await pagina.locator('.consultron__pie').screenshot({ path: path.join(CAPTURAS, 'consultron-gemini-permisos.png') });
+    await (await ajustesConsultron()).locator('.consultron__pie').screenshot({ path: path.join(CAPTURAS, 'consultron-gemini-permisos.png') });
+    await pagina.keyboard.press('Escape');
     assert.equal(aLaNube.length, 1, 'una pregunta a la función');
     const [pedido] = aLaNube;
     assert.deepEqual(Object.keys(pedido).sort(), ['dispositivo', 'mensajes'], 'solo el número del navegador y los mensajes');
@@ -9937,20 +10084,33 @@ try {
     assert.equal(await pagina.evaluate(() => window.alModelo.length), 1, 'la contestó la compu');
     googleTarda = false;
 
-    // A question about their notes stays on the computer, even with the permission on.
+    // A question about their notes: to Gemini too.
+    const deGemini = pagina.locator('.consultron__entrada[data-estado="listo"]').filter({ hasText: 'Contestó Gemini, de Google.' });
+    let antes = await deGemini.count();
     await campo.fill('¿Qué es un semáforo?');
     await campo.press('Enter');
-    await pagina.waitForFunction(() => window.alModelo.length > 1);
-    assert.equal(aLaNube.length, 2, 'sus apuntes no van a Gemini');
+    await deGemini.nth(antes).waitFor();
+    assert.equal(aLaNube.length, 3, 'sus apuntes van a Gemini');
+    assert.equal(await pagina.evaluate(() => window.alModelo.length), 1, 'la compu no la contestó');
 
-    // A computer that can't run Consultron: with the permission on, Gemini answers their career; the rest says it can't.
+    // Gemini can't and the function asks Groq: the screen says so.
+    contestaGroq = true;
+    await campo.fill('¿Qué es un semáforo?');
+    await campo.press('Enter');
+    await pagina.locator('.consultron__entrada[data-estado="listo"]').filter({ hasText: 'Gemini no pudo. Contestó Groq.' }).waitFor();
+    assert.equal(aLaNube.length, 4, 'una sola pregunta a la función');
+    contestaGroq = false;
+
+    // A computer that can't run Consultron (a phone is the same): with the permission on, Gemini answers everything.
+    // The corner is there too, on any screen.
     await pagina.evaluate(() => localStorage.setItem('prueba-gpu', 'sin'));
+    await ir('calendario');
+    await pagina.locator('.flotante__boton').waitFor();
     await ir('consultron');
-    await pagina.getByText('Este navegador no puede usar la placa de video.', { exact: false }).waitFor();
-    await pagina.getByText('Gemini, de Google, puede contestar igual sobre los resúmenes de El Santo Resumen y tu carrera.').waitFor();
-    assert.equal(await carrera.isChecked(), true, 'el permiso sigue prendido');
+    await campo.waitFor();
+    assert.equal(await pagina.getByText('Este navegador no puede usar la placa de video.', { exact: false }).count(), 0, 'con Gemini, no hay nada que avisar');
     assert.equal(await boton('Bajar Consultron').count(), 0, 'nada para bajar');
-    assert.equal(await pagina.locator('.consultron__practicar').count(), 0, 'practicar necesita el modelo');
+    await pagina.locator('.consultron__practicar').waitFor();
     await pagina.evaluate((c) => {
       window.addEventListener('message', (e) => {
         if (e.source !== window || e.data?.fuente !== 'super-cvg') return;
@@ -9962,18 +10122,15 @@ try {
     await campo.fill('Que necesito para cursar legislacion?');
     await campo.press('Enter');
     await pagina.locator('.consultron__entrada[data-estado="listo"]').filter({ hasText: 'Contestó Gemini, de Google.' }).waitFor();
-    assert.equal(aLaNube.length, 3, 'sin placa de video, su carrera va a Gemini');
+    assert.equal(aLaNube.length, 5, 'sin placa de video, su carrera va a Gemini');
+    antes = await deGemini.count();
     await campo.fill('¿Qué es un semáforo?');
     await campo.press('Enter');
-    await pagina.locator('.consultron__entrada[data-estado="no-esta"]').filter({ hasText: 'Esta compu no puede correr Consultron.' }).waitFor();
-    assert.equal(aLaNube.length, 3, 'sus apuntes tampoco van a Gemini');
+    await deGemini.nth(antes).waitFor();
+    assert.equal(aLaNube.length, 6, 'sus apuntes también');
     await fin('consultron-gemini-sin-compu');
 
-    // A summary in PDF: what is marked in it goes to Gemini with the summaries' permission.
-    await resumenes.click();
-    await aviso.getByRole('button', { name: 'Usar Gemini' }).click();
-    for (let i = 0; i < 40 && !(await resumenes.isChecked()); i++) await pagina.waitForTimeout(50);
-    assert.equal(await resumenes.isChecked(), true, 'el de los resúmenes prendido');
+    // A summary in PDF: what is marked in it goes to Gemini.
     santoPdfConTexto = true;
     try {
       await ir('resumenes');
@@ -9995,7 +10152,7 @@ try {
       await marcada.waitFor();
       await marcada.press('Enter');
       await alLado.locator('.consultron__entrada[data-estado="listo"]').filter({ hasText: 'Contestó Gemini, de Google.' }).waitFor();
-      assert.equal(aLaNube.length, 4, 'lo marcado en un resumen va a Gemini');
+      assert.equal(aLaNube.length, 7, 'lo marcado en un resumen va a Gemini');
       assert.match(JSON.stringify(aLaNube.at(-1)), /junta los datos/, 'con lo marcado');
       await visor.getByRole('button', { name: 'Cerrar', exact: true }).click();
       await visor.waitFor({ state: 'detached' });
@@ -10007,8 +10164,9 @@ try {
     await ir('consultron');
 
     // Off without asking.
-    await carrera.click();
-    assert.equal(await carrera.isChecked(), false, 'se apaga sin preguntar');
+    await ajustesConsultron();
+    await gemini.click();
+    assert.equal(await gemini.isChecked(), false, 'se apaga sin preguntar');
     await pagina.unroute(NUBE);
     await pagina.evaluate(() => localStorage.removeItem('cl.consultron.gemini'));
   });
@@ -10422,12 +10580,24 @@ try {
     assert.match(await segunda.innerText(), /Ojo\. Un monitor no es un semáforo\./);
     assert.equal(await entradas.count(), 3);
 
-    // The talk is kept: «Charla nueva», and it's among the ones of before, also after a reload. Opened, it goes on.
+    // The talk is kept: «Charla nueva», and it's in the column of talks, also after a reload. Opened, it goes on.
     await boton('Charla nueva').click();
-    const anteriores = pagina.getByRole('region', { name: 'Charlas anteriores' });
+    const anteriores = pagina.getByRole('complementary', { name: 'Charlas' });
     const esta = anteriores.getByRole('button', { name: /^Tomame preguntas de monitores/ });
     await esta.waitFor();
     assert.match(await esta.innerText(), /hoy, \d{2}:\d{2}/);
+    // The list shows the talk since its first answer: the reload waits for the save with the three, or it cuts it.
+    await pagina.waitForFunction(() => new Promise((listo) => {
+      const abrir = indexedDB.open('super-cvg-charlas');
+      abrir.onerror = () => listo(false);
+      abrir.onsuccess = () => {
+        const todas = abrir.result.transaction('charlas').objectStore('charlas').getAll();
+        todas.onsuccess = () => {
+          abrir.result.close();
+          listo(todas.result.some((c) => c.entradas.length === 3 && c.entradas[2].practica?.fase === 'corregida'));
+        };
+      };
+    }), null, { polling: 100 });
     await pagina.reload();
     await campo.waitFor({ timeout: 15000 });
     await esta.click();
@@ -10488,7 +10658,7 @@ try {
     await ir('consultron');
     await campo.waitFor({ timeout: 15000 });
     await pagina.waitForTimeout(400);
-    assert.equal(await anteriores.count(), 0, 'otra sesión empieza sin charlas');
+    assert.equal(await anteriores.getByRole('listitem').count(), 0, 'otra sesión empieza sin charlas');
 
     // As the test before left it: Consultron not on this computer.
     await pagina.evaluate(async () => {
@@ -10792,9 +10962,10 @@ try {
       const c = await navegador.newContext(opciones);
       contextos.push(c);
       await c.route('**/*', atender);
+      await prepararContexto(c);
       const p = await c.newPage();
       p.on('pageerror', (e) => errores.push(e.message));
-      p.on('console', (m) => { if (m.type() === 'error') errores.push(m.text()); });
+      escucharConsola(p);
       return p;
     };
     const conGoogle = async (p) => {
@@ -10870,7 +11041,7 @@ try {
       // «Seguir conectado», for both ways in: on the phone right above Entrar, on the computer last.
       const recordar = celu.locator('.entrar__recordar');
       assert.equal(await celu.locator('.entrar__recordar + .entrar__boton').count(), 1, 'en el celu, arriba de Entrar');
-      await recordar.getByText('Vale también para Entrar con Google. Si no lo marcás, cada pestaña nueva te pide entrar otra vez.').waitFor();
+      await recordar.getByText('Vale también para Entrar con Google. También ves tus materias y los archivos que abriste sin internet. Si no lo marcás, cada pestaña nueva te pide entrar otra vez.').waitFor();
       await celu.locator('.entrar__formulario').screenshot({ path: path.join(CAPTURAS, 'entrar-google-boton-390.png') });
       assert.deepEqual(await fallasAxe(celu), [], 'la pantalla de entrada');
       assert.equal(await seSale(celu), false, 'la pantalla de entrada se sale a lo ancho');
@@ -11616,15 +11787,18 @@ try {
     const aGoogle = pedidos.filter((p) => /(^|\.)google(apis)?\.com$/.test(new URL(p.url).hostname));
     assert.deepEqual(aGoogle.filter((p) => (JSON.stringify(p).includes(TOKEN) && !aSuDrive(p)) || JSON.stringify(p).includes(CONTRASENA)), [], 'la clave del campus en Google');
     // A summary's own scripts blocked by its frame's sandbox is the sandbox doing its job (SANTO_HTML carries a script
-    // and an onerror on purpose; that they never ran is checked by the stolen-title asserts).
-    const reales = errores.filter((e) => !/Failed to load resource/.test(e) && !/^Blocked script execution in 'about:srcdoc' because the document's frame is sandboxed/.test(e));
+    // and an onerror on purpose; that they never ran is checked by the stolen-title asserts). Its onerror read into an
+    // inert document is marked by escucharConsola.
+    const reales = errores.filter((e) => !/Failed to load resource/.test(e) && !/^Blocked script execution in 'about:srcdoc' because the document's frame is sandboxed/.test(e) && !/^inerte: Executing inline event handler/.test(e));
     assert.deepEqual([...new Set(reales)], [], 'errores de consola, incluida la CSP');
   });
 } finally {
   await navegador.close();
   cerrar();
+  if (process.env.FLUJOS_REGISTRO) fs.writeFileSync(process.env.FLUJOS_REGISTRO, JSON.stringify({ resultados, pedidos, errores, sinSimular: [...sinSimular] }));
 }
 
-const fallas = resultados.filter((r) => !r).length;
-console.log(`\n${resultados.length - fallas} de ${resultados.length} pasaron`);
+const fallas = resultados.filter((r) => !r.ok).length;
+// In parallel, the runner says the total.
+if (!LISTA) console.log(`\n${resultados.length - fallas} de ${resultados.length} pasaron`);
 process.exitCode = fallas ? 1 : 0;

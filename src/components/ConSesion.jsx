@@ -15,6 +15,9 @@ export function tomarDestino() {
   return d;
 }
 
+/** Whether signing in goes on to what another app shared (Entrar.jsx says so). */
+export const vaACompartir = () => destino === '/compartir';
+
 export default function ConSesion() {
   const token = useToken();
   // Read once, on arrival without a session. The router keeps showing the old hash after Compartido clears it,
@@ -26,6 +29,8 @@ export default function ConSesion() {
     if (pathname.endsWith('/propias/abrir') && hash.startsWith('#materia=')) return `/propias/abrir${hash}`;
     if (pathname.endsWith('/horario/compartido') && hash.startsWith('#horario=')) return `/horario/compartido${hash}`;
     if (pathname.endsWith('/archivo') && leerFragmento(hash)) return `/archivo${hash}`;
+    // What another app shared waits in the service worker's cache (compartido.js), not in the address.
+    if (/\/compartir\/?$/.test(pathname)) return '/compartir';
     // An invitation to a live session: its code waits in memory, out of the address.
     if (/\/en-vivo\/?$/.test(pathname) && guardarInvitacion(hash)) return '/en-vivo';
     // A link from El Santo Resumen: its code already left the address and was traded (main.jsx), and the key waits in

@@ -1,5 +1,7 @@
 import { useMemo, useSyncExternalStore } from 'react';
+import { conRespaldo } from './respaldo';
 import { FORMATOS, ID, INSTANCIAS, leerFoto, limpio, nombreDeMateria, SANTO, SERVICIO, SIN_RED, SIN_RESPUESTA, SLUG, urlDeResumen } from './santoResumen';
+import { borrarAparte, huellaDe } from './sinInternet';
 
 // Resúmenes: the student's own account of El Santo Resumen, linked to this browser. El Santo Resumen opens
 // /resumenes#vincular=<code>: one use, a few minutes, after the «#» so it never reaches a server. The code leaves the
@@ -7,7 +9,8 @@ import { FORMATOS, ID, INSTANCIAS, leerFoto, limpio, nombreDeMateria, SANTO, SER
 // is known whose campus account this is; then it and the account name stay in this browser, per campus student
 // (`cl.santo.<id>`), until Desvincular. The key only reads
 // what that account uploaded and sent here, takes one of those out and unlinks itself. It travels only in the
-// x-utn-llave header, never in an address or a log. What comes back stays in memory, like the campus data.
+// x-utn-llave header, never in an address or a log. What comes back stays in memory, like the campus data, and with
+// «Seguir conectado» the lists are also kept for offline (respaldo.js) under a fingerprint of the key, never the key.
 //   POST ?a=cvg-canjear { codigo }  201 { llave, usuario }  400 codigo (wrong, expired or used)  429 tope-ip  403 sin-ip
 //   GET  ?a=cvg-resumenes            200 { usuario, subidos, enviados }
 //   POST ?a=cvg-quitar { id }         204
@@ -212,6 +215,8 @@ export function borrarVinculo(alumno, siEs = null) {
   } catch {
     // Nothing to forget.
   }
+  // And the lists of that account kept for offline.
+  borrarAparte(LISTAS);
   avisar();
 }
 
@@ -308,7 +313,7 @@ async function pedir(ruta, { metodo, llave, cuerpo } = {}) {
       cache: 'no-store',
     });
   } catch {
-    throw falla(SIN_RED);
+    throw falla(SIN_RED, { codigo: 'red' });
   }
   let datos = null;
   if (r.status !== 204) {
@@ -332,12 +337,20 @@ const conLlave = (llave) => {
   return llave;
 };
 
-/** What the account uploaded (also in review or hidden) and what it sent here (only published). */
+const LISTAS = 'santo.resumenes';
+
+/** What the account uploaded (also in review or hidden) and what it sent here (only published). Offline, the lists
+ * kept for that key. */
 export async function cargarResumenes(llave) {
-  const r = await pedir('cvg-resumenes', { metodo: 'GET', llave: conLlave(llave) });
-  revisarLlave(r);
-  if (r.status !== 200 || !r.datos || typeof r.datos !== 'object') throw falla(SIN_RESPUESTA);
-  return leerResumenes(r.datos);
+  const suya = conLlave(llave);
+  const datos = await conRespaldo(LISTAS, async () => {
+    const r = await pedir('cvg-resumenes', { metodo: 'GET', llave: suya });
+    revisarLlave(r);
+    if (r.status !== 200 || !r.datos || typeof r.datos !== 'object') throw falla(SIN_RESPUESTA);
+    // Only the lists: nothing else of the answer is kept.
+    return { usuario: r.datos.usuario, subidos: r.datos.subidos, enviados: r.datos.enviados };
+  }, { de: (await huellaDe(suya)) ?? null });
+  return leerResumenes(datos);
 }
 
 /** Takes one out of what was sent here. It stays in the bank. */

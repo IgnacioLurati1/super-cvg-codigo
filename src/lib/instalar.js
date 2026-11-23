@@ -1,7 +1,7 @@
 // «Instalar Super CVG» (Configuración). Chrome, Edge and Android offer it once, early, in `beforeinstallprompt`: before
 // anyone opens Configuración, so it's kept from the start (main.jsx). Safari on iPhone and iPad has no such event, it's
-// done by hand from Compartir. Installed, or where the browser can't, there's nothing to offer. No service worker:
-// nothing of the campus is kept for offline, the app is this same page in its own window.
+// done by hand from Compartir. Installed, or where the browser can't, there's nothing to offer. The app is this same page
+// in its own window; the service worker (trabajador.js) lets it open without internet.
 import { useSyncExternalStore } from 'react';
 
 const VENTANA_PROPIA = '(display-mode: standalone)';

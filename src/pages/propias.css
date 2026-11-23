@@ -595,10 +595,19 @@
   max-width: none;
 }
 
+/* The kinds and «Mostrar también» wrap as one run of buttons, so «Para el parcial» sits beside «Actividades» when it
+   fits. Each group keeps its role; only its box goes inline. */
 .filtro__botones {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px 18px;
+  margin-bottom: -6px;
+}
+
+.filtro__botones > .tipos {
+  display: inline;
+}
+
+.filtro__botones .tipos__opcion {
+  margin: 0 6px 6px 0;
+  vertical-align: top;
 }
 
 .materia__sumar {

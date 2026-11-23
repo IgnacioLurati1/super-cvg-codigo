@@ -13,3 +13,6 @@ graphify-out/
 .claude/settings.local.json
 capturas/
 !.env.flujos
+
+# Supabase CLI link state, never committed.
+supabase/.temp/

@@ -9,18 +9,6 @@
   max-width: var(--ancho-consultron);
 }
 
-/* The robot, its name and, with a computer, «Achicar», in one line. */
-.consultron__cabeza {
-  display: flex;
-  align-items: center;
-  gap: 18px;
-}
-
-.consultron__cabeza h1 {
-  flex: 1;
-  margin: 0;
-}
-
 .consultron__achicar {
   flex: none;
   display: inline-flex;
@@ -70,13 +58,6 @@
 .consultron__robot--grande svg {
   width: 38px;
   height: 38px;
-}
-
-.consultron__bajada {
-  margin: 14px 0 32px;
-  color: var(--texto-suave);
-  font-size: var(--t-h3);
-  line-height: 1.45;
 }
 
 .consultron__estado,
@@ -223,6 +204,8 @@
 
 .consultron__cuerpo {
   display: grid;
+  /* A wide code block scrolls inside its box: it doesn't push the text past the column. */
+  grid-template-columns: minmax(0, 1fr);
   gap: 10px;
   min-width: 0;
   padding-top: 4px;
@@ -287,6 +270,7 @@
 /* Code in an answer, in the lab's fixed-width letter, scrolled sideways if it's wide. */
 .consultron__codigo {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 8px;
   margin: 0 0 10px;
 }
@@ -2187,5 +2171,765 @@ html[data-consultron-lado='izquierda'] .flotante > .lector__consultron-borde::af
 @media (forced-colors: active) {
   .cvg-modos__boton[aria-pressed='true'] {
     border-width: 3px;
+  }
+}
+
+/* ---------- Consultron's own screen: a chat (Consultron.jsx, Charla.jsx with vista="pagina") ----------
+   The height of the window, without the footer (Layout.jsx). The talks in a quiet column on the left, a drawer on a
+   phone. In the middle, one column to read: the student's bubbles on the right, the answers in plain text with their
+   yellow tabs, and the box to write at the bottom. Empty, the greeting and the box go to the middle of the screen. */
+.consultron--chat {
+  height: calc(100vh - var(--alto-cabecera) - var(--alto-sin-internet, 0px) - var(--alto-barra-prueba, 0px));
+  height: calc(100dvh - var(--alto-cabecera) - var(--alto-sin-internet, 0px) - var(--alto-barra-prueba, 0px));
+  min-height: 26rem;
+}
+
+.consultron--chat > * {
+  max-width: none;
+}
+
+.charla[data-vista='pagina'] {
+  display: flex;
+  height: 100%;
+  min-height: 0;
+}
+
+/* The column of talks. */
+.charla__lado {
+  display: flex;
+  flex: 0 0 17rem;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 0;
+  padding: 14px 10px 16px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border-right: 1px solid var(--borde);
+  background: var(--superficie);
+}
+
+.charla__lado-cierre {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.charla__lado-titulo {
+  margin: 14px 10px 4px;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+  font-weight: 600;
+}
+
+.charla__nueva {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-bloque);
+  background: var(--fondo);
+  color: var(--texto);
+  font: inherit;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: border-color 150ms ease, transform 120ms ease-out;
+}
+
+.charla__nueva svg,
+.charla__icono svg,
+.charla__enviar svg,
+.charla__bajar svg,
+.consultron__abrir-ajustes svg {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.charla__nueva:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.charla__nueva:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .charla__nueva:hover:not(:disabled) {
+    border-color: var(--borde-control);
+  }
+}
+
+/* Every talk: its first question and when, the one on screen marked with the color of action on its edge. */
+.charlas__lista--lateral {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 2px;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  overflow: visible;
+}
+
+.charlas__lista--lateral .charlas__item {
+  position: relative;
+}
+
+.charlas__lista--lateral .charlas__item + .charlas__item {
+  border-top: 0;
+}
+
+.charlas__lista--lateral .charlas__abrir {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 1px;
+  padding: 7px 44px 7px 12px;
+  border-radius: var(--radio-control);
+}
+
+.charlas__lista--lateral .charlas__primera {
+  font-size: var(--t-chica);
+}
+
+.charlas__lista--lateral .charlas__cuando {
+  font-size: 0.75rem;
+}
+
+.charlas__lista--lateral .charlas__abrir[aria-current='true'] {
+  background: var(--fondo);
+  box-shadow: inset 3px 0 0 var(--accion);
+  font-weight: 600;
+}
+
+.charlas__lista--lateral .charlas__abrir:focus-visible,
+.charlas__lista--lateral .charlas__borrar:focus-visible {
+  outline-offset: -2px;
+}
+
+.charlas__lista--lateral .charlas__borrar {
+  position: absolute;
+  top: 50%;
+  right: 4px;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radio-control);
+  translate: 0 -50%;
+}
+
+/* With a mouse, the bin shows on the talk it points at or that has the focus. */
+@media (hover: hover) and (pointer: fine) {
+  .charlas__lista--lateral .charlas__borrar {
+    opacity: 0;
+    transition: opacity 120ms ease;
+  }
+
+  .charlas__lista--lateral .charlas__item:is(:hover, :focus-within) .charlas__borrar {
+    opacity: 1;
+  }
+
+  .charlas__lista--lateral .charlas__abrir:hover:not(:disabled) {
+    background: var(--fondo);
+  }
+}
+
+/* The drawer of talks, on a phone: from the left, over a shade. */
+.charla__cajon {
+  position: fixed;
+  inset: 0 auto 0 0;
+  width: min(20rem, 86vw);
+  max-width: none;
+  height: 100%;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: var(--superficie);
+  color: var(--texto);
+}
+
+.charla__cajon::backdrop {
+  background: rgb(0 0 0 / 0.4);
+}
+
+.charla__cajon > .charla__lado {
+  height: 100%;
+  padding-top: max(10px, env(safe-area-inset-top));
+  padding-bottom: max(16px, env(safe-area-inset-bottom));
+  border-right: 0;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .charla__cajon[open] {
+    transition: translate 260ms cubic-bezier(0.32, 0.72, 0, 1);
+  }
+
+  @starting-style {
+    .charla__cajon[open] {
+      translate: -100% 0;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .charla__cajon[open] {
+    transition: opacity 160ms ease-out;
+  }
+
+  @starting-style {
+    .charla__cajon[open] {
+      opacity: 0;
+    }
+  }
+}
+
+/* The middle: the bar on top, the talk that scrolls and the box. */
+.charla__centro {
+  position: relative;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+.charla__barra {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  min-height: 56px;
+  padding: 8px clamp(10px, 2vw, 20px);
+}
+
+.consultron__titulo {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.consultron__titulo h1 {
+  margin: 0;
+  font-size: var(--t-h3);
+  line-height: 1.2;
+}
+
+.consultron__titulo .consultron__robot {
+  width: 30px;
+  height: 30px;
+}
+
+.consultron__titulo .consultron__robot svg {
+  width: 18px;
+  height: 18px;
+}
+
+.charla__icono {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--texto-suave);
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: background-color 150ms ease, color 150ms ease, transform 120ms ease-out;
+}
+
+.charla__icono:active:not(:disabled) {
+  transform: scale(0.94);
+}
+
+.charla__icono:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .charla__icono:hover:not(:disabled) {
+    background: var(--superficie);
+    color: var(--texto);
+  }
+}
+
+.consultron__abrir-ajustes {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 6px 14px 6px 10px;
+  border: 1px solid var(--borde);
+  border-radius: 999px;
+  background: var(--superficie);
+  color: var(--texto);
+  font: inherit;
+  font-size: var(--t-chica);
+  font-weight: 600;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: border-color 150ms ease, transform 120ms ease-out;
+}
+
+.consultron__abrir-ajustes:active {
+  transform: scale(0.97);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .consultron__abrir-ajustes:hover {
+    border-color: var(--borde-control);
+  }
+}
+
+/* Downloading or loading the model while it can be asked: a dot on «Ajustes», where the progress is. */
+.consultron__abrir-ajustes[data-cargando]::after {
+  content: '';
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--foco);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .consultron__abrir-ajustes[data-cargando]::after {
+    animation: consultron-pensando 1.6s ease-in-out infinite;
+  }
+}
+
+@media (forced-colors: active) {
+  .consultron__abrir-ajustes[data-cargando]::after {
+    background: Highlight;
+  }
+}
+
+.charla[data-vista='pagina'] .charla__lista {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.charla__columna {
+  width: 100%;
+  max-width: calc(var(--ancho-consultron) + 2 * var(--margen));
+  margin: 0 auto;
+  padding: 12px var(--margen) 8px;
+}
+
+.charla[data-vista='pagina'] .consultron__hilo {
+  gap: 32px;
+  margin-bottom: 24px;
+}
+
+/* Where an answer comes from: small chips under it, each with its yellow tab, its name and where in it. Long names
+   are cut: the whole name is what a screen reader says. */
+.charla[data-vista='pagina'] .consultron__fuentes ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.charla[data-vista='pagina'] .consultron__fuentes li {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.charla[data-vista='pagina'] .consultron__fuente {
+  align-items: center;
+  gap: 8px;
+  width: auto;
+  max-width: 100%;
+  min-height: 36px;
+  padding: 4px 12px 4px 6px;
+  border-radius: 999px;
+  font-size: var(--t-chica);
+}
+
+.charla[data-vista='pagina'] .consultron__fuente-numero {
+  border-radius: 999px;
+}
+
+.charla[data-vista='pagina'] .consultron__fuente-texto {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+}
+
+.charla[data-vista='pagina'] :is(.consultron__fuente-nombre, .consultron__fuente-dato) {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.charla[data-vista='pagina'] .consultron__fuente-nombre {
+  flex: 0 1 auto;
+  max-width: 24rem;
+  font-weight: 600;
+}
+
+.charla[data-vista='pagina'] .consultron__fuente-dato {
+  flex: 0 10 auto;
+  font-size: 0.8125rem;
+}
+
+/* The box at the bottom, the width of the column, with the talk fading under its top edge. */
+.charla__abajo {
+  position: relative;
+  flex: none;
+  width: 100%;
+  max-width: calc(var(--ancho-consultron) + 2 * var(--margen));
+  margin: 0 auto;
+  padding: 0 var(--margen) max(10px, env(safe-area-inset-bottom));
+}
+
+.charla__abajo::before {
+  content: '';
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  right: 0;
+  height: 20px;
+  background: linear-gradient(to bottom, transparent, var(--fondo));
+  pointer-events: none;
+}
+
+.charla[data-vista='pagina'] .consultron__caja {
+  position: static;
+  padding: 0;
+  background: none;
+}
+
+.charla[data-vista='pagina'] .consultron__redactor {
+  border-radius: 24px;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.04), 0 10px 28px rgb(0 0 0 / 0.07);
+}
+
+.charla[data-vista='pagina'] .consultron__redactor:has(.consultron__campo:focus) {
+  box-shadow: 0 0 0 2px var(--foco), 0 10px 28px rgb(0 0 0 / 0.07);
+}
+
+.charla[data-vista='pagina'] textarea.consultron__campo {
+  min-height: 3.2em;
+  max-height: min(16em, 38dvh);
+  padding: 16px 18px 4px;
+  overflow-y: auto;
+}
+
+.charla[data-vista='pagina'] .consultron__herramientas {
+  flex-wrap: nowrap;
+  gap: 4px;
+  padding: 6px 8px 8px 14px;
+}
+
+/* Where it looks, inside the box, as two quiet pills beside the tools. */
+.charla[data-vista='pagina'] .consultron__herramientas .consultron__donde {
+  flex: 0 1 auto;
+  min-width: 0;
+  margin: 0 0 0 4px;
+}
+
+.charla[data-vista='pagina'] .consultron__herramientas .consultron__selector {
+  border-color: transparent;
+  background: var(--fondo);
+}
+
+/* Ask and stop: one round button at the end of the box. */
+.charla__enviar {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  margin-left: auto;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--accion);
+  color: var(--accion-texto);
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: background-color 150ms ease, transform 120ms ease-out;
+}
+
+.charla__enviar svg {
+  stroke-width: 2.2;
+}
+
+.charla__enviar rect {
+  fill: currentColor;
+  stroke: none;
+}
+
+.charla__enviar:active {
+  transform: scale(0.94);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .charla__enviar:hover {
+    background: var(--accion-hover);
+  }
+}
+
+@media (forced-colors: active) {
+  .charla__enviar {
+    border: 2px solid ButtonText;
+  }
+}
+
+/* Practice, over the box. */
+.charla[data-vista='pagina'] .practica__armar {
+  margin-bottom: 10px;
+}
+
+/* «Bajar al final», over the box, when the student is well above the end. */
+.charla__bajar {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 50%;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid var(--borde);
+  border-radius: 50%;
+  background: var(--superficie);
+  color: var(--texto);
+  box-shadow: 0 4px 14px rgb(0 0 0 / 0.12);
+  cursor: pointer;
+  translate: -50% 0;
+  touch-action: manipulation;
+  transition: opacity 160ms ease-out, scale 160ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+@starting-style {
+  .charla__bajar {
+    opacity: 0;
+    scale: 0.95;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .charla__bajar {
+    transition: opacity 160ms ease-out;
+  }
+
+  @starting-style {
+    .charla__bajar {
+      scale: 1;
+    }
+  }
+}
+
+.charla__bajar:active {
+  scale: 0.94;
+}
+
+/* The greeting, before the first question: in the middle, with the box under it and the ideas under the box. */
+.charla__saludo {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  padding: 8px 0 24px;
+  text-align: center;
+}
+
+.charla__hola {
+  margin: 4px 0 0;
+  color: var(--texto);
+  font-family: var(--fuente-titulos);
+  font-size: var(--t-h2);
+  font-weight: 700;
+  line-height: 1.15;
+}
+
+.charla__bajada {
+  max-width: 32rem;
+  margin: 0;
+  color: var(--texto-suave);
+  line-height: 1.5;
+}
+
+.charla[data-vista='pagina'][data-vacia] .charla__lista {
+  flex: 0 1 auto;
+  margin-top: auto;
+}
+
+/* Before it can be asked there's no box: what it takes goes in the middle. */
+.charla[data-vista='pagina'][data-vacia] .charla__lista:last-child {
+  margin-bottom: auto;
+  padding-bottom: 24px;
+}
+
+.charla[data-vista='pagina'][data-vacia] .charla__abajo {
+  margin-bottom: auto;
+  padding-bottom: 24px;
+}
+
+.charla[data-vista='pagina'][data-vacia] .charla__abajo::before {
+  content: none;
+}
+
+.charla[data-vista='pagina'] .charla__ideas {
+  justify-content: center;
+  margin-top: 16px;
+}
+
+/* Before it can be asked, what it takes goes under the greeting. */
+.charla[data-vista='pagina'] .charla__columna > :is(.consultron__arranque, .consultron__opciones, .consultron__estado, .mensaje) {
+  margin-bottom: 16px;
+}
+
+.charla[data-vista='pagina'] .charla__columna > .consultron__estado {
+  text-align: center;
+}
+
+/* The window of settings: from «Ajustes», on the right under the bar. On a phone, from the bottom. */
+.consultron__ajustes {
+  position: fixed;
+  inset: calc(var(--alto-cabecera) + 60px) max(16px, env(safe-area-inset-right)) auto auto;
+  width: min(26rem, calc(100vw - 32px));
+  max-width: none;
+  max-height: calc(100dvh - var(--alto-cabecera) - 76px);
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border: 1px solid var(--borde);
+  border-radius: 16px;
+  background: var(--superficie);
+  color: var(--texto);
+  box-shadow: 0 16px 48px rgb(0 0 0 / 0.18);
+  transform-origin: top right;
+}
+
+.consultron__ajustes::backdrop {
+  background: rgb(0 0 0 / 0.18);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .consultron__ajustes[open] {
+    transition: opacity 180ms ease-out, scale 200ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  @starting-style {
+    .consultron__ajustes[open] {
+      opacity: 0;
+      scale: 0.96;
+    }
+  }
+}
+
+.consultron__ajustes-cuerpo {
+  display: grid;
+  gap: 16px;
+  padding: 12px 18px 20px;
+}
+
+.consultron__ajustes-cabeza {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-right: -8px;
+}
+
+.consultron__ajustes-cabeza h2 {
+  margin: 0;
+  font-size: var(--t-h3);
+}
+
+.consultron__ajustes .consultron__pie {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+
+.consultron__ajustes .consultron__pie h3,
+.consultron__ajustes .consultron__arranque h3 {
+  margin: 0;
+  color: var(--texto);
+  font-size: var(--t-ui);
+}
+
+.consultron__ajustes-letra {
+  justify-self: start;
+  font-size: var(--t-chica);
+}
+
+/* Narrower: the talks go to a drawer (Charla.jsx, the same width), the box keeps its tools in one line. */
+@media (max-width: 899.98px) {
+  .consultron__abrir-ajustes {
+    width: 40px;
+    padding: 0;
+    justify-content: center;
+    border-color: transparent;
+    background: transparent;
+  }
+
+  .consultron__abrir-ajustes-texto {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 599.98px) {
+  .charla__barra {
+    min-height: 52px;
+    padding-inline: 6px;
+  }
+
+  .charla[data-vista='pagina'] .consultron__herramientas {
+    flex-wrap: wrap;
+    padding-left: 10px;
+  }
+
+  /* Where it looks takes the first line of the tools, whole. */
+  .charla[data-vista='pagina'] .consultron__herramientas .consultron__donde {
+    flex: 1 1 100%;
+    order: -1;
+    margin: 0 0 2px;
+  }
+
+  .charla[data-vista='pagina'] textarea.consultron__campo {
+    padding: 14px 14px 4px;
+  }
+
+  .charla__hola {
+    font-size: var(--t-h3);
+  }
+
+  .consultron__ajustes {
+    inset: auto 0 0;
+    width: 100%;
+    max-height: 85dvh;
+    padding-bottom: env(safe-area-inset-bottom);
+    border-radius: 16px 16px 0 0;
+    transform-origin: bottom center;
   }
 }

@@ -3,6 +3,7 @@ import { SITIO } from '../../sitio.config.js';
 import { huella } from './datos';
 import { esDemo } from './modoDemo';
 import { sesionRecordada, tokenActual } from './sesion';
+import { borrarAparte } from './sinInternet';
 
 // Google, with the student's own account: Classroom (read only), the hidden folder of this app in their Drive (the
 // copy of their things, sincro.js), the calendar «Super CVG» it creates in their Google Calendar (calendarioSincro.js)
@@ -22,7 +23,8 @@ import { sesionRecordada, tokenActual } from './sesion';
 // number of the Google account (`sub`, nothing else) and the uses turned on stay next to the campus key; while saving in
 // Drive, that number also stays for the student in this browser, so a new session renews too. If the browser
 // does not let Google answer inside a frame, one click brings it back without asking which account. Salir drops it;
-// turning off the last use (Desconectar, Dejar de guardar) also tells Google.
+// turning off the last use (Desconectar, Dejar de guardar) also tells Google. Offline nothing is asked: what Classroom
+// brought shows as it was kept (classroom.js), and the permission comes back once the network does.
 
 /** The OAuth client of Super CVG in Google Cloud (sitio.config.js). It is public. Empty: nothing of Google shows. */
 export const CLIENTE_GOOGLE = import.meta.env.VITE_GOOGLE_CLIENTE || SITIO.google || '';
@@ -278,6 +280,8 @@ export function olvidarGoogle({ revocar = false } = {}) {
   if (revocar) {
     olvidarCuenta();
     queridos.clear();
+    // What Classroom brought, kept for offline, goes with the account.
+    borrarAparte('classroom.');
     // The other tabs of this student drop it too: it no longer works.
     hablar({ olvida: true, de: deQuien() });
   }
@@ -292,6 +296,7 @@ export function olvidarGoogle({ revocar = false } = {}) {
  * too. If another use is still on, the permission stays: Google gives it whole, and the other one needs it. */
 export function soltarGoogle(uso) {
   queridos.delete(uso);
+  if (uso === 'classroom') borrarAparte('classroom.');
   const quedan = usosActuales().filter((u) => u !== uso);
   if (!quedan.length) {
     olvidarGoogle({ revocar: true });
@@ -302,7 +307,8 @@ export function soltarGoogle(uso) {
 }
 
 let renovando = null;
-const foto = () => `${crudo()}|${renovando ? 1 : 0}|${usosActuales().join(' ')}`;
+const sinRed = () => typeof navigator !== 'undefined' && navigator.onLine === false;
+const foto = () => `${crudo()}|${renovando ? 1 : 0}|${usosActuales().join(' ')}|${sinRed() ? 1 : 0}`;
 
 // With «Seguir conectado» the permission is shared by every tab of this browser: one that connects, renews or
 // disconnects changes what the others show.
@@ -310,11 +316,18 @@ if (typeof window !== 'undefined') {
   window.addEventListener('storage', (e) => {
     if (e.key === CLAVE_GOOGLE || e.key === CLAVE_USOS || e.key === null) avisar();
   });
+  window.addEventListener('offline', avisar);
+  // Back online: the permission that ended meanwhile comes back by itself.
+  window.addEventListener('online', () => {
+    avisar();
+    if (arrancado && !leer() && usosActuales().length) renovarGoogle();
+  });
 }
 
-/** { disponible, conectado, vence, email, renovando } for a use (Classroom, if none is said), and the screen redraws
- * when it changes. The first screen that asks brings the connection back if it was cut (a new tab, or the hour ended
- * while the computer slept). */
+/** { disponible, conectado, vence, email, renovando, sinRed } for a use (Classroom, if none is said), and the screen
+ * redraws when it changes. The first screen that asks brings the connection back if it was cut (a new tab, or the hour
+ * ended while the computer slept). `sinRed`: offline, with the use on and its account known, so what was kept of it
+ * shows (classroom.js) even if the permission ended. */
 export function useGoogle(uso = 'classroom') {
   const valor = useSyncExternalStore((f) => {
     avisados.add(f);
@@ -325,7 +338,19 @@ export function useGoogle(uso = 'classroom') {
   const v = leer();
   const enUso = DE_PASO.has(uso) || usosActuales().includes(uso);
   const conectado = enUso && cubre(v, uso);
-  return { disponible: disponibleGoogle(), conectado, vence: conectado ? v.vence : null, email: v?.email ?? '', renovando: (enUso || !usosActuales().length) && !conectado && renovando !== null };
+  return {
+    disponible: disponibleGoogle(),
+    conectado,
+    vence: conectado ? v.vence : null,
+    email: v?.email ?? '',
+    renovando: (enUso || !usosActuales().length) && !conectado && renovando !== null,
+    sinRed: guardadoSinRed(uso),
+  };
+}
+
+/** Offline, a use turned on for a known account, with «Seguir conectado»: what was kept of it is what shows. */
+export function guardadoSinRed(uso = 'classroom') {
+  return sinRed() && sesionRecordada() && usosActuales().includes(uso) && Boolean(cuentaGoogle());
 }
 
 let arrancado = false;
@@ -613,7 +638,8 @@ const enFila = (fn) => (typeof navigator !== 'undefined' && navigator.locks?.req
  * uses turned on. True if it did. One at a time, also among the tabs. */
 export function renovarGoogle() {
   if (renovando) return renovando;
-  if (!CLIENTE_GOOGLE || !tokenActual() || esDemo(tokenActual()) || typeof document === 'undefined') return Promise.resolve(false);
+  // Offline, Google is not asked: the network coming back renews it.
+  if (!CLIENTE_GOOGLE || !tokenActual() || esDemo(tokenActual()) || typeof document === 'undefined' || sinRed()) return Promise.resolve(false);
   const usos = usosActuales();
   const antes = venceGoogle() ?? 0;
   renovando = enFila(async () => {

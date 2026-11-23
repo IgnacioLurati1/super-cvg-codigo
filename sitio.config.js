@@ -25,5 +25,5 @@ export const SITIO = {
     { ruta: 'opinar', titulo: 'Opinar | Super CVG', descripcion: 'Contanos qué le falta a Super CVG, qué no anda o qué te gusta.' },
     { ruta: 'entrada', titulo: 'La facu en 3D | Super CVG', descripcion: 'La entrada de UTN FRRO en 3D, para mirarla desde donde quieras.' },
   ],
-  privadas: ['calendario', 'horario', 'horario/compartido', 'materias', 'inscripcion', 'buscar', 'notas', 'sysacad', 'carrera', 'resumenes', 'configuracion', 'mensajes', 'compartido', 'archivo', 'propias', 'laboratorio', 'calculadoras', 'repaso', 'en-vivo', ...CALCULADORAS.map((c) => `calculadoras/${c.slug}`)],
+  privadas: ['calendario', 'horario', 'horario/compartido', 'materias', 'inscripcion', 'buscar', 'notas', 'sysacad', 'carrera', 'resumenes', 'configuracion', 'mensajes', 'compartido', 'archivo', 'compartir', 'propias', 'laboratorio', 'calculadoras', 'repaso', 'en-vivo', 'disenos', ...CALCULADORAS.map((c) => `calculadoras/${c.slug}`)],
 };

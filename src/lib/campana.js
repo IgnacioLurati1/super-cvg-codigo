@@ -152,6 +152,24 @@ export async function revisarCampana(token) {
   }
 }
 
+/** What the clock's tab brought, for the other tabs of the session (useSinLeer.js): only what came from the campus. */
+export const campanaCompartible = () => {
+  const { disponible, conteo, contado, lista, deLaLista } = estado;
+  return { disponible, conteo, contado, lista, deLaLista };
+};
+
+/** What another tab of the session brought (campanaCompartible): this one shows it without asking. */
+export function recibirCampana(e) {
+  if (!e || typeof e !== 'object') return;
+  const conteo = Number.isSafeInteger(e.conteo) && e.conteo > 0 ? e.conteo : 0;
+  const lista = Array.isArray(e.lista) ? e.lista : null;
+  const deLaLista = lista && Number.isSafeInteger(e.deLaLista) ? e.deLaLista : null;
+  const alumno = usuarioActual();
+  // Without a list there, the one here stays.
+  const conLista = lista ? { lista, deLaLista } : {};
+  poner({ disponible: e.disponible !== false, conteo, contado: e.contado === true, ...conLista, alumno, visto: leerVisto(alumno) });
+}
+
 /** The student opened the bell: the list, again if the count changed since it came, and everything in it seen. */
 export async function abrirCampana() {
   const token = tokenActual();

@@ -63,6 +63,11 @@
   scrollbar-width: none;
 }
 
+/* «Cerrar» among the buttons only on a phone (below). */
+.previa--pdf .previa__cerrar-abajo {
+  display: none;
+}
+
 .previa--pdf .previa__acciones .boton {
   flex: none;
   min-height: 36px;
@@ -96,19 +101,31 @@
     border-radius: 0;
     margin-inline: -8px;
   }
-  /* The pages take the screen: the name and «Cerrar» in a short row above, the file's details and its buttons under
-     the pages. */
+  /* The pages take the screen: the file's details and its buttons under them, «Cerrar» among the buttons in the place of
+     the link to the campus. The row above stays only for «Volver a la carpeta» or «Volver al texto». The file's name is
+     on the screen that opened it, and so are its details (kind, date, course): here only screen readers get them. */
   .previa--pdf .previa__caja {
     gap: 4px;
     padding-block: 6px 8px;
   }
-  .previa--pdf .previa__cabeza h2 {
-    display: -webkit-box;
+  .previa--pdf :is(.previa__cerrar, .previa__ver-original) {
+    display: none;
+  }
+  .previa--pdf .previa__cerrar-abajo {
+    display: inline-flex;
+  }
+  .previa--pdf .previa__cabeza {
+    justify-content: flex-end;
+  }
+  .previa--pdf .previa__cabeza:not(:has(.previa__volver)),
+  .previa--pdf .previa__cabeza h2,
+  .previa--pdf .previa__caja > .previa__dato {
+    position: absolute;
+    width: 1px;
+    height: 1px;
     overflow: hidden;
-    font-size: 1.0625rem;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
-    line-clamp: 2;
+    clip-path: inset(50%);
+    white-space: nowrap;
   }
   .previa--pdf .previa__caja > .previa__vista {
     order: 1;
@@ -135,6 +152,17 @@
     overflow: hidden;
     clip-path: inset(50%);
     white-space: nowrap;
+  }
+  /* They go at once; back, they rise into place (data-volviendo, VUELTA_MS in PreviaHoja.jsx). */
+  .previa--pdf .previa__caja > [data-volviendo] {
+    animation: previa-ficha-vuelve 220ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+}
+
+@keyframes previa-ficha-vuelve {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
   }
 }
 

@@ -1,23 +1,15 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import Campo from '../Campo';
-import ElegirMateria, { useMaterias } from '../ElegirMateria';
+import ElegirMateria, { ElegirSeccion, NUEVA, seccionInicial, useMaterias } from '../ElegirMateria';
 import { guardarArchivos } from '../SumarCosas';
 import { useMio } from '../../lib/mio';
 import { agregarAlProyecto, borrarProyecto, cambiarProyecto, crearProyecto, guardarArchivoNuevo } from '../../lib/laboratorio/guardado';
-import { agregadaDe, agregarBloques, agregarCategoria, esAgregada, propiaDe, seccionesTuyas, sumarEnSeccion, sumarSeccionPropia } from '../../lib/propias';
+import { esAgregada, seccionesDondeSumar, sumarDondeSea } from '../../lib/propias';
 
 // «Guardar en lo mío»: what a tab of the table gives (its text, or a file) goes to a section of one of the student's
 // courses, as anything they add themselves. It stays when the session ends.
 
-const NUEVA = 'nueva';
 const NOMBRE_NUEVA = 'De la sesión en vivo';
-
-function seccionesDe(mio, materia) {
-  if (materia === null) return [];
-  const propia = typeof materia === 'string' ? propiaDe(mio, materia) : agregadaDe(mio, materia);
-  return typeof materia === 'string' ? (propia?.categorias ?? []).filter((c) => c.campus === undefined) : seccionesTuyas(propia);
-}
 
 /** The files of a table's Laboratorio, as a project of the student's: its id, or null if it doesn't fit (nothing stays). */
 function comoProyecto(nombre, { lenguaje, archivos }) {
@@ -45,7 +37,7 @@ export default function GuardarEnLoMio({ dar, titulo, alCerrar }) {
   const [hecho, setHecho] = useState(null);
   const id = useId();
   const form = useRef(null);
-  const secciones = seccionesDe(mio, materia);
+  const secciones = seccionesDondeSumar(mio, materia);
 
   // What the tab gives, once: it may take a moment (an image of the board).
   useEffect(() => {
@@ -65,7 +57,7 @@ export default function GuardarEnLoMio({ dar, titulo, alCerrar }) {
   const elegirMateria = (m) => {
     setMateria(m);
     setError('');
-    setSeccion(seccionesDe(mio, m).find((c) => c.nombre === NOMBRE_NUEVA)?.id ?? NUEVA);
+    setSeccion(seccionInicial(seccionesDondeSumar(mio, m), NOMBRE_NUEVA));
   };
 
   // Code goes to the student's Laboratorio, exact: as course text it would lose its indentation.
@@ -102,17 +94,8 @@ export default function GuardarEnLoMio({ dar, titulo, alCerrar }) {
     } else {
       bloques = [{ tipo: 'texto', texto: `${String(que.nombre || titulo).slice(0, 150)}\n\n${que.texto}` }];
     }
-    let ok = false;
-    let nombreSeccion = NOMBRE_NUEVA;
-    if (seccion !== NUEVA) nombreSeccion = secciones.find((c) => c.id === seccion)?.nombre ?? NOMBRE_NUEVA;
-    if (typeof materia === 'string') {
-      const cat = seccion === NUEVA ? agregarCategoria(materia, NOMBRE_NUEVA) : seccion;
-      ok = cat !== null && agregarBloques(materia, cat, bloques) > 0;
-    } else {
-      const nueva = seccion === NUEVA ? sumarSeccionPropia(materia, NOMBRE_NUEVA) : null;
-      const cat = nueva ? nueva.categoria : seccion === NUEVA ? null : seccion;
-      ok = cat !== null && sumarEnSeccion(materia, `p${cat}`, bloques) !== null;
-    }
+    const nombreSeccion = seccion === NUEVA ? NOMBRE_NUEVA : (secciones.find((c) => c.id === seccion)?.nombre ?? NOMBRE_NUEVA);
+    const ok = sumarDondeSea(materia, seccion === NUEVA ? null : seccion, NOMBRE_NUEVA, bloques) > 0;
     setGuardando(false);
     if (!ok) {
       setError('No entra en esa sección. Probá con otra.');
@@ -150,14 +133,7 @@ export default function GuardarEnLoMio({ dar, titulo, alCerrar }) {
         <form ref={form} className="envivo-guardar__form" onSubmit={guardar} noValidate>
           <p className="envivo-guardar__que">{que.archivo ? `Se guarda como archivo, «${que.nombre}».` : 'Se guarda como texto.'}</p>
           <ElegirMateria valor={materia} materias={materias} alElegir={elegirMateria} ninguna="Elegí una" />
-          {materia !== null && (
-            <Campo etiqueta="Sección">
-              <select className="campo__control" value={seccion} onChange={(e) => setSeccion(e.target.value === NUEVA ? NUEVA : Number(e.target.value))}>
-                {secciones.map((c) => <option key={c.id} value={c.id}>{c.nombre}</option>)}
-                {!secciones.some((c) => c.nombre === NOMBRE_NUEVA) && <option value={NUEVA}>Una nueva, «{NOMBRE_NUEVA}»</option>}
-              </select>
-            </Campo>
-          )}
+          {materia !== null && <ElegirSeccion secciones={secciones} valor={seccion} nueva={NOMBRE_NUEVA} alElegir={setSeccion} />}
           {error && <p className="campo__error" role="alert">{error}</p>}
           <div className="envivo-guardar__botones">
             <button type="submit" className="boton boton--chico" disabled={guardando}>{guardando ? 'Guardando…' : 'Guardar'}</button>

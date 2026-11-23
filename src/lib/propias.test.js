@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { enLinea, leerFormato } from './formato';
 import { fijarUsuario, mioActual } from './mio';
 import {
-  agregadaDe, agregarBloques, agregarCategoria, borrarBloque, borrarCategoria, borrarPropia, cambiarBloque, crearPropia, esAgregada, moverBloque, moverCategoria, pasarBloque, propiaDe, renombrarCategoria, renombrarPropia, pasarASeccion, seccionesTuyas, sumarEnSeccion, sumarPropia, sumarSeccionPropia, unirClassroomPropia,
+  agregadaDe, agregarBloques, agregarCategoria, borrarBloque, borrarCategoria, borrarPropia, cambiarBloque, crearPropia, esAgregada, moverBloque, moverCategoria, pasarBloque, propiaDe, renombrarCategoria, renombrarPropia, pasarASeccion, seccionesDondeSumar, seccionesTuyas, sumarDondeSea, sumarEnSeccion, sumarPropia, sumarSeccionPropia, unirClassroomPropia,
 } from './propias';
 import {
   archivoDeMateria, guardarMateria, hashDeMateria, hayMateriaEnHash, leerArchivoMateria, LIMITE_ARCHIVOS, LIMITE_ZIP, materiaDeHash, MAX_ARCHIVOS, nombreDelArchivo, porQueNoEntra, resumenDeMateria, tieneArchivos,
@@ -179,6 +179,25 @@ describe('materias propias', () => {
     const atada = propia.categorias.find((c) => c.campus === 5);
     borrarBloque(propia.id, atada.id, atada.bloques[0].id);
     expect(agregadaDe(mioActual(), 7).categorias.some((c) => c.campus === 5)).toBe(false);
+  });
+
+  it('lo que llega de afuera va a una sección de una propia o a una tuya de una materia del campus, o a una nueva', () => {
+    const texto = { tipo: 'texto', texto: 'Ojo' };
+    // A campus course: a new section of the student's, and then that one.
+    expect(seccionesDondeSumar(mioActual(), 7)).toEqual([]);
+    expect(sumarDondeSea(7, null, 'Compartido', [texto, texto])).toBe(2);
+    const [nueva] = seccionesDondeSumar(mioActual(), 7);
+    expect(nueva.nombre).toBe('Compartido');
+    expect(sumarDondeSea(7, nueva.id, 'Compartido', [texto])).toBe(1);
+    expect(seccionesDondeSumar(mioActual(), 7)[0].bloques).toHaveLength(3);
+    expect(sumarDondeSea(7, 999, 'Compartido', [texto])).toBe(0);
+    // A course of the student's own.
+    const id = crearPropia({ nombre: 'Mía' });
+    const [general] = seccionesDondeSumar(mioActual(), id);
+    expect(sumarDondeSea(id, general.id, 'Compartido', [texto])).toBe(1);
+    expect(sumarDondeSea(id, null, 'Compartido', [texto])).toBe(1);
+    expect(seccionesDondeSumar(mioActual(), id).map((c) => [c.nombre, c.bloques.length])).toEqual([['General', 1], ['Compartido', 1]]);
+    expect(seccionesDondeSumar(mioActual(), null)).toEqual([]);
   });
 
   it('lo tuyo pasa de sección guardado donde se ve, con su número, y no se va con la sección que deja', () => {

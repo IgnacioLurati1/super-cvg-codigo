@@ -4,7 +4,7 @@
 // navigator.storage.estimate against tracking. No room shows while downloading (mensajeDeCarga).
 
 export const MOTIVOS = {
-  celular: 'Consultron necesita una compu. En el celular no entra.',
+  celular: 'En el celular, Consultron contesta con Gemini. Prendelo para preguntarle.',
   'sin-webgpu': 'Este navegador no puede usar la placa de video. Probá con Chrome o Edge actualizados.',
   'placa-vieja': 'La placa de video de esta compu no alcanza para Consultron.',
 };

@@ -343,7 +343,7 @@ export function MateriasEnHoy() {
   const materias = useConsulta(async () => {
     await cargarPerfil();
     return cargarMaterias();
-  });
+  }, [], { alInstante: true });
   if (materias.error && !materias.datos) return <ErrorConReintento texto={materias.error} recargar={materias.recargar} />;
   if (!materias.datos) return <Cargando texto="Buscando tus materias" cuantas={3} />;
   const fuera = fueraDeHoy(mio);

@@ -1,4 +1,5 @@
-import { normalizar } from './datos';
+import { huella, normalizar } from './datos';
+import { mioActual } from './mio';
 
 // Since Sysacad Lindo 2.4.0, the extension keeps a copy (text only) of the last time the student opened each of these
 // tabs of Sysacad, and hands them to this page in the same window, like the finals (sysacad.js). The exact shape is
@@ -115,12 +116,21 @@ export function leerPestanas(datos, ahora = Date.now()) {
 const CHICAS = new Set(['da', 'das', 'de', 'del', 'di', 'do', 'dos', 'du', 'e', 'el', 'la', 'las', 'le', 'lo', 'los', 'van', 'von', 'y']);
 const palabras = (nombre) => new Set(normalizar(nombre).split(/[^a-z0-9ñ]+/).filter((p) => p && !CHICAS.has(p)));
 
-/** Whether the name Sysacad gives and the one of the campus account are the same person. */
+const firma = (nombre) => [...palabras(nombre)].sort().join(' ');
+
+/** A pair of names the student said are both theirs (a nickname in the campus, say), as a fingerprint: the names
+ * themselves are never kept (mio.sysacadSuyo). */
+export const huellaDelPar = (deSysacad, delCampus) => huella(`${firma(deSysacad)}|${firma(delCampus)}`);
+
+/** Whether the name Sysacad gives and the one of the campus account are the same person: the same words, or a pair
+ * the student confirmed. */
 export function mismoAlumno(deSysacad, delCampus) {
   const a = palabras(deSysacad);
   const b = palabras(delCampus);
+  if (!a.size || !b.size) return false;
   const [corto, largo] = a.size <= b.size ? [a, b] : [b, a];
-  return corto.size >= 2 && [...corto].every((p) => largo.has(p));
+  if (corto.size >= 2 && [...corto].every((p) => largo.has(p))) return true;
+  return mioActual().sysacadSuyo.includes(huellaDelPar(deSysacad, delCampus));
 }
 
 const HORA = new Intl.DateTimeFormat('es-AR', { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });

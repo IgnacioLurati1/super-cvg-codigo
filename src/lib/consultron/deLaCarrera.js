@@ -160,8 +160,8 @@ export function carreraParaLaPregunta(carrera, pregunta, fecha = '', { elegida =
   else if (/\b(nota|notas|promedio|aprobadas|aprobe)\b/.test(p)) filas = [dato('Aprobadas')];
   else if (/\b(frena|conviene|priorizar|primero|enfocarme)\b/.test(p)) {
     // The advice already made, with the count of Tu carrera: of what it can sit for (or take), the one that opens the
-    // most right away first, then the one that holds back the most down the chain. In words a small model can't turn
-    // around.
+    // most right away first, then the one that holds back the most down the chain, the nearer ones weighing more
+    // (frenos.js). In words a small model can't turn around.
     const materias = (n) => (n === 1 ? '1 materia' : `${n} materias`);
     const consejo = (lista, verbo) => {
       if (!lista.length) return [];

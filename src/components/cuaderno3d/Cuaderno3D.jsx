@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { useAhorro } from '../../lib/ahorro';
 import { movimientoDe, useAjustes } from '../../lib/ajustes';
 import { diasDeNotas, leerColores, puede3D } from './soporte';
 import './Cuaderno3D.css';
 
 // The landing's 3D still life (escena.js). three.js arrives with import() only when the piece is about to show and
 // the browser is idle. «Sin animaciones» renders nothing and loads nothing; «Reducir siempre» or the system's
-// reduced motion leave it still (dragging still turns it). Without WebGL it renders nothing.
+// reduced motion leave it still (dragging still turns it). Without WebGL or saving data (ahorro.js) it renders nothing.
 
 const CONSULTA = '(prefers-reduced-motion: reduce)';
 const seguirSistema = (avisar) => {
@@ -21,7 +22,8 @@ const ATRIBUTOS = ['data-tema', 'data-paleta', 'data-contraste', 'data-daltonism
 export default function Cuaderno3D() {
   const movimiento = movimientoDe(useAjustes());
   const reducido = useSyncExternalStore(seguirSistema, sistemaQuieto, () => false);
-  if (movimiento === 'ninguno') return null;
+  const ahorro = useAhorro();
+  if (movimiento === 'ninguno' || ahorro) return null;
   return <Escena quieto={movimiento === 'reducido' || reducido} />;
 }
 

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { normalizar } from './ajustes';
-import { codigoDeEstilo, leerCodigoDeEstilo } from './codigoDeEstilo';
+import { EN_EL_MENU, normalizar } from './ajustes';
+import { codigoDeEstilo, leerCodigoDeEstilo, MAX_ESCRITO } from './codigoDeEstilo';
+import { CODIGOS_DE_ANTES } from './codigoDeEstilo.fixture';
 import { moverBloque, ordenDeHoy } from './hoy';
 import { sanearMio } from './mio';
 
@@ -76,7 +77,7 @@ describe('pasar tu estilo con un código', () => {
     expect([ajustes.daltonismo, ajustes.movimiento]).toEqual(['azul-amarillo', 'reducido']);
   });
 
-  it.each(['rosa', 'bosque', 'cafe', 'lavanda', 'infierno', 'glaciar'])('una paleta viaja en el código: Hoja con %s se lee de vuelta', (tema) => {
+  it.each(['rosa', 'bosque', 'cafe', 'lavanda', 'infierno', 'glaciar', 'cosmico'])('una paleta viaja en el código: Hoja con %s se lee de vuelta', (tema) => {
     const mios = normalizar({ estilo: 'hoja', tema });
     const codigo = codigoDeEstilo(mios, MIO);
     const { ajustes } = aplicar(leerCodigoDeEstilo(codigo, TUYOS));
@@ -148,6 +149,23 @@ describe('pasar tu estilo con un código', () => {
     expect(ajustes.accion).toBe('#7a3fb0');
   });
 
+  it('el fogonazo de Batman viaja en el código, y uno de antes lo trae prendido', () => {
+    const apagado = codigoDeEstilo(normalizar({ ...MIOS, estilo: 'batman', fogonazo: false }), MIO);
+    expect(aplicar(leerCodigoDeEstilo(apagado, TUYOS)).ajustes.fogonazo).toBe(false);
+    const prendido = codigoDeEstilo(normalizar({ ...MIOS, estilo: 'batman' }), MIO);
+    expect(aplicar(leerCodigoDeEstilo(prendido, { ...TUYOS, fogonazo: false })).ajustes.fogonazo).toBe(true);
+    const viejo = 'CVG-42800-00C01-00011-00101-W01W0-B8050-00000-00000-00006-T4HR0-00000-000G0-00000-ZZZZM';
+    expect(aplicar(leerCodigoDeEstilo(viejo, { ...TUYOS, fogonazo: false })).ajustes.fogonazo).toBe(true);
+  });
+
+  it('el borde de la cabecera de Pizarrón viaja en el código', () => {
+    const mios = normalizar({ ...MIOS, estilo: 'pizarron', bandeja: '#2b6cb0' });
+    const codigo = codigoDeEstilo(mios, MIO);
+    const { ajustes } = aplicar(leerCodigoDeEstilo(codigo, TUYOS));
+    expect([ajustes.estilo, ajustes.bandeja]).toEqual(['pizarron', '#2b6cb0']);
+    expect(codigo.slice(4, 5)).toBe('8');
+  });
+
   it('la cabecera viaja en el código, aparte del color principal', () => {
     const mios = normalizar({ ...MIOS, cabecera: '#121417' });
     const codigo = codigoDeEstilo(mios, MIO);
@@ -162,6 +180,92 @@ describe('pasar tu estilo con un código', () => {
     const tuyos = normalizar({ cabecera: '#ffffff' });
     const { ajustes } = aplicar(leerCodigoDeEstilo(viejo, tuyos), tuyos);
     expect([ajustes.estilo, ajustes.accion, ajustes.cabecera]).toEqual(['hoja', '#8a1f3d', null]);
+  });
+
+  // Made on 22/11, before the strong version of the themes (version 4): Profesional and Glaciar. It doesn't touch it.
+  it('un código de la versión 4 se sigue leyendo, sin tocar la versión potente', () => {
+    const viejo = 'CVG-42800-00C01-00011-00101-W01W0-B8050-00000-00000-00006-T4HR0-00000-000G0-00000-ZZZZM';
+    const tuyos = normalizar({ potente: true });
+    const { ajustes } = aplicar(leerCodigoDeEstilo(viejo, tuyos), tuyos);
+    expect([ajustes.estilo, ajustes.tema, ajustes.potente]).toEqual(['profesional', 'glaciar', true]);
+  });
+
+  it('la versión potente viaja en el código', () => {
+    const { ajustes } = aplicar(leerCodigoDeEstilo(codigoDeEstilo(normalizar({ tema: 'cosmico', potente: true, fondoCalidad: 'ultra' }), MIO), {}), normalizar({}));
+    expect([ajustes.tema, ajustes.potente, ajustes.fondoMueve, ajustes.fondoCalidad]).toEqual(['cosmico', true, false, 'ultra']);
+  });
+
+  // Diseños entered the menu inside version 5: its order and places take 9 and 6 characters. The codes from before,
+  // of any version, read exactly as they read at b3e648e, and Diseños starts where it starts (last, inside «Más»).
+  it.each(CODIGOS_DE_ANTES.map((x) => [x.codigo.slice(4, 5), x.codigo, x.leido]))('un código de la versión %s de antes de Diseños se lee igual: %s', (_, codigo, leido) => {
+    // The same, and Batman's beam on, as it was before version 8.
+    expect(leerCodigoDeEstilo(codigo, TUYOS)).toEqual({ ...leido, ajustes: { ...leido.ajustes, fogonazo: true } });
+    const { ajustes } = aplicar(leerCodigoDeEstilo(codigo, TUYOS));
+    expect(ajustes.menu.orden.at(-1)).toBe('disenos');
+    expect(ajustes.menu.lugares.disenos).toBe('mas');
+  });
+
+  it('el código más largo, con todos los colores propios y los filtros, entra en el campo para pegarlo', () => {
+    const todo = normalizar({ fondoFiltro: 'sepia', fondoIntensidad: 35, fondoTono: 290, fondoDesenfoque: 40, accion: '#123456', resaltador: '#abcdef', consultronColor: '#654321', cabecera: '#0f0f0f', bandeja: '#aabbcc' });
+    const codigo = codigoDeEstilo(todo, MIO);
+    expect(codigo.length).toBeGreaterThan(120);
+    expect(codigo.length).toBeLessThanOrEqual(MAX_ESCRITO);
+    // What the Diseños service takes (supercvg-disenos/reglas.ts): 120 characters without «CVG» and the dashes.
+    expect(codigo.replace(/^CVG-/, '').replace(/-/g, '').length).toBeLessThanOrEqual(120);
+    expect(leerCodigoDeEstilo(codigo, TUYOS)).not.toBeNull();
+  });
+
+  it('los filtros del fondo viajan en el código: filtro, intensidad, tono y desenfoque', () => {
+    const mios = normalizar({ fondoFiltro: 'sepia', fondoIntensidad: 35, fondoTono: 290, fondoDesenfoque: 40 });
+    const { ajustes } = aplicar(leerCodigoDeEstilo(codigoDeEstilo(mios, MIO), TUYOS));
+    expect([ajustes.fondoFiltro, ajustes.fondoIntensidad, ajustes.fondoTono, ajustes.fondoDesenfoque]).toEqual(['sepia', 35, 290, 40]);
+    const topes = normalizar({ fondoFiltro: 'suave', fondoIntensidad: 100, fondoTono: 355, fondoDesenfoque: 100 });
+    const leido = aplicar(leerCodigoDeEstilo(codigoDeEstilo(topes, MIO), TUYOS)).ajustes;
+    expect([leido.fondoFiltro, leido.fondoIntensidad, leido.fondoTono, leido.fondoDesenfoque]).toEqual(['suave', 100, 355, 100]);
+  });
+
+  it('Diseños viaja en el código: su lugar en el menú y en el orden', () => {
+    const mios = normalizar({ menu: { orden: ['disenos', 'hoy', 'materias'], lugares: { disenos: 'vista', hoy: 'mas' } } });
+    const codigo = codigoDeEstilo(mios, MIO);
+    expect(codigo[4]).toBe('8');
+    const { ajustes } = aplicar(leerCodigoDeEstilo(codigo, TUYOS));
+    expect(ajustes.menu.orden.slice(0, 3)).toEqual(['disenos', 'hoy', 'materias']);
+    expect(ajustes.menu.lugares.disenos).toBe('vista');
+    expect(ajustes.menu.lugares.hoy).toBe('mas');
+    expect(codigoDeEstilo(ajustes, MIO)).toBe(codigo);
+    const oculto = normalizar({ menu: { lugares: { disenos: 'oculta' } } });
+    expect(aplicar(leerCodigoDeEstilo(codigoDeEstilo(oculto, MIO), TUYOS)).ajustes.menu.lugares.disenos).toBe('oculta');
+  });
+
+  it('cualquier orden del menú vuelve igual, también con las últimas pantallas primero', () => {
+    for (const primera of ['envivo', 'consultron', 'disenos', 'repaso']) {
+      const orden = [primera, ...[...EN_EL_MENU].reverse().filter((c) => c !== primera)];
+      const { ajustes } = aplicar(leerCodigoDeEstilo(codigoDeEstilo(normalizar({ menu: { orden } }), MIO), TUYOS));
+      expect(ajustes.menu.orden).toEqual(orden);
+    }
+  });
+
+  it('un código nuevo nunca se lee como uno de antes ni al revés', () => {
+    const lugares = ['vista', 'mas', 'oculta'];
+    let semilla = 7;
+    const azar = () => {
+      semilla = (semilla * 1103515245 + 12345) % 2147483648;
+      return semilla / 2147483648;
+    };
+    for (let n = 0; n < 200; n++) {
+      const orden = [...EN_EL_MENU];
+      for (let i = orden.length - 1; i > 0; i--) {
+        const j = Math.floor(azar() * (i + 1));
+        [orden[i], orden[j]] = [orden[j], orden[i]];
+      }
+      const menu = { orden, lugares: Object.fromEntries(EN_EL_MENU.map((c, i) => [c, lugares[(n + i) % 3]])) };
+      const colores = n % 2 ? { accion: '#123456', cabecera: '#abcdef' } : {};
+      const mios = normalizar({ menu, ...colores });
+      const codigo = codigoDeEstilo(mios, MIO);
+      const { ajustes } = aplicar(leerCodigoDeEstilo(codigo, TUYOS));
+      expect(ajustes.menu.orden).toEqual(mios.menu.orden);
+      expect(ajustes.menu.lugares).toEqual(mios.menu.lugares);
+    }
   });
 
   it('un error de tipeo o algo que no es un código no pasa', () => {

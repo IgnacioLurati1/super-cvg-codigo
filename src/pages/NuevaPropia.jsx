@@ -27,7 +27,7 @@ export default function NuevaPropia() {
     await cargarPerfil();
     const { enCurso, otras } = await cargarMaterias();
     return [...enCurso, ...otras];
-  });
+  }, [], { alInstante: true });
   // A course of Classroom can be the base too, once connected: the course then shows its Classroom live.
   const google = useGoogle();
   const { datos: cursos, error: errorCursos } = useConsulta(() => (google.conectado ? cargarCursos() : Promise.resolve([])), [google.conectado]);

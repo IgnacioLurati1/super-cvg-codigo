@@ -435,3 +435,23 @@ export function conCitaQueFalta(texto, elegidos) {
   const cierre = /[.!?…]+$/.exec(entero);
   return cierre ? `${entero.slice(0, cierre.index)} [${mejor.n}]${cierre[0]}` : `${entero} [${mejor.n}]`;
 }
+
+/** How long each piece shows when it is the answer (respuestaSinRed). */
+export const LARGO_SIN_RED = 320;
+
+// A piece as plain text in one line: nothing in it reads as a list, a formula, code, bold or the number of a piece.
+const enUnaLinea = (texto) => String(texto ?? '').replace(/\[\d+\]/g, ' ').replace(/[`*$\\]/g, '').replace(/\s+/g, ' ').trim().replace(/^[-#>\s]+/, '');
+
+function recortar(texto, max) {
+  if (texto.length <= max) return texto;
+  const corte = texto.lastIndexOf(' ', max);
+  return `${texto.slice(0, corte > max / 2 ? corte : max)}…`;
+}
+
+/** Without internet and without the model on this device, the answer is the pieces found, each with its number: the
+ * screen names its file and page under «De dónde sale», and opens it there. `donde`: what the line says they come from. */
+export function respuestaSinRed(elegidos, donde = 'tus apuntes') {
+  const items = (elegidos ?? []).map((e, i) => ({ n: i + 1, texto: recortar(enUnaLinea(e?.trozo?.texto), LARGO_SIN_RED) })).filter((x) => x.texto);
+  if (!items.length) return '';
+  return [`Sin internet. Esto encontré en ${donde}:`, '', ...items.map((x) => `- ${x.texto} [${x.n}]`)].join('\n');
+}

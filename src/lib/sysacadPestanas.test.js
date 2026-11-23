@@ -1,6 +1,7 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
+import { fijarUsuario, mioActual, sonMiasLasDeSysacad } from './mio';
 import { mensajeDeEjemplo } from './demoSysacad';
-import { anchosParejos, fechaCompleta, filasQueCoinciden, leerPestanas, mismoAlumno, PESTANAS_DE_SYSACAD, vistoHace } from './sysacadPestanas';
+import { anchosParejos, fechaCompleta, huellaDelPar, filasQueCoinciden, leerPestanas, mismoAlumno, PESTANAS_DE_SYSACAD, vistoHace } from './sysacadPestanas';
 
 const AHORA = Date.UTC(2026, 10, 11, 15);
 const tabla = (extra = {}) => ({ t: 'tabla', titulo: null, columnas: ['Fecha', 'Materia', 'Nota'], filas: [['12/02/2026', 'Física I', '7']], ...extra });
@@ -137,6 +138,32 @@ describe('de quién son las copias', () => {
   ])('«%s» y «%s»: %s', (deSysacad, delCampus, igual) => {
     expect(mismoAlumno(deSysacad, delCampus)).toBe(igual);
     expect(mismoAlumno(delCampus, deSysacad)).toBe(igual);
+  });
+});
+
+describe('¿son tuyas?', () => {
+  afterEach(() => {
+    fijarUsuario(null);
+    localStorage.clear();
+  });
+
+  it('un nombre distinto en el campus vale después de que el alumno dice que son suyas, solo ese par', () => {
+    fijarUsuario(7);
+    expect(mismoAlumno('PEREZ, Juan Ignacio', 'Juancito Gamer')).toBe(false);
+    sonMiasLasDeSysacad(huellaDelPar('PEREZ, Juan Ignacio', 'Juancito Gamer'));
+    // Accents, capitals and order don't change the pair; the names never get stored.
+    expect(mismoAlumno('Juan Ignacio Pérez', 'GAMER, juancito')).toBe(true);
+    expect(mismoAlumno('GOMEZ, Ana', 'Juancito Gamer')).toBe(false);
+    expect(JSON.stringify(mioActual())).not.toMatch(/perez|juancito/i);
+    // Another student of the same browser doesn't inherit it.
+    fijarUsuario(8);
+    expect(mismoAlumno('PEREZ, Juan Ignacio', 'Juancito Gamer')).toBe(false);
+  });
+
+  it('sin nombre de un lado, nunca', () => {
+    fijarUsuario(7);
+    sonMiasLasDeSysacad(huellaDelPar('', 'Juancito Gamer'));
+    expect(mismoAlumno('', 'Juancito Gamer')).toBe(false);
   });
 });
 

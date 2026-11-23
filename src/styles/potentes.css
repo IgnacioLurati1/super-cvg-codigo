@@ -1,0 +1,284 @@
+/* The strong version of each theme (`data-potente`, src/lib/ajustes.js): its own sky behind the page, in every style.
+   Hoja, Plano and Pizarrón keep their lines, grid or chalk dust over it.
+
+   Each theme says two things: --particulas (small things in tiles of different sizes, so the pattern never shows) and
+   --cielo-potente (the lights, the big shapes and the base). Everything stays still. With high contrast, all of it, softened. */
+
+html[data-potente='si'] {
+  --particulas: linear-gradient(transparent, transparent);
+  --cielo-potente: linear-gradient(var(--fondo), var(--fondo));
+}
+
+/* The sky goes in a layer of its own, fixed to the window: scrolling doesn't repaint it, and iOS (which ignores
+   `background-attachment: fixed`) doesn't stretch it over the whole page. The body keeps only its color, which the
+   browser paints under everything, so the layer sits between that color and the page. */
+html[data-potente='si']:is([data-estilo='original'], [data-estilo='profesional'], [data-estilo='batman']) body {
+  background: var(--fondo);
+}
+
+/* Hoja, Plano and Pizarrón: the page's color goes to <html>, so the body paints only its pattern, over the sky. */
+html[data-potente='si']:is([data-estilo='hoja'], [data-estilo='plano'], [data-estilo='pizarron']) {
+  background: var(--fondo);
+}
+
+html[data-potente='si'][data-estilo='hoja'] body {
+  background: repeating-linear-gradient(to bottom, transparent 0 calc(var(--renglon-alto) - 1px), var(--renglon) 0 var(--renglon-alto));
+}
+
+html[data-potente='si'][data-estilo='plano'] body {
+  background:
+    linear-gradient(var(--cuadricula-mayor) 1px, transparent 1px) 0 0 / 120px 120px,
+    linear-gradient(90deg, var(--cuadricula-mayor) 1px, transparent 1px) 0 0 / 120px 120px,
+    linear-gradient(var(--cuadricula) 1px, transparent 1px) 0 0 / 24px 24px,
+    linear-gradient(90deg, var(--cuadricula) 1px, transparent 1px) 0 0 / 24px 24px;
+  background-attachment: fixed;
+}
+
+html[data-potente='si'][data-estilo='pizarron'] body {
+  background: var(--pizarron-polvo);
+  background-attachment: fixed;
+}
+
+/* The sky and its canvases measure the whole window, from the top left: the scrollbar comes and goes between screens
+   (Calendario is long, Buscar short) and the browser's bar on a phone, and with inset: 0 they would stretch and the scene
+   would move. The scrollbar goes over their right edge. */
+html[data-potente='si'] body::before {
+  content: '';
+  position: fixed;
+  inset: 0 auto auto 0;
+  width: 100vw;
+  height: 100vh;
+  height: 100lvh;
+  z-index: -1;
+  pointer-events: none;
+  contain: strict;
+  background: var(--particulas), var(--cielo-potente);
+}
+
+/* High contrast keeps the sky, the canvases too (src/lib/fondo), at less than half: the page's color shows through and
+   the text keeps its contrast. */
+html[data-potente='si'][data-contraste='alto'] body::before,
+html[data-potente='si'][data-contraste='alto'] .fondo-potente {
+  opacity: 0.42;
+}
+
+/* Seen through, the painted scene (Media and up) would show the CSS sky under it: two moons in Lavanda with Batman. With
+   the scene there, only the scene. */
+html[data-potente='si'][data-contraste='alto'] body:has(> .fondo-potente--escena)::before {
+  opacity: 0;
+}
+
+/* Claro: a day sky, with clouds. */
+html[data-potente='si'][data-tema='claro']:not([data-paleta]) {
+  --particulas:
+    radial-gradient(9vw 5vh at 12% 16%, rgb(255 255 255 / 0.95), transparent 70%) 0 0 / 100% 100% no-repeat,
+    radial-gradient(7vw 6vh at 16% 13%, rgb(255 255 255 / 0.95), transparent 70%) 0 0 / 100% 100% no-repeat,
+    radial-gradient(10vw 4vh at 19% 17%, rgb(255 255 255 / 0.9), transparent 70%) 0 0 / 100% 100% no-repeat,
+    radial-gradient(11vw 5vh at 80% 9%, rgb(255 255 255 / 0.9), transparent 70%) 0 0 / 100% 100% no-repeat,
+    radial-gradient(8vw 6vh at 85% 6%, rgb(255 255 255 / 0.95), transparent 70%) 0 0 / 100% 100% no-repeat,
+    radial-gradient(12vw 4vh at 88% 10%, rgb(255 255 255 / 0.85), transparent 70%) 0 0 / 100% 100% no-repeat,
+    radial-gradient(14vw 4vh at 55% 34%, rgb(255 255 255 / 0.7), transparent 70%) 0 0 / 100% 100% no-repeat,
+    radial-gradient(10vw 5vh at 60% 31%, rgb(255 255 255 / 0.7), transparent 70%) 0 0 / 100% 100% no-repeat;
+  --cielo-potente:
+    radial-gradient(40vw 30vh at 92% -6%, rgb(255 236 170 / 0.55), transparent 70%) 0 0 / 100% 100% no-repeat,
+    linear-gradient(180deg, #b9d8f5, #dcebf8 45vh, var(--fondo) 90vh);
+}
+
+/* Oscuro: the night, with the moon and a few stars. */
+html[data-potente='si'][data-tema='oscuro']:not([data-paleta]) {
+  --particulas:
+    radial-gradient(1.2px 1.2px at 40px 60px, rgb(255 255 255 / 0.75), transparent 70%) 0 0 / 199px 199px,
+    radial-gradient(1px 1px at 150px 20px, rgb(220 230 255 / 0.6), transparent 70%) 0 0 / 263px 263px,
+    radial-gradient(1.6px 1.6px at 90px 280px, rgb(255 255 255 / 0.85), transparent 70%) 0 0 / 347px 347px,
+    radial-gradient(1px 1px at 300px 120px, rgb(255 255 255 / 0.55), transparent 70%) 0 0 / 409px 409px;
+  --cielo-potente:
+    radial-gradient(circle 44px at 84% 13%, rgb(246 242 228 / 0.92) 96%, transparent 100%) 0 0 / 100% 100% no-repeat,
+    radial-gradient(circle 240px at 84% 13%, rgb(190 210 255 / 0.16), transparent 70%) 0 0 / 100% 100% no-repeat,
+    linear-gradient(0deg, rgb(255 170 90 / 0.1), transparent 28vh),
+    linear-gradient(180deg, #081223, var(--fondo) 70vh);
+}
+
+/* On a phone the moon would sit behind the text: it goes small and faint. */
+@media (max-width: 47.99rem) {
+  html[data-potente='si'][data-tema='oscuro']:not([data-paleta]) {
+    --cielo-potente:
+      radial-gradient(circle 22px at 88% 9%, rgb(246 242 228 / 0.35) 96%, transparent 100%) 0 0 / 100% 100% no-repeat,
+      radial-gradient(circle 140px at 88% 9%, rgb(190 210 255 / 0.12), transparent 70%) 0 0 / 100% 100% no-repeat,
+      linear-gradient(0deg, rgb(255 170 90 / 0.1), transparent 28vh),
+      linear-gradient(180deg, #081223, var(--fondo) 70vh);
+  }
+}
+
+/* Lavanda with Batman, always dark: the same field at night, with a crescent moon and the rows faintly lit. */
+html[data-potente='si'][data-estilo='batman'][data-paleta='lavanda'] {
+  --particulas:
+    radial-gradient(1.2px 1.2px at 40px 60px, rgb(235 225 255 / 0.75), transparent 70%) 0 0 / 199px 199px,
+    radial-gradient(1px 1px at 150px 20px, rgb(220 205 255 / 0.6), transparent 70%) 0 0 / 263px 263px,
+    radial-gradient(1.6px 1.6px at 90px 280px, rgb(240 232 255 / 0.85), transparent 70%) 0 0 / 347px 347px,
+    radial-gradient(3px 3px at 300px 520px, rgb(214 180 255 / 0.5), transparent 70%) 0 0 / 409px 409px;
+  --cielo-potente:
+    radial-gradient(circle 36px at calc(84% + 16px) calc(13% - 7px), #120c2a 96%, transparent 100%) 0 0 / 100% 100% no-repeat,
+    radial-gradient(circle 40px at 84% 13%, rgb(241 234 252 / 0.95) 96%, transparent 100%) 0 0 / 100% 100% no-repeat,
+    radial-gradient(circle 220px at 84% 13%, rgb(200 180 255 / 0.16), transparent 70%) 0 0 / 100% 100% no-repeat,
+    radial-gradient(90vw 34vh at 50% 100%, rgb(132 96 205 / 0.3), transparent 70%) 0 0 / 100% 100% no-repeat,
+    linear-gradient(180deg, #0b0820, #1b1340 50vh, var(--fondo));
+}
+
+@media (max-width: 47.99rem) {
+  html[data-potente='si'][data-estilo='batman'][data-paleta='lavanda'] {
+    --cielo-potente:
+      radial-gradient(90vw 34vh at 50% 100%, rgb(132 96 205 / 0.3), transparent 70%) 0 0 / 100% 100% no-repeat,
+      linear-gradient(180deg, #0b0820, #1b1340 50vh, var(--fondo));
+  }
+}
+
+/* Rosa oscuro: cherry petals at dusk. */
+html[data-potente='si'][data-paleta='rosa'] {
+  --particulas:
+    radial-gradient(7px 4px at 40px 60px, rgb(255 196 222 / 0.6) 50%, transparent 100%) 0 0 / 263px 263px,
+    radial-gradient(4px 7px at 170px 200px, rgb(255 176 222 / 0.6) 50%, transparent 100%) 0 0 / 331px 331px,
+    radial-gradient(7px 4px at 90px 330px, rgb(255 210 222 / 0.6) 50%, transparent 100%) 0 0 / 409px 409px,
+    radial-gradient(4px 7px at 300px 90px, rgb(255 186 222 / 0.6) 50%, transparent 100%) 0 0 / 479px 479px,
+    radial-gradient(7px 4px at 420px 380px, rgb(255 200 222 / 0.6) 50%, transparent 100%) 0 0 / 547px 547px,
+    radial-gradient(4px 7px at 230px 500px, rgb(255 170 222 / 0.6) 50%, transparent 100%) 0 0 / 613px 613px;
+  --cielo-potente:
+    radial-gradient(80vw 42vh at 50% 108%, rgb(255 128 96 / 0.38), transparent 70%) 0 0 / 100% 100% no-repeat,
+    radial-gradient(55vw 40vh at 15% 0%, rgb(194 48 110 / 0.45), transparent 70%) 0 0 / 100% 100% no-repeat,
+    radial-gradient(40vw 30vh at 90% 30%, rgb(255 100 160 / 0.22), transparent 70%) 0 0 / 100% 100% no-repeat,
+    linear-gradient(180deg, var(--cielo), var(--fondo));
+}
+
+/* Verde bosque: the forest at night, with fireflies. */
+html[data-potente='si'][data-paleta='bosque'] {
+  --particulas:
+    radial-gradient(circle 10px at 40px 60px, rgb(244 255 160 / 0.6), rgb(214 255 110 / 0.22) 28%, transparent 100%) 0 0 / 263px 263px,
+    radial-gradient(circle 8px at 170px 200px, rgb(244 255 160 / 0.6), rgb(214 255 110 / 0.22) 28%, transparent 100%) 0 0 / 331px 331px,
+    radial-gradient(circle 12px at 90px 330px, rgb(244 255 160 / 0.6), rgb(214 255 110 / 0.22) 28%, transparent 100%) 0 0 / 409px 409px,
+    radial-gradient(circle 7px at 300px 90px, rgb(244 255 160 / 0.6), rgb(214 255 110 / 0.22) 28%, transparent 100%) 0 0 / 479px 479px,
+    radial-gradient(circle 11px at 420px 380px, rgb(244 255 160 / 0.6), rgb(214 255 110 / 0.22) 28%, transparent 100%) 0 0 / 547px 547px,
+    radial-gradient(circle 9px at 230px 500px, rgb(244 255 160 / 0.6), rgb(214 255 110 / 0.22) 28%, transparent 100%) 0 0 / 613px 613px;
+  --cielo-potente:
+    radial-gradient(45vw 60vh at 72% -12%, rgb(170 255 200 / 0.2), transparent 70%) 0 0 / 100% 100% no-repeat,
+    linear-gradient(0deg, rgb(130 210 160 / 0.22), transparent 36vh),
+    linear-gradient(180deg, #030c07, var(--fondo) 45vh);
+}
+
+/* Café: the light of a lamp and the rings of a cup. */
+html[data-potente='si'][data-paleta='cafe'] {
+  --particulas:
+    radial-gradient(1px 1px at 60px 40px, rgb(255 222 180 / 0.35), transparent 70%) 0 0 / 157px 157px,
+    radial-gradient(1.4px 1.4px at 120px 180px, rgb(255 210 160 / 0.3), transparent 70%) 0 0 / 241px 241px;
+  --cielo-potente:
+    radial-gradient(circle at 9% 82%, transparent 66px, rgb(176 110 56 / 0.3) 68px, rgb(176 110 56 / 0.12) 73px, transparent 76px) 0 0 / 100% 100% no-repeat,
+    radial-gradient(circle at 14% 76%, transparent 70px, rgb(176 110 56 / 0.18) 72px, transparent 76px) 0 0 / 100% 100% no-repeat,
+    radial-gradient(circle at 93% 58%, transparent 56px, rgb(176 110 56 / 0.24) 58px, rgb(176 110 56 / 0.1) 62px, transparent 65px) 0 0 / 100% 100% no-repeat,
+    radial-gradient(50vw 50vh at 88% -8%, rgb(255 190 110 / 0.24), transparent 70%) 0 0 / 100% 100% no-repeat,
+    radial-gradient(30vw 30vh at 88% -4%, rgb(255 214 150 / 0.14), transparent 70%) 0 0 / 100% 100% no-repeat,
+    linear-gradient(180deg, var(--cielo), var(--fondo));
+}
+
+/* Lavanda: a lilac sky over a lavender field. */
+html[data-potente='si'][data-paleta='lavanda']:not([data-estilo='batman']) {
+  --particulas:
+    radial-gradient(3px 7px at 40px 60px, rgb(123 82 199 / 0.5) 50%, transparent 100%) 0 0 / 263px 263px,
+    radial-gradient(3px 7px at 170px 200px, rgb(140 82 199 / 0.5) 50%, transparent 100%) 0 0 / 331px 331px,
+    radial-gradient(3px 7px at 90px 330px, rgb(110 82 199 / 0.5) 50%, transparent 100%) 0 0 / 409px 409px,
+    radial-gradient(3px 7px at 300px 90px, rgb(150 82 199 / 0.5) 50%, transparent 100%) 0 0 / 479px 479px,
+    radial-gradient(3px 7px at 420px 380px, rgb(118 82 199 / 0.5) 50%, transparent 100%) 0 0 / 547px 547px,
+    radial-gradient(3px 7px at 230px 500px, rgb(132 82 199 / 0.5) 50%, transparent 100%) 0 0 / 613px 613px;
+  --cielo-potente:
+    radial-gradient(40vw 30vh at 85% 4%, rgb(255 228 245 / 0.9), transparent 70%) 0 0 / 100% 100% no-repeat,
+    radial-gradient(90vw 30vh at 50% 108%, rgb(140 100 210 / 0.45), transparent 70%) 0 0 / 100% 100% no-repeat,
+    linear-gradient(0deg, rgb(150 110 220 / 0.26), transparent 30vh),
+    linear-gradient(180deg, #ddccf6, var(--fondo) 60vh);
+}
+
+/* Infierno: embers and sparks rising from below. */
+html[data-potente='si'][data-paleta='infierno'] {
+  --particulas:
+    radial-gradient(circle 7px at 40px 60px, rgb(255 226 140 / 0.6), rgb(255 120 30 / 0.3) 32%, transparent 100%) 0 0 / 223px 223px,
+    radial-gradient(circle 5px at 170px 200px, rgb(255 226 140 / 0.6), rgb(255 120 30 / 0.3) 32%, transparent 100%) 0 0 / 291px 291px,
+    radial-gradient(circle 8px at 90px 330px, rgb(255 226 140 / 0.6), rgb(255 120 30 / 0.3) 32%, transparent 100%) 0 0 / 369px 369px,
+    radial-gradient(circle 4px at 300px 90px, rgb(255 226 140 / 0.6), rgb(255 120 30 / 0.3) 32%, transparent 100%) 0 0 / 439px 439px,
+    radial-gradient(circle 6px at 420px 380px, rgb(255 226 140 / 0.6), rgb(255 120 30 / 0.3) 32%, transparent 100%) 0 0 / 507px 507px,
+    radial-gradient(circle 5px at 230px 500px, rgb(255 226 140 / 0.6), rgb(255 120 30 / 0.3) 32%, transparent 100%) 0 0 / 573px 573px;
+  --cielo-potente:
+    radial-gradient(95vw 48vh at 50% 112%, rgb(255 96 24 / 0.5), transparent 70%) 0 0 / 100% 100% no-repeat,
+    radial-gradient(40vw 40vh at 8% 104%, rgb(200 40 10 / 0.45), transparent 70%) 0 0 / 100% 100% no-repeat,
+    radial-gradient(40vw 40vh at 94% 100%, rgb(255 140 30 / 0.2), transparent 70%) 0 0 / 100% 100% no-repeat,
+    linear-gradient(180deg, #0c0302, var(--fondo) 50vh);
+}
+
+/* Glaciar: the northern lights and snow. */
+html[data-potente='si'][data-paleta='glaciar'] {
+  --particulas:
+    radial-gradient(circle 1.6px at 30px 50px, rgb(255 255 255 / 0.8), transparent 75%) 0 0 / 167px 167px,
+    radial-gradient(circle 1.2px at 120px 140px, rgb(230 248 255 / 0.65), transparent 75%) 0 0 / 233px 233px,
+    radial-gradient(circle 2.2px at 200px 60px, rgb(255 255 255 / 0.85), transparent 75%) 0 0 / 301px 301px,
+    radial-gradient(circle 1.4px at 60px 280px, rgb(220 245 255 / 0.6), transparent 75%) 0 0 / 379px 379px;
+  --cielo-potente:
+    radial-gradient(70vw 13vh at 30% 12%, rgb(60 255 180 / 0.26), transparent 70%) 0 0 / 100% 100% no-repeat,
+    radial-gradient(55vw 10vh at 66% 21%, rgb(80 210 255 / 0.22), transparent 70%) 0 0 / 100% 100% no-repeat,
+    radial-gradient(50vw 9vh at 52% 5%, rgb(150 120 255 / 0.18), transparent 70%) 0 0 / 100% 100% no-repeat,
+    radial-gradient(60vw 14vh at 80% 32%, rgb(60 255 180 / 0.1), transparent 70%) 0 0 / 100% 100% no-repeat,
+    linear-gradient(180deg, #030d14, var(--fondo) 60vh);
+}
+
+/* Violeta cósmico: space, with stars and three nebulas. */
+html[data-potente='si'][data-paleta='cosmico'] {
+  --particulas:
+    radial-gradient(1.4px 1.4px at 31px 47px, rgb(255 255 255 / 0.85), transparent 70%) 0 0 / 173px 173px,
+    radial-gradient(1px 1px at 120px 90px, rgb(233 213 255 / 0.7), transparent 70%) 0 0 / 211px 211px,
+    radial-gradient(1.8px 1.8px at 200px 30px, rgb(255 255 255 / 0.9), transparent 70%) 0 0 / 263px 263px,
+    radial-gradient(1px 1px at 60px 250px, rgb(240 171 252 / 0.7), transparent 70%) 0 0 / 307px 307px,
+    radial-gradient(1.2px 1.2px at 290px 180px, rgb(255 255 255 / 0.6), transparent 70%) 0 0 / 359px 359px,
+    radial-gradient(2.2px 2.2px at 140px 340px, rgb(255 255 255 / 0.95), transparent 70%) 0 0 / 431px 431px,
+    radial-gradient(1px 1px at 80px 140px, rgb(255 255 255 / 0.75), transparent 70%) 0 0 / 149px 149px,
+    radial-gradient(1.6px 1.6px at 220px 400px, rgb(233 213 255 / 0.85), transparent 70%) 0 0 / 467px 467px;
+  --cielo-potente:
+    radial-gradient(55vw 42vh at 14% 10%, rgb(168 85 247 / 0.42), transparent 70%) 0 0 / 100% 100% no-repeat,
+    radial-gradient(45vw 38vh at 88% 30%, rgb(217 70 239 / 0.3), transparent 70%) 0 0 / 100% 100% no-repeat,
+    radial-gradient(70vw 50vh at 62% 100%, rgb(99 102 241 / 0.26), transparent 70%) 0 0 / 100% 100% no-repeat,
+    radial-gradient(30vw 22vh at 40% 55%, rgb(236 72 153 / 0.12), transparent 70%) 0 0 / 100% 100% no-repeat,
+    linear-gradient(180deg, var(--cielo), var(--fondo));
+}
+
+/* Movement and high quality (src/lib/fondo/fondo.js): two canvases over this sky. While they move, the still particles
+   above go away. */
+.fondo-potente {
+  position: fixed;
+  inset: 0 auto auto 0;
+  width: 100vw;
+  height: 100vh;
+  height: 100lvh;
+  z-index: -1;
+  pointer-events: none;
+}
+
+html[data-fondo-lienzo][data-fondo-mueve='si'] body::before {
+  background: var(--cielo-potente);
+}
+
+/* Violeta cósmico with «Movimiento del fondo»: the nebula drifts, slowly. In Baja it is in the CSS sky (its stars, too,
+   until the canvas takes them); painted, in the sky's canvas. A bit bigger than the window, so its edges never show. */
+@keyframes nebulosa-deriva {
+  from {
+    transform: scale(1.07) translate(-1.6%, -1%) rotate(-0.5deg);
+  }
+  to {
+    transform: scale(1.07) translate(1.6%, 1%) rotate(0.5deg);
+  }
+}
+
+html[data-potente='si'][data-paleta='cosmico'][data-fondo-mueve='si']:not([data-movimiento='ninguno'], [data-movimiento='reducido']) body::before,
+html[data-potente='si'][data-paleta='cosmico'][data-fondo-mueve='si']:not([data-movimiento='ninguno'], [data-movimiento='reducido']) .fondo-potente--escena {
+  animation: nebulosa-deriva 70s ease-in-out infinite alternate;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-movimiento='sistema'] body::before,
+  html[data-movimiento='sistema'] .fondo-potente--escena {
+    animation: none;
+  }
+}

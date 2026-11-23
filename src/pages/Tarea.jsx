@@ -405,7 +405,7 @@ function TuEntrega({ tarea, materia, estado, ahora, onCambio }) {
 
 export default function Tarea() {
   const { id, tarea: cmid } = useParams();
-  const { datos, error, cargando, recargar } = useConsulta(() => cargarTarea(Number(id), Number(cmid)), [id, cmid]);
+  const { datos, error, cargando, recargar } = useConsulta(() => cargarTarea(Number(id), Number(cmid)), [id, cmid], { alInstante: true });
   // Fixed title: the browser history keeps it even after leaving.
   useSeo({ titulo: tituloDe('Tarea'), noindex: true });
   const [ahora, setAhora] = useState(() => Date.now() / 1000);

@@ -1,5 +1,6 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { cerrarSesion, conCache, iniciarSesion, tokenActual, vaciarCache } from './sesion';
+import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { cerrarSesion, conCache, desdeLoGuardado, enCache, exigirCampus, iniciarSesion, olvidar, tokenActual, vaciarCache } from './sesion';
+import { huellaDe } from './sinInternet';
 
 beforeEach(() => {
   sessionStorage.clear();
@@ -105,5 +106,199 @@ describe('conCache', () => {
   it('does not store a failed answer', async () => {
     await expect(conCache('a', 5, async () => { throw new Error('x'); })).rejects.toThrow('x');
     expect(await conCache('a', 5, async () => 3)).toBe(3);
+  });
+});
+
+describe('desdeLoGuardado', () => {
+  // An answer already past its window: what a screen finds when it comes back after a while.
+  const vieja = async (nombre, datos) => {
+    await conCache(nombre, 0, async () => datos);
+  };
+
+  it('draws from what was kept without asking, and the campus is asked as always afterwards', async () => {
+    await vieja('materias', 'viejo');
+    const pide = vi.fn(async () => 'nuevo');
+    expect(await desdeLoGuardado(() => conCache('materias', 0, pide))).toEqual({ datos: 'viejo' });
+    expect(pide).not.toHaveBeenCalled();
+    expect(await conCache('materias', 0, pide)).toBe('nuevo');
+    expect(pide).toHaveBeenCalledTimes(1);
+  });
+
+  it('follows a screen that asks one thing after another', async () => {
+    await vieja('perfil', { id: 5 });
+    await vieja('materias', [11]);
+    await vieja('contenido.11', ['Unidad 1']);
+    const pide = vi.fn(async () => 'no');
+    const r = await desdeLoGuardado(async () => {
+      await conCache('perfil', 0, pide);
+      const [id] = await conCache('materias', 0, pide);
+      return conCache(`contenido.${id}`, 0, pide);
+    });
+    expect(r).toEqual({ datos: ['Unidad 1'] });
+    expect(pide).not.toHaveBeenCalled();
+  });
+
+  it('gives nothing when a part is not kept, even if the screen catches the error, and asks nobody', async () => {
+    await vieja('perfil', { id: 5 });
+    const pide = vi.fn(async () => 'no');
+    expect(await desdeLoGuardado(() => conCache('materias', 0, pide))).toBeNull();
+    expect(await desdeLoGuardado(async () => (await conCache('materias', 0, pide).catch(() => null)) ?? 'vacío')).toBeNull();
+    expect(pide).not.toHaveBeenCalled();
+    expect(() => exigirCampus()).not.toThrow();
+  });
+
+  it('another caller at the same time still gets the campus, not what was kept', async () => {
+    await vieja('materias', 'viejo');
+    const pasada = desdeLoGuardado(async () => {
+      const a = await conCache('materias', 0, async () => 'no');
+      await new Promise((ok) => setTimeout(ok, 30));
+      return a;
+    });
+    // The pass is waiting on something else: another task asks meanwhile.
+    await new Promise((ok) => setTimeout(ok, 10));
+    expect(await conCache('materias', 0, async () => 'nuevo')).toBe('nuevo');
+    // And the pass ended where it waited, giving nothing.
+    expect(await pasada).toBeNull();
+  });
+
+  it('forgets nothing and asks nothing outside conCache during the pass', async () => {
+    await vieja('materias', 'viejo');
+    let lanzo = false;
+    const r = await desdeLoGuardado(async () => {
+      olvidar(['materias']);
+      try {
+        exigirCampus();
+      } catch {
+        lanzo = true;
+      }
+      return conCache('materias', 0, async () => 'no');
+    });
+    expect(lanzo).toBe(true);
+    expect(r).toBeNull();
+    expect(enCache('materias')).toBe('viejo');
+  });
+
+  it('what was forgotten is not drawn again', async () => {
+    await vieja('tarea.3', 'sin entregar');
+    olvidar(['tarea.']);
+    expect(await desdeLoGuardado(() => conCache('tarea.3', 5, async () => 'no'))).toBeNull();
+  });
+
+  it('nothing of the previous student', async () => {
+    await vieja('materias', 'de A');
+    const pasada = desdeLoGuardado(() => conCache('materias', 0, async () => 'no'));
+    cerrarSesion();
+    expect(await pasada).toBeNull();
+  });
+});
+
+describe('the tabs of the session', () => {
+  const otra = new BroadcastChannel('super-cvg-pestanas');
+  const esperar = (ms) => new Promise((ok) => setTimeout(ok, ms));
+  const recibidos = [];
+  otra.onmessage = ({ data }) => recibidos.push(data);
+  beforeEach(() => {
+    recibidos.length = 0;
+    iniciarSesion('k');
+  });
+  afterAll(() => otra.close());
+
+  it('takes what another tab of the session brought, without asking', async () => {
+    const huella = await huellaDe('k');
+    otra.postMessage({ tipo: 'campus.respuesta', huella, nombre: 'materias', cuando: Date.now(), desde: Date.now(), datos: ['Física II'] });
+    await vi.waitFor(() => expect(enCache('materias')).toEqual(['Física II']));
+    const fn = vi.fn(async () => 'no');
+    expect(await conCache('materias', 5, fn)).toEqual(['Física II']);
+    expect(fn).not.toHaveBeenCalled();
+  });
+
+  it('ignores another student, and everything after Salir', async () => {
+    otra.postMessage({ tipo: 'campus.respuesta', huella: await huellaDe('otra'), nombre: 'materias', cuando: Date.now(), desde: Date.now(), datos: ['ajena'] });
+    await esperar(30);
+    expect(enCache('materias')).toBeUndefined();
+    const huella = await huellaDe('k');
+    cerrarSesion();
+    otra.postMessage({ tipo: 'campus.respuesta', huella, nombre: 'materias', cuando: Date.now(), desde: Date.now(), datos: ['tarde'] });
+    await esperar(30);
+    expect(enCache('materias')).toBeUndefined();
+  });
+
+  it('does not take what was asked before this tab forgot it', async () => {
+    const huella = await huellaDe('k');
+    const desde = Date.now() - 1000;
+    olvidar(['tarea.']);
+    otra.postMessage({ tipo: 'campus.respuesta', huella, nombre: 'tarea.3', cuando: Date.now(), desde, datos: 'antes de entregar' });
+    await esperar(30);
+    expect(enCache('tarea.3')).toBeUndefined();
+  });
+
+  it('waits for what another tab is asking for instead of asking again', async () => {
+    const huella = await huellaDe('k');
+    otra.postMessage({ tipo: 'campus.pidiendo', huella, nombre: 'materias', desde: Date.now() });
+    await esperar(30);
+    const fn = vi.fn(async () => 'propio');
+    const pedido = conCache('materias', 5, fn);
+    await esperar(30);
+    otra.postMessage({ tipo: 'campus.respuesta', huella, nombre: 'materias', cuando: Date.now(), desde: Date.now(), datos: 'de la otra' });
+    expect(await pedido).toBe('de la otra');
+    expect(fn).not.toHaveBeenCalled();
+  });
+
+  it('two tabs that start together agree on one asking', async () => {
+    const huella = await huellaDe('k');
+    // Something from another tab first: this one knows it is not alone.
+    otra.postMessage({ tipo: 'campus.fallo', huella, nombre: 'nada' });
+    otra.postMessage({ tipo: 'campus.pidiendo', huella, nombre: 'nada', desde: Date.now(), de: 'z' });
+    await esperar(30);
+    const fn = vi.fn(async () => 'propio');
+    const pedido = conCache('contenido.5', 5, fn);
+    // The other one started a moment before.
+    otra.postMessage({ tipo: 'campus.pidiendo', huella, nombre: 'contenido.5', desde: Date.now() - 5, de: 'z' });
+    await esperar(100);
+    otra.postMessage({ tipo: 'campus.respuesta', huella, nombre: 'contenido.5', cuando: Date.now(), desde: Date.now() - 5, datos: 'de la otra' });
+    expect(await pedido).toBe('de la otra');
+    expect(fn).not.toHaveBeenCalled();
+  });
+
+  it('asks itself when the other tab could not', async () => {
+    const huella = await huellaDe('k');
+    otra.postMessage({ tipo: 'campus.pidiendo', huella, nombre: 'materias', desde: Date.now() });
+    await esperar(30);
+    const pedido = conCache('materias', 5, async () => 'propio');
+    otra.postMessage({ tipo: 'campus.fallo', huella, nombre: 'materias' });
+    expect(await pedido).toBe('propio');
+  });
+
+  it('a tab that opens takes what another of the session has, without asking', async () => {
+    const huella = await huellaDe('k');
+    // Another tab of the session is open: it holds its lock, and answers the greeting.
+    const otraPresente = { name: `super-cvg-sesion-${huella}`, mode: 'shared' };
+    Object.defineProperty(navigator, 'locks', {
+      configurable: true,
+      value: { request: (nombre, opciones, fn) => fn(), query: async () => ({ held: [otraPresente] }) },
+    });
+    const saludos = new BroadcastChannel('super-cvg-pestanas');
+    saludos.onmessage = ({ data }) => {
+      if (data.tipo !== 'campus.hola' || data.huella !== huella) return;
+      saludos.postMessage({ tipo: 'campus.entrega', huella, nombre: 'materias', cuando: Date.now(), desde: Date.now(), datos: ['de la otra'] });
+      saludos.postMessage({ tipo: 'campus.entregado', huella });
+    };
+    try {
+      const fn = vi.fn(async () => ['propias']);
+      expect(await conCache('materias', 5, fn)).toEqual(['de la otra']);
+      expect(fn).not.toHaveBeenCalled();
+    } finally {
+      saludos.close();
+      delete navigator.locks;
+    }
+  });
+
+  it('tells the others what it asks for and what came', async () => {
+    await conCache('contenido.77', 5, async () => ['Unidad 1']);
+    const huella = await huellaDe('k');
+    const estos = () => recibidos.filter((m) => m.nombre === 'contenido.77');
+    await vi.waitFor(() => expect(estos().map((m) => m.tipo)).toEqual(['campus.pidiendo', 'campus.respuesta']));
+    expect(estos().every((m) => m.huella === huella)).toBe(true);
+    expect(estos()[1].datos).toEqual(['Unidad 1']);
   });
 });

@@ -1,0 +1,56 @@
+/* The bar of a design being tried (BarraDePrueba.jsx), at the bottom of every screen until the student answers it. */
+.prueba-barra {
+  position: fixed;
+  left: 50%;
+  bottom: max(12px, env(safe-area-inset-bottom));
+  z-index: 35;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 16px;
+  width: min(40rem, calc(100% - 2 * var(--margen)));
+  padding: 12px 16px;
+  border: 2px solid var(--accion);
+  border-radius: var(--radio-bloque);
+  background: var(--superficie);
+  box-shadow: 0 10px 30px -12px var(--sombra, rgb(0 0 0 / 0.5));
+  transform: translateX(-50%);
+}
+
+.prueba-barra p {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.prueba-barra__acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.prueba-barra .boton {
+  white-space: nowrap;
+}
+
+/* On a phone, low: the text over the two buttons side by side, with less room around. */
+@media (max-width: 40rem) {
+  .prueba-barra {
+    gap: 8px;
+    padding: 8px 12px;
+  }
+
+  .prueba-barra__acciones {
+    flex-wrap: nowrap;
+    width: 100%;
+  }
+
+  .prueba-barra__acciones .boton {
+    flex: 1;
+  }
+}
+
+/* The room it takes at the end of the page, so nothing stays under it. */
+.prueba-hueco {
+  height: var(--alto-barra-prueba, 0px);
+}

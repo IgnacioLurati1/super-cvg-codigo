@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
+import { useDeNoche } from '../lib/ajustes';
 
 // The screens of the header, in the order they came. Configuración (ajustes.js) says how it looks, where each one goes
 // (in sight, inside «Más» or nowhere) and their order, which is also the one of Alt and a number (atajos.js).
@@ -19,6 +20,7 @@ export const PANTALLAS_DEL_MENU = [
   { clave: 'repaso', a: '/repaso', texto: 'Repaso' },
   { clave: 'consultron', a: '/consultron', texto: 'Consultron' },
   { clave: 'envivo', a: '/en-vivo', texto: 'En vivo' },
+  { clave: 'disenos', a: '/disenos', texto: 'Diseños' },
 ];
 
 // Mensajes and Configuración always go with their drawing; the rest, with the styles that have them.
@@ -75,6 +77,8 @@ const DIBUJOS = {
     </>
   ),
   laboratorio: <path d="M8 7l-5 5 5 5M16 7l5 5-5 5M14 4l-4 16" />,
+  // Diseños: a painter's palette, with three dots of paint.
+  disenos: <path d="M12 3.5a8.5 8.5 0 1 0 0 17c1.1 0 1.7-.7 1.7-1.6 0-.5-.2-.8-.5-1.2-.3-.3-.5-.7-.5-1.2 0-.9.7-1.6 1.6-1.6h1.9a4.3 4.3 0 0 0 4.3-4.3c0-3.9-3.8-7.1-8.5-7.1zM7.5 12h.01M9.5 8h.01M14.5 8h.01" />,
   // Repaso: two index cards, one over the other.
   repaso: <path d="M7.5 4.5h13v10h-13zM3.5 8.5v11h13M10.5 8h7M10.5 11h4.5" />,
   consultron: <path d="M12 4.6V7M13.3 3.3a1.3 1.3 0 1 1-2.6 0 1.3 1.3 0 0 1 2.6 0zM8 7h8a3.5 3.5 0 0 1 3.5 3.5V15a3.5 3.5 0 0 1-3.5 3.5H8A3.5 3.5 0 0 1 4.5 15v-4.5A3.5 3.5 0 0 1 8 7zM2.5 11.5v3M21.5 11.5v3M9.5 11.6v.9M14.5 11.6v.9M10 15.3c1.2.8 2.8.8 4 0" />,
@@ -86,11 +90,15 @@ const DIBUJOS = {
   ),
 };
 
+// Hoy at night: the moon instead of the sun (the hours of «Según la hora», or 20 to 7).
+const LUNA = <path d="M19.5 14.6A8 8 0 0 1 9.4 4.5a8 8 0 1 0 10.1 10.1z" />;
+
 /** The drawing of a screen of the menu. */
 export function IconoMenu({ nombre }) {
+  const deNoche = useDeNoche();
   return (
     <svg className="icono-menu" viewBox="0 0 24 24" aria-hidden="true" focusable="false" strokeLinecap="round">
-      {DIBUJOS[nombre]}
+      {nombre === 'hoy' && deNoche ? LUNA : DIBUJOS[nombre]}
     </svg>
   );
 }

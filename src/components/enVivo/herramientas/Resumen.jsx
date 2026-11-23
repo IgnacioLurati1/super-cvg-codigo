@@ -257,7 +257,7 @@ function useDelBanco(r) {
 // The «me gusta» of the student's account, as in Resúmenes: a key El Santo Resumen no longer knows is forgotten.
 function GustoDeLaMesa({ r }) {
   const { avisar } = useUI();
-  const { datos: perfil } = useConsulta(cargarPerfil);
+  const { datos: perfil } = useConsulta(cargarPerfil, [], { alInstante: true });
   const alumno = perfil?.id ?? null;
   const vinculo = useVinculo(alumno);
   const cortar = (cual) => {

@@ -8,6 +8,9 @@ import '@fontsource/kalam/latin-700.css';
 import './styles/tokens.css';
 import './styles/base.css';
 import './styles/estilos.css';
+import './styles/potentes.css';
+import './styles/filtros.css';
+import { iniciarFondo } from './lib/fondo/fondo';
 import './styles/animaciones.css';
 import App from './App';
 import { atenderVueltaDeGoogle } from './lib/google';
@@ -15,11 +18,12 @@ import { iniciarMovimiento } from './lib/movimiento';
 import { iniciarEscritura } from './lib/escritura';
 import { marcarLlegadas } from './lib/llegadas';
 import { arrancarCalendario } from './lib/calendarioSincro';
-import { arrancarDrive } from './lib/sincro';
 import { arrancarApariencia } from './lib/apariencia';
 import { iniciarVinculo } from './lib/resumenes';
 import { iniciarSysacad } from './lib/sysacad';
 import { escucharInstalacion } from './lib/instalar';
+import { registrarTrabajador } from './lib/trabajador';
+import { limpiarCompartidoViejo } from './lib/compartido';
 import { contarVisita } from './lib/visita';
 import { sumarLetrasDeCodigo } from './lib/letrasDeCodigo';
 
@@ -39,16 +43,27 @@ if (atenderVueltaDeGoogle()) {
   iniciarSysacad();
   // The look goes with the student's things, and comes back from them.
   arrancarApariencia();
-  // «Guardar en tu Google Drive», for whoever turned it on.
-  arrancarDrive();
+  // «Guardar en tu Google Drive», for whoever turned it on. Apart: it brings the union and Drive, and the first page
+  // shouldn't wait for them.
+  import('./lib/sincro').then((m) => m.arrancarDrive(), () => {});
+  // Sysacad Lindo's finals, copies and exams, through the same Drive, for the devices without the extension.
+  import('./lib/sysacadEnDrive').then((m) => m.arrancarSysacadEnDrive(), () => {});
   // The calendar «Super CVG» in Google Calendar, for whoever linked it.
   arrancarCalendario();
   // «Entrar con Google»: its file in Drive follows a new campus key.
   import('./lib/entrarConGoogle').then((m) => m.arrancarEntrarConGoogle(), () => {});
   // The browser's offer to install it comes once and early, before anyone opens Configuración.
   escucharInstalacion();
+  // The site's own files, kept to open without internet (scripts/trabajador.mjs).
+  registrarTrabajador();
+  // «Descargas inteligentes»: what the worker needs to bring the day's material with the site closed. Apart, like Drive.
+  import('./lib/descargas').then((m) => m.arrancarDescargas(), () => {});
+  // What another app shared and nobody placed goes after half an hour (compartido.js).
+  limpiarCompartidoViejo();
   // The letters of the code that can be chosen (Configuración, Laboratorio): downloaded only when one shows.
   sumarLetrasDeCodigo();
+  // The strong themes' movement and high quality: nothing is drawn until one of them is on.
+  iniciarFondo();
 
   createRoot(document.getElementById('root')).render(
     <StrictMode>

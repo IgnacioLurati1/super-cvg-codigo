@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { bajarArchivo, CAMPUS, enviarEntrega, ErrorCampus, ESCRITURA, guardarEntrega, inscribirse, LARGO_MAXIMO, largoEnBytes, LECTURA, llamar, mandarMensaje, marcarLeida, pedirClave, responderEnConversacion, responderEnForo, subirArchivo, textoAHtml } from './moodle';
+import { TOPE_MS, bajarArchivo, CAMPUS, esArchivoDelCampus, pedirArchivo, enviarEntrega, ErrorCampus, ESCRITURA, guardarEntrega, inscribirse, LARGO_MAXIMO, largoEnBytes, LECTURA, llamar, mandarMensaje, marcarLeida, pedirClave, responderEnConversacion, responderEnForo, subirArchivo, textoAHtml } from './moodle';
 
 const responder = (cuerpo, { status = 200, tipo = 'application/json' } = {}) =>
   vi.fn(async () => new Response(typeof cuerpo === 'string' ? cuerpo : JSON.stringify(cuerpo), { status, headers: { 'content-type': tipo } }));
@@ -175,6 +175,27 @@ describe('bajarArchivo', () => {
   it('treats a JSON answer as a failed download', async () => {
     vi.stubGlobal('fetch', responder({ error: 'x' }));
     await expect(bajarArchivo('k', direccion)).rejects.toMatchObject({ codigo: 'archivo_rechazado' });
+  });
+
+  it('asks for a part with Range, the key still only in the body', async () => {
+    const pedido = vi.fn(async () => new Response('pd', { status: 206, headers: { 'content-type': 'application/pdf', 'content-range': 'bytes 0-1/9' } }));
+    vi.stubGlobal('fetch', pedido);
+    const corte = new AbortController();
+    const respuesta = await pedirArchivo('secreta', direccion, { rango: 'bytes=0-1', senal: corte.signal });
+    expect(respuesta.status).toBe(206);
+    const [url, opciones] = pedido.mock.calls[0];
+    expect(String(url)).not.toMatch(/token|secreta|vieja/);
+    expect(opciones.headers).toEqual({ Range: 'bytes=0-1' });
+    // The caller's signal still stops it (joined with the time limit).
+    corte.abort();
+    expect(opciones.signal.aborted).toBe(true);
+    expect(opciones.body.get('token')).toBe('secreta');
+    expect(JSON.stringify(opciones.headers)).not.toContain('secreta');
+  });
+
+  it('knows a campus file by its address', () => {
+    expect(esArchivoDelCampus(direccion)).toBe(true);
+    for (const otra of ['https://evil.example/webservice/pluginfile.php/1/a.pdf', `${CAMPUS}/pluginfile.php/1/a.pdf`, 'no es una dirección', undefined]) expect(esArchivoDelCampus(otra)).toBe(false);
   });
 
 describe('lo que no se puede torcer', () => {
@@ -501,5 +522,59 @@ describe('enviarEntrega', () => {
     vi.stubGlobal('fetch', caido);
     await expect(enviarEntrega('k', 7)).rejects.toMatchObject({ codigo: 'http_503' });
     expect(caido).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('15 segundos para que el campus conteste', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.unstubAllGlobals();
+  });
+
+  // A connection that neither answers nor breaks: only the signal ends it.
+  const colgado = () =>
+    vi.fn((_url, { signal } = {}) => new Promise((_ok, mal) => signal?.addEventListener('abort', () => mal(signal.reason ?? new DOMException('aborted', 'AbortError')))));
+
+  it('una lectura sin respuesta falla a los 15 s como una caída de la red', async () => {
+    vi.useFakeTimers();
+    vi.stubGlobal('fetch', colgado());
+    const pedido = llamar('t', 'core_webservice_get_site_info').catch((e) => e);
+    await vi.advanceTimersByTimeAsync(TOPE_MS - 1);
+    vi.advanceTimersByTime(1);
+    const error = await pedido;
+    expect(TOPE_MS).toBe(15_000);
+    expect([error instanceof ErrorCampus, error.codigo]).toEqual([true, 'tiempo']);
+    const { esFaltaDeConexion } = await import('./sinInternet');
+    expect(esFaltaDeConexion(error)).toBe(true);
+  });
+
+  it('el ingreso también tiene tope', async () => {
+    vi.useFakeTimers();
+    vi.stubGlobal('fetch', colgado());
+    const pedido = pedirClave('u', 'c').catch((e) => e);
+    await vi.advanceTimersByTimeAsync(TOPE_MS);
+    expect((await pedido).codigo).toBe('tiempo');
+  });
+
+  it('una escritura no: cortarla no la deshace en el campus, y repetirla la mandaría dos veces', async () => {
+    vi.useFakeTimers();
+    const fetch = colgado();
+    vi.stubGlobal('fetch', fetch);
+    mandarMensaje('t', 5, 'hola').catch(() => {});
+    await vi.advanceTimersByTimeAsync(TOPE_MS * 4);
+    expect(fetch.mock.calls[0][1].signal).toBeUndefined();
+  });
+
+  it('un archivo grande: el tope corre hasta que llegan las cabeceras, y la señal de quien pide sigue cortándolo', async () => {
+    vi.useFakeTimers();
+    const fetch = vi.fn(async () => new Response(new Blob(['x']), { status: 200, headers: { 'content-type': 'application/pdf' } }));
+    vi.stubGlobal('fetch', fetch);
+    const corte = new AbortController();
+    await pedirArchivo('t', `${CAMPUS}/webservice/pluginfile.php/1/a.pdf`, { senal: corte.signal });
+    const senal = fetch.mock.calls[0][1].signal;
+    await vi.advanceTimersByTimeAsync(TOPE_MS * 2);
+    expect(senal.aborted).toBe(false);
+    corte.abort();
+    expect(senal.aborted).toBe(true);
   });
 });

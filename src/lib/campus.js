@@ -8,7 +8,7 @@ import { leerMandado, leerPublicado, leerRespuesta, mandarMensaje, marcarLeida, 
 import { conversaciones, mensaje, mismoTexto, personasHalladas, tandaDeMensajes } from './mensajes';
 import { fijarCursos } from './colores';
 import { fijarUsuario } from './mio';
-import { cerrarSesion, conCache, enCache, olvidar, tokenActual } from './sesion';
+import { alHidratar, cerrarSesion, conCache, enCache, enLoGuardado, exigirCampus, olvidar, tokenActual } from './sesion';
 import { limpiarNotificacion, limpiarNotificaciones } from './notificaciones';
 import { aHtml, leerEstado, leerTareas } from './tareas';
 import { leerAcceso, leerCuestionarios, leerDevolucion, leerIntentos, leerMejorNota, leerOpcionesCombinadas, leerRevision, revisionDe, seVeLaDevolucion, terminados } from './cuestionarios';
@@ -45,6 +45,8 @@ const cerradaEnElCampus = async (error, funcion, token) =>
   error.campus === 'accessexception' && (DE_INSCRIPCION.has(funcion) || DE_TAREAS.has(funcion) || DE_MENSAJES.has(funcion) || DE_NOTIFICACIONES.has(funcion) || DE_CUESTIONARIOS.has(funcion) || DE_FOROS.has(funcion)) && (await sigueViva(token));
 
 const pedir = async (funcion, parametros) => {
+  // Drawing a screen from what was kept asks nobody (sesion.js).
+  exigirCampus();
   const token = tokenActual();
   if (!token) throw new ErrorCampus('Tu sesión terminó.', 'sin_sesion');
   if (import.meta.env.DEV && esDemo(token)) {
@@ -73,9 +75,16 @@ export async function cargarPerfil() {
     const completo = textoPlano(info.fullname) || [info.firstname, info.lastname].map(textoPlano).filter(Boolean).join(' ');
     return { id: info.userid, nombre: textoPlano(info.firstname), completo, funciones };
   });
-  fijarUsuario(perfil.id);
+  // Drawing from what was kept changes nothing: the student is set when the disk's copy comes to memory, below.
+  if (!enLoGuardado()) fijarUsuario(perfil.id);
   return perfil;
 }
+
+// The disk's copy is this key's (sinInternet.js): its student is the one coming in, before the campus answers.
+alHidratar((guardadas) => {
+  const id = guardadas.get('perfil')?.datos?.id;
+  if (Number.isSafeInteger(id) && id > 0) fijarUsuario(id);
+});
 
 /** { materiaId: name }, for what the student added on top of the campus. */
 export async function cargarNombres() {
@@ -310,6 +319,8 @@ async function escribirMensajes(funcion, real, demo) {
   if (!token) throw new ErrorCampus('Tu sesión terminó.', 'sin_sesion');
   try {
     if (import.meta.env.DEV && esDemo(token)) {
+      // The sample sends nothing: offline it fails like a fetch with no network, to try the queue (porMandar.js).
+      if (typeof navigator !== 'undefined' && navigator.onLine === false) throw new TypeError('Failed to fetch');
       const { DEMO_MENSAJES } = await import('./demoMensajes');
       return await demo(DEMO_MENSAJES);
     }
@@ -324,8 +335,36 @@ async function escribirMensajes(funcion, real, demo) {
 }
 
 // A clear no from the campus says the message didn't go. A cut connection or a failed answer doesn't: it may have got
-// there all the same, so it is looked up before saying «No salió», and trying again doesn't send it twice.
+// there all the same, so it is looked up before saying «No salió», and trying again doesn't send it twice. When the look
+// itself fails, the error says so (`sinVerificar`): the queue of Mensajes (porMandar.js) waits or asks, and never sends.
 const enDuda = (error) => !(error instanceof ErrorCampus) || /^http_|^respuesta_invalida$|^sin_confirmar$/.test(error.codigo);
+
+/** Whether a message got to the campus, for a send whose answer got lost: the message as the campus keeps it, or null.
+ * `conversacionId` looks among the last ones of the conversation newer than `despuesDe`; `personaId`, at the last one
+ * of the student's latest conversations. Fails when the campus can't be read. */
+export async function buscarEnviado({ conversacionId, personaId, texto, despuesDe = 0 }) {
+  const { id: yo } = await cargarPerfil();
+  if (conversacionId) {
+    const ultimos = await leerMensajes(conversacionId, 0, 5);
+    return ultimos.mensajes.findLast((m) => m.de === yo && m.id > despuesDe && mismoTexto(texto, m.texto)) ?? null;
+  }
+  const recientes = await leerConversaciones(0);
+  const llego = recientes.conversaciones.find((c) => !c.grupo && c.persona?.id === personaId && c.ultimo?.de === yo && mismoTexto(texto, c.ultimo.texto));
+  return llego ? { conversacionId: llego.id, mensaje: llego.ultimo } : null;
+}
+
+async function siLlego(error, donde) {
+  if (!enDuda(error)) throw error;
+  let llego;
+  try {
+    llego = await buscarEnviado(donde);
+  } catch {
+    error.sinVerificar = true;
+    throw error;
+  }
+  if (llego) return llego;
+  throw error;
+}
 
 /** Answers in a conversation, after the screen asked: the message as the campus keeps it. `despuesDe`: the id of the
  * newest message shown, to find this one if the answer gets lost on the way. */
@@ -338,11 +377,7 @@ export async function responderEn(conversacionId, texto, { despuesDe = 0 } = {})
       async (D) => leerRespuesta(await D.responder(conversacionId, texto, yo)),
     ));
   } catch (error) {
-    if (!enDuda(error)) throw error;
-    const ultimos = await leerMensajes(conversacionId, 0, 5).catch(() => null);
-    const llego = ultimos?.mensajes.findLast((m) => m.de === yo && m.id > despuesDe && mismoTexto(texto, m.texto));
-    if (llego) return llego;
-    throw error;
+    return await siLlego(error, { conversacionId, texto, despuesDe });
   } finally {
     olvidar(['mensajes.lista.', `mensajes.charla.${conversacionId}.`]);
   }
@@ -359,11 +394,7 @@ export async function escribirA(personaId, texto) {
     );
     return { conversacionId: r.conversationid, mensaje: mensaje(r) };
   } catch (error) {
-    if (!enDuda(error)) throw error;
-    const recientes = await leerConversaciones(0).catch(() => null);
-    const llego = recientes?.conversaciones.find((c) => !c.grupo && c.persona.id === personaId && c.ultimo?.de === yo && mismoTexto(texto, c.ultimo.texto));
-    if (llego) return { conversacionId: llego.id, mensaje: llego.ultimo };
-    throw error;
+    return await siLlego(error, { personaId, texto });
   } finally {
     olvidar(['mensajes.lista.']);
   }

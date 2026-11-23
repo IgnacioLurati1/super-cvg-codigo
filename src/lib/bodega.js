@@ -1,7 +1,7 @@
 // The bytes of the student's own files, in this browser's database: the local storage of mio.js can't hold files.
 // Keyed by student and file, so two students on the same computer never see each other's. Nothing leaves the browser,
 // unless the student saves in their own Google Drive (sincro.js).
-import { falla } from './paquete';
+import { falla } from './falla';
 import { mimeDe } from './propiasSaneo';
 
 const BASE = 'super-cvg';

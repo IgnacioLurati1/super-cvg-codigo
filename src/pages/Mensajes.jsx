@@ -7,13 +7,16 @@ import { Cargando, ErrorConReintento } from '../components/Filas';
 import { Bloques } from '../components/TextoConFormato';
 import { clienteDeAdjuntos, descartarAdjunto, largoDelAdjunto, PIDE_CONECTAR, prepararAdjunto, problemaDeArchivo, sanearNombre, textoConAdjunto } from '../lib/adjuntos';
 import { peso } from '../lib/datos';
-import { buscarPersonas, cargarConversaciones, cargarFoto, cargarMensajes, CONVERSACIONES_POR_TANDA, escribirA, marcarComoLeida, responderEn } from '../lib/campus';
+import { buscarPersonas, cargarConversaciones, cargarFoto, cargarMensajes, cargarPerfil, CONVERSACIONES_POR_TANDA, escribirA, marcarComoLeida, responderEn } from '../lib/campus';
 import { textoError } from '../lib/errores';
 import { conectarGoogle, permisoGoogle, useGoogle } from '../lib/google';
 import { cuandoCorto, diaDeMensajes, filtrarConversaciones, horaDeMensaje, iniciales, juntarMensajes, LARGO_MAXIMO, largoEnBytes, porDia } from '../lib/mensajes';
+import { fila, usePorMandar } from '../lib/mensajesPorMandar';
 import { CAMPUS } from '../lib/moodle';
+import { DUDA, ESPERA, FALLO } from '../lib/porMandar';
+import { useUI } from '../components/ui';
 import { tituloDe, useSeo } from '../lib/seo';
-import { useToken } from '../lib/sesion';
+import { sesionRecordada, useToken } from '../lib/sesion';
 import { clienteDeTemporales, prepararTemporal, TOPE_TEMPORAL, TOPE_TEMPORAL_EN_TEXTO } from '../lib/temporales';
 import { useImagenQuieta } from '../lib/imagenQuieta';
 import { useConsulta } from '../lib/useConsulta';
@@ -28,6 +31,8 @@ const conTeclado = typeof window !== 'undefined' && Boolean(window.matchMedia?.(
 // Private messages of the campus: the conversations, one of them, and writing. Reading is like the rest of Super CVG,
 // in memory only. A message goes when Mandar is touched (or Enter, with a keyboard), and opening a conversation marks it
 // as read in the campus, like opening it there. Side by side when there is room; on a phone, one or the other.
+// A text without a file goes through the queue of porMandar.js: without signal it waits as «Por mandar» and goes by
+// itself when the network comes back.
 
 // Below this width (in rem, so a bigger letter folds it sooner) the list and the conversation take turns.
 const ANGOSTA_EN_REM = 48;
@@ -243,20 +248,23 @@ function Burbuja({ m, mio, autor, conAutor, seguido, onProbar, onEditar, onCance
   let archivo = null;
   if (m.adjunto?.url) archivo = <TarjetaAdjunto adjunto={m.adjunto} cuando={m.cuando} />;
   else if (m.adjunto) archivo = <ArchivoSaliendo adjunto={m.adjunto} fallo={m.estado === 'fallo'} />;
-  // Until the link is in the campus: once the message goes, it can't come back.
-  const cancelable = m.estado === 'saliendo' && m.adjunto && !m.adjunto.url && m.adjunto.paso !== 'mandando';
+  // Until the link is in the campus: once the message goes, it can't come back. One waiting for the signal, until it goes.
+  const cancelable = m.estado === ESPERA || (m.estado === 'saliendo' && m.adjunto && !m.adjunto.url && m.adjunto.paso !== 'mandando');
+  let estado = hora;
+  if (m.estado === 'saliendo') estado = 'Saliendo';
+  else if (m.estado === ESPERA) estado = 'Por mandar';
   return (
     <li className="mensajes__burbuja" data-mio={mio || undefined} data-estado={m.estado} data-seguido={seguido || undefined} data-subiendo={(m.adjunto && !m.adjunto.url) || undefined}>
       {conAutor && <p className="mensajes__autor" aria-hidden="true">{autor}</p>}
       <div className="mensajes__globo">
-        <span className="solo-lectores">{m.estado === 'saliendo' ? `${autor}, saliendo. ` : `${autor}${hora ? `, ${hora}` : ''}. `}</span>
+        <span className="solo-lectores">{estado === hora ? `${autor}${hora ? `, ${hora}` : ''}. ` : `${autor}, ${estado.toLowerCase()}. `}</span>
         {archivo}
         {contenido}
-        <span className="mensajes__hora" aria-hidden="true">{m.estado === 'saliendo' ? 'Saliendo' : hora}</span>
+        <span className="mensajes__hora" aria-hidden="true">{estado}</span>
       </div>
       {cancelable && (
         <button type="button" className="boton boton--secundario boton--chico mensajes__cancelar" onClick={() => onCancelar(m)}>
-          Cancelar<span className="solo-lectores"> el envío de {m.adjunto.nombre}</span>
+          Cancelar<span className="solo-lectores">{m.adjunto ? ` el envío de ${m.adjunto.nombre}` : ' el envío'}</span>
         </button>
       )}
       {m.estado === 'fallo' && (
@@ -264,6 +272,15 @@ function Burbuja({ m, mio, autor, conAutor, seguido, onProbar, onEditar, onCance
           <p><strong>No salió.</strong> {m.error}</p>
           <div className="mensajes__fallo-botones">
             <button type="button" className="boton boton--secundario boton--chico" onClick={() => onProbar(m)}>Probar de nuevo</button>
+            <button type="button" className="boton boton--secundario boton--chico" onClick={() => onEditar(m)}>Editar</button>
+          </div>
+        </div>
+      )}
+      {m.estado === DUDA && (
+        <div className="mensajes__fallo mensajes__fallo--duda">
+          <p><strong>No sabemos si salió.</strong> Reintentar se fija primero en el campus.</p>
+          <div className="mensajes__fallo-botones">
+            <button type="button" className="boton boton--secundario boton--chico" onClick={() => onProbar(m)}>Reintentar</button>
             <button type="button" className="boton boton--secundario boton--chico" onClick={() => onEditar(m)}>Editar</button>
           </div>
         </div>
@@ -290,6 +307,7 @@ function Charla({ c, yo, angosta, pulso, ahora, enfocar, onVolver, onLeida, onEn
   const marcando = useRef(false);
   const pulsoVisto = useRef(pulso);
   const inicial = c.inicial ?? [];
+  const { confirmar } = useUI();
   const [hilo, setHilo] = useState(() => ({ mensajes: inicial, miembros: {}, mas: false, desde: inicial.length, cargando: !nueva && !inicial.length, error: '', cargandoMas: false, errorMas: '' }));
   const [intento, setIntento] = useState(0);
   const [propios, setPropios] = useState(() => borradores.get(clave)?.propios ?? []);
@@ -323,6 +341,10 @@ function Charla({ c, yo, angosta, pulso, ahora, enfocar, onVolver, onLeida, onEn
   const [aviso, setAviso] = useState('');
   // The same words twice are only read again if something changes: a trailing dot does.
   const anunciar = (t) => setAviso((a) => (a === t ? `${t}.` : t));
+  const p = c.persona;
+  // What waits in the queue for this conversation, or for this person when it has no conversation yet.
+  const esDeAca = (x) => (x.destino.conversacionId ? x.destino.conversacionId === c.id : !c.grupo && x.destino.personaId === p?.id);
+  const enFila = usePorMandar().filter(esDeAca);
 
   useEffect(() => {
     if (enfocar === 'campo') campo.current?.focus();
@@ -386,6 +408,30 @@ function Charla({ c, yo, angosta, pulso, ahora, enfocar, onVolver, onLeida, onEn
     });
   }, [nueva, cargada, c.sinLeer, c.id, onLeida]);
 
+  // What the queue did with a message of this conversation. A new one moves to its conversation in Mensajes.
+  useEffect(() => fila.escuchar(({ tipo, item, resultado }) => {
+    const deAca = item.destino.conversacionId ? item.destino.conversacionId === c.id : !c.grupo && item.destino.personaId === c.persona?.id;
+    if (!deAca) return;
+    if (tipo === 'salio') {
+      const m = item.destino.conversacionId ? resultado : resultado?.mensaje;
+      if (m && !nueva) {
+        ajuste.current = 'abajo';
+        setHilo((h) => ({ ...h, mensajes: juntarMensajes(h.mensajes, [m]), desde: h.mensajes.some((x) => x.id === m.id) ? h.desde : h.desde + 1 }));
+      }
+      anunciar('Mensaje enviado');
+    } else if (tipo === ESPERA) anunciar('Sin señal. Queda por mandar');
+    else if (tipo === DUDA) anunciar('No sabemos si salió');
+    else if (tipo === FALLO) anunciar('El mensaje no salió');
+  }), [c.id, c.grupo, c.persona?.id, nueva]);
+
+  // A message put in the queue shows at the bottom, as one that goes.
+  const cuantosEnFila = useRef(enFila.length);
+  useLayoutEffect(() => {
+    const el = hiloRef.current;
+    if (el && enFila.length > cuantosEnFila.current) el.scrollTop = el.scrollHeight;
+    cuantosEnFila.current = enFila.length;
+  }, [enFila.length]);
+
   useLayoutEffect(() => {
     const el = hiloRef.current;
     const a = ajuste.current;
@@ -436,7 +482,6 @@ function Charla({ c, yo, angosta, pulso, ahora, enfocar, onVolver, onLeida, onEn
     }
   };
 
-  const p = c.persona;
   let noPuede = '';
   if (!c.grupo && p?.borrada) noPuede = 'Esta cuenta ya no está en el campus.';
   else if (!c.grupo && p?.bloqueada) noPuede = 'Bloqueaste a esta persona en el campus. Para escribirle, desbloqueala ahí.';
@@ -461,6 +506,21 @@ function Charla({ c, yo, angosta, pulso, ahora, enfocar, onVolver, onLeida, onEn
     const archivo = previo ? (previo.adjunto ?? null) : adjunto;
     if ((!limpio && !archivo) || largoEnBytes(limpio) + delArchivo(archivo) > LARGO_MAXIMO || noPuede) {
       campo.current?.focus();
+      return;
+    }
+    if (!archivo && !previo) {
+      setTexto('');
+      setProblema('');
+      try {
+        const alumno = yo || (await cargarPerfil()).id;
+        const despuesDe = hilo.mensajes.reduce((max, m) => Math.max(max, m.id), 0);
+        await fila.encolar({ destino: nueva ? { personaId: p.id } : { conversacionId: c.id }, nombre: c.nombre, texto: limpio, despuesDe, alumno });
+        anunciar(navigator.onLine === false ? 'Sin señal. Queda por mandar' : 'Mandando el mensaje');
+      } catch {
+        // It never got in the queue: what was written comes back to the box.
+        setTexto((t) => (t.trim() ? `${t.trimEnd()}\n${limpio}` : limpio));
+        anunciar('El mensaje no salió');
+      }
       return;
     }
     // Google's window, when it has to show, opens right here, still in the click: after a wait the browser blocks it.
@@ -529,6 +589,15 @@ function Charla({ c, yo, angosta, pulso, ahora, enfocar, onVolver, onLeida, onEn
       descartar(adjunto);
       setAdjunto({ archivo: m.adjunto.archivo, nombre: m.adjunto.nombre, bytes: m.adjunto.bytes, via: m.adjunto.via, subida: m.adjunto.subida });
     }
+    campo.current?.focus();
+  };
+
+  // Out of the queue before it goes, and back to the box. Nothing when it was already going out.
+  const sacarDeLaFila = async (m, cancelado) => {
+    const quitado = await fila.cancelar(m.id);
+    if (!quitado) return;
+    setTexto((t) => (t.trim() ? `${t.trimEnd()}\n${quitado.texto}` : quitado.texto));
+    if (cancelado) anunciar('Cancelaste el envío');
     campo.current?.focus();
   };
 
@@ -621,7 +690,10 @@ function Charla({ c, yo, angosta, pulso, ahora, enfocar, onVolver, onLeida, onEn
     if (m.de === yo) return 'Vos';
     return miembros[m.de]?.nombre ?? (c.grupo ? 'Alguien del grupo' : c.nombre);
   };
-  const todos = [...hilo.mensajes, ...propios.map((x) => ({ ...x, de: yo }))];
+  const deLaFila = enFila.map((x) => ({ id: x.id, texto: x.texto, estado: x.estado === ESPERA && !x.espero ? 'saliendo' : x.estado, cuando: Math.floor(x.cuando / 1000), error: x.error, de: yo, cola: true }));
+  const todos = [...hilo.mensajes, ...propios.map((x) => ({ ...x, de: yo })), ...deLaFila];
+  // Without «Seguir conectado» the queue lives in the tab.
+  const seBorra = !sesionRecordada() && enFila.some((x) => x.estado === ESPERA || x.estado === DUDA);
   let detalle = null;
   if (c.grupo) detalle = <p className="mensajes__subtitulo">{[c.detalle, c.personas > 1 ? `${c.personas} personas` : c.personas === 1 ? 'Una persona' : ''].filter(Boolean).join(', ')}</p>;
   else if (nueva) detalle = <p className="mensajes__subtitulo">Conversación nueva</p>;
@@ -687,10 +759,16 @@ function Charla({ c, yo, angosta, pulso, ahora, enfocar, onVolver, onLeida, onEn
                     seguido={seguido}
                     onProbar={(x) => {
                       campo.current?.focus();
-                      mandar(x.texto, x.id);
+                      if (x.cola) fila.reintentar(x.id);
+                      else mandar(x.texto, x.id);
                     }}
-                    onEditar={editar}
-                    onCancelar={(x) => controles.current.get(x.id)?.abort()}
+                    onEditar={async (x) => {
+                      if (!x.cola) return editar(x);
+                      // It may be in the campus already: sending the edited one could make two.
+                      if (x.estado === DUDA && !(await confirmar({ titulo: '¿Editarlo?', texto: 'Puede que ya haya salido. Si lo mandás de nuevo, puede llegar dos veces.', boton: 'Editar' }))) return;
+                      sacarDeLaFila(x, false);
+                    }}
+                    onCancelar={(x) => (x.cola ? sacarDeLaFila(x, true) : controles.current.get(x.id)?.abort())}
                   />
                 );
               })}
@@ -746,6 +824,7 @@ function Charla({ c, yo, angosta, pulso, ahora, enfocar, onVolver, onLeida, onEn
           />
           <button type="submit" className="boton mensajes__mandar" aria-disabled={vacio || quedan < 0 ? 'true' : undefined}>Mandar</button>
           <p className="mensajes__ayuda">
+            {seBorra && <span>Si cerrás la pestaña, se pierde lo que está por mandar.</span>}
             {/* Always there, so a screen reader hears it when it starts saying something. */}
             <span id={idLargo} className="mensajes__largo" data-pasado={quedan < 0 || undefined} aria-live="polite">{largo}</span>
           </p>
@@ -949,6 +1028,35 @@ export default function Mensajes() {
     setLista((l) => ({ ...l, conversaciones: [c, ...l.conversaciones.filter((x) => x.id !== conversacionId)] }));
     setElegida({ modo: 'charla', c: { ...c, inicial: mensaje ? [mensaje] : [] }, enfocar: 'campo' });
   };
+
+  // A message of the queue went out, also one that waited: the list says it, and a new conversation opens in its place.
+  useEffect(() => fila.escuchar(({ tipo, item, resultado }) => {
+    if (tipo !== 'salio' || !resultado) return;
+    if (item.destino.conversacionId) {
+      setLista((l) => {
+        const c = l.conversaciones.find((x) => x.id === item.destino.conversacionId);
+        return c ? { ...l, conversaciones: [{ ...c, ultimo: resultado }, ...l.conversaciones.filter((x) => x.id !== c.id)] } : l;
+      });
+      return;
+    }
+    const abierta = elegida?.modo === 'charla' && !elegida.c.id && elegida.c.persona?.id === item.destino.personaId ? elegida.c.persona : null;
+    const { conversacionId, mensaje } = resultado;
+    if (!conversacionId) {
+      setIntento((n) => n + 1);
+      return;
+    }
+    setLista((l) => {
+      const antes = l.conversaciones.find((x) => x.id === conversacionId);
+      const persona = abierta ?? antes?.persona;
+      if (!antes && !persona) return l;
+      const c = antes ? { ...antes, ultimo: mensaje } : { id: conversacionId, grupo: false, nombre: persona.nombre, detalle: '', foto: persona.foto, persona, sinLeer: 0, ultimo: mensaje };
+      return { ...l, conversaciones: [c, ...l.conversaciones.filter((x) => x.id !== conversacionId)] };
+    });
+    if (abierta) {
+      const c = { id: conversacionId, grupo: false, nombre: abierta.nombre, detalle: '', foto: abierta.foto, persona: abierta, sinLeer: 0, ultimo: mensaje };
+      setElegida({ modo: 'charla', c: { ...c, inicial: mensaje ? [mensaje] : [] }, enfocar: 'campo' });
+    } else if (!lista.conversaciones.some((x) => x.id === conversacionId)) setIntento((n) => n + 1);
+  }), [elegida, lista.conversaciones]);
 
   const enLaLista = lista.conversaciones.filter((c) => c.sinLeer > 0).length;
   const hayNuevos = !lista.cargando && total > enLaLista;

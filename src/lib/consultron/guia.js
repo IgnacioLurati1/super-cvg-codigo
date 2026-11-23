@@ -185,8 +185,8 @@ export const PANTALLAS = [
   {
     ruta: null,
     nombre: 'Guardar en tu Google Drive',
-    texto: 'Está arriba de todo en Configuración. Lo prendés en cada dispositivo con la misma cuenta de Google. Si entrás con Google, se prende solo. Lo que sumás, los archivos de tus materias y tu configuración aparecen en todos tus dispositivos. «Borrar la copia de tu Drive» deja de guardar.',
-    palabras: 'drive sincronizar respaldo copia dispositivos celular compu google sincronizacion backup',
+    texto: 'Está arriba de todo en Configuración. Lo prendés en cada dispositivo con la misma cuenta de Google. Si entrás con Google, se prende solo. Lo que sumás, los archivos de tus materias y tu configuración aparecen en todos tus dispositivos. Para que uno tenga su propia configuración, apagá ahí «Misma configuración en todos tus dispositivos». «Borrar la copia de tu Drive» deja de guardar.',
+    palabras: 'misma configuracion estilo distinto cada dispositivo drive sincronizar respaldo copia dispositivos celular compu google sincronizacion backup',
   },
   {
     ruta: null,

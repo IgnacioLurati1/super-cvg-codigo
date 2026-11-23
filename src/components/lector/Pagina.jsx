@@ -1,6 +1,7 @@
 import { memo, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { TextLayer } from 'pdfjs-dist';
 import { piezaEn } from '../../lib/lectura';
+import { esSinDatos } from '../../lib/pdfPartes';
 import { cubre, densidadDe, juntarCajas, regionVisible } from './geometria';
 import { Cinta } from './Senaladores';
 
@@ -89,7 +90,10 @@ function sacarDetalle(detalle) {
 // What a page shows once it is near the view: its drawing, its text (to select it and find in it, invisible) and the
 // matches of the search. Leaving the view, it goes away with all of it, so a long PDF does not fill the memory.
 // The drawings go through `cola` (cola.js): one at a time, the pages in view first.
-function Dibujo({ pdf, numero, escala, cola = SIN_COLA, obtenerTexto, registrar, hallazgos, actual, fuente, onUbicar }) {
+// For a PDF coming by parts (VisorPdf.jsx): `alMedir(numero, ancho, alto)` gets the size of the page at scale 1;
+// `esperarDatos(promesa)` stops waiting when the data isn't here and there is no connection (then the page says so,
+// and lets the next one draw), and a new `vuelta` (the connection came back) draws it again.
+function Dibujo({ pdf, numero, escala, cola = SIN_COLA, obtenerTexto, registrar, hallazgos, actual, fuente, onUbicar, alMedir = null, esperarDatos = null, vuelta = 0 }) {
   const lienzo = useRef(null);
   const capa = useRef(null);
   const marcas = useRef(null);
@@ -103,6 +107,14 @@ function Dibujo({ pdf, numero, escala, cola = SIN_COLA, obtenerTexto, registrar,
   const ubicada = useRef(null);
   const [listo, setListo] = useState(false);
   const [conTexto, setConTexto] = useState(false);
+  const [sinDatos, setSinDatos] = useState(false);
+  // Read when drawn: a new one (or none, once the whole file is here) doesn't draw the page again.
+  const medir = useRef(alMedir);
+  const esperar = useRef(esperarDatos);
+  useEffect(() => {
+    medir.current = alMedir;
+    esperar.current = esperarDatos;
+  });
 
   // The drawing, sharp on any screen; again a moment after the size changes, with the old one stretched meanwhile.
   useEffect(() => {
@@ -111,9 +123,14 @@ function Dibujo({ pdf, numero, escala, cola = SIN_COLA, obtenerTexto, registrar,
     let sacar = null;
     const dibujar = async () => {
       sacar = null;
+      const conDatos = (promesa) => (esperar.current ? esperar.current(promesa) : promesa);
       try {
-        const hoja = await pdf.getPage(numero);
+        const hoja = await conDatos(pdf.getPage(numero));
         if (!vivo) return;
+        if (medir.current) {
+          const uno = hoja.getViewport({ scale: 1 });
+          medir.current(numero, uno.width, uno.height);
+        }
         const base = hoja.getViewport({ scale: escala });
         const quiero = densidadPantalla();
         const densidad = densidadDe(base.width, base.height, quiero, topeHoja());
@@ -123,11 +140,12 @@ function Dibujo({ pdf, numero, escala, cola = SIN_COLA, obtenerTexto, registrar,
         canvas.height = Math.floor(vista.height);
         canvas.className = 'lector__lienzo';
         tarea = hoja.render({ canvas, viewport: vista });
-        await tarea.promise;
+        await conDatos(tarea.promise);
         if (!vivo) {
           canvas.width = 0;
           return;
         }
+        setSinDatos(false);
         const viejo = lienzo.current.querySelector('.lector__lienzo');
         if (viejo) {
           viejo.replaceWith(canvas);
@@ -138,8 +156,13 @@ function Dibujo({ pdf, numero, escala, cola = SIN_COLA, obtenerTexto, registrar,
         if (!hecha.current.falta) sacarDetalle(detalle);
         setListo(true);
         revisarDetalle.current();
-      } catch {
-        // Cancelled because the size changed or it left the view; a broken page stays white.
+      } catch (e) {
+        // Cancelled because the size changed or it left the view; a broken page stays white. One whose data isn't here
+        // without connection says so.
+        if (esSinDatos(e)) {
+          tarea?.cancel();
+          if (vivo) setSinDatos(true);
+        }
       }
     };
     const espera = setTimeout(() => {
@@ -151,7 +174,7 @@ function Dibujo({ pdf, numero, escala, cola = SIN_COLA, obtenerTexto, registrar,
       sacar?.();
       tarea?.cancel();
     };
-  }, [pdf, numero, escala, cola]);
+  }, [pdf, numero, escala, cola, vuelta]);
 
   // Zoomed in on a phone the whole drawing has fewer pixels than the screen: the part in view is drawn on top with the
   // screen's, once the scroll stays still. The old one stays, stretched, until the new one is there.
@@ -335,7 +358,8 @@ function Dibujo({ pdf, numero, escala, cola = SIN_COLA, obtenerTexto, registrar,
   return (
     <>
       <div ref={lienzo} className="lector__dibujo" />
-      {!listo && <div className="lector__hoja-esperando" aria-hidden="true"><i /><i /><i /><i /></div>}
+      {!listo && !sinDatos && <div className="lector__hoja-esperando" aria-hidden="true"><i /><i /><i /><i /></div>}
+      {!listo && sinDatos && <div className="lector__hoja-sin-datos" role="status"><p>Esta página no quedó guardada. Abrila con internet.</p></div>}
       <div ref={marcas} className="lector__marcas" aria-hidden="true" />
       <div ref={capa} className="textLayer" style={{ ...ESTILO_TEXTO, transform: `scale(${escala / ESCALA_TEXTO})` }} />
     </>

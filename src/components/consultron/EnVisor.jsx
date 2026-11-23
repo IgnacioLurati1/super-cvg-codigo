@@ -1,6 +1,6 @@
 import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import { IconoMenu } from '../../layouts/Menu';
-import { cargar, revisar, sePuedePreguntar, usar, useConsultron } from '../../lib/consultron/motor';
+import { cargarSiHaceFalta, revisar, sePuedePreguntar, usar, useConsultron } from '../../lib/consultron/motor';
 import { usePermisosNube } from '../../lib/consultron/nube';
 import { Borde, BotonesDeAncho, useAncho } from './Ancho';
 import Charla, { TODAS } from './Charla';
@@ -32,7 +32,7 @@ export default function EnVisor({ materia = TODAS, marcado = null, abierto, enRe
     return usar();
   }, []);
   useEffect(() => {
-    if (estado.fase === 'bajado') cargar();
+    if (estado.fase === 'bajado') cargarSiHaceFalta();
   }, [estado.fase]);
   // Opening it, the focus goes to where to write. While it gets ready, to its button or its title.
   useEffect(() => {
@@ -52,12 +52,18 @@ export default function EnVisor({ materia = TODAS, marcado = null, abierto, enRe
   }, []);
   const medida = useAncho({ fila, resto: MIN_LECTURA, contenedor: () => raiz.current?.parentElement });
   const { ancho } = medida;
-  // The row knows the width too: what it centers over the pages moves with it (lector.css).
+  // The row knows the width too: what it centers over the pages moves with it (lector.css). `--lado-consultron` is the
+  // room it takes beside what is read, only while it's there: the PDF reader and the summaries keep what they show where
+  // it was while it fits (VisorPdf.jsx, resumenes.css). Apart from `--ancho-consultron`, which its own screen has too.
   useLayoutEffect(() => {
     const padre = raiz.current?.parentElement;
     if (!padre || !alLado) return undefined;
     padre.style.setProperty('--ancho-consultron', `${ancho}px`);
-    return () => padre.style.removeProperty('--ancho-consultron');
+    padre.style.setProperty('--lado-consultron', `${ancho}px`);
+    return () => {
+      padre.style.removeProperty('--ancho-consultron');
+      padre.style.removeProperty('--lado-consultron');
+    };
   }, [ancho, alLado]);
 
   return (

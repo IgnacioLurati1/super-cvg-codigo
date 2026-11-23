@@ -1,0 +1,575 @@
+/* Diseños: los estilos que publican los alumnos, en tarjetas. Lo que se recuerda es la miniatura de cada uno, pintada
+   con su propio código; lo demás, quieto y con los tokens del sitio. Las clases van con su prefijo: el CSS de cada
+   pantalla queda cargado al pasar a otra. */
+.disenos__bajada {
+  max-width: 44em;
+  margin: 0 0 24px;
+  color: var(--texto-suave);
+}
+
+.disenos__herramientas {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px 16px;
+  margin-bottom: 24px;
+}
+
+.disenos__herramientas .campo {
+  flex: 1 1 14rem;
+  max-width: 22rem;
+  margin: 0;
+}
+
+.disenos__publicar-boton {
+  margin-left: auto;
+}
+
+.disenos__lista {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 18rem), 1fr));
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  transition: opacity 160ms ease;
+}
+
+.disenos__lista[data-cargando] {
+  opacity: 0.55;
+}
+
+.diseno {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-bloque);
+  background: var(--superficie);
+}
+
+/* The one on the page right now: framed in the main color. */
+.diseno[data-probando] {
+  border-color: var(--accion);
+  box-shadow: 0 0 0 1px var(--accion);
+}
+
+/* «Vista previa» keeps its name while it's on; a dot says it (aria-pressed for screen readers). */
+.diseno__botones .boton[aria-pressed='true']::before,
+.disenos__acciones .boton[aria-pressed='true']::before {
+  content: '';
+  flex: none;
+  width: 8px;
+  height: 8px;
+  margin-right: 8px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 0 3px color-mix(in srgb, currentColor 30%, transparent);
+}
+
+.diseno__cuerpo {
+  display: grid;
+  flex: 1;
+  align-content: start;
+  gap: 4px;
+  min-width: 0;
+}
+
+.diseno__nombre {
+  margin: 0;
+  font-size: var(--t-ui);
+  font-weight: 700;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.diseno__autor,
+.diseno__resumen {
+  margin: 0;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+  overflow-wrap: anywhere;
+}
+
+.diseno__descripcion {
+  display: -webkit-box;
+  margin: 4px 0 0;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+.diseno__marca {
+  margin: 4px 0 0;
+  color: var(--error-texto, var(--error));
+  font-size: var(--t-chica);
+}
+
+.diseno__puntaje {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 6px;
+  margin: 0;
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+.diseno__puntaje[data-vacio] {
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+}
+
+.diseno__estrella {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  fill: var(--resaltador);
+  stroke: var(--texto);
+  stroke-linejoin: round;
+  stroke-width: 1.2;
+}
+
+.diseno__votos {
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+}
+
+.diseno__botones,
+.disenos__acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* While they come: the shape of a card, its miniature on top (panel.css draws the pieces). */
+.disenos .cargando--tarjetas .esqueleto {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 18rem), 1fr));
+  gap: 16px;
+}
+
+.disenos .cargando--tarjetas .esqueleto__pieza {
+  min-height: 25rem;
+  padding: 12px;
+  border: 1px solid var(--borde);
+}
+
+.disenos .cargando--tarjetas .esqueleto__pieza i:first-child {
+  width: 100%;
+  height: 128px;
+  margin-bottom: 8px;
+  border-radius: 6px;
+}
+
+.disenos__mas {
+  display: block;
+  margin: 20px auto 0;
+}
+
+.disenos__vacio {
+  display: grid;
+  justify-items: start;
+  gap: 12px;
+  max-width: 44em;
+  padding: 24px;
+  border: 1px dashed var(--borde-control);
+  border-radius: var(--radio-bloque);
+}
+
+.disenos__vacio p,
+.disenos__nada {
+  margin: 0;
+  color: var(--texto-suave);
+}
+
+/* ---------- The design in small ---------- */
+/* Its own colors come inline (MiniaturaDeDiseno.jsx); the page is the drawing of its theme or style
+   (configuracion.css, .dibujo-tema), without its own header: the bar on top is this design's. */
+.mini-diseno {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 128px;
+  overflow: hidden;
+  border: 1px solid var(--borde-control);
+  border-radius: 6px;
+  isolation: isolate;
+}
+
+.mini-diseno[data-grande] {
+  flex: none;
+  height: 180px;
+}
+
+.mini-diseno[data-lado='izquierda'] {
+  flex-direction: row;
+}
+
+.mini-diseno__barra {
+  z-index: 1;
+  display: flex;
+  flex: none;
+}
+
+.mini-diseno__barra .muestra-menu {
+  flex: 1;
+  min-height: 36px;
+  border-radius: 0;
+}
+
+.mini-diseno[data-lado='izquierda'] .mini-diseno__barra .muestra-menu {
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  width: 7.5rem;
+  padding: 10px 6px;
+  gap: 4px;
+}
+
+.mini-diseno[data-lado='izquierda'] .muestra-menu__cosa {
+  padding: 0 6px;
+}
+
+.mini-diseno .mini-diseno__pagina {
+  flex: 1;
+  height: auto;
+  min-height: 0;
+  border: 0;
+  border-radius: 0;
+}
+
+.mini-diseno .mini-diseno__pagina::before {
+  display: none;
+}
+
+/* Plano and Pizarrón in the design's own light or dark, not the viewer's (configuracion.css draws the viewer's). */
+html .mini-diseno .mini-diseno__pagina[data-luz='oscuro'][data-cual='plano'] {
+  background:
+    linear-gradient(rgb(214 230 255 / 0.18) 1px, transparent 1px) 0 0 / 8px 8px,
+    linear-gradient(90deg, rgb(214 230 255 / 0.18) 1px, transparent 1px) 0 0 / 8px 8px,
+    #0d3360;
+}
+
+html .mini-diseno .mini-diseno__pagina[data-luz='oscuro'][data-cual='plano']::after {
+  border-color: #f2f7ff;
+}
+
+html .mini-diseno .mini-diseno__pagina[data-luz='claro'][data-cual='plano'] {
+  background:
+    linear-gradient(rgb(29 79 159 / 0.18) 1px, transparent 1px) 0 0 / 8px 8px,
+    linear-gradient(90deg, rgb(29 79 159 / 0.18) 1px, transparent 1px) 0 0 / 8px 8px,
+    #f5f1e4;
+}
+
+html .mini-diseno .mini-diseno__pagina[data-luz='claro'][data-cual='plano']::after {
+  border-color: #14284d;
+}
+
+html .mini-diseno .mini-diseno__pagina[data-luz='oscuro'][data-cual='pizarron'] {
+  background: #24392f;
+}
+
+html .mini-diseno .mini-diseno__pagina[data-luz='claro'][data-cual='pizarron'] {
+  background: #f9fbfc;
+}
+
+/* The strong version: a few lights behind the page. */
+.mini-diseno .mini-diseno__pagina[data-potente]::before {
+  display: block;
+  inset: 0;
+  height: auto;
+  border: 0;
+  background:
+    radial-gradient(1.5px 1.5px at 18% 30%, rgb(255 255 255 / 0.9), transparent),
+    radial-gradient(1px 1px at 42% 70%, rgb(255 255 255 / 0.8), transparent),
+    radial-gradient(1.5px 1.5px at 66% 22%, rgb(255 255 255 / 0.85), transparent),
+    radial-gradient(1px 1px at 84% 58%, rgb(255 255 255 / 0.75), transparent),
+    radial-gradient(60% 70% at 85% 100%, rgb(255 255 255 / 0.12), transparent);
+}
+
+.mini-diseno__pinturas {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  z-index: 1;
+  display: flex;
+  gap: 4px;
+}
+
+.mini-diseno__pinturas i {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 2px rgb(255 255 255 / 0.9),
+    0 1px 3px rgb(0 0 0 / 0.35);
+}
+
+/* ---------- While one is tried or in use ---------- */
+.disenos__barra {
+  position: sticky;
+  bottom: max(12px, env(safe-area-inset-bottom));
+  z-index: 5;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 16px;
+  margin-top: 24px;
+  padding: 12px 16px;
+  border: 2px solid var(--accion);
+  border-radius: var(--radio-bloque);
+  background: var(--superficie);
+  box-shadow: 0 10px 30px -12px var(--sombra, rgb(0 0 0 / 0.5));
+}
+
+.disenos__barra .boton {
+  white-space: nowrap;
+}
+
+.disenos__barra p {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+/* ---------- The sheet of one design, and the one to publish ---------- */
+.disenos__hoja .previa__caja {
+  gap: 14px;
+}
+
+.disenos__hoja .diseno__puntaje,
+.disenos__hoja .diseno__resumen {
+  margin: 0;
+}
+
+.disenos__opinar {
+  display: grid;
+  gap: 14px;
+  margin-top: 8px;
+  padding-top: 16px;
+  border-top: 1px solid var(--borde);
+}
+
+.disenos__opinar h3 {
+  margin: 0;
+  font-size: var(--t-ui);
+}
+
+.disenos__vincular {
+  display: grid;
+  justify-items: start;
+  gap: 10px;
+  padding: 14px;
+  border-radius: var(--radio-control);
+  background: var(--fondo);
+}
+
+.disenos__vincular p {
+  margin: 0;
+}
+
+.estrellas__titulo {
+  margin: 0 0 6px;
+  font-weight: 600;
+}
+
+.estrellas__fila {
+  display: flex;
+  gap: 2px;
+}
+
+.estrellas__una {
+  display: inline-grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radio-control);
+  background: none;
+  color: inherit;
+  cursor: pointer;
+}
+
+.estrellas__una:focus-visible {
+  outline: 2px solid var(--foco);
+  outline-offset: 2px;
+}
+
+.estrellas__una svg {
+  width: 30px;
+  height: 30px;
+  fill: none;
+  stroke: var(--texto-suave);
+  stroke-linejoin: round;
+  stroke-width: 1.4;
+  transition: transform 120ms ease;
+}
+
+.estrellas__una[data-pintada] svg {
+  fill: var(--resaltador);
+  stroke: var(--texto);
+}
+
+.estrellas__una:active svg {
+  transform: scale(0.9);
+}
+
+/* While the vote goes: still focusable, so the focus stays where it was. */
+.estrellas[aria-busy='true'] .estrellas__una {
+  cursor: progress;
+  opacity: 0.6;
+}
+
+/* What happened in the sheet, held at its bottom while it scrolls. Empty, it takes no room. */
+.disenos__aviso {
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+}
+
+.disenos__aviso p {
+  margin: 0;
+}
+
+.disenos__aviso p:not(:empty) {
+  padding: 12px 14px;
+  border-left: 4px solid var(--ok, var(--accion));
+  border-radius: var(--radio-control);
+  background: var(--superficie);
+  box-shadow: 0 6px 20px -8px rgb(0 0 0 / 0.45);
+}
+
+.disenos__aviso p[role='alert']:not(:empty) {
+  border-left-color: var(--error);
+}
+
+/* On a phone the sheet covers the page, so the preview shows once it closes. */
+.disenos__nota-celu {
+  display: none;
+  margin: 0;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+}
+
+@media (max-width: 40rem) {
+  .disenos__nota-celu {
+    display: block;
+  }
+}
+
+.comentarios {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.comentario {
+  display: grid;
+  justify-items: start;
+  gap: 2px;
+  padding: 10px 12px;
+  border-radius: var(--radio-control);
+  background: var(--fondo);
+}
+
+.comentario__quien {
+  margin: 0;
+  font-size: var(--t-chica);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.comentario__cuando {
+  color: var(--texto-suave);
+  font-weight: 400;
+}
+
+.comentario__texto {
+  margin: 0;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+.disenos__link {
+  min-height: 32px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--texto-suave);
+  cursor: pointer;
+  font: inherit;
+  font-size: var(--t-chica);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.disenos__link:hover {
+  color: var(--texto);
+}
+
+.disenos__comentar,
+.disenos__publicar {
+  display: grid;
+  gap: 12px;
+}
+
+.disenos__comentar .campo,
+.disenos__publicar .campo {
+  margin: 0;
+}
+
+.disenos__publicar .boton {
+  justify-self: start;
+}
+
+.disenos__pie-form {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.disenos__quedan {
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+.disenos__quedan[data-sobra] {
+  color: var(--error-texto, var(--error));
+}
+
+.disenos__al-pie {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 12px;
+  border-top: 1px solid var(--borde);
+}
+
+.disenos__borrar {
+  border-color: var(--error);
+  color: var(--error-texto, var(--error));
+}
+
+@media (max-width: 40rem) {
+  .disenos__herramientas .campo {
+    flex-basis: 100%;
+    max-width: none;
+  }
+
+  .disenos__publicar-boton {
+    margin-left: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .disenos__lista,
+  .estrellas__una svg {
+    transition: none;
+  }
+}

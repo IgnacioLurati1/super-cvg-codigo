@@ -6,7 +6,8 @@ import { esDemo } from '../lib/modoDemo';
 import { tituloDe, useSeo } from '../lib/seo';
 import { tokenActual } from '../lib/sesion';
 import { olvidarPestanasSysacad, SYSACAD, SYSACAD_LINDO, useSysacad, vincularSysacad } from '../lib/sysacad';
-import { fechaCompleta, mismoAlumno, vistoHace } from '../lib/sysacadPestanas';
+import { fechaCompleta, huellaDelPar, mismoAlumno, vistoHace } from '../lib/sysacadPestanas';
+import { sonMiasLasDeSysacad, useMio } from '../lib/mio';
 import { datosDe, leerCorrelativas, leerEstadoAcademico } from '../lib/sysacadVistas';
 import { Bloques, Certificados, Correlativas, EstadoAcademico } from './SysacadVistas';
 import { normalizar } from '../lib/datos';
@@ -157,8 +158,8 @@ function Copias({ pestanas }) {
 
 export default function Sysacad() {
   useSeo({ titulo: tituloDe('Sysacad'), noindex: true });
-  const { estado, pidio, copias, sinCopias } = useSysacad();
-  const perfil = useConsulta(() => cargarPerfil());
+  const { estado, pidio, copias, sinCopias, deDrive, buscandoDrive } = useSysacad();
+  const perfil = useConsulta(() => cargarPerfil(), [], { alInstante: true });
   const { confirmar } = useUI();
   // After «Vincular» or «Borrar las copias» the focus goes to what took their place, once it is on the page. If that
   // never shows up, to the screen's title, never lost on the body.
@@ -190,11 +191,20 @@ export default function Sysacad() {
     setFoco({ a: 'estado' });
   };
 
+  const sonMias = () => {
+    sonMiasLasDeSysacad(huellaDelPar(copias.alumno, nombre));
+    setFoco({ a: 'estado' });
+  };
+  // What the student confirmed changes whose the copies are.
+  useMio();
+
   const conExtension = estado === 'vinculada' || estado === 'sin-vincular';
   const nombre = perfil.datos?.completo ?? '';
   let contenido;
   if (!copias && !sinCopias) {
     contenido = <Cargando texto="Buscando Sysacad Lindo" cuantas={3} />;
+  } else if (!copias && buscandoDrive) {
+    contenido = <Cargando texto="Buscando en tu Drive" cuantas={3} />;
   } else if (!copias && conExtension) {
     contenido = (
       <Estado titulo="Actualizá Sysacad Lindo" acciones={<a className="boton boton--chico" href={SYSACAD_LINDO} target="_blank" rel="noreferrer">Bajar la versión nueva{otraPestana}</a>}>
@@ -204,7 +214,8 @@ export default function Sysacad() {
   } else if (!copias) {
     contenido = (
       <Estado titulo="Instalá Sysacad Lindo" acciones={<a className="boton boton--chico" href={SYSACAD_LINDO} target="_blank" rel="noreferrer">Bajar Sysacad Lindo{otraPestana}</a>}>
-        Es una extensión para Chrome y Edge. Guarda una copia de cada pestaña de Sysacad que abrís.
+        Es una extensión para Chrome y Edge. Guarda una copia de cada pestaña de Sysacad que abrís. ¿La tenés en la compu? Prendé
+        «Guardar en tu Google Drive» ahí y acá. Las copias aparecen también en el celu.
       </Estado>
     );
   } else if (!copias.vinculada && !pidio) {
@@ -257,15 +268,23 @@ export default function Sysacad() {
     );
   } else if (!mismoAlumno(copias.alumno, nombre)) {
     contenido = (
-      <Estado titulo="Son de otra cuenta" acciones={<button type="button" className="boton boton--chico" onClick={borrar}>Borrar las copias</button>}>
-        Las copias de Sysacad de este navegador no son de tu cuenta del campus.
+      <Estado
+        titulo="¿Son tuyas?"
+        acciones={
+          <>
+            <button type="button" className="boton boton--chico" onClick={sonMias}>Sí, son mías</button>
+            <button type="button" className="boton boton--chico boton--secundario" onClick={borrar}>Borrar las copias</button>
+          </>
+        }
+      >
+        Las copias de Sysacad tienen un nombre distinto al de tu cuenta del campus.
       </Estado>
     );
   } else {
     contenido = (
       <>
         <div className="sysacad-aviso">
-          <p>Es una copia de lo que viste. En Sysacad puede haber algo más nuevo.</p>
+          <p>{deDrive ? 'Es una copia de tu Drive, de lo que viste en Sysacad desde la compu. Puede haber algo más nuevo.' : 'Es una copia de lo que viste. En Sysacad puede haber algo más nuevo.'}</p>
           <AbrirSysacad />
         </div>
         <Copias pestanas={copias.pestanas} />

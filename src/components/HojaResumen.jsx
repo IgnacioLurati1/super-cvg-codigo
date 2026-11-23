@@ -1,12 +1,14 @@
 import { useState } from 'react';
+import { useAhorro } from '../lib/ahorro';
 import { useTemaOscuro } from '../lib/ajustes';
 
 /** The sheet behind a card, like the summary printed: the photo of its first page, which El Santo Resumen takes, over
  * its cover (exam, title and subject). The cover is what shows while the photo comes, when there is none or when it
  * does not load, so nothing moves. In the dark theme, the photo of the page in its own dark theme, where it has one.
- * Only decoration: screen readers have the title and the data of the card. */
-export default function HojaResumen({ foto, titulo, materia, instancia }) {
+ * Only decoration: screen readers have the title and the data of the card. Saving data (ahorro.js), only the cover. */
+export default function HojaResumen({ foto: laFoto, titulo, materia, instancia }) {
   const oscuro = useTemaOscuro();
+  const foto = useAhorro() ? null : laFoto;
   // By address: the one that loaded and the one that failed. Another photo starts over.
   const [cargada, setCargada] = useState('');
   const [fallidas, setFallidas] = useState(() => new Set());

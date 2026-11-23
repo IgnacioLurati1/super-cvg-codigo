@@ -42,7 +42,7 @@ export function MarcaResultado({ resultado }) {
  * attempts and reviews are. `onIr` closes the preview, which stays mounted across pages. */
 export default function CuestionarioPrevia({ item, onIr }) {
   const { materiaId, cmid } = item.cuestionario;
-  const { datos, error, cargando } = useConsulta(() => cargarCuestionario(materiaId, cmid), [materiaId, cmid]);
+  const { datos, error, cargando } = useConsulta(() => cargarCuestionario(materiaId, cmid), [materiaId, cmid], { alInstante: true });
   const [ahora] = useState(() => Date.now() / 1000);
   const c = datos?.cuestionario;
   const clave = c ? estadoDe(datos.intentos, datos.mejor) : null;

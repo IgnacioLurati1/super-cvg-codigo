@@ -25,6 +25,7 @@ const PANTALLAS = [
   { clave: 'repaso', a: '/repaso', nombre: 'Repaso' },
   { clave: 'consultron', a: '/consultron', nombre: 'Consultron' },
   { clave: 'envivo', a: '/en-vivo', nombre: 'En vivo' },
+  { clave: 'disenos', a: '/disenos', nombre: 'Diseños' },
 ];
 
 /**
@@ -93,6 +94,10 @@ export const ATAJOS = [
       { teclas: ['←'], texto: 'Paso anterior, en el paso a paso' },
       { teclas: ['→'], texto: 'Paso siguiente, en el paso a paso' },
     ],
+  },
+  {
+    grupo: 'En Consultron',
+    lista: [{ teclas: ['Esc'], texto: 'Frenar la respuesta', siempre: true }],
   },
   {
     grupo: 'En tu horario',

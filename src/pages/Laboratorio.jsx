@@ -1,5 +1,6 @@
 import { lazy, Suspense, useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useMaterias } from '../components/ElegirMateria';
+import { useAdelantar } from '../lib/ahorro';
 import Base from '../components/laboratorio/Base';
 import Casos from '../components/laboratorio/Casos';
 import Chapin from '../components/laboratorio/Chapin';
@@ -367,10 +368,10 @@ export function IDE({ vivo = null }) {
     if (!enVivo) guardarMesa({ mesa, abierto, escrito: null, pestanas });
   }, [enVivo, mesa, abierto, pestanas]);
 
-  // Each language loads its engine when it's in view, unless the device asks to save data: then, when it runs.
-  useEffect(() => {
-    if (!navigator.connection?.saveData) motorDe(lenguaje).encender();
-  }, [lenguaje]);
+  // Each language loads its engine when it's in view, unless saving data (ahorro.js): then, when it runs.
+  useAdelantar(() => {
+    motorDe(lenguaje).encender();
+  }, true, lenguaje);
   useEffect(() => {
     const ids = IDS_DE_LENGUAJE;
     ids.forEach((l) => motorDe(l).usar(true));

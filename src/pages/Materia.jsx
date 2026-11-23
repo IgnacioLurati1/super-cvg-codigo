@@ -174,7 +174,7 @@ export default function Materia() {
     const materia = [...enCurso, ...otras].find((m) => String(m.id) === id);
     if (!materia) return { materia: null, items: [] };
     return { materia, items: await cargarContenido(materia) };
-  }, [id]);
+  }, [id], { alInstante: true });
   // The name and the symbol from the list of subjects, while the content is on its way: the title doesn't start as
   // «Materia» and change under the pen.
   const [listado, setListado] = useState(materiasYaCargadas);
@@ -251,7 +251,7 @@ export default function Materia() {
   // the course has more than one section.
   const cuantasSecciones = useMemo(() => ordenar(agrupar(visibles), agregada, !lectura).length, [visibles, agregada, lectura]);
   const indice = useMemo(() => grupos.map((g) => ({ clave: `s${g.id}`, nombre: g.nombre, destino: idDeSeccion(g.id), seccion: g.id })), [grupos]);
-  const conTemas = cr.google.disponible && cr.google.conectado && (cr.cursos.datos?.length ?? 0) > 0 && Boolean(cr.curso) && Boolean(cr.datos.datos);
+  const conTemas = cr.google.disponible && (cr.google.conectado || cr.google.sinRed) && (cr.cursos.datos?.length ?? 0) > 0 && Boolean(cr.curso) && Boolean(cr.datos.datos);
   const indiceClassroom = useMemo(() => (conTemas ? [
     ...(derecha.some(delTablon) ? [{ clave: 'tablon', nombre: 'Tablón', destino: ID_TABLON, classroom: true }] : []),
     ...porTema(derecha.filter((i) => !delTablon(i))).map((t) => ({ clave: t.id, nombre: t.nombre, destino: idDeTema(t.id), classroom: true })),

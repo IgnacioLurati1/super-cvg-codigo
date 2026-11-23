@@ -1,14 +1,18 @@
 import { dominioDe, enlaceSeguro, fecha, fechaHora, huella, idDeYoutube, normalizar, primeraFrase, sinExtension } from './datos';
-import { olvidarGoogle, renovarGoogle, tokenGoogle } from './google';
+import { cuentaGoogle, olvidarGoogle, renovarGoogle, tokenGoogle } from './google';
+import { conRespaldo, sinRed } from './respaldo';
 import { dibujoDeArchivoEnlazado, iconoDeEnlace } from './simbolos';
 
 // What Super CVG reads from Classroom, read only, straight from the student's browser to Google. It stays in this
-// tab's memory, per permission: a new permission (or another account) never sees what the previous one brought. On disk
-// there is only which course goes with which campus course (mio.js, by number).
+// tab's memory, per permission: a new permission (or another account) never sees what the previous one brought. With
+// «Seguir conectado» it is also kept for offline (respaldo.js), for that campus student and that Google account only;
+// offline Google is never asked, and Desconectar deletes it (google.js). Besides, on disk there is only which course
+// goes with which campus course (mio.js, by number).
 export const API_CLASSROOM = 'https://classroom.googleapis.com/v1';
 const PAGINAS = 5;
 
 const falla = (texto, codigo = '') => Object.assign(new Error(texto), { conocido: true, codigo });
+const SIN_RED = 'No se pudo llegar a Classroom. Revisá internet y probá de nuevo.';
 const ID = /^\d{1,24}$/;
 // eslint-disable-next-line no-control-regex
 const limpio = (v, max) => (typeof v === 'string' ? v.replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, max) : '');
@@ -26,7 +30,7 @@ async function pedirUna(token, ruta, params) {
       referrerPolicy: 'no-referrer',
     });
   } catch {
-    throw falla('No se pudo llegar a Classroom. Revisá internet y probá de nuevo.');
+    throw falla(SIN_RED, 'red');
   }
   if (r.status === 401) {
     if (tokenGoogle() === token) {
@@ -37,7 +41,7 @@ async function pedirUna(token, ruta, params) {
   }
   if (r.status === 403) throw falla('Google no dio permiso para ver esto. Volvé a conectar Classroom y dejá marcadas todas las opciones.', 'permiso');
   if (r.status === 404) throw falla('Ese curso ya no está en tu Classroom.', 'no-existe');
-  if (!r.ok) throw falla('Classroom no responde ahora. Probá de nuevo en un rato.');
+  if (!r.ok) throw falla('Classroom no responde ahora. Probá de nuevo en un rato.', r.status >= 500 ? 'caido' : '');
   try {
     return await r.json();
   } catch {
@@ -57,16 +61,36 @@ async function listar(token, ruta, campo, params, paginas = PAGINAS) {
   return todo;
 }
 
-// Per permission and once per tab: moving around does not ask Google again. A failure is not kept.
+// Per permission and once per tab: moving around does not ask Google again. A failure is not kept, nor what came from
+// the disk: once the network is back, Google is asked. `traer(token)` gives what Google said, kept as it came;
+// `leer` makes it what the screens use, both from Google and from the disk.
 const guardados = new Map();
-function enCache(clave, fn) {
+function enCache(clave, traer, leer = (x) => x) {
   const token = tokenGoogle();
-  if (!token) return Promise.reject(falla('Conectá Classroom para ver esto.', 'sin-conectar'));
   const k = `${token}:${clave}`;
-  if (!guardados.has(k)) {
-    for (const viejo of guardados.keys()) if (!viejo.startsWith(`${token}:`)) guardados.delete(viejo);
-    guardados.set(k, fn(token).catch((e) => { guardados.delete(k); throw e; }));
-  }
+  if (token && guardados.has(k)) return guardados.get(k);
+  // Offline, only what was kept for this Google account: nothing goes to Google, also without the permission.
+  const cuenta = cuentaGoogle();
+  if (!token && !sinRed()) return Promise.reject(falla('Conectá Classroom para ver esto.', 'sin-conectar'));
+  let deGoogle = false;
+  const pedido = conRespaldo(`classroom.${clave}`, async () => {
+    const datos = await traer(token);
+    deGoogle = true;
+    return datos;
+  }, {
+    de: cuenta,
+    esRed: (e) => e?.codigo === 'red' || e?.codigo === 'caido',
+    sinRedError: () => falla(SIN_RED, 'red'),
+  }).then(leer);
+  if (!token) return pedido;
+  for (const viejo of guardados.keys()) if (!viejo.startsWith(`${token}:`)) guardados.delete(viejo);
+  guardados.set(k, pedido.then((d) => {
+    if (!deGoogle) guardados.delete(k);
+    return d;
+  }, (e) => {
+    guardados.delete(k);
+    throw e;
+  }));
   return guardados.get(k);
 }
 export const olvidarClassroom = () => guardados.clear();
@@ -84,7 +108,7 @@ export function leerCursos(lista) {
 }
 
 export const cargarCursos = () =>
-  enCache('cursos', async (token) => leerCursos(await listar(token, 'courses', 'courses', { studentId: 'me', courseStates: 'ACTIVE', pageSize: '100' })));
+  enCache('cursos', (token) => listar(token, 'courses', 'courses', { studentId: 'me', courseStates: 'ACTIVE', pageSize: '100' }), leerCursos);
 
 const VACIAS = new Set(['a', 'con', 'de', 'del', 'e', 'el', 'en', 'la', 'las', 'los', 'para', 'y', 'comision', 'curso', 'utn', 'frro']);
 const ROMANOS = { 1: 'i', 2: 'ii', 3: 'iii', 4: 'iv' };
@@ -381,10 +405,13 @@ const sinPermiso = (e) => {
   throw e;
 };
 
+// What was kept, as Google's: every part a list.
+const listas = (d) => Object.fromEntries(['temas', 'materiales', 'tareas', 'avisos'].map((c) => [c, Array.isArray(d?.[c]) ? d[c] : []]));
+
 /** What a course has, as Google gives it: { temas, materiales, tareas, avisos }. */
-export const cargarDatosCurso = (id) =>
-  enCache(`curso:${id}`, async (token) => {
-    if (!ID.test(String(id))) throw falla('Ese curso ya no está en tu Classroom.', 'no-existe');
+export const cargarDatosCurso = (id) => {
+  if (!ID.test(String(id))) return Promise.reject(falla('Ese curso ya no está en tu Classroom.', 'no-existe'));
+  return enCache(`curso:${id}`, async (token) => {
     const base = `courses/${id}`;
     const [temas, materiales, tareas, avisos] = await Promise.all([
       listar(token, `${base}/topics`, 'topic', { pageSize: '100' }).catch(sinPermiso),
@@ -393,17 +420,19 @@ export const cargarDatosCurso = (id) =>
       listar(token, `${base}/announcements`, 'announcements', { pageSize: '50' }, 1).catch(sinPermiso),
     ]);
     return { temas, materiales, tareas, avisos };
-  });
+  }, listas);
+};
 
 export const cargarCurso = (id) => cargarDatosCurso(id).then(armarCurso);
 
 /** The tasks of a course the student already turned in (their numbers). */
-export const cargarEntregas = (id) =>
-  enCache(`entregas:${id}`, async (token) => {
-    if (!ID.test(String(id))) throw falla('Ese curso ya no está en tu Classroom.', 'no-existe');
+export const cargarEntregas = (id) => {
+  if (!ID.test(String(id))) return Promise.reject(falla('Ese curso ya no está en tu Classroom.', 'no-existe'));
+  return enCache(`entregas:${id}`, async (token) => {
     const lista = await listar(token, `courses/${id}/courseWork/-/studentSubmissions`, 'studentSubmissions', { userId: 'me', pageSize: '100' }).catch(sinPermiso);
-    return new Set(lista.filter((e) => e && ID.test(e.courseWorkId) && (e.state === 'TURNED_IN' || e.state === 'RETURNED')).map((e) => e.courseWorkId));
-  });
+    return lista.filter((e) => e && ID.test(e.courseWorkId) && (e.state === 'TURNED_IN' || e.state === 'RETURNED')).map((e) => e.courseWorkId);
+  }, (ids) => new Set((Array.isArray(ids) ? ids : []).filter((x) => ID.test(x))));
+};
 
 const ADJUNTOS_EN_TEXTO = 12;
 // What a post has attached, by name: «Adjuntos: Guía 3; Video de la clase.»

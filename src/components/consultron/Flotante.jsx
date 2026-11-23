@@ -1,10 +1,11 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { IconoMenu } from '../../layouts/Menu';
+import { useAdelantar } from '../../lib/ahorro';
 import { RINCON_CONSULTRON, useAjustes } from '../../lib/ajustes';
 import { revisarCompu } from '../../lib/consultron/compu';
 import { materiaDeRuta } from '../../lib/consultron/donde';
-import { cargar, revisar, sePuedePreguntar, usar, useConsultron } from '../../lib/consultron/motor';
+import { cargarSiHaceFalta, revisar, sePuedePreguntar, usar, useConsultron } from '../../lib/consultron/motor';
 import { usePermisosNube } from '../../lib/consultron/nube';
 import { abrirPanel, cerrarPanel, usePanel, useSoloEnCaja } from '../../lib/consultron/panel';
 import { useSesionEnVivo } from '../../lib/enVivo/estado';
@@ -121,12 +122,13 @@ export default function Flotante() {
       vivo = false;
     };
   }, []);
-  useEffect(() => {
-    if (enLab) codigo.traer().catch(() => {});
-  }, [enLab]);
-  useEffect(() => {
-    if (enMesa) hilo.traer().catch(() => {});
-  }, [enMesa]);
+  // Saving data (ahorro.js), they come when the box opens.
+  useAdelantar(() => {
+    codigo.traer().catch(() => {});
+  }, enLab);
+  useAdelantar(() => {
+    hilo.traer().catch(() => {});
+  }, enMesa);
   // Open, it's in use: it checks the computer, and the model stays on the video card. After the box appeared: in use,
   // a model loading slowly in the background goes at full speed.
   useEffect(() => {
@@ -143,7 +145,7 @@ export default function Flotante() {
   }, [abierto, enSuPantalla, sinModelo]);
   useEffect(() => {
     if (!abierto || enSuPantalla || sinModelo || estado.fase !== 'bajado') return undefined;
-    const espera = setTimeout(cargar, APARECE_MS);
+    const espera = setTimeout(cargarSiHaceFalta, APARECE_MS);
     return () => clearTimeout(espera);
   }, [abierto, enSuPantalla, sinModelo, estado.fase]);
   // Opening it, the focus goes to where to write. While it gets ready, to its button or its title. When it gets ready
@@ -151,7 +153,7 @@ export default function Flotante() {
   useEffect(() => {
     const recien = abierto && !estabaAbierto.current;
     estabaAbierto.current = abierto;
-    if (!abierto || enSuPantalla || !(puede || enLab || enMesa) || !panel.current) return;
+    if (!abierto || enSuPantalla || !panel.current) return;
     const donde = document.activeElement;
     if (!recien && donde && donde !== document.body && !panel.current.contains(donde)) return;
     (panel.current.querySelector('textarea') ?? panel.current.querySelector('.flotante__arranque .boton') ?? panel.current.querySelector('h2'))?.focus();
@@ -162,7 +164,8 @@ export default function Flotante() {
     boton.current?.focus();
   }, [abierto]);
 
-  if (enSuPantalla || !(puede || enLab || enMesa)) return null;
+  // Also where the computer can't run the model: Gemini answers there (Ignacio, 22/11/2026), and the box offers it.
+  if (enSuPantalla) return null;
   const cerrar = () => {
     volver.current = true;
     cerrarPanel();

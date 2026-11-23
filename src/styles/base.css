@@ -12,8 +12,11 @@ html {
   scroll-padding-top: var(--alto-cabecera);
 }
 
+/* The page reaches the phone's edges (viewport-fit=cover in index.html): under the gesture bar at the foot, and under
+   the notch of a phone turned sideways, where the content keeps out of its way. */
 body {
   margin: 0;
+  padding-inline: env(safe-area-inset-left) env(safe-area-inset-right);
   background: var(--fondo);
   color: var(--texto);
   font-family: var(--fuente-ui);
@@ -45,7 +48,9 @@ h3 {
   /* Whole pixels: a title of 86.39px left everything under it half a pixel off, and what animates in jumped a pixel when
      its animation ended and the browser drew it again on the page. */
   line-height: round(1.15em, 1px);
-  text-wrap: balance;
+  /* Each line as full as it fits, without a lone word at the end: balance broke «Administración de Sistemas de
+     Información» in three short lines. */
+  text-wrap: pretty;
   overflow-wrap: break-word;
 }
 

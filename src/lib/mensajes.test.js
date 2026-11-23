@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
-  buscarPersonas, cargarConversaciones, cargarMensajes, contarSinLeer, escribirA, marcarComoLeida, responderEn,
+  buscarEnviado, buscarPersonas, cargarConversaciones, cargarMensajes, contarSinLeer, escribirA, marcarComoLeida, responderEn,
 } from './campus';
 import {
   conversacion, conversaciones, cuandoCorto, diaDeMensajes, filtrarConversaciones, fotoDe, horaDeMensaje, iniciales,
@@ -241,6 +241,28 @@ describe('against the campus', () => {
     respuestas.core_message_get_conversation_messages = () => ({ messages: [escrito(40, 9, 'Gracias')] });
     await expect(responderEn(501, 'Gracias', { despuesDe: 40 })).rejects.toMatchObject({ codigo: 'http_502' });
     expect(del('core_message_send_messages_to_conversation')).toHaveLength(1);
+  });
+
+  it('says when it could not look the message up, so the queue does not send it again on its own', async () => {
+    respuestas.core_message_send_messages_to_conversation = () => {
+      throw new TypeError('Failed to fetch');
+    };
+    respuestas.core_message_get_conversation_messages = () => {
+      throw new TypeError('Failed to fetch');
+    };
+    await expect(responderEn(501, 'Gracias', { despuesDe: 40 })).rejects.toMatchObject({ sinVerificar: true });
+    expect(del('core_message_send_messages_to_conversation')).toHaveLength(1);
+    respuestas.core_message_get_conversation_messages = () => ({ messages: [escrito(40, 9, 'Gracias')] });
+    await expect(responderEn(501, 'Gracias', { despuesDe: 40 })).rejects.not.toHaveProperty('sinVerificar');
+  });
+
+  it('finds a message that got there: in its conversation, or the last one with that person', async () => {
+    respuestas.core_message_get_conversation_messages = () => ({ messages: [escrito(78, 9, '<p>Gracias</p>'), escrito(40, 21, 'De nada')] });
+    expect(await buscarEnviado({ conversacionId: 501, texto: 'Gracias', despuesDe: 40 })).toMatchObject({ id: 78 });
+    expect(await buscarEnviado({ conversacionId: 501, texto: 'Gracias', despuesDe: 78 })).toBeNull();
+    respuestas.core_message_get_conversations = () => ({ conversations: [{ id: 640, type: 1, members: [gente(25, 'Martina Gómez')], messages: [escrito(91, 9, '<p>Hola</p>')] }] });
+    expect(await buscarEnviado({ personaId: 25, texto: 'Hola' })).toMatchObject({ conversacionId: 640, mensaje: { id: 91 } });
+    expect(await buscarEnviado({ personaId: 25, texto: 'Chau' })).toBeNull();
   });
 
   it('does not look anything up after a clear no from the campus', async () => {

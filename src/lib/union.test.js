@@ -643,6 +643,32 @@ describe('los tipos de aviso ocultos', () => {
   });
 });
 
+describe('las secciones que no baja la descarga de noche', () => {
+  it('cada sección salteada es un elemento con solo números, y se arma de vuelta igual', () => {
+    const d = limpio({ ...base(), sinDescargar: { 12: [30, 4], 7: [9] } });
+    const p = piezas(d);
+    expect(Object.keys(p).filter((k) => k.startsWith('nd/')).sort()).toEqual(['nd/12/30', 'nd/12/4', 'nd/7/9']);
+    expect(limpio(armar(p)).sinDescargar).toEqual({ 7: [9], 12: [4, 30] });
+    expect(limpio(armar({ ...p, 'nd/x/1': 1, 'nd/3/<b>': 1, 'nd/0/1': 1 })).sinDescargar).toEqual({ 7: [9], 12: [4, 30] });
+  });
+
+  it('salteada en uno y vuelta a bajar en el otro: gana el último, cada sección por su lado', () => {
+    const a = dispositivo(base());
+    const copia = sincronizar(a, null, H);
+    const b = dispositivo(base());
+    sincronizar(b, copia, H + 1);
+    a.cambiar((d) => ({ ...d, sinDescargar: { 12: [4, 30] } }), H + 10);
+    const c2 = sincronizar(a, copia, H + 20);
+    expect(sincronizar(b, c2, H + 30).datos.sinDescargar).toEqual({ 12: [4, 30] });
+    b.cambiar((d) => ({ ...d, sinDescargar: { 12: [30] } }), H + 40);
+    a.cambiar((d) => ({ ...d, sinDescargar: { 12: [...d.sinDescargar[12], 50] } }), H + 45);
+    const c3 = sincronizar(b, c2, H + 50);
+    const c4 = sincronizar(a, c3, H + 60);
+    expect(c4.datos.sinDescargar).toEqual({ 12: [30, 50] });
+    expect(sincronizar(b, c4, H + 70).datos.sinDescargar).toEqual({ 12: [30, 50] });
+  });
+});
+
 describe('las carpetas de Drive', () => {
   const A = 'carpetaDeDriveA1';
   const B = 'carpetaDeDriveB2';
@@ -704,6 +730,12 @@ describe('fijadas, archivadas y la tarjeta de cada materia', () => {
 describe('la apariencia', () => {
   const con = (apariencia) => limpio({ apariencia });
 
+  it('los filtros del fondo: cada uno es un elemento, y dos dispositivos se unen por ajuste', () => {
+    const mio = con({ fondoFiltro: 'sepia', fondoIntensidad: 35, fondoTono: 290, fondoDesenfoque: 40 });
+    expect(limpio(armar(piezas(mio)))).toEqual(mio);
+    expect(Object.keys(piezas(mio)).filter((k) => k.startsWith('aj/fondo')).sort()).toEqual(['aj/fondoDesenfoque', 'aj/fondoFiltro', 'aj/fondoIntensidad', 'aj/fondoTono']);
+  });
+
   it('cada ajuste es un elemento, y se arma de vuelta igual: sin apariencia, con la de entrada y con cambios', () => {
     for (const a of [null, {}, { estilo: 'hoja', letra: 'grande', menu: { estilo: 'iconos', posicion: 'izquierda', orden: [], lugares: {} } }]) {
       const mio = con(a);
@@ -722,5 +754,16 @@ describe('la apariencia', () => {
     const remoto = { datos: con({}), t: { aj: H, 'aj/estilo': H + 5 } };
     const r = unir({ datos: con({ estilo: 'hoja' }), t: { aj: H, 'aj/estilo': H }, d: {} }, remoto, { ahora: H + 10 });
     expect(limpio(r.datos).apariencia).toEqual({});
+  });
+});
+
+describe('los nombres de Sysacad que el alumno dijo que son suyos', () => {
+  it('cada par es un elemento, solo como huella', () => {
+    const d = limpio({ ...base(), sysacadSuyo: ['1x9ab', 'zz'] });
+    const p = piezas(d);
+    expect(Object.keys(p).filter((k) => k.startsWith('sy/')).sort()).toEqual(['sy/1x9ab', 'sy/zz']);
+    expect(limpio(armar(p)).sysacadSuyo).toEqual(['1x9ab', 'zz']);
+    expect(limpio(armar({ ...p, 'sy/PEREZ': 1, 'sy/<b>': 1, 'sy/abcdefgh': 1 })).sysacadSuyo).toEqual(['1x9ab', 'zz']);
+    expect(limpio({ ...base(), sysacadSuyo: ['Pérez, Juan', 3, 'ok1'] }).sysacadSuyo).toEqual(['ok1']);
   });
 });

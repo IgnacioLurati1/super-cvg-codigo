@@ -6,6 +6,7 @@ import { IconoMenu } from '../layouts/Menu';
 import { useSesionEnVivo } from '../lib/enVivo/estado';
 import { llevarResumen } from '../lib/enVivo/llevar';
 import { docDeResumen } from '../lib/lectura';
+import { acomodarResumen } from '../lib/quieto';
 import { cargarTextos, FORMATOS } from '../lib/santoResumen';
 import { lugarDeBarra, seleccionDicha, textoMarcado } from '../lib/seleccionEnMarco';
 import { useConsulta } from '../lib/useConsulta';
@@ -295,6 +296,22 @@ function Html({ r, alPreguntar, enMesa, letra = SIN_LETRA }) {
   const [carga, setCarga] = useState(0);
   // Only on a phone (with `letra`): elsewhere the frame is left as it comes.
   useMarcoTactil(marco, { ...letra, carga: letra === SIN_LETRA ? 0 : carga });
+  // With Consultron beside it (EnVisor.jsx, --lado-consultron), its content stays where it was while it fits
+  // (quieto.js). Again when the frame or Consultron change width, and when the summary itself changes size.
+  useEffect(() => {
+    const f = marco.current;
+    const doc = f?.contentDocument;
+    if (!doc?.body) return undefined;
+    const acomodar = () => acomodarResumen(doc, parseFloat(getComputedStyle(f).getPropertyValue('--lado-consultron')) || 0);
+    const afuera = new ResizeObserver(acomodar);
+    const adentro = new doc.defaultView.ResizeObserver(acomodar);
+    afuera.observe(f);
+    adentro.observe(doc.body);
+    return () => {
+      afuera.disconnect();
+      adentro.disconnect();
+    };
+  }, [carga]);
   const alCargar = () => {
     cargado();
     setCarga((n) => n + 1);
@@ -422,7 +439,7 @@ function useTextoDe(r, pedido) {
 // table's box is the one.
 export function useConsultronDelResumen(r, forma, botonConsultron, { enMesa = false } = {}) {
   const caja = useSoloEnCaja();
-  const hayConsultron = useHayConsultron({ resumen: true }) && forma !== 'pdf' && !(caja && enMesa);
+  const hayConsultron = useHayConsultron() && forma !== 'pdf' && !(caja && enMesa);
   const conConsultron = useEnVisor() && hayConsultron;
   const abierto = useTextoDe(r, conConsultron);
   // Narrow, Consultron goes over the summary: what's behind it is out of reach.

@@ -49,6 +49,33 @@ export function simboloDe(nombre, id) {
   return hallado ? hallado[0] : POR_NUMERO[id % POR_NUMERO.length];
 }
 
+// The courses of one's own without a campus course have nothing to take a symbol from: each gets one of these, picked at
+// random from its id (so it's the same every time) and different from the others while there are symbols left. The
+// oldest choose first, so adding a course never changes the symbol of one already there.
+const PARA_TUYAS = [
+  'libro', 'hoja', 'hexagono', 'rombo', 'brujula', 'chispa', 'compas', 'cubo', 'bandera', 'burbuja', 'escudo', 'antena',
+  'matraz', 'atomo', 'sigma', 'barras', 'balanza', 'adn', 'codigo', 'chip', 'base', 'maletin', 'moneda', 'personas', 'estrella',
+];
+const azarDe = (texto) => {
+  let h = 2166136261;
+  for (const c of String(texto)) h = Math.imul(h ^ c.codePointAt(0), 16777619) >>> 0;
+  return h;
+};
+
+/** Map of id → symbol for the courses of one's own that have no campus course. */
+export function simbolosDeTuyas(ids) {
+  const usados = new Set();
+  const simbolos = new Map();
+  for (const id of [...ids].sort((a, b) => String(a).localeCompare(String(b), 'en', { numeric: true }))) {
+    if (usados.size === PARA_TUYAS.length) usados.clear();
+    let i = azarDe(id) % PARA_TUYAS.length;
+    while (usados.has(PARA_TUYAS[i])) i = (i + 1) % PARA_TUYAS.length;
+    usados.add(PARA_TUYAS[i]);
+    simbolos.set(id, PARA_TUYAS[i]);
+  }
+  return simbolos;
+}
+
 // The kind of file, by its extension (or its type, when the name has none).
 const CLASES_DE_ARCHIVO = [
   ['pdf', /^pdf$/, /pdf/],

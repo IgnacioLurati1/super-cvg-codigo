@@ -28,6 +28,7 @@ const PANTALLAS = [
   { a: '/laboratorio', nombre: 'Laboratorio', simbolo: 'codigo', color: '3' },
   { a: '/repaso', nombre: 'Repaso', simbolo: 'marcador', color: '6' },
   { a: '/calculadoras', nombre: 'Calculadoras', simbolo: 'sigma', color: '1' },
+  { a: '/disenos', nombre: 'Diseños', simbolo: 'capas', color: '5' },
 ].map((p) => ({ ...p, clave: `pantalla:${p.a}`, dato: 'Pantalla' }));
 
 // Each calculator, only when something is typed: with nothing, Calculadoras is enough.

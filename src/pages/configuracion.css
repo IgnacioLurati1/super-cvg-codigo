@@ -23,7 +23,28 @@
 
 /* Opened from below, a section starts under the tabs (the header's room is the page's scroll-padding-top). */
 .ajustes__panel {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
   scroll-margin-top: 44px;
+}
+
+/* A design being tried from Diseños: the options are greyed out until it is used or left (the way to Diseños stays). */
+.ajustes__panel:disabled > :not(.ajustes__a-disenos) {
+  opacity: 0.5;
+}
+
+.ajustes__panel:disabled :is(button, input, select, textarea, label) {
+  cursor: not-allowed;
+}
+
+.ajustes__en-prueba {
+  margin: 16px 0 0;
+  padding: 12px 16px;
+  border-left: 4px solid var(--accion);
+  border-radius: var(--radio-bloque);
+  background: var(--superficie);
 }
 
 .ajustes__pestana {
@@ -78,6 +99,22 @@
   padding-bottom: 0;
 }
 
+/* With Bordes each section is its own frame (styles/estilos.css): apart from the next one, with its top line and its
+   room at the bottom too, or the rounded corners touch and the last controls sit on the line. */
+html[data-bordes='si'] .ajustes__seccion {
+  margin-bottom: 16px;
+  padding-block: 28px;
+}
+
+html[data-bordes='si'] .ajustes__seccion:last-child {
+  margin-bottom: 0;
+  padding-bottom: 28px;
+}
+
+html[data-bordes='si'] .ajustes__panel > .ajustes__seccion:first-child {
+  border-top: 1px var(--recuadro-trazo, solid) var(--recuadro);
+}
+
 .ajustes__cabeza p {
   margin: 0;
   color: var(--texto-suave);
@@ -119,6 +156,21 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
   gap: 8px;
+}
+
+.ajustes__dispositivo {
+  margin-top: 10px;
+}
+
+.ajustes__dispositivo[aria-pressed='true'] {
+  border-color: var(--accion);
+  box-shadow: inset 0 0 0 1px var(--accion);
+}
+
+.ajustes__dispositivo[aria-pressed='true']::before {
+  content: '✓';
+  content: '✓' / '';
+  margin-right: 6px;
 }
 
 .elecciones[data-parejas] {
@@ -326,16 +378,16 @@
   background: #152a38;
 }
 
-.dibujo-tema[data-cual='sistema'] {
-  background: linear-gradient(115deg, #eef2f6 50%, #0f1923 50%);
+.dibujo-tema[data-cual='cosmico'] {
+  background: radial-gradient(70% 80% at 20% 10%, rgb(124 58 237 / 0.35), transparent 70%), #0b0717;
 }
 
-.dibujo-tema[data-cual='sistema']::before {
-  background: linear-gradient(115deg, #17324d 50%, #3578bd 50%);
+.dibujo-tema[data-cual='cosmico']::before {
+  background: linear-gradient(90deg, #7c3aed, #a21caf);
 }
 
-.dibujo-tema[data-cual='sistema']::after {
-  background: linear-gradient(115deg, #ffffff 50%, #233240 50%);
+.dibujo-tema[data-cual='cosmico']::after {
+  background: #211640;
 }
 
 /* The styles: a ruled sheet with its red margin, and the dark one with its gradients. */
@@ -640,6 +692,24 @@ html[data-tema='claro'] .dibujo-tema[data-cual='pizarron']::before {
   min-width: 0;
 }
 
+.ajuste-si__linea {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+}
+
+/* A highlighter tag beside a switch's name («Recomendado» on the strong version). */
+.ajuste-si__marca {
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--resaltador);
+  color: var(--resaltador-texto);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
 .ajuste-drive__nombre,
 .ajuste-si__nombre {
   font-weight: 700;
@@ -888,6 +958,25 @@ h3.ajustes__leyenda {
 .brillo-pdf__valor {
   color: var(--texto-suave);
   font-size: var(--t-chica);
+}
+
+.ajustes__filtro-barra:not(:empty) {
+  margin-top: 8px;
+}
+
+/* The background's filters: as wide as the choices above them. */
+.brillo-pdf--ancho {
+  max-width: none;
+}
+
+.brillo-pdf__cabeza,
+.brillo-pdf__control {
+  transition: opacity 200ms ease-out;
+}
+
+.brillo-pdf[data-apagado] .brillo-pdf__cabeza,
+.brillo-pdf[data-apagado] .brillo-pdf__control {
+  opacity: 0.55;
 }
 
 .brillo-pdf__ayuda {
@@ -1455,4 +1544,105 @@ h3.ajustes__leyenda {
   font-family: var(--codigo-letra);
   font-size: 1rem;
   font-weight: 700;
+}
+
+/* Diseños, first thing in «Cómo se ve»: the whole card is the link. Three swatches of the page's own colors hint at
+   styles to try. */
+.ajustes__a-disenos {
+  display: flex;
+  align-items: center;
+  gap: 16px 20px;
+  margin-bottom: 24px;
+  padding: 18px 20px;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-control);
+  background:
+    radial-gradient(120% 140% at 0% 0%, color-mix(in srgb, var(--accion) 16%, transparent), transparent 60%),
+    var(--superficie);
+  color: inherit;
+  text-decoration: none;
+  transition: border-color 160ms ease, transform 160ms ease;
+}
+
+.ajustes__a-disenos:hover {
+  border-color: var(--accion);
+}
+
+.ajustes__a-disenos:active {
+  transform: scale(0.99);
+}
+
+.ajustes__a-disenos-muestras {
+  display: flex;
+  flex: none;
+}
+
+.ajustes__a-disenos-muestras span {
+  width: 34px;
+  height: 34px;
+  border: 3px solid var(--superficie);
+  border-radius: 50%;
+  background: var(--accion);
+}
+
+.ajustes__a-disenos-muestras span + span {
+  margin-left: -12px;
+}
+
+.ajustes__a-disenos-muestras span:nth-child(2) {
+  background: var(--resaltador);
+}
+
+.ajustes__a-disenos-muestras span:nth-child(3) {
+  background: var(--ok);
+}
+
+.ajustes__a-disenos-texto {
+  display: grid;
+  flex: 1;
+  gap: 2px;
+}
+
+.ajustes__a-disenos-texto strong {
+  font-size: 1.15rem;
+}
+
+.ajustes__a-disenos-texto span {
+  color: var(--texto-suave);
+}
+
+.ajustes__a-disenos-boton {
+  flex: none;
+}
+
+@media (max-width: 40rem) {
+  .ajustes__a-disenos {
+    flex-wrap: wrap;
+  }
+
+  .ajustes__a-disenos-texto {
+    flex-basis: calc(100% - 100px);
+  }
+
+  .ajustes__a-disenos-boton {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ajustes__a-disenos {
+    transition: none;
+  }
+}
+
+/* «Según la hora»: when the night starts and ends, side by side while they fit. */
+.ajustes__horas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 16px;
+}
+
+.ajustes__horas .campo {
+  flex: 1 1 9rem;
+  max-width: 14rem;
 }

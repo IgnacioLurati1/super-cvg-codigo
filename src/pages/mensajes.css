@@ -540,6 +540,28 @@
   display: none;
 }
 
+/* Waiting for the signal (porMandar.js): dashed, in the colors of what is written, until it goes. */
+.mensajes__burbuja[data-estado='espera'] .mensajes__globo {
+  border: 1px dashed var(--texto-suave);
+  background: var(--superficie);
+  color: var(--texto);
+}
+
+/* Perhaps it went: dashed in the color of a notice, with what to do under it. */
+.mensajes__burbuja[data-estado='duda'] .mensajes__globo {
+  border: 1px dashed var(--aviso);
+  background: var(--superficie);
+  color: var(--texto);
+}
+
+.mensajes__burbuja[data-estado='duda'] .mensajes__hora {
+  display: none;
+}
+
+.mensajes__fallo--duda p {
+  color: var(--texto);
+}
+
 .mensajes__fallo {
   display: grid;
   justify-items: end;

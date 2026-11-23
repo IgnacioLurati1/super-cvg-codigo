@@ -2,6 +2,9 @@
 // VisorPdf), an HTML as its text (shown in a sandboxed frame, with no scripts, or, if its scripts were turned on there,
 // its original in the reader of demo.lutastudios.com), a Word or PowerPoint as the text El Santo Resumen extracts.
 // Each one counts the reading or the download there, as when it is opened there. Each one takes a signal to stop it.
+// With «Seguir conectado», what opened is also kept for offline, with the campus files (respaldo.js): offline it opens
+// from there without asking. The original of an HTML with scripts is not kept: its reader is on another site.
+import { archivoAparte, guardarArchivoAparte, sinRed } from './respaldo';
 import { ID, SERVICIO, SIN_RED, SIN_RESPUESTA } from './santoResumen';
 
 export const NO_ESTA = 'Ese resumen ya no está en el banco.';
@@ -36,8 +39,31 @@ async function traer(ruta, id, senal, extra = '') {
   return r;
 }
 
+// The copy kept of a summary, by its id and how it came (`bajar`, `ver`, `vista`). Online it is asked again, and the
+// copy is replaced; when the request never got there, or offline, the copy. Without one, the error. `comoTexto`: what
+// comes is a text, kept as a file.
+async function conCopia(como, id, senal, traerlo, comoTexto = false) {
+  if (!ID.test(id)) throw falla(NO_ESTA, 'id');
+  const direccion = `santo:${como}:${id}`;
+  if (!sinRed()) {
+    try {
+      const valor = await traerlo();
+      guardarArchivoAparte(direccion, comoTexto ? new Blob([valor], { type: 'text/plain' }) : valor);
+      return valor;
+    } catch (e) {
+      if (e?.codigo !== 'red') throw e;
+    }
+  }
+  const guardado = await archivoAparte(direccion);
+  if (senal?.aborted) throw senal.reason ?? new DOMException('Frenado', 'AbortError');
+  if (!guardado) throw falla(SIN_RED, 'red');
+  return comoTexto ? guardado.text() : guardado;
+}
+
 /** The bytes of a PDF, checked: no bigger than any El Santo Resumen takes, and starting as a PDF does. */
-export async function traerPdf(id, senal) {
+export const traerPdf = (id, senal) => conCopia('bajar', id, senal, () => pdfDelServicio(id, senal));
+
+async function pdfDelServicio(id, senal) {
   const r = await traer('bajar', id, senal);
   if (Number(r.headers.get('content-length')) > TOPE_PDF) throw falla(MUY_GRANDE, 'muy-grande');
   const bytes = await r.arrayBuffer();
@@ -50,9 +76,12 @@ export async function traerPdf(id, senal) {
 /** The text of an HTML summary, as El Santo Resumen keeps it (already cleaned there). It only goes into a frame
  * without scripts. */
 export async function traerHtml(id, senal) {
-  const r = await traer('ver', id, senal);
-  const texto = await r.text();
-  if (!texto.trim()) throw falla(SIN_RESPUESTA, 'vacio');
+  const texto = await conCopia('ver', id, senal, async () => {
+    const r = await traer('ver', id, senal);
+    const crudo = await r.text();
+    if (!crudo.trim()) throw falla(SIN_RESPUESTA, 'vacio');
+    return crudo.slice(0, TOPE_HTML);
+  }, true);
   return texto.slice(0, TOPE_HTML);
 }
 
@@ -70,7 +99,7 @@ async function traerOriginal(id, senal) {
  * reader of demo.lutastudios.com (`scripts: true`); if not, or if that fails, the cleaned copy as always, ready for a
  * frame without scripts. */
 export async function traerParaLeer(id, js, senal) {
-  if (js) {
+  if (js && !sinRed()) {
     try {
       return { scripts: true, html: await traerOriginal(id, senal) };
     } catch (e) {
@@ -83,8 +112,18 @@ export async function traerParaLeer(id, js, senal) {
 
 /** The text El Santo Resumen took out of a Word or PowerPoint, and whether it goes on in the file. */
 export async function traerVista(id, senal) {
-  const r = await traer('vista', id, senal);
-  const datos = await r.json().catch(() => null);
+  const texto = await conCopia('vista', id, senal, async () => {
+    const r = await traer('vista', id, senal);
+    const datos = await r.json().catch(() => null);
+    if (!datos || typeof datos.texto !== 'string') throw falla(SIN_RESPUESTA, 'servicio');
+    return JSON.stringify({ texto: datos.texto, cortado: datos.cortado === true });
+  }, true);
+  let datos = null;
+  try {
+    datos = JSON.parse(texto);
+  } catch {
+    // A copy that can't be read is no copy.
+  }
   if (!datos || typeof datos.texto !== 'string') throw falla(SIN_RESPUESTA, 'servicio');
   return { texto: datos.texto.slice(0, TOPE_VISTA), cortado: datos.cortado === true || datos.texto.length > TOPE_VISTA };
 }

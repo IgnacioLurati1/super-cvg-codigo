@@ -1,5 +1,5 @@
 import { useEffect, useId, useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react';
-import { useLocation } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { AjustesDeHoy, MateriasEnHoy } from '../components/AjustesDeHoy';
 import BrilloPdf from '../components/BrilloPdf';
 import Campo from '../components/Campo';
@@ -7,30 +7,34 @@ import { BotonConectar } from '../components/Classroom';
 import GuardarEnDrive from '../components/GuardarEnDrive';
 import EntrarConGoogle from '../components/EntrarConGoogle';
 import { Cargando, ErrorConReintento } from '../components/Filas';
+import { EstadoDescargas, SeccionesQueBaja } from '../components/DescargasInteligentes';
 import { useUI } from '../components/ui';
-import { COLORES_DEL_CODIGO, CONTRASTE_MINIMO, contraste, LAB_TAMANO, LETRAS_DE_CODIGO, SIEMPRE_OSCUROS, cambiarAjustes, cambioDeBordes, cambioDeEstilo, colorActual, cuestaLeerSobre, elegirVista, ponerEstiloDeMenu, useAjustes, volverAjustesOriginales } from '../lib/ajustes';
-import { movimientoDe, ponerAlineacionDelMenu, ponerAnchoDelMenu, ponerPosicionDelMenu } from '../lib/ajustes';
+import { COLORES_DEL_CODIGO, CONTRASTE_MINIMO, contraste, LAB_TAMANO, LETRAS_DE_CODIGO, SIEMPRE_OSCUROS, cambiarAjustes, cambiarSegunLaHora, cambioDeBordes, cambioDeEstilo, disenoQueSeVe, editarDiseno, horasDeLaNoche, colorActual, cuestaLeerSobre, elegirVista, ponerEstiloDeMenu, useAjustes, volverAjustesOriginales } from '../lib/ajustes';
+import { DESENFOQUE_DEL_FONDO, INTENSIDAD_DEL_FILTRO, TONO_DEL_FILTRO, movimientoDe, ponerAlineacionDelMenu, ponerAnchoDelMenu, ponerPosicionDelMenu } from '../lib/ajustes';
 import PantallasDelMenu from '../components/PantallasDelMenu';
 import QueAvisosVes from '../components/QueAvisosVes';
 import { AvisosEnMiniatura, HoyEnMiniatura, MateriaEnMiniatura, MateriasEnMiniatura, VistaPrevia } from '../components/VistaPrevia';
-import { IconoMenu, PANTALLAS_DEL_MENU } from '../layouts/Menu';
+import { IconoMenu } from '../layouts/Menu';
+import MuestraMenu from '../components/MuestraMenu';
+import { useAhorro } from '../lib/ahorro';
 import { guardarArchivo } from '../lib/archivos';
 import { atajosDelSitio } from '../lib/atajos';
 import { ATAJOS_DEL_LECTOR } from '../components/lector/atajos';
 import { olvidarSacadas } from '../lib/campana';
 import { cargarMaterias, cargarPerfil } from '../lib/campus';
-import { codigoDeEstilo, leerCodigoDeEstilo } from '../lib/codigoDeEstilo';
+import { codigoDeEstilo, leerCodigoDeEstilo, MAX_ESCRITO } from '../lib/codigoDeEstilo';
 import { COLORES } from '../lib/colores';
 import { vaciarBodega } from '../lib/bodega';
 import { olvidarClassroom } from '../lib/classroom';
 import { disponibleGoogle, soltarGoogle, useGoogle } from '../lib/google';
 import { instalar, useInstalar } from '../lib/instalar';
 import { borrarMio, cambiarMio, exportarMio, importarMio, useMio, usuarioActual } from '../lib/mio';
-import { borrarCopiaDrive, hayCopiaDrive, olvidarDrive } from '../lib/sincro';
+import { borrarCopiaDrive, hayCopiaDrive, olvidarDrive, useDrive } from '../lib/sincro';
 import { estadoCalendario, olvidarCalendario } from '../lib/calendarioSincro';
 import { tituloDe, useSeo } from '../lib/seo';
 import { useConsulta } from '../lib/useConsulta';
 import { useMarcarVistos } from '../lib/vistos';
+import { useDisenoEnPrueba } from '../lib/enPrueba';
 import '../styles/codigo.css';
 import './configuracion.css';
 import './materias.css';
@@ -38,6 +42,8 @@ import '../components/consultron/consultron.css';
 import { ESTILOS_DE_TARJETA, NOMBRES_DE_TARJETA } from '../lib/tarjetas';
 
 const SECCION_DISPOSITIVOS = 'tus-dispositivos';
+const SECCION_AHORRO = 'ahorro-de-datos';
+const SECCION_DESCARGAS = 'descargas-inteligentes';
 
 // The screen goes by sections, one at a time. The address keeps the open one (#pdf), so a reload or a link opens it, and
 // a link to something inside one (#atajos) opens the one that holds it.
@@ -66,6 +72,8 @@ const DENTRO_DE = {
   atajos: 'teclado',
   'sin-mouse': 'teclado',
   [SECCION_DISPOSITIVOS]: 'datos',
+  [SECCION_AHORRO]: 'datos',
+  [SECCION_DESCARGAS]: 'datos',
   ...Object.fromEntries([...PANTALLAS_DE_AJUSTES.map((p) => p.id), ...Object.keys(PANTALLA_DE_ANCLA)].map((id) => [id, 'pantallas'])),
   consultron: 'como-se-ve',
   'pasar-estilo': 'como-se-ve',
@@ -86,8 +94,15 @@ const ESTILOS = [
   { valor: 'pizarron', nombre: 'Pizarrón', texto: 'El del aula, de tiza en oscuro y de fibrón en claro.', dibujo: <span className="dibujo-tema" data-cual="pizarron" aria-hidden="true" /> },
 ];
 
+// The data saver (ahorro.js), on this device.
+const MODOS_DE_AHORRO = [
+  { valor: 'auto', nombre: 'Automático', texto: 'Con el ahorro de datos del celu o una conexión lenta.' },
+  { valor: 'siempre', nombre: 'Siempre' },
+  { valor: 'nunca', nombre: 'Nunca' },
+];
+
 // The themes that are a palette: they apply to every style, also the always-dark ones.
-const PALETAS_DEL_TEMA = ['rosa', 'bosque', 'cafe', 'lavanda', 'infierno', 'glaciar'];
+const PALETAS_DEL_TEMA = ['rosa', 'bosque', 'cafe', 'lavanda', 'infierno', 'glaciar', 'cosmico'];
 
 const TEMAS = [
   { valor: 'claro', nombre: 'Claro', dibujo: <span className="dibujo-tema" data-cual="claro" aria-hidden="true" /> },
@@ -98,8 +113,51 @@ const TEMAS = [
   { valor: 'lavanda', nombre: 'Lavanda', dibujo: <span className="dibujo-tema" data-cual="lavanda" aria-hidden="true" /> },
   { valor: 'infierno', nombre: 'Infierno', dibujo: <span className="dibujo-tema" data-cual="infierno" aria-hidden="true" /> },
   { valor: 'glaciar', nombre: 'Glaciar', dibujo: <span className="dibujo-tema" data-cual="glaciar" aria-hidden="true" /> },
-  { valor: 'sistema', nombre: 'Del sistema', texto: 'Sigue a tu dispositivo.', dibujo: <span className="dibujo-tema" data-cual="sistema" aria-hidden="true" /> },
+  { valor: 'cosmico', nombre: 'Violeta cósmico', dibujo: <span className="dibujo-tema" data-cual="cosmico" aria-hidden="true" /> },
 ];
+
+// What the strong version of each theme puts behind the page (styles/potentes.css). With «Seguir a tu dispositivo», the
+// one of the theme the device shows.
+const POTENTES = {
+  claro: 'Un cielo de día, con nubes.',
+  oscuro: 'La noche, con la luna y estrellas.',
+  rosa: 'Pétalos de cerezo al atardecer.',
+  bosque: 'El bosque de noche, con luciérnagas.',
+  cafe: 'La luz de una lámpara y las marcas de la taza.',
+  lavanda: 'Un cielo lila sobre un campo de lavanda.',
+  lavandaNoche: 'El campo de lavanda de noche, bajo la luna.',
+  infierno: 'Brasas y chispas.',
+  glaciar: 'Aurora boreal y nieve.',
+  cosmico: 'El espacio, con estrellas y nebulosas.',
+};
+// How elaborate the strong version's sky is (lib/fondo): the CSS one, painted, painted with everything, or alive too.
+const CALIDADES = [
+  { valor: 'baja', nombre: 'Baja', texto: 'La más liviana.' },
+  { valor: 'media', nombre: 'Media', texto: 'Un fondo pintado, con mucho más detalle.' },
+  { valor: 'alta', nombre: 'Alta', texto: 'Todavía más detalle. Tarda un poco más en aparecer.' },
+  { valor: 'ultra', nombre: 'Ultra', texto: 'Con «Movimiento del fondo», el cielo cobra vida. Gasta más batería.' },
+];
+// The background's filters, with or without the strong version (FILTROS_DEL_FONDO in lib/ajustes.js).
+const FILTROS = [
+  { valor: 'ninguno', nombre: 'Ninguno' },
+  { valor: 'grises', nombre: 'Blanco y negro' },
+  { valor: 'sepia', nombre: 'Sepia', texto: 'El tono cálido de una foto vieja.' },
+  { valor: 'vivo', nombre: 'Más vivo', texto: 'Colores más fuertes.' },
+  { valor: 'suave', nombre: 'Suave', texto: 'Colores apagados, con menos contraste.' },
+];
+// What moves in each one with «Movimiento del fondo» (lib/fondo/particulas.js).
+const SE_MUEVE = {
+  claro: 'Las nubes pasan despacio.',
+  oscuro: 'Las estrellas titilan y cada tanto pasa una fugaz.',
+  rosa: 'Caen pétalos de cerezo.',
+  bosque: 'Las luciérnagas vuelan y se prenden.',
+  cafe: 'Flota polvo en la luz de la lámpara.',
+  lavanda: 'Vuelan pétalos de lavanda.',
+  lavandaNoche: 'Luciérnagas sobre la lavanda.',
+  infierno: 'Suben brasas.',
+  glaciar: 'Cae nieve.',
+  cosmico: 'Las estrellas titilan y cada tanto pasa una fugaz.',
+};
 
 // A page of a PDF in small, under the same filter as the real ones (configuracion.css): one paper, or two halves.
 function DibujoPdf({ papeles }) {
@@ -117,21 +175,6 @@ const paginasPdf = (claro) => [
   { valor: 'oscuro', nombre: 'Oscuras', texto: 'Fondo oscuro y letra clara. Las imágenes también cambian de color.', dibujo: <DibujoPdf papeles={['oscuro']} /> },
   { valor: 'tema', nombre: 'Como el tema', texto: `Con el tema oscuro, oscuras. Con el claro, ${claro === 'sepia' ? 'sepia' : 'claras'}.`, dibujo: <DibujoPdf papeles={[claro, 'oscuro']} /> },
 ];
-
-// The header in small: two screens (four with only the drawings), the first one on view, as each style shows them.
-function MuestraMenu({ estilo }) {
-  const conDibujo = estilo === 'iconos' || estilo === 'solo-iconos';
-  return (
-    <span className="muestra-menu" data-estilo={estilo} aria-hidden="true">
-      {PANTALLAS_DEL_MENU.slice(0, estilo === 'solo-iconos' ? 4 : 2).map((m, i) => (
-        <span key={m.clave} className="muestra-menu__cosa" data-actual={i === 0 || undefined}>
-          {conDibujo && <IconoMenu nombre={m.clave} />}
-          {estilo !== 'solo-iconos' && m.texto}
-        </span>
-      ))}
-    </span>
-  );
-}
 
 const ESTILOS_DE_MENU = [
   { valor: 'texto', nombre: 'Palabras', texto: 'El nombre de cada pantalla.' },
@@ -341,12 +384,59 @@ function Dibujo({ forma }) {
   );
 }
 
-function Elecciones({ titulo, ayuda, nombre, opciones, valor, alElegir, parejas, apagado = false }) {
+// «Según la hora» (ajustes.js): a design for the day and one for the night. What changes on this screen goes into the
+// one chosen here; leaving the screen, the hour's shows again.
+const HORA_ENTERA = /^\d\d:\d\d$/;
+function SegunLaHora({ segun }) {
+  const [editando, setEditando] = useState(null);
+  useEffect(() => () => editarDiseno(null), []);
+  const elegir = (periodo) => {
+    setEditando(periodo);
+    editarDiseno(periodo);
+  };
+  const prender = (si) => {
+    setEditando(null);
+    editarDiseno(null);
+    cambiarSegunLaHora(si);
+  };
+  // Half typed, the field says nothing yet: nothing changes until it is a whole hour.
+  const hora = (desde, hasta) => HORA_ENTERA.test(desde) && HORA_ENTERA.test(hasta) && horasDeLaNoche(desde, hasta);
+  return (
+    <>
+      <Interruptor id="segun-la-hora" nombre="Según la hora" ayuda="Un diseño de día y otro de noche." prendido={Boolean(segun)} alCambiar={prender} />
+      {segun && (
+        <>
+          <div className="ajustes__horas">
+            <label className="campo">
+              <span className="campo__etiqueta">La noche empieza</span>
+              <input className="campo__control" type="time" step={300} value={segun.desde} onChange={(e) => hora(e.target.value, segun.hasta)} />
+            </label>
+            <label className="campo">
+              <span className="campo__etiqueta">La noche termina</span>
+              <input className="campo__control" type="time" step={300} value={segun.hasta} onChange={(e) => hora(segun.desde, e.target.value)} />
+            </label>
+          </div>
+          {segun.desde === segun.hasta && <p className="ajustes__ayuda" role="status">Con las dos horas iguales, no hay noche.</p>}
+          <Elecciones
+            titulo="Estás cambiando el de"
+            ayuda="Lo que cambies en esta pantalla queda en ese."
+            nombre="segun-la-hora-cual"
+            opciones={[{ valor: 'dia', nombre: 'Día' }, { valor: 'noche', nombre: 'Noche' }]}
+            valor={editando ?? disenoQueSeVe()}
+            alElegir={elegir}
+          />
+        </>
+      )}
+    </>
+  );
+}
+
+function Elecciones({ titulo, ayuda, ayudaViva = false, nombre, opciones, valor, alElegir, parejas, apagado = false, pie = null }) {
   const id = useId();
   return (
     <fieldset className="ajustes__grupo" aria-describedby={ayuda ? id : undefined} disabled={apagado}>
       <legend className="ajustes__leyenda">{titulo}</legend>
-      {ayuda && <p id={id} className="ajustes__ayuda">{ayuda}</p>}
+      {ayuda && <p id={id} className="ajustes__ayuda" aria-live={ayudaViva ? 'polite' : undefined}>{ayuda}</p>}
       <div className="elecciones" data-parejas={parejas}>
         {opciones.map((o) => (
           <label key={o.valor} className="eleccion">
@@ -359,6 +449,7 @@ function Elecciones({ titulo, ayuda, nombre, opciones, valor, alElegir, parejas,
           </label>
         ))}
       </div>
+      {pie}
     </fieldset>
   );
 }
@@ -419,7 +510,7 @@ function ElegirColor({ clave, titulo, ayuda, otroColor, opciones, ajustes, poner
         <span className="ajustes__previa" aria-hidden="true">{previa}</span>
         {propio && <button type="button" className="boton boton--secundario" onClick={volver}>Volver al original</button>}
       </div>
-      {propio && cuestaLeerSobre(propio) && <p className="ajustes__alerta" role="status">{alerta}</p>}
+      {alerta && propio && cuestaLeerSobre(propio) && <p className="ajustes__alerta" role="status">{alerta}</p>}
     </div>
   );
 }
@@ -517,7 +608,7 @@ function PasarEstilo({ ajustes }) {
             autoComplete="off"
             autoCapitalize="characters"
             spellCheck={false}
-            maxLength={120}
+            maxLength={MAX_ESCRITO}
           />
         </Campo>
         <button type="submit" className="boton boton--secundario">Usar este estilo</button>
@@ -533,7 +624,7 @@ function PasarEstilo({ ajustes }) {
 
 function TusDatos() {
   const { confirmar, avisar } = useUI();
-  const perfil = useConsulta(cargarPerfil);
+  const perfil = useConsulta(cargarPerfil, [], { alInstante: true });
   const [problema, setProblema] = useState('');
   const archivo = useRef(null);
 
@@ -644,10 +735,13 @@ function TuClassroom() {
     setCambio(true);
     avisar('Desconectaste Classroom');
   };
-  if (google.conectado) {
+  if (google.conectado || google.sinRed) {
+    let estado = 'Conectado.';
+    if (!google.conectado) estado = 'Sin internet. Se conecta de nuevo cuando vuelva.';
+    else if (google.email) estado = <>Conectado como <strong>{google.email}</strong>.</>;
     return (
       <div className="ajustes__botones">
-        <p className="ajustes__estado">{google.email ? <>Conectado como <strong>{google.email}</strong>.</> : 'Conectado.'}</p>
+        <p className="ajustes__estado">{estado}</p>
         <button ref={desconectarBoton} type="button" className="boton boton--secundario" onClick={desconectar}>Desconectar</button>
       </div>
     );
@@ -711,6 +805,33 @@ const BASES = [
   { valor: 'lado', nombre: 'Una al lado de la otra' },
   { valor: 'abajo', nombre: 'Una abajo de la otra', texto: 'Con las claves unidas por líneas en el margen.' },
 ];
+
+/** A slider of the background's filters: how strong the filter is, the tone or the blur. */
+function BarraDelFiltro({ nombre, valor, min, max, paso, unidad, ayuda, apagado = false, alCambiar }) {
+  const id = useId();
+  return (
+    <div className="brillo-pdf brillo-pdf--ancho" data-apagado={apagado || undefined}>
+      <div className="brillo-pdf__cabeza">
+        <label htmlFor={id} className="brillo-pdf__nombre">{nombre}</label>
+        <output htmlFor={id} className="brillo-pdf__valor" aria-hidden="true">{valor}{unidad}</output>
+      </div>
+      <input
+        id={id}
+        className="brillo-pdf__control"
+        type="range"
+        min={min}
+        max={max}
+        step={paso}
+        value={valor}
+        aria-valuetext={`${valor}${unidad === '°' ? ' grados' : ' por ciento'}`}
+        aria-describedby={ayuda ? `${id}-ayuda` : undefined}
+        disabled={apagado}
+        onChange={(e) => alCambiar(Number(e.target.value))}
+      />
+      {ayuda && <p id={`${id}-ayuda`} className="brillo-pdf__ayuda">{ayuda}</p>}
+    </div>
+  );
+}
 
 /** The size of the code, with a slider. The preview under it follows. */
 function TamanoDelCodigo({ valor, alCambiar }) {
@@ -835,11 +956,14 @@ function ColoresDelCodigo({ ajustes, poner }) {
 }
 
 /** A setting that is on or off, with what it does underneath. */
-function Interruptor({ id, nombre, ayuda, prendido, alCambiar }) {
+function Interruptor({ id, nombre, ayuda, prendido, alCambiar, marca }) {
   return (
     <div className="ajuste-si">
       <span className="ajuste-si__texto">
-        <label htmlFor={id} className="ajuste-si__nombre">{nombre}</label>
+        <span className="ajuste-si__linea">
+          <label htmlFor={id} className="ajuste-si__nombre">{nombre}</label>
+          {marca && <span className="ajuste-si__marca">{marca}</span>}
+        </span>
         <span id={`${id}-ayuda`} className="ajuste-si__ayuda">{ayuda}</span>
       </span>
       <input id={id} className="interruptor" type="checkbox" role="switch" checked={prendido} aria-describedby={`${id}-ayuda`} onChange={(e) => alCambiar(e.target.checked)} />
@@ -891,11 +1015,13 @@ function Pestanas({ actual, alElegir }) {
   );
 }
 
-function Panel({ id, actual, children }) {
+// While a design from Diseños is tried, every option is greyed out: what shows is the design, and a change would be
+// saved under it without being seen. A fieldset turns off every control inside at once.
+function Panel({ id, actual, bloqueado = false, children }) {
   return (
-    <div className="ajustes__panel" role="tabpanel" id={`ajustes-${id}`} aria-labelledby={`pestana-${id}`} hidden={actual !== id}>
+    <fieldset className="ajustes__panel" role="tabpanel" id={`ajustes-${id}`} aria-labelledby={`pestana-${id}`} hidden={actual !== id} disabled={bloqueado}>
       {children}
-    </div>
+    </fieldset>
   );
 }
 
@@ -1000,10 +1126,21 @@ export default function Configuracion() {
   useSeo({ titulo: tituloDe('Configuración'), noindex: true });
   const { confirmar, avisar } = useUI();
   const ajustes = useAjustes();
+  const enPrueba = useDisenoEnPrueba();
+  const drive = useDrive();
   const google = useGoogle();
   const instalable = useInstalar() !== null;
+  const ahorrando = useAhorro();
   const marcarVistos = useMarcarVistos();
   const siempreOscuro = SIEMPRE_OSCUROS.includes(ajustes.estilo);
+  // Batman's yellow beam takes the highlighter's color (animaciones.css): while it's on, that color says so.
+  const conFogonazo = ajustes.estilo === 'batman' && ajustes.fogonazo;
+  // With «Seguir a tu dispositivo», the theme the device shows now (public/ajustes.js marks it).
+  const temaVisible = typeof document === 'undefined' ? 'claro' : document.documentElement.getAttribute('data-tema') === 'oscuro' ? 'oscuro' : 'claro';
+  // Batman is always dark: Claro shows the night sky, and Lavanda its field at night (potentes.css).
+  const temaPotente = siempreOscuro && ajustes.tema === 'lavanda' ? 'lavandaNoche' : siempreOscuro && ['claro', 'sistema'].includes(ajustes.tema) ? 'oscuro' : ajustes.tema === 'sistema' ? temaVisible : ajustes.tema;
+  // With «Movimiento» following the device, the device can ask for less motion: the background stays still then.
+  const dispositivoQuieto = typeof window !== 'undefined' && Boolean(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches);
   const { hash, key } = useLocation();
   const [seccion, setSeccion] = useState(() => seccionDe(hash));
   // Each arrival at the screen reads the address again: a second link to #atajos while another section is open (a new
@@ -1021,7 +1158,7 @@ export default function Configuracion() {
     if (seccion !== 'pantallas') return null;
     await cargarPerfil();
     return cargarMaterias();
-  }, [seccion === 'pantallas']);
+  }, [seccion === 'pantallas'], { alInstante: true });
   const elegirPantalla = (id) => {
     setPantalla(id);
     window.history.replaceState(window.history.state, '', `#${id}`);
@@ -1074,8 +1211,26 @@ export default function Configuracion() {
       </div>
 
       <Pestanas actual={seccion} alElegir={elegirSeccion} />
+      {enPrueba && (
+        <p className="ajustes__en-prueba">
+          Estás probando <strong>{enPrueba.nombre}</strong>. Para cambiar algo, usalo o volvé al tuyo desde la barra de abajo.
+        </p>
+      )}
 
-      <Panel id="como-se-ve" actual={seccion}>
+      <Panel bloqueado={Boolean(enPrueba)} id="como-se-ve" actual={seccion}>
+        <Link className="ajustes__a-disenos" to="/disenos">
+          <span className="ajustes__a-disenos-muestras" aria-hidden="true">
+            <span />
+            <span />
+            <span />
+          </span>
+          <span className="ajustes__a-disenos-texto">
+            <strong>Diseños</strong>
+            <span>Probá los estilos que publicaron otros alumnos o publicá el tuyo.</span>
+          </span>
+          <span className="boton ajustes__a-disenos-boton" aria-hidden="true">Ver diseños</span>
+        </Link>
+
         <Seccion titulo="Estilo y tema">
           <Elecciones titulo="Estilo" ayuda="Nada se mueve de lugar." nombre="estilo" parejas="estilo" opciones={ESTILOS} valor={ajustes.estilo} alElegir={(estilo) => poner(cambioDeEstilo(ajustes, estilo))} />
           <Interruptor
@@ -1085,13 +1240,132 @@ export default function Configuracion() {
             prendido={ajustes.bordes}
             alCambiar={(bordes) => poner(cambioDeBordes(bordes))}
           />
+          {ajustes.estilo === 'batman' && (
+            <Interruptor
+              id="fogonazo"
+              nombre="Fogonazo amarillo"
+              ayuda="La luz de la señal cada vez que cambiás de pantalla."
+              prendido={ajustes.fogonazo}
+              alCambiar={(fogonazo) => poner({ fogonazo })}
+            />
+          )}
           <Elecciones
             titulo="Tema"
             ayuda={siempreOscuro ? `Con el estilo ${ESTILOS.find((e) => e.valor === ajustes.estilo).nombre}, siempre oscuro.` : undefined}
             nombre="tema"
             opciones={TEMAS}
-            valor={siempreOscuro && !PALETAS_DEL_TEMA.includes(ajustes.tema) ? 'oscuro' : ajustes.tema}
+            valor={siempreOscuro && ajustes.tema !== 'sistema' && !PALETAS_DEL_TEMA.includes(ajustes.tema) ? 'oscuro' : ajustes.tema}
             alElegir={(tema) => poner({ tema })}
+            pie={(
+              <button
+                type="button"
+                className="boton boton--secundario boton--chico ajustes__dispositivo"
+                aria-pressed={ajustes.tema === 'sistema'}
+                onClick={() => poner({ tema: ajustes.tema === 'sistema' ? document.documentElement.getAttribute('data-tema') || 'claro' : 'sistema' })}
+              >
+                Seguir a tu dispositivo
+              </button>
+            )}
+          />
+          <Interruptor
+            id="potente"
+            nombre="Versión potente"
+            marca="Recomendado"
+            ayuda={POTENTES[temaPotente]}
+            prendido={ajustes.potente}
+            alCambiar={(potente) => poner(potente ? { potente, fondoCalidad: 'media', fondoMueve: true } : { potente })}
+          />
+          {ajustes.potente && (
+            <>
+              <Interruptor
+                id="fondo-mueve"
+                nombre="Movimiento del fondo"
+                ayuda={movimientoDe(ajustes) !== 'sistema' ? 'Queda quieto con «Reducir siempre» o «Sin animaciones».' : dispositivoQuieto ? 'Queda quieto. Tu dispositivo pide menos movimiento.' : SE_MUEVE[temaPotente]}
+                prendido={ajustes.fondoMueve}
+                alCambiar={(fondoMueve) => poner({ fondoMueve })}
+              />
+              <Elecciones titulo="Calidad del fondo" nombre="fondo-calidad" opciones={CALIDADES} valor={ajustes.fondoCalidad} alElegir={(fondoCalidad) => poner({ fondoCalidad })} />
+            </>
+          )}
+          {/* The background's filters, with or without the strong version: three rows that go together. */}
+          <Elecciones
+            titulo="Filtro del fondo"
+            nombre="fondo-filtro"
+            opciones={FILTROS}
+            valor={ajustes.fondoFiltro}
+            alElegir={(fondoFiltro) => poner({ fondoFiltro })}
+            pie={(
+              // The slider comes with a filter: a screen reader hears it.
+              <div className="ajustes__filtro-barra" aria-live="polite">
+                {ajustes.fondoFiltro !== 'ninguno' && (
+                  <BarraDelFiltro nombre="Intensidad" valor={ajustes.fondoIntensidad} {...INTENSIDAD_DEL_FILTRO} unidad="%" alCambiar={(fondoIntensidad) => poner({ fondoIntensidad })} />
+                )}
+              </div>
+            )}
+          />
+          <BarraDelFiltro
+            nombre="Tono del fondo"
+            valor={ajustes.fondoTono}
+            {...TONO_DEL_FILTRO}
+            unidad="°"
+            apagado={ajustes.fondoFiltro === 'grises'}
+            ayuda={ajustes.fondoFiltro === 'grises' ? 'Con blanco y negro no cambia nada.' : 'Gira los colores del fondo.'}
+            alCambiar={(fondoTono) => poner({ fondoTono })}
+          />
+          <BarraDelFiltro
+            nombre="Desenfoque del fondo"
+            valor={ajustes.fondoDesenfoque}
+            {...DESENFOQUE_DEL_FONDO}
+            unidad="%"
+            ayuda="Gasta más batería."
+            alCambiar={(fondoDesenfoque) => poner({ fondoDesenfoque })}
+          />
+          <SegunLaHora segun={ajustes.segunLaHora} />
+        </Seccion>
+
+        <Seccion titulo="Colores" bajada="Cambian en toda la página.">
+          <ElegirColor
+            clave="accion"
+            titulo="Color principal"
+            ayuda="Los botones."
+            otroColor="Otro color principal"
+            opciones={COLORES_ACCION}
+            ajustes={ajustes}
+            poner={poner}
+            alerta="Con este color cuesta leer el texto de los botones. Probá uno más claro o más oscuro."
+            previa={<span className="boton">Así queda</span>}
+          />
+          <ElegirColor
+            clave="cabecera"
+            titulo="Cabecera"
+            ayuda="Sin elegir, va la del estilo."
+            otroColor="Otro color de cabecera"
+            opciones={COLORES_CABECERA}
+            ajustes={ajustes}
+            poner={poner}
+            alerta="Con este color cuesta leer la cabecera. Probá uno más claro o más oscuro."
+          />
+          {ajustes.estilo === 'pizarron' && (
+            <ElegirColor
+              clave="bandeja"
+              titulo="Borde de la cabecera"
+              ayuda="Sin elegir, va el de madera."
+              otroColor="Otro color de borde"
+              opciones={COLORES_CABECERA}
+              ajustes={ajustes}
+              poner={poner}
+            />
+          )}
+          <ElegirColor
+            clave="resaltador"
+            titulo={conFogonazo ? 'Resaltador y fogonazo' : 'Resaltador'}
+            ayuda={conFogonazo ? 'Marca lo urgente, el día de hoy y la luz al cambiar de pantalla.' : 'Marca lo urgente y el día de hoy.'}
+            otroColor="Otro color de resaltador"
+            opciones={COLORES_RESALTADOR}
+            ajustes={ajustes}
+            poner={poner}
+            alerta="Con este color cuesta leer lo resaltado. Probá uno más claro o más oscuro."
+            previa={<span className="marcado">Así queda</span>}
           />
         </Seccion>
 
@@ -1131,42 +1405,6 @@ export default function Configuracion() {
           />
         </Seccion>
 
-
-        <Seccion titulo="Colores" bajada="Cambian en toda la página.">
-          <ElegirColor
-            clave="accion"
-            titulo="Color principal"
-            ayuda="Los botones."
-            otroColor="Otro color principal"
-            opciones={COLORES_ACCION}
-            ajustes={ajustes}
-            poner={poner}
-            alerta="Con este color cuesta leer el texto de los botones. Probá uno más claro o más oscuro."
-            previa={<span className="boton">Así queda</span>}
-          />
-          <ElegirColor
-            clave="cabecera"
-            titulo="Cabecera"
-            ayuda="Sin elegir, va la del estilo."
-            otroColor="Otro color de cabecera"
-            opciones={COLORES_CABECERA}
-            ajustes={ajustes}
-            poner={poner}
-            alerta="Con este color cuesta leer la cabecera. Probá uno más claro o más oscuro."
-          />
-          <ElegirColor
-            clave="resaltador"
-            titulo="Resaltador"
-            ayuda="Marca lo urgente y el día de hoy."
-            otroColor="Otro color de resaltador"
-            opciones={COLORES_RESALTADOR}
-            ajustes={ajustes}
-            poner={poner}
-            alerta="Con este color cuesta leer lo resaltado. Probá uno más claro o más oscuro."
-            previa={<span className="marcado">Así queda</span>}
-          />
-        </Seccion>
-
         <Seccion id="consultron" titulo="Consultron" bajada="Cómo se ve su charla, acá y en cada pantalla.">
           <MuestraConsultron />
           <Elecciones titulo="Letra de la charla" nombre="consultron-letra" opciones={LETRAS_CONSULTRON} valor={ajustes.consultronLetra} alElegir={(consultronLetra) => poner({ consultronLetra })} parejas="tres" />
@@ -1191,7 +1429,7 @@ export default function Configuracion() {
         </Seccion>
       </Panel>
 
-      <Panel id="pdf" actual={seccion}>
+      <Panel bloqueado={Boolean(enPrueba)} id="pdf" actual={seccion}>
         <Seccion titulo="Lector de PDF">
           <div className="ajustes__pdf">
             <Elecciones
@@ -1208,7 +1446,7 @@ export default function Configuracion() {
         </Seccion>
       </Panel>
 
-      <Panel id="menu" actual={seccion}>
+      <Panel bloqueado={Boolean(enPrueba)} id="menu" actual={seccion}>
         <Seccion titulo="Menú" bajada="Los cambios se ven al instante.">
           <Elecciones
             titulo="Posición del menú"
@@ -1255,7 +1493,7 @@ export default function Configuracion() {
 
       </Panel>
 
-      <Panel id="pantallas" actual={seccion}>
+      <Panel bloqueado={Boolean(enPrueba)} id="pantallas" actual={seccion}>
         <Subpestanas actual={pantalla} alElegir={elegirPantalla} />
 
         <Subpanel id="hoy" actual={pantalla} vista={<VistaPrevia><HoyEnMiniatura mio={mio} vista={ajustes.vistas.hoy} /></VistaPrevia>}>
@@ -1309,7 +1547,7 @@ export default function Configuracion() {
         </Subpanel>
       </Panel>
 
-      <Panel id="laboratorio" actual={seccion}>
+      <Panel bloqueado={Boolean(enPrueba)} id="laboratorio" actual={seccion}>
         <Seccion titulo="Editor">
           <Elecciones titulo="Letra del código" nombre="lab-letra" opciones={LETRAS_DEL_CODIGO} valor={ajustes.labLetra} alElegir={(labLetra) => poner({ labLetra })} />
           <TamanoDelCodigo valor={ajustes.labTamano} alCambiar={(labTamano) => poner({ labTamano })} />
@@ -1349,7 +1587,7 @@ export default function Configuracion() {
         </Seccion>
       </Panel>
 
-      <Panel id="teclado" actual={seccion}>
+      <Panel bloqueado={Boolean(enPrueba)} id="teclado" actual={seccion}>
         <Seccion id="sin-mouse" titulo="Sin mouse">
           <Interruptor
             id="modo-sin-mouse"
@@ -1365,7 +1603,7 @@ export default function Configuracion() {
         </Seccion>
       </Panel>
 
-      <Panel id="datos" actual={seccion}>
+      <Panel bloqueado={Boolean(enPrueba)} id="datos" actual={seccion}>
         {(google.disponible || instalable) && (
           <Seccion
             id={SECCION_DISPOSITIVOS}
@@ -1373,10 +1611,44 @@ export default function Configuracion() {
             bajada={google.disponible && <>Va por dispositivo. Prendelo <strong>en cada compu, celu o navegador</strong> donde entrás a Super CVG, con la misma cuenta de Google.</>}
           >
             <GuardarEnDrive />
+            {drive.prendido && (
+              <Interruptor
+                id="misma-en-todos"
+                nombre="Misma configuración en todos tus dispositivos"
+                ayuda="Apagado, este dispositivo tiene la suya. Lo que cambies acá no llega a los otros."
+                prendido={ajustes.mismaEnTodos}
+                alCambiar={(mismaEnTodos) => poner({ mismaEnTodos })}
+              />
+            )}
             <EntrarConGoogle />
             <InstalarApp />
           </Seccion>
         )}
+
+        <Seccion id={SECCION_AHORRO} titulo="Ahorro de datos" bajada="Mientras está prendido, lo que no pediste espera a que lo abras. Las tarjetas de Resúmenes van sin foto.">
+          <Elecciones
+            titulo="Cuándo"
+            ayuda={ajustes.ahorro === 'auto' ? (ahorrando ? 'Ahora está prendido.' : 'Ahora está apagado.') : undefined}
+            ayudaViva
+            nombre="ahorro"
+            opciones={MODOS_DE_AHORRO}
+            valor={ajustes.ahorro}
+            alElegir={(ahorro) => poner({ ahorro })}
+          />
+        </Seccion>
+
+        <Seccion id={SECCION_DESCARGAS} titulo="Descargas inteligentes">
+          <Interruptor
+            id="descargas"
+            nombre="Bajar el material del día"
+            marca="Recomendado"
+            ayuda="Con Super CVG cerrado, baja por wifi el material de las materias que cursás ese día. De noche, las del día siguiente. Hasta 200 MB por día."
+            prendido={ajustes.descargas}
+            alCambiar={(descargas) => poner({ descargas })}
+          />
+          <EstadoDescargas prendido={ajustes.descargas} />
+          {ajustes.descargas && <SeccionesQueBaja />}
+        </Seccion>
 
         {google.disponible && (
           <Seccion titulo="Classroom" bajada="Tus cursos de Classroom dentro de cada materia, solo para leer. La conexión queda en esta pestaña.">

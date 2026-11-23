@@ -15,7 +15,8 @@ const paso = (accion) => (PIDE_APROBADA.has(accion) ? 'a' : 'c');
  * [{ accion, clave }], abre }]. `abre`: the side opens once every one of `faltan` is there (nothing else is missing and,
  * for the final, the subject is regular).
  * `candidatos`: [{ clave, ... }], each comes back with `abre` (how many open right away with it) and `frena` (how many
- * it holds back down the whole chain), first by `abre`, then by `frena`. Electives are never counted.
+ * it holds back down the whole chain), first by `abre`, then by that chain weighed by nearness, then by `frena`.
+ * Electives are never counted.
  * `soloAprobada`: the candidates are regular already, so only what asks for them passed counts.
  */
 export function ordenarFrenos(lados, candidatos, { soloAprobada = false, minimo = 0 } = {}) {
@@ -32,29 +33,36 @@ export function ordenarFrenos(lados, candidatos, { soloAprobada = false, minimo 
     }
   }
 
+  // Each subject down the chain counts once (`frena`), and for the order it weighs by how near it is (`cerca`): 1 if
+  // it asks for this one, ½ one step further, ¼ the next. Going from started to passed in the same subject is no step.
   const frena = (clave) => {
-    const vistos = new Set();
-    const materias = new Set();
-    const pila = soloAprobada ? [`a:${clave}`] : [`c:${clave}`, `a:${clave}`];
-    while (pila.length) {
-      const nodo = pila.pop();
-      if (vistos.has(nodo)) continue;
-      vistos.add(nodo);
-      const k = nodo.slice(2);
-      if (k !== clave && !electiva.get(k)) materias.add(k);
-      if (nodo.startsWith('c:')) pila.push(`a:${k}`);
-      for (const s of salen.get(nodo) ?? []) pila.push(s);
+    const pasos = new Map();
+    const cola = (soloAprobada ? [`a:${clave}`] : [`c:${clave}`, `a:${clave}`]).map((nodo) => [nodo, 0]);
+    while (cola.length) {
+      const [nodo, n] = cola.shift();
+      if (pasos.has(nodo)) continue;
+      pasos.set(nodo, n);
+      if (nodo.startsWith('c:')) cola.unshift([`a:${nodo.slice(2)}`, n]);
+      for (const s of salen.get(nodo) ?? []) cola.push([s, n + 1]);
     }
-    return materias.size;
+    const cuan = new Map();
+    for (const [nodo, n] of pasos) {
+      const k = nodo.slice(2);
+      if (k !== clave && !electiva.get(k)) cuan.set(k, Math.min(cuan.get(k) ?? n, n));
+    }
+    let cerca = 0;
+    for (const n of cuan.values()) cerca += 0.5 ** (n - 1);
+    return { frena: cuan.size, cerca };
   };
   const abre = (clave) => new Set(lados
     .filter((l) => l.abre && !l.electiva && l.clave !== clave && l.faltan.length > 0 && l.faltan.every((r) => r.clave === clave))
     .map((l) => l.clave)).size;
 
   return candidatos
-    .map((c) => ({ ...c, abre: abre(c.clave), frena: frena(c.clave) }))
+    .map((c) => ({ ...c, abre: abre(c.clave), ...frena(c.clave) }))
     .filter((f) => f.frena >= minimo)
-    .sort((x, y) => y.abre - x.abre || y.frena - x.frena || x.nombre.localeCompare(y.nombre, 'es'));
+    .sort((x, y) => y.abre - x.abre || y.cerca - x.cerca || y.frena - x.frena || x.nombre.localeCompare(y.nombre, 'es'))
+    .map(({ cerca: _cerca, ...f }) => f);
 }
 
 /** What a card says of one: «abre 2 ya, frena 5», «frena 5» or «no frena ninguna». */

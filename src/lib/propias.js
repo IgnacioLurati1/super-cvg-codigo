@@ -12,6 +12,10 @@ export const agregadaDe = (mio, materiaId) => mio.propias.find((p) => p.de === m
 export const esAgregada = (propia) => propia.de !== null && propia.de !== undefined;
 /** The student's own sections of a campus course, in their order: not the categories tied to a section of the campus. */
 export const seccionesTuyas = (agregada) => (agregada?.categorias ?? []).filter((c) => c.campus === undefined);
+/** Where something can be added in a course (ElegirSeccion): the sections of one of the student's own (its id, text),
+ * or the student's sections of a campus course (its number). */
+export const seccionesDondeSumar = (mio, materia) =>
+  materia === null ? [] : seccionesTuyas(typeof materia === 'string' ? propiaDe(mio, materia) : agregadaDe(mio, materia));
 
 const ahora = () => Math.floor(Date.now() / 1000);
 
@@ -222,6 +226,17 @@ export function agregarBloques(id, catId, bloques) {
   const entran = bloques.slice(0, Math.max(0, LIMITES.bloques - categoria.bloques.length)).map((b) => ({ ...b, id: idChico() }));
   if (!entran.length) return 0;
   return cambiarCategoria(id, catId, (c) => ({ ...c, bloques: [...c.bloques, ...entran] })) ? entran.length : 0;
+}
+
+/** Adds blocks to a section of `seccionesDondeSumar`, or with `seccion` null to a new one named `nueva`. How many went
+ * in: the first ones. */
+export function sumarDondeSea(materia, seccion, nueva, bloques) {
+  if (typeof materia === 'string') {
+    const cat = seccion === null ? agregarCategoria(materia, nueva) : seccion;
+    return cat === null ? 0 : agregarBloques(materia, cat, bloques);
+  }
+  const cat = seccion === null ? (sumarSeccionPropia(materia, nueva)?.categoria ?? null) : seccion;
+  return cat === null ? 0 : (sumarEnSeccion(materia, `p${cat}`, bloques)?.ids.length ?? 0);
 }
 
 export const cambiarBloque = (id, catId, bloqueId, cambios) =>

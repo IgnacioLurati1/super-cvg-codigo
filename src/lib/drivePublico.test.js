@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { armarMapa, buscarEnMapa, CARRERA, clienteDrivePublico, contenidoDe, drivesDe, enlaceDe, indiceDe, leerEnlace, sanearDriveMio, sanearMapa, tipoDe, visorDe, vistaDeGoogle } from './drivePublico';
+import { armarMapa, buscarEnMapa, CARRERA, clienteDrivePublico, contenidoDe, drivesDe, enlaceDe, indiceDe, leerEnlace, sanearDriveMio, sanearMapa, sinSesionDeGoogle, tipoDe, visorDe, vistaDeGoogle } from './drivePublico';
 
 const ID = '1ZgKML44drc8Wq3pcbHsc-ozPINv6xSHQ';
 const CARPETA = 'application/vnd.google-apps.folder';
@@ -22,6 +22,9 @@ describe('el link de una carpeta o un archivo', () => {
   it('la vista de Google, para cuando frena las descargas', () => {
     expect(vistaDeGoogle({ id: ID, m: 'application/pdf', k: 'k1' })).toBe(`https://drive.google.com/file/d/${ID}/preview?resourcekey=k1`);
     expect(vistaDeGoogle({ id: ID, m: 'application/vnd.google-apps.presentation' })).toBe(`https://docs.google.com/presentation/d/${ID}/preview`);
+    // A file of Classroom opens with the account linked to it; anything that isn't a mail stays out.
+    expect(vistaDeGoogle({ id: ID, m: 'application/pdf', k: 'k1' }, 'ana@frro.utn.edu.ar')).toBe(`https://drive.google.com/file/d/${ID}/preview?resourcekey=k1&authuser=ana%40frro.utn.edu.ar`);
+    expect(vistaDeGoogle({ id: ID, m: 'application/pdf' }, 'no es un mail')).toBe(`https://drive.google.com/file/d/${ID}/preview`);
   });
 
   it('el link de vuelta, con su clave si la tiene', () => {
@@ -204,5 +207,22 @@ describe('lo que el alumno guarda de Drive', () => {
     expect(d).toEqual({ propios: [{ id: 'carpetaDeDriveA1', nombre: 'Física', k: 'k-1' }], sinCarrera: false, ocultos: ['carpetaDeDriveB2'] });
     expect(drivesDe(d).map((x) => x.id)).toEqual([CARRERA.id, 'carpetaDeDriveA1']);
     expect(drivesDe({ ...d, sinCarrera: true }).map((x) => x.id)).toEqual(['carpetaDeDriveA1']);
+  });
+});
+
+describe('sinSesionDeGoogle', () => {
+  const con = (userAgent, extra = {}) => sinSesionDeGoogle({ userAgent, maxTouchPoints: 0, ...extra });
+  it('says no to Chrome, Edge and Opera, where the viewer of Google has the session', () => {
+    expect(con('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36')).toBe(false);
+    expect(con('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36 Edg/131.0.0.0')).toBe(false);
+    expect(con('Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Mobile Safari/537.36 OPR/86.0.0.0')).toBe(false);
+    expect(sinSesionDeGoogle(null)).toBe(false);
+  });
+  it('says yes to Brave, Firefox and Safari, also any browser on an iPhone or iPad', () => {
+    expect(con('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36', { brave: {} })).toBe(true);
+    expect(con('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:133.0) Gecko/20100101 Firefox/133.0')).toBe(true);
+    expect(con('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.1 Safari/605.1.15')).toBe(true);
+    expect(con('Mozilla/5.0 (iPhone; CPU iPhone OS 18_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/131.0.0.0 Mobile/15E148 Safari/604.1')).toBe(true);
+    expect(con('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.1 Safari/605.1.15', { maxTouchPoints: 5 })).toBe(true);
   });
 });

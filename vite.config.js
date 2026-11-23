@@ -6,7 +6,7 @@ import { SITIO } from './sitio.config.js';
 import { rutasPublicas } from './scripts/rutas.mjs';
 
 // La política de contenido mínima: solo scripts propios. Nada de scripts inline, on…=, javascript: ni eval.
-// `connect-src` es la garantía de fondo: el navegador solo puede pedir datos al sitio, al campus, a los títulos de video, al panel de Luta Studios (el contador de visitas y Consultron con Gemini, que sale de ahí hacia Google), a El Santo Resumen (su índice de apuntes, su servicio de banco y consejos y la función de Consultron en «Código» del Laboratorio, que sale de ahí hacia Groq o Gemini), a Google Classroom (solo lectura, y la revocación del permiso) y a Google Drive (`www.googleapis.com`, también `/upload`: la carpeta oculta de la app, si el alumno guarda ahí lo suyo, y la carpeta «Super CVG» con los archivos que manda por Mensajes, de donde sale su link de `drive.google.com`, que se abre en otra pestaña y nunca se pide; y las carpetas públicas de la pestaña Drive de Buscar, con la clave del sitio). `frame-src` deja abrir, oculta, la pantalla de permiso de Google para renovarlo sin mostrar nada.
+// `connect-src` es la garantía de fondo: el navegador solo puede pedir datos al sitio, al campus, a los títulos de video, al panel de Luta Studios (el contador de visitas y Consultron con Gemini, que sale de ahí hacia Google), a El Santo Resumen (su índice de apuntes, su servicio de banco y consejos, la función `supercvg-disenos` de Diseños, en el mismo origen, y la función de Consultron en «Código» del Laboratorio, que sale de ahí hacia Groq o Gemini), a Google Classroom (solo lectura, y la revocación del permiso) y a Google Drive (`www.googleapis.com`, también `/upload`: la carpeta oculta de la app, si el alumno guarda ahí lo suyo, y la carpeta «Super CVG» con los archivos que manda por Mensajes, de donde sale su link de `drive.google.com`, que se abre en otra pestaña y nunca se pide; y las carpetas públicas de la pestaña Drive de Buscar, con la clave del sitio). `frame-src` deja abrir, oculta, la pantalla de permiso de Google para renovarlo sin mostrar nada.
 // `frame-src` también deja el lector de El Santo Resumen (`demo.lutastudios.com/visor/`): un resumen HTML con sus scripts prendidos corre ahí, en un marco que solo puede correr scripts, sin origen y sin nada de este sitio. Y la vista de Google de un archivo público de Drive (`drive.google.com` y `docs.google.com`, `/preview`), solo cuando Google frena las descargas de la pestaña Drive: corre en su propio origen, sin nada de este sitio.
 // `img-src` suma el Supabase de El Santo Resumen por las fotos de la primera página de cada resumen del banco, que saca él y guarda en su carpeta pública (`leerFoto` de src/lib/santoResumen.js solo deja pasar esas).
 // El Laboratorio corre Python, SQL, C y JavaScript en WebAssembly (Pyodide, sql.js, el compilador xcc y el intérprete QuickJS, de /motores/), dentro de un worker que arranca de un `blob:` para llevar esta misma política: por eso `worker-src` suma `blob:`, y `script-src` suma `'wasm-unsafe-eval'`, que deja compilar WebAssembly y nada más (sigue sin `eval` ni `new Function` de JavaScript, también adentro del worker; en C es lo que deja correr el programa que acaba de compilar). El JavaScript del alumno tampoco pasa por `eval`: lo lee y lo corre QuickJS adentro de su WebAssembly. Lo que corre ahí no tiene red: además de este `connect-src`, el worker se queda sin fetch, sockets ni IndexedDB al terminar de cargar (src/lib/laboratorio/red.js).
@@ -343,6 +343,29 @@ function quickjsDeMotores() {
   };
 }
 
+// Chunks that keep their name from one publication to the next, so a phone downloads only what changed. A chunk's name
+// carries the names of the chunks it imports, so a change spreads to everything that imports it:
+//   - lib-<package>: each package of node_modules in its own chunk, which imports only other packages. One chunk per
+//     package, not per family: y-protocols (live sessions, asked at start) with y-codemirror.next would bring codemirror
+//     to the first page.
+//   - app: the code of the first page that other screens share (lib, components, layouts). A change here still renames
+//     almost every screen. The entry keeps only main.jsx and the router (App.jsx), whose list of screens changes with
+//     any of them: no screen imports it, so changing one screen renames only that screen and the entry.
+//   - app-pantallas: the screens of the first page (Hoy, Entrar...), which almost no other screen imports.
+const familia = (id) => {
+  const m = /.*node_modules[\\/]((@[^\\/]+[\\/])?[^\\/]+)/.exec(id);
+  return m ? `lib-${m[1].replace(/^@/, '').replace(/[\\/.]/g, '-')}` : null;
+};
+const deLaApp = (id) => /[\\/]src[\\/]/.test(id) && !/[\\/]src[\\/](main|App)\.jsx$/.test(id);
+// Priority decides who takes a module first; an app group also takes what its modules import, not taken yet. A library
+// doesn't take the ones it imports: each one is already in its own chunk, and fflate (used by the first page's zips)
+// would otherwise go inside the PDF export library and drag its 200 KB to the first page.
+const PEDAZOS = [
+  { name: familia, debugName: 'lib', test: /node_modules/, includeDependenciesRecursively: false, priority: 3 },
+  { name: 'app', test: (id) => deLaApp(id) && !/[\\/]src[\\/]pages[\\/]/.test(id), tags: ['$initial'], priority: 2 },
+  { name: 'app-pantallas', test: deLaApp, tags: ['$initial'], priority: 1 },
+];
+
 // The tests say dates with the faculty's clock, wherever they run: the machine of the deploy is in UTC.
 if (process.env.VITEST) process.env.TZ = 'America/Argentina/Cordoba';
 
@@ -360,8 +383,9 @@ export default defineConfig({
   // Pyodide finds its files from where it is: it isn't bundled ahead in dev (https://pyodide.org/en/stable/usage/working-with-bundlers.html).
   // tesseract.js is CommonJS and loads late, with the first photo: ready ahead, so dev doesn't reload the page then.
   optimizeDeps: { exclude: ['pyodide'], include: ['tesseract.js'] },
-  // The 3D notebook (three.js) is one lazy chunk of about 560 KB, loaded only on the sign-in screen.
-  build: { chunkSizeWarningLimit: 600 },
+  // three.js (the 3D of the sign-in screen and the entrance) is one lazy chunk of about 610 KB, loaded only there.
+  // The manifest (.vite/manifest.json) tells scripts/trabajador.mjs which chunks each screen needs; it deletes it.
+  build: { chunkSizeWarningLimit: 650, manifest: true, rolldownOptions: { output: { codeSplitting: { groups: PEDAZOS } } } },
   // graphify-out, dist and the screenshots change while working: they must not reload the page.
   server: { port: 5330, strictPort: true, watch: { ignored: ['**/graphify-out/**', '**/dist/**', '**/capturas/**'] } },
   test: { environment: 'jsdom' },

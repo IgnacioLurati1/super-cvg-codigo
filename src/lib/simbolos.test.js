@@ -93,3 +93,22 @@ describe('un link a un archivo de Drive', () => {
     expect(dibujoDeItem({ tipo: 'archivo', archivo: 'a.pdf' }).enlace).toBe(false);
   });
 });
+
+describe('the symbols of courses of your own', () => {
+  it('gives each one a different symbol, the same every time, and a new one never changes the others', async () => {
+    const { simbolosDeTuyas } = await import('./simbolos');
+    const ids = ['p1700000000001', 'p1700000000002', 'p1700000000003'];
+    const uno = simbolosDeTuyas(ids);
+    expect(new Set(uno.values()).size).toBe(3);
+    expect(simbolosDeTuyas([...ids].reverse())).toEqual(uno);
+    const con = simbolosDeTuyas([...ids, 'p1800000000000']);
+    for (const id of ids) expect(con.get(id)).toBe(uno.get(id));
+    expect(new Set(con.values()).size).toBe(4);
+  });
+
+  it('not always the star: different ids give different symbols', async () => {
+    const { simbolosDeTuyas } = await import('./simbolos');
+    const vistos = new Set(Array.from({ length: 30 }, (_, i) => simbolosDeTuyas([`p17000000${i}`]).get(`p17000000${i}`)));
+    expect(vistos.size).toBeGreaterThan(5);
+  });
+});

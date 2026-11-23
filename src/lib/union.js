@@ -99,6 +99,9 @@ export function piezas(mio) {
   for (const id of hoy?.fuera ?? []) p[`hoy/m/${id}`] = 1;
   // Each kind of notification hidden is an element: showing it again on one device is a deletion the others learn.
   for (const clave of mio?.avisosOcultos ?? []) p[`av/${clave}`] = 1;
+  for (const h of mio?.sysacadSuyo ?? []) p[`sy/${h}`] = 1;
+  // And each section a course skips in the night downloads (descargas.js): bringing it again is a deletion too.
+  for (const [id, secciones] of Object.entries(mio?.sinDescargar ?? {})) for (const s of secciones) p[`nd/${id}/${s}`] = 1;
   // Drive folders (drivePublico.js): each one added and each thing hidden is an element; taking the career's away, one more.
   for (const { id, ...resto } of mio?.drive?.propios ?? []) p[`dr/p/${id}`] = resto;
   if (mio?.drive?.sinCarrera) p['dr/sin'] = 1;
@@ -150,6 +153,8 @@ export function armar(p) {
   const repaso = [];
   const hoy = { orden: [], columnas: {}, ocultos: [], cuenta: null, dias: null, fuera: [], semana: null };
   const avisosOcultos = [];
+  const sinDescargar = {};
+  const sysacadSuyo = [];
   const drive = { propios: [], sinCarrera: false, ocultos: [] };
   const apariencia = {};
   let conApariencia = false;
@@ -202,6 +207,8 @@ export function armar(p) {
     else if (k === 'hoy/semana') hoy.semana = v;
     else if ((r = /^hoy\/m\/(\d{1,12})$/.exec(k))) hoy.fuera.push(Number(r[1]));
     else if ((r = /^av\/([a-z]{1,20})$/.exec(k))) avisosOcultos.push(r[1]);
+    else if ((r = /^sy\/([0-9a-z]{1,7})$/.exec(k))) sysacadSuyo.push(r[1]);
+    else if ((r = /^nd\/([1-9]\d{0,11})\/([1-9]\d{0,15})$/.exec(k))) (sinDescargar[r[1]] ??= []).push(Number(r[2]));
     else if ((r = /^dr\/p\/([\w-]{10,100})$/.exec(k))) drive.propios.push({ id: r[1], ...v });
     else if (k === 'dr/sin') drive.sinCarrera = true;
     else if ((r = /^dr\/o\/([\w-]{10,100})$/.exec(k))) drive.ocultos.push(r[1]);
@@ -241,9 +248,11 @@ export function armar(p) {
     salida.push({ id, ...meta, categorias, cambiada: pr.cambiada });
   }
   avisosOcultos.sort();
+  sysacadSuyo.sort();
+  for (const s of Object.values(sinDescargar)) s.sort((a, b) => a - b);
   drive.propios.sort((a, b) => (a.id < b.id ? -1 : 1));
   drive.ocultos.sort();
-  return { materias, eventos, propias: salida, cursos, campus, horario, lecturas, hechas, laboratorio, proyectosLab, escritos, repaso, hoy, avisosOcultos, drive, apariencia: conApariencia ? apariencia : null };
+  return { materias, eventos, propias: salida, cursos, campus, horario, lecturas, hechas, laboratorio, proyectosLab, escritos, repaso, hoy, avisosOcultos, sysacadSuyo, drive, apariencia: conApariencia ? apariencia : null, sinDescargar };
 }
 
 // Two versions of a text: if one already has the other, that one; if not, both, the newest first. `recorto` is called

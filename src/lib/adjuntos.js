@@ -19,6 +19,7 @@
 import { peso } from './datos';
 import { olvidarGoogle, permisoGoogle, renovarGoogle, tokenGoogle } from './google';
 import { esDemo } from './modoDemo';
+import { sanearNombre } from './nombreArchivo';
 import { tokenActual } from './sesion';
 import { leerLinkTemporal, linkTemporal } from './temporales';
 
@@ -42,31 +43,12 @@ const ES_ID = new RegExp(`^${ID}$`);
 // after or in between: not another site that ends in Google, not another path, not a second parameter.
 const LINK = new RegExp(`^https://drive\\.google\\.com/file/d/(${ID})/view(?:\\?usp=(?:sharing|drive_link|share_link|drivesdk))?$`);
 const CON_PESO = /^(.*\S) \((\d{1,4}(?:,\d)? (?:KB|MB))\)$/;
-const LARGO_NOMBRE = 100;
 const TIPO = /^[\w.+-]{1,60}\/[\w.+-]{1,100}$/;
+
+export { sanearNombre };
 
 /** The address that opens a Drive file. Only for a checked id. */
 export const linkDeArchivo = (id) => `https://drive.google.com/file/d/${id}/view?usp=sharing`;
-
-/** A file name to upload and to show: nothing that hides or reorders letters (invisible marks, right-to-left
- * switches), no line breaks, no `<` or `>` (the campus would read them as HTML) and no slashes. Up to 100 letters,
- * keeping its ending. Never empty. */
-export function sanearNombre(nombre) {
-  let limpio = String(nombre ?? '')
-    .normalize('NFC')
-    .replace(/[\p{Cc}\p{Zl}\p{Zp}]/gu, ' ')
-    .replace(/\p{Cf}/gu, '')
-    .replace(/[<>]/g, '')
-    .replace(/[/\\]/g, '-')
-    .replace(/\s+/g, ' ')
-    .trim();
-  const letras = [...limpio];
-  if (letras.length > LARGO_NOMBRE) {
-    const final = /\.[\p{L}\p{N}]{1,8}$/u.exec(limpio)?.[0] ?? '';
-    limpio = `${letras.slice(0, LARGO_NOMBRE - [...final].length).join('').trimEnd()}${final}`;
-  }
-  return limpio && !/^[.\s-]*$/.test(limpio) ? limpio : 'archivo';
-}
 
 /** Why a file can't go, in words, or ''. */
 export function problemaDeArchivo(archivo) {

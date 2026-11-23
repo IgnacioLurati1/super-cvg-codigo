@@ -36,7 +36,7 @@ export default function ElegirDelCampus({ materias, inicial, yaEstan, onAgregar,
     if (!materia) return [];
     const mio = mioActual();
     return personalizar(await cargarContenido(materia), mio).filter((i) => !estaOculto(mio, i));
-  }, [materiaId]);
+  }, [materiaId], { alInstante: true });
 
   const grupos = useMemo(() => agrupar(filtro.trim() ? buscar(items ?? [], filtro, 1000) : items ?? []), [items, filtro]);
 

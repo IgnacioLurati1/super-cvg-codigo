@@ -101,27 +101,68 @@ async function leerJson(respuesta) {
   }
 }
 
+// ---------- How long the campus gets ----------
+
+/** A read the campus doesn't answer in this time fails like a fall of the network: what was kept shows instead. With a
+ * bad signal the connection neither answers nor breaks, and the browser alone would wait minutes. */
+export const TOPE_MS = 15_000;
+const TARDO = 'El campus no contestó a tiempo. Probá de nuevo en un rato.';
+
+// A signal that stops at the time limit, and also when `afuera` (the caller's) stops. `listo` ends the limit: for a
+// file, once its headers arrived (a big one can take longer to come, and that is not a fall).
+function conTope(afuera) {
+  const propio = new AbortController();
+  const reloj = setTimeout(() => propio.abort(new ErrorCampus(TARDO, 'tiempo')), TOPE_MS);
+  let senal = propio.signal;
+  if (afuera) {
+    if (typeof AbortSignal.any === 'function') senal = AbortSignal.any([afuera, propio.signal]);
+    else if (afuera.aborted) propio.abort(afuera.reason);
+    else afuera.addEventListener('abort', () => propio.abort(afuera.reason), { once: true });
+  }
+  const motivo = (error) => (propio.signal.aborted && propio.signal.reason instanceof ErrorCampus && !afuera?.aborted ? propio.signal.reason : error);
+  return { senal, listo: () => clearTimeout(reloj), motivo };
+}
+
 /** Exchanges the password for a key. One attempt per call: it never retries, so a typo cannot add failed logins. */
 export async function pedirClave(usuario, contrasena) {
-  const respuesta = await fetch(`${CAMPUS}/login/token.php`, {
-    method: 'POST',
-    redirect: 'error',
-    body: new URLSearchParams({ username: usuario, password: contrasena, service: 'moodle_mobile_app' }),
-  });
-  const datos = await leerJson(respuesta);
+  const tope = conTope();
+  let datos;
+  try {
+    const respuesta = await fetch(`${CAMPUS}/login/token.php`, {
+      method: 'POST',
+      redirect: 'error',
+      signal: tope.senal,
+      body: new URLSearchParams({ username: usuario, password: contrasena, service: 'moodle_mobile_app' }),
+    });
+    datos = await leerJson(respuesta);
+  } catch (error) {
+    throw tope.motivo(error);
+  } finally {
+    tope.listo();
+  }
   if (!datos.token) throw errorDeAcceso(datos.errorcode);
   return datos.token;
 }
 
 // One request to the web service, with the key in the body. Each caller says which list the function has to be in.
+// Only the reads get the time limit: a write stopped here may have happened in the campus anyway, and the student
+// trying again would send it twice.
 async function enviar(lista, token, funcion, parametros) {
   if (!lista.has(funcion)) throw new Error(`Función fuera de la lista: ${funcion}`);
-  const respuesta = await fetch(`${CAMPUS}/webservice/rest/server.php`, {
-    method: 'POST',
-    redirect: 'error',
-    body: new URLSearchParams({ ...parametros, wstoken: token, wsfunction: funcion, moodlewsrestformat: 'json' }),
-  });
-  return leerJson(respuesta);
+  const tope = lista === LECTURA ? conTope() : null;
+  try {
+    const respuesta = await fetch(`${CAMPUS}/webservice/rest/server.php`, {
+      method: 'POST',
+      redirect: 'error',
+      ...(tope && { signal: tope.senal }),
+      body: new URLSearchParams({ ...parametros, wstoken: token, wsfunction: funcion, moodlewsrestformat: 'json' }),
+    });
+    return await leerJson(respuesta);
+  } catch (error) {
+    throw tope ? tope.motivo(error) : error;
+  } finally {
+    tope?.listo();
+  }
 }
 
 export async function llamar(token, funcion, parametros = {}) {
@@ -215,20 +256,45 @@ export async function marcarLeida(token, usuarioId, conversacionId) {
   return true;
 }
 
-/** Downloads a campus file with the key in the body. Refuses any address outside the campus. */
-export async function bajarArchivo(token, direccion) {
-  const url = new URL(direccion);
-  if (url.origin !== CAMPUS || !url.pathname.startsWith('/webservice/pluginfile.php/')) {
-    throw new ErrorCampus('Ese archivo no está en el campus.', 'fuera_del_campus');
+/** Whether an address is a campus file that pedirArchivo would ask for. */
+export function esArchivoDelCampus(direccion) {
+  try {
+    const url = new URL(direccion);
+    return url.origin === CAMPUS && url.pathname.startsWith('/webservice/pluginfile.php/');
+  } catch {
+    return false;
   }
+}
+
+/** Asks the campus for a file with the key in the body, and gives back the answer unread. `rango`: «bytes=a-b» or
+ * «bytes=a-», for a part of it (the campus answers 206 with Content-Range, or 200 with the whole file; pdfPartes.js).
+ * `senal` stops it. Refuses any address outside the campus. */
+export async function pedirArchivo(token, direccion, { rango = null, senal } = {}) {
+  if (!esArchivoDelCampus(direccion)) throw new ErrorCampus('Ese archivo no está en el campus.', 'fuera_del_campus');
+  const url = new URL(direccion);
   url.searchParams.delete('token');
   url.searchParams.delete('wstoken');
-  const respuesta = await fetch(url, { method: 'POST', redirect: 'error', body: new URLSearchParams({ token }) });
+  const tope = conTope(senal);
+  const opciones = { method: 'POST', redirect: 'error', body: new URLSearchParams({ token }), signal: tope.senal };
+  if (rango) opciones.headers = { Range: rango };
+  let respuesta;
+  try {
+    respuesta = await fetch(url, opciones);
+  } catch (error) {
+    throw tope.motivo(error);
+  } finally {
+    tope.listo();
+  }
   if (!respuesta.ok) throw new ErrorCampus('No se pudo bajar el archivo. Probá de nuevo.', `http_${respuesta.status}`);
   if ((respuesta.headers.get('content-type') ?? '').includes('application/json')) {
     throw new ErrorCampus('No se pudo bajar el archivo. Probá de nuevo.', 'archivo_rechazado');
   }
-  return respuesta.blob();
+  return respuesta;
+}
+
+/** Downloads a whole campus file with the key in the body. Refuses any address outside the campus. */
+export async function bajarArchivo(token, direccion) {
+  return (await pedirArchivo(token, direccion)).blob();
 }
 
 // ---------- Handing in a task ----------

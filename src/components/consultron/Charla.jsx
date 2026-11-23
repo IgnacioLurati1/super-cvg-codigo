@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ErrorConReintento } from '../Filas';
 import { useAbrirPrevia } from '../Previa';
@@ -20,7 +20,7 @@ import { pantallaAhora, pideAlgoNuevo, senalaLaPantalla } from '../../lib/consul
 import { delSitio } from '../../lib/consultron/sitio';
 import { alTerminar, empezar, frenar, limpiar, mostrarCalculo, mostrarEjemplo, mostrarSoloEjemplo, noPudoLeer, pedirDatos, respondiendo, responder, sePuedePreguntar, sinTextoAbierto, sugerir, useConsultron } from '../../lib/consultron/motor';
 import { usePermisosNube } from '../../lib/consultron/nube';
-import { OfertaNube } from './Modelo';
+import { cambiarNube, OfertaNube } from './Modelo';
 import { aclara, armarCharla, citasDe, leerRespuesta, objeta, pideOtraVez, preguntaAclarada, preguntaObjetada, preguntaOtraVez, sinPensar } from '../../lib/consultron/pedido';
 import { textoError } from '../../lib/errores';
 import { adivinarLenguaje, pareceCodigo } from '../../lib/laboratorio/adivinar';
@@ -67,6 +67,20 @@ export const PREGUNTA_MARCADO = 'Explicame esto';
 const otraPestana = <span className="solo-lectores">, se abre en otra pestaña</span>;
 const suave = () => (window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth');
 
+// Consultron's screen without room for its column of talks: they open in a drawer.
+const ANGOSTA = '(max-width: 899.98px)';
+const conMedidas = () => typeof window !== 'undefined' && typeof window.matchMedia === 'function';
+const escucharAncho = (f) => {
+  if (!conMedidas()) return () => {};
+  const m = window.matchMedia(ANGOSTA);
+  m.addEventListener('change', f);
+  return () => m.removeEventListener('change', f);
+};
+const esAngosta = () => conMedidas() && window.matchMedia(ANGOSTA).matches;
+const useAngosta = () => useSyncExternalStore(escucharAncho, esAngosta, () => false);
+// A window over the page (a confirmation, a PDF, a summary) takes Esc for itself.
+const ventanaEncima = () => Boolean(document.querySelector('dialog[open], [role="dialog"]'));
+
 /** Consultron's face, next to what it says. */
 export const Robot = ({ grande = false }) => (
   <span className={grande ? 'consultron__robot consultron__robot--grande' : 'consultron__robot'} aria-hidden="true">
@@ -81,7 +95,7 @@ const SIN_MATERIAS = [];
  * courses by name, for El Santo Resumen. */
 function useApuntes(materia) {
   const mio = useMio();
-  const materias = useConsulta(() => cargarMaterias(), []);
+  const materias = useConsulta(() => cargarMaterias(), [], { alInstante: true });
   const donde = useMemo(() => (materias.datos ? dondeBusca(materia, materias.datos, mio) : null), [materias.datos, materia, mio]);
   const suya = Boolean(donde?.suya);
   // The campus courses change only with the choice: a mark of the student doesn't ask the campus again.
@@ -89,7 +103,7 @@ function useApuntes(materia) {
     if (!materias.datos) return null;
     return suya ? SIN_MATERIAS : dondeBusca(materia, materias.datos).materias;
   }, [materias.datos, materia, suya]);
-  const contenido = useConsulta(() => (elegidas ? (elegidas.length ? cargarIndice(elegidas) : Promise.resolve([])) : Promise.resolve(null)), [elegidas]);
+  const contenido = useConsulta(() => (elegidas ? (elegidas.length ? cargarIndice(elegidas) : Promise.resolve([])) : Promise.resolve(null)), [elegidas], { alInstante: true });
   const suyos = useMemo(() => {
     if (!donde || !materias.datos) return { archivos: [], notas: [] };
     const nombres = Object.fromEntries([...materias.datos.enCurso, ...materias.datos.otras].map((m) => [m.id, m.nombre]));
@@ -188,6 +202,8 @@ const LEYENDO_MESA = ['Mirando la mesa…', 'Hojeando las pestañas…', 'Subray
 const CAMBIA_MS = 2400;
 /** How long an end of the list that the answer already left behind still counts as the end, for a scroll on its way. */
 const RECIENTE_MS = 1000;
+/** How far above the end the student has to be for «Bajar al final» to show. */
+const LEJOS_PX = 240;
 
 function Pensando({ frases }) {
   const [i, setI] = useState(() => Math.floor(Math.random() * frases.length));
@@ -277,7 +293,7 @@ function Respuesta({ entrada, abrirResumen, nivel, alIr, sinSalir = false }) {
       {entrada.estado === 'frenado' && <p className="consultron__nota">La frenaste.</p>}
       {entrada.estado === 'falla' && <p className="consultron__nota consultron__nota--error">Consultron se trabó con esta pregunta. Probá de nuevo.</p>}
       {entrada.contesto && entrada.estado === 'listo' && <p className="consultron__nota">{entrada.contesto}</p>}
-      {entrada.nube && ['listo', 'no-esta'].includes(entrada.estado) && <p className="consultron__nota">Contestó Gemini, de Google.</p>}
+      {entrada.nube && ['listo', 'no-esta'].includes(entrada.estado) && <p className="consultron__nota">{entrada.groq ? 'Gemini no pudo. Contestó Groq.' : 'Contestó Gemini, de Google.'}</p>}
       {entrada.nubeFallo && !entrada.nube && ['listo', 'no-esta'].includes(entrada.estado) && <p className="consultron__nota">{entrada.nubeTope ? 'Por hoy no te quedan preguntas con Gemini.' : 'Gemini tardó demasiado.'} Contestó Consultron en tu compu.</p>}
       {fuentes.length > 0 && (
         <div className="consultron__fuentes">
@@ -452,10 +468,12 @@ export const Entrada = memo(function Entrada({ entrada, ultima, refUltima, nivel
 /**
  * How a list of questions follows the answer being written, in the corner, beside a reader and in a live session's
  * Consultron (enVivo/herramientas/Consultron.jsx). `activo`: only then. `cambio`: changes when the last answer grows.
- * Returns { lista, ultima } (the refs of the list and of its last entry), `alPreguntar()` (on asking: it follows the
- * new question) and the `props` of the list.
+ * `alFondo`: on asking, it follows the answer down to its end (Consultron's screen), not only until its question
+ * reaches the top. Returns { lista, ultima } (the refs of the list and of its last entry), `alPreguntar()` (on asking:
+ * it follows the new question), the `props` of the list, `lejos` (the student is well above the end) and `bajar()`,
+ * which takes the list to its end and follows it again.
  */
-export function useSigue(activo, cambio) {
+export function useSigue(activo, cambio, { alFondo: hastaElFin = false } = {}) {
   const lista = useRef(null);
   const ultima = useRef(null);
   // How the corner follows the answer being written. 'pregunta': down to where its question reaches the top, and there
@@ -465,6 +483,9 @@ export function useSigue(activo, cambio) {
   const puesto = useRef(0);
   // Where the end of the list was in the last second, as the answer grew: [when, where].
   const finales = useRef([]);
+  // Well above the end: «Bajar al final» shows.
+  const [lejos, setLejos] = useState(false);
+  const medir = (l) => setLejos(l.scrollHeight - l.scrollTop - l.clientHeight > LEJOS_PX);
   // Before painting: the list never shows a moment behind the answer it follows.
   useLayoutEffect(() => {
     const l = lista.current;
@@ -472,13 +493,21 @@ export function useSigue(activo, cambio) {
     const fondo = l.scrollHeight - l.clientHeight;
     const ahora = performance.now();
     finales.current = [...finales.current.filter(([cuando]) => ahora - cuando < RECIENTE_MS), [ahora, fondo]].slice(-24);
-    if (!seguir.current) return;
+    if (!seguir.current) {
+      medir(l);
+      return;
+    }
     const tope = ultima.current ? l.scrollTop + ultima.current.getBoundingClientRect().top - l.getBoundingClientRect().top - 12 : fondo;
     const destino = seguir.current === 'fondo' ? fondo : Math.min(fondo, tope);
-    // Only down: it never takes the student back up to what they already passed.
-    if (destino <= l.scrollTop + 1) return;
-    l.scrollTop = destino;
+    // Where it is now is this one's too: when what was there before the first question (a tall offer) goes away, the
+    // browser moves the list up by itself, and that move isn't the student's.
     puesto.current = l.scrollTop;
+    // Only down: it never takes the student back up to what they already passed.
+    if (destino > l.scrollTop + 1) {
+      l.scrollTop = destino;
+      puesto.current = l.scrollTop;
+    }
+    medir(l);
   }, [activo, cambio]);
   const alFondo = (l) => l.scrollHeight - l.scrollTop - l.clientHeight < 8;
   // A move of the list that isn't this one's is the student's (the wheel, the bar, the keys): at the end it stays at
@@ -493,6 +522,7 @@ export function useSigue(activo, cambio) {
     if (llego) l.scrollTop = l.scrollHeight - l.clientHeight;
     puesto.current = l.scrollTop;
     seguir.current = llego ? 'fondo' : null;
+    medir(l);
   };
   // Before the list moves: the answer being written doesn't pull against the wheel, a finger, a key or the bar.
   const tomarScroll = (e) => {
@@ -511,9 +541,18 @@ export function useSigue(activo, cambio) {
     lista,
     ultima,
     alPreguntar: () => {
-      seguir.current = 'pregunta';
+      seguir.current = hastaElFin ? 'fondo' : 'pregunta';
     },
     props: activo ? { onScroll: alMover, onWheel: tomarScroll, onTouchMove: tomarScroll, onKeyDown: alTeclearLista, onPointerDown: alApretarLista } : {},
+    lejos: activo && lejos,
+    bajar: () => {
+      const l = lista.current;
+      if (!l) return;
+      seguir.current = 'fondo';
+      l.scrollTop = l.scrollHeight - l.clientHeight;
+      puesto.current = l.scrollTop;
+      medir(l);
+    },
   };
 }
 
@@ -525,12 +564,21 @@ export function useSigue(activo, cambio) {
  * button; `fin` and `despues`: at the end of the box and under it. `lectura`: the line under everything, said aloud.
  */
 export function Caja({ campo, valor, alCambiar, alPreguntar, compacta = false, alPegar, maximo = 1000, lectura = '', arriba = null, encima = null, herramientas, fin = null, despues = null }) {
+  // It grows with what is written, up to its top (consultron.css). Where the browser can't do it by itself
+  // (`field-sizing`), from here.
+  const forma = useRef(null);
+  useLayoutEffect(() => {
+    const c = forma.current?.querySelector('textarea');
+    if (!c || typeof CSS === 'undefined' || CSS.supports?.('field-sizing', 'content')) return;
+    c.style.height = 'auto';
+    c.style.height = `${c.scrollHeight + 2}px`;
+  }, [valor]);
   const alTeclear = (e) => {
     if (e.key !== 'Enter' || e.shiftKey || e.nativeEvent.isComposing) return;
     if (window.matchMedia('(hover: hover) and (pointer: fine)').matches) alPreguntar(e);
   };
   return (
-    <form className="consultron__caja" onSubmit={alPreguntar}>
+    <form ref={forma} className="consultron__caja" onSubmit={alPreguntar}>
       {arriba}
       <div className="consultron__redactor">
         {encima}
@@ -565,10 +613,13 @@ export function Caja({ campo, valor, alCambiar, alPreguntar, compacta = false, a
  * marked in a PDF to ask about ({ trozo, vez }, VisorPdf.jsx): it goes first with the next question, and
  * `alSoltarMarcado` lets go of it. `enResumen`: it's beside a summary of El Santo Resumen (VisorResumen.jsx) and answers
  * with it alone, or with what it knows if it isn't there: no courses to choose. `abierto`: that summary as a document
- * (adjuntar.js, `documentoDeTexto`); undefined while it comes, null if it has no text.
+ * (adjuntar.js, `documentoDeTexto`); undefined while it comes, null if it has no text. `vista: 'pagina'`: Consultron's
+ * own screen, a whole chat: the talks in a side column (a drawer on a phone), the answers in one column and the box at
+ * the bottom. `barra`: { titulo, acciones }, what the screen puts in its bar on top.
  */
 
-export default function Charla({ inicial = TODAS, nivel = 2, compacta = false, alIr, pagina = null, marcado = null, alSoltarMarcado, abierto = null, enResumen = false, conPantalla = false }) {
+export default function Charla({ inicial = TODAS, nivel = 2, compacta = false, alIr, pagina = null, marcado = null, alSoltarMarcado, abierto = null, enResumen = false, conPantalla = false, vista = null, barra = null }) {
+  const enPagina = vista === 'pagina' && !compacta;
   const { estado, hilo } = useConsultron();
   const [materia, setMateria] = useState(inicial);
   const [origen, setOrigen] = useState('todo');
@@ -588,6 +639,7 @@ export default function Charla({ inicial = TODAS, nivel = 2, compacta = false, a
   const corte = useRef(null);
   const ocupado = respondiendo(hilo);
   const permisos = usePermisosNube();
+  const { confirmar: confirmarGemini } = useUI();
   const listo = sePuedePreguntar(estado, permisos, { enResumen });
   // The same one for the whole talk, so that an entry already written isn't drawn again when this screen is.
   const alIrAhora = useRef(alIr);
@@ -606,8 +658,9 @@ export default function Charla({ inicial = TODAS, nivel = 2, compacta = false, a
   };
   const largo = hilo.at(-1)?.texto.length ?? 0;
   const conEjemplo = Boolean(hilo.at(-1)?.ejemplo);
-  // In the corner, the answer being written stays in sight, down to where its question reaches the top.
-  const { lista, ultima, alPreguntar: seguirLaNueva, props: alSeguir } = useSigue(compacta, `${hilo.length} ${largo} ${ultimaEstado} ${conEjemplo}`);
+  // In the corner, the answer being written stays in sight, down to where its question reaches the top. In its own
+  // screen it follows the answer to its end, until the student scrolls up.
+  const { lista, ultima, alPreguntar: seguirLaNueva, props: alSeguir, lejos, bajar } = useSigue(compacta || enPagina, `${hilo.length} ${largo} ${ultimaEstado} ${conEjemplo}`, { alFondo: enPagina });
   // Something marked in the PDF: the question to ask about it, ready to change, with the focus there.
   const vezMarcado = marcado?.vez;
   const [marcadoVisto, setMarcadoVisto] = useState(null);
@@ -628,12 +681,28 @@ export default function Charla({ inicial = TODAS, nivel = 2, compacta = false, a
   const buscando = enResumen ? abierto === undefined : !materias.error && (!elegidas || (!contenido.datos && !contenido.error));
   const adjuntos = useAdjuntos();
   const soltar = useSoltar();
+  // A question asked while its courses came, until they are here ({ dada }, as `preguntar` got it).
+  const [enEspera, setEnEspera] = useState(null);
   const preguntar = async (e, dada) => {
     e?.preventDefault();
     const escrita = (typeof dada === 'string' ? dada : pregunta).trim();
     // On a phone, the keyboard would cover the answer.
     if (window.matchMedia('(hover: hover) and (pointer: fine)').matches) campo.current?.focus();
-    if ((!escrita && !adjuntos.pendientes.length && !marcado) || ocupado || !listo || buscando) return;
+    if ((!escrita && !adjuntos.pendientes.length && !marcado) || ocupado || !listo) return;
+    // Where only Gemini answers and it wasn't approved: it asks for it now, once. Back, nothing is asked.
+    const aprobado = permisos.todo || (enResumen === true && permisos.resumenes);
+    if (estado.fase === 'no-puede' && !aprobado) {
+      if (!(await cambiarNube(confirmarGemini, 'todo', true, { sinModelo: true }))) return;
+      // Approved: it goes from the screen as it is now, which may have changed while the window was open.
+      setEnEspera({ dada });
+      return;
+    }
+    // Its courses (or the summary beside it) are still on their way: the question waits for them and goes by itself.
+    // It used to be lost, and the student's Enter did nothing.
+    if (buscando) {
+      setEnEspera({ dada });
+      return;
+    }
     // An idea asks by itself: what the student was writing stays.
     if (typeof dada !== 'string') setPregunta('');
     seguirLaNueva();
@@ -651,7 +720,7 @@ export default function Charla({ inicial = TODAS, nivel = 2, compacta = false, a
     const conCita = typeof dada !== 'string' && marcado ? [{ id: `marcado-${marcado.vez}`, nombre: marcado.trozo.texto, clase: 'marcado', pagina: marcado.trozo.pagina }] : [];
     const id = empezar(texto, donde, [...conCita, ...suyos.map((a) => ({ id: a.id, nombre: a.nombre, clase: a.clase, url: a.url }))], { enResumen });
     if (conCita.length) alSoltarMarcado?.();
-    if (!compacta) requestAnimationFrame(() => ultima.current?.scrollIntoView({ block: 'start', behavior: suave() }));
+    if (!compacta && !enPagina) requestAnimationFrame(() => ultima.current?.scrollIntoView({ block: 'start', behavior: suave() }));
     // «Tomame preguntas de Redes»: a practice question from the notes (Practica.jsx).
     const pide = !suyos.length && !elMarcado && pidePractica(texto);
     if (pide) {
@@ -852,12 +921,53 @@ export default function Charla({ inicial = TODAS, nivel = 2, compacta = false, a
     responder(id, sitio.piezas.length ? [...todos.slice(0, 6 - sitio.piezas.length), ...sitio.piezas] : todos.slice(0, 6), '', comoResponde);
     if (ejemplo) armarEjemplo(id, ejemplo, texto);
   };
+  const preguntarAhora = useRef(preguntar);
+  useLayoutEffect(() => {
+    preguntarAhora.current = preguntar;
+  });
+  useEffect(() => {
+    if (!enEspera || buscando) return;
+    const { dada } = enEspera;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- a wait that ends once, when what it waited for is here
+    setEnEspera(null);
+    preguntarAhora.current(null, dada);
+  }, [enEspera, buscando]);
   // The talk on screen stays saved (charlas.js): a new one asks nothing.
   const charlaNueva = () => {
     limpiar();
     setArmando(false);
+    cajon.current?.close();
     campo.current?.focus();
   };
+  // In its own screen: the talks in a column, or in a drawer without room for it.
+  const angosta = useAngosta() && enPagina;
+  const cajon = useRef(null);
+  const idLado = useId();
+  const alAbrirCharla = () => {
+    setArmando(false);
+    cajon.current?.close();
+    // Closing the drawer gives the focus back to its button: then it goes to the box, to go on with the talk.
+    requestAnimationFrame(() => campo.current?.focus({ preventScroll: true }));
+  };
+  // A click on the shade around the drawer closes it.
+  const alTocarCajon = (e) => {
+    if (e.target === e.currentTarget) e.currentTarget.close();
+  };
+  // Esc stops the answer being written, anywhere in the screen but in a window over it.
+  const detenerAhora = useRef(detener);
+  useLayoutEffect(() => {
+    detenerAhora.current = detener;
+  });
+  useEffect(() => {
+    if (!enPagina || !ocupado) return undefined;
+    const alTeclear = (e) => {
+      if (e.key !== 'Escape' || e.defaultPrevented || ventanaEncima()) return;
+      e.preventDefault();
+      detenerAhora.current();
+    };
+    document.addEventListener('keydown', alTeclear);
+    return () => document.removeEventListener('keydown', alTeclear);
+  }, [enPagina, ocupado]);
   // «Practicar»: a theme for the course of «De qué materia» (Practica.jsx).
   const [armando, setArmando] = useState(false);
   const botonPracticar = useRef(null);
@@ -905,6 +1015,178 @@ export default function Charla({ inicial = TODAS, nivel = 2, compacta = false, a
     </>
   );
 
+  const donde = !enResumen && !materias.error && (
+    <div className="consultron__donde">
+      <span aria-hidden="true">Busca en</span>
+      <label htmlFor={idMateria} className="solo-lectores">De qué materia</label>
+      <select id={idMateria} className="campo__control consultron__selector" value={materia} disabled={!materias.datos} onChange={(e) => setMateria(e.target.value)}>
+        {opciones}
+      </select>
+      <label htmlFor={idOrigen} className="solo-lectores">De dónde</label>
+      <select id={idOrigen} className="campo__control consultron__selector consultron__origen" value={origen} onChange={(e) => setOrigen(e.target.value)}>
+        {ORIGENES.map(([v, t]) => <option key={v} value={v}>{t}</option>)}
+      </select>
+    </div>
+  );
+  const armar = armando && <ArmarPractica materia={materia} onCerrar={cerrarPractica} ocupado={ocupado || buscando} />;
+  // Practice needs the model of the computer or «Usar Gemini».
+  const botonPractica = (estado.fase === 'listo' || permisos.todo) && (
+    <button ref={botonPracticar} type="button" className="consultron__practicar" aria-expanded={armando} title="Practicar con preguntas de tus apuntes" onClick={() => setArmando(!armando)}>
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9 3h6v3H9zM7 4.5H5V21h14V4.5h-2M8.5 13.5l2.5 2.5 4.5-4.5" /></svg>
+      <span className="consultron__practicar-texto">Practicar</span>
+    </button>
+  );
+  // In its own screen, round buttons with their sign: the arrow to ask, the square to stop.
+  const boton = enPagina ? (
+    ocupado ? (
+      <button type="button" className="charla__enviar" aria-label="Frenar" title="Frenar" onClick={detener}>
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="7" y="7" width="10" height="10" rx="2" /></svg>
+      </button>
+    ) : (
+      <button type="submit" className="charla__enviar" aria-label="Preguntar" title="Preguntar">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 19V5M6 11l6-6 6 6" /></svg>
+      </button>
+    )
+  ) : ocupado ? (
+    <button type="button" className="boton boton--secundario" onClick={detener}>Frenar</button>
+  ) : (
+    <button type="submit" className="boton">Preguntar</button>
+  );
+  const caja = (
+    <Caja
+      campo={campo}
+      valor={pregunta}
+      alCambiar={setPregunta}
+      alPreguntar={preguntar}
+      compacta={compacta}
+      alPegar={alPegar}
+      lectura={lecturaTexto}
+      arriba={enPagina ? armar : (
+        <>
+          {donde}
+          {armar}
+        </>
+      )}
+      encima={(
+        <>
+          {lectura.leyendo && <progress className="consultron__barra consultron__barra--fina" max={lectura.total || 1} value={lectura.actual} aria-hidden="true" />}
+          {marcado && <Marcado trozo={marcado.trozo} alSacar={() => {
+            alSoltarMarcado?.();
+            campo.current?.focus();
+          }} />}
+          {adjuntos.pendientes.length > 0 && <AdjuntosCaja pendientes={adjuntos.pendientes} campo={campo} />}
+        </>
+      )}
+      herramientas={(
+        <>
+          <BotonAdjuntar />
+          <Dictar base={pregunta} alTexto={setPregunta} campo={campo} />
+          {botonPractica}
+          {enPagina && donde}
+          {boton}
+        </>
+      )}
+      fin={soltar.arrastrando && <p className="consultron__soltar" aria-hidden="true">Soltá acá para adjuntar</p>}
+      despues={<ProblemasAdjuntos problemas={adjuntos.problemas} />}
+    />
+  );
+  const ideas = listo && !buscando && (
+    <ul className="charla__ideas" aria-label="Ideas para preguntar">
+      {ideasPara(pagina).map((idea) => (
+        <li key={idea}>
+          <button type="button" className="charla__idea" onClick={() => preguntar(null, idea)}>{idea}</button>
+        </li>
+      ))}
+    </ul>
+  );
+  const errores = !enResumen && (
+    <>
+      {materias.error && <ErrorConReintento texto={textoError(materias.error)} recargar={materias.recargar} />}
+      {contenido.error && <ErrorConReintento texto={textoError(contenido.error)} recargar={contenido.recargar} />}
+    </>
+  );
+  const entradas = hilo.map((entrada, i) => (
+    <Entrada key={entrada.id} entrada={entrada} ultima={i === hilo.length - 1} refUltima={ultima} nivel={nivel} abrirResumen={setVisor} alIr={irAOtra} ocupado={entrada.practica ? ocupado : false} />
+  ));
+  const anuncio = <p className="solo-lectores" role="status">{respuestaAnuncio}</p>;
+
+  if (enPagina) {
+    const lado = (enCajon) => (
+      <>
+        {enCajon && (
+          <div className="charla__lado-cierre">
+            <button type="button" className="charla__icono" aria-label="Cerrar" onClick={() => cajon.current?.close()}>
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 6l12 12M18 6L6 18" /></svg>
+            </button>
+          </div>
+        )}
+        <button type="button" className="charla__nueva" disabled={ocupado} onClick={charlaNueva}>
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 5v14M5 12h14" /></svg>
+          Charla nueva
+        </button>
+        {/* Not a heading: it would come before the page's h1. The column is a landmark named by it. */}
+        <p id={idLado} className="charla__lado-titulo">Charlas</p>
+        <Charlas ocupado={ocupado} alAbrir={alAbrirCharla} lateral={{ titulo: idLado, alVaciar: () => campo.current?.focus() }} />
+      </>
+    );
+    return (
+      <div className="charla" data-vista="pagina" data-vacia={hilo.length === 0 || undefined} data-arrastrando={soltar.arrastrando || undefined} {...soltar.props}>
+        {angosta ? (
+          // The shade around it is a mouse's way out: Esc and «Cerrar» close it too.
+          <dialog ref={cajon} className="charla__cajon" aria-labelledby={idLado} onClick={alTocarCajon}>
+            <div className="charla__lado">{lado(true)}</div>
+          </dialog>
+        ) : (
+          <aside className="charla__lado" aria-labelledby={idLado}>{lado(false)}</aside>
+        )}
+        <div className="charla__centro">
+          <header className="charla__barra">
+            {angosta && (
+              <button type="button" className="charla__icono" aria-label="Tus charlas" aria-haspopup="dialog" onClick={() => cajon.current?.showModal()}>
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 7h16M4 12h10M4 17h16" /></svg>
+              </button>
+            )}
+            {barra?.titulo}
+            {angosta && hilo.length > 0 && (
+              <button type="button" className="charla__icono" aria-label="Charla nueva" title="Charla nueva" disabled={ocupado} onClick={charlaNueva}>
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 20h8M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z" /></svg>
+              </button>
+            )}
+            {barra?.acciones}
+          </header>
+          <div ref={lista} className="charla__lista" {...alSeguir}>
+            <div className="charla__columna">
+              {errores}
+              {hilo.length === 0 ? (
+                <div className="charla__saludo">
+                  <Robot grande />
+                  <p className="charla__hola">¿Qué estudiamos hoy?</p>
+                  <p className="charla__bajada">Preguntale a tus apuntes o pasale un ejercicio para las calculadoras. Busca en los PDF del campus y en El Santo Resumen.</p>
+                </div>
+              ) : (
+                // A log of the talk, not read aloud word by word: the status under it says when an answer is done.
+                <section className="consultron__hilo" role="log" aria-live="off" aria-label="Tus preguntas">
+                  {entradas}
+                </section>
+              )}
+              {anuncio}
+            </div>
+          </div>
+          <div className="charla__abajo">
+            {lejos && hilo.length > 0 && (
+              <button type="button" className="charla__bajar" aria-label="Bajar al final" title="Bajar al final" onClick={bajar}>
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 5v14M6 13l6 6 6-6" /></svg>
+              </button>
+            )}
+            {caja}
+            {hilo.length === 0 && ideas}
+          </div>
+        </div>
+        {visor && <VisorResumen resumen={visor} onCerrar={() => setVisor(null)} />}
+      </div>
+    );
+  }
+
   return (
     <div className="charla" data-compacta={compacta || undefined} data-arrastrando={soltar.arrastrando || undefined} {...soltar.props}>
       <div
@@ -912,98 +1194,31 @@ export default function Charla({ inicial = TODAS, nivel = 2, compacta = false, a
         className="charla__lista"
         {...alSeguir}
       >
-        {!enResumen && materias.error && <ErrorConReintento texto={textoError(materias.error)} recargar={materias.recargar} />}
-        {!enResumen && contenido.error && <ErrorConReintento texto={textoError(contenido.error)} recargar={contenido.recargar} />}
+        {errores}
         {hilo.length === 0 && (
           <div className="charla__vacia">
             {compacta && <Robot />}
             {compacta && <p>Preguntale a tus apuntes o pasale un ejercicio para las calculadoras.</p>}
             {/* Beside a summary the model answers, and Gemini would do better: the offer to turn it on. */}
-            {enResumen === true && estado.fase === 'listo' && !permisos.resumenes && <OfertaNube cual="resumenes" />}
-            {listo && !buscando && (
-              <ul className="charla__ideas" aria-label="Ideas para preguntar">
-                {ideasPara(pagina).map((idea) => (
-                  <li key={idea}>
-                    <button type="button" className="charla__idea" onClick={() => preguntar(null, idea)}>{idea}</button>
-                  </li>
-                ))}
-              </ul>
-            )}
+            {enResumen === true && estado.fase === 'listo' && !permisos.resumenes && !permisos.todo && <OfertaNube cual="todo" />}
+            {ideas}
             {listo && <Charlas nivel={nivel} ocupado={ocupado} alAbrir={() => campo.current?.focus()} />}
           </div>
         )}
 
         {hilo.length > 0 && (
           <section className="consultron__hilo" aria-label="Tus preguntas">
-            {hilo.map((entrada, i) => (
-              <Entrada key={entrada.id} entrada={entrada} ultima={i === hilo.length - 1} refUltima={ultima} nivel={nivel} abrirResumen={setVisor} alIr={irAOtra} ocupado={entrada.practica ? ocupado : false} />
-            ))}
+            {entradas}
             {!ocupado && (
               <button type="button" className="consultron__limpiar" onClick={charlaNueva}>Charla nueva</button>
             )}
           </section>
         )}
-        <p className="solo-lectores" role="status">{respuestaAnuncio}</p>
+        {anuncio}
       </div>
-
-      <Caja
-        campo={campo}
-        valor={pregunta}
-        alCambiar={setPregunta}
-        alPreguntar={preguntar}
-        compacta={compacta}
-        alPegar={alPegar}
-        lectura={lecturaTexto}
-        arriba={(
-          <>
-            {!enResumen && !materias.error && (
-              <div className="consultron__donde">
-                <span aria-hidden="true">Busca en</span>
-                <label htmlFor={idMateria} className="solo-lectores">De qué materia</label>
-                <select id={idMateria} className="campo__control consultron__selector" value={materia} disabled={!materias.datos} onChange={(e) => setMateria(e.target.value)}>
-                  {opciones}
-                </select>
-                <label htmlFor={idOrigen} className="solo-lectores">De dónde</label>
-                <select id={idOrigen} className="campo__control consultron__selector consultron__origen" value={origen} onChange={(e) => setOrigen(e.target.value)}>
-                  {ORIGENES.map(([v, t]) => <option key={v} value={v}>{t}</option>)}
-                </select>
-              </div>
-            )}
-            {armando && <ArmarPractica materia={materia} onCerrar={cerrarPractica} ocupado={ocupado || buscando} />}
-          </>
-        )}
-        encima={(
-          <>
-            {lectura.leyendo && <progress className="consultron__barra consultron__barra--fina" max={lectura.total || 1} value={lectura.actual} aria-hidden="true" />}
-            {marcado && <Marcado trozo={marcado.trozo} alSacar={() => {
-              alSoltarMarcado?.();
-              campo.current?.focus();
-            }} />}
-            {adjuntos.pendientes.length > 0 && <AdjuntosCaja pendientes={adjuntos.pendientes} campo={campo} />}
-          </>
-        )}
-        herramientas={(
-          <>
-            <BotonAdjuntar />
-            <Dictar base={pregunta} alTexto={setPregunta} campo={campo} />
-            {/* Practice needs the model of the computer: with only Gemini, there's none. */}
-            {estado.fase === 'listo' && (
-              <button ref={botonPracticar} type="button" className="consultron__practicar" aria-expanded={armando} title="Practicar con preguntas de tus apuntes" onClick={() => setArmando(!armando)}>
-                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9 3h6v3H9zM7 4.5H5V21h14V4.5h-2M8.5 13.5l2.5 2.5 4.5-4.5" /></svg>
-                <span className="consultron__practicar-texto">Practicar</span>
-              </button>
-            )}
-            {ocupado ? (
-              <button type="button" className="boton boton--secundario" onClick={detener}>Frenar</button>
-            ) : (
-              <button type="submit" className="boton">Preguntar</button>
-            )}
-          </>
-        )}
-        fin={soltar.arrastrando && <p className="consultron__soltar" aria-hidden="true">Soltá acá para adjuntar</p>}
-        despues={<ProblemasAdjuntos problemas={adjuntos.problemas} />}
-      />
+      {caja}
       {visor && <VisorResumen resumen={visor} onCerrar={() => setVisor(null)} />}
     </div>
   );
 }
+

@@ -7,6 +7,8 @@ beforeAll(() => arrancarApariencia());
 
 beforeEach(() => {
   fijarUsuario(null);
+  // Starting over keeps it off: each test starts with it on.
+  cambiarAjustes({ mismaEnTodos: true });
   localStorage.clear();
   volverAjustesOriginales();
 });
@@ -23,7 +25,7 @@ describe('lo que viaja', () => {
     expect(sanearMio({ apariencia: { menu } }).apariencia.menu).toMatchObject({ alineacion: 'medio', ancho: 'pantalla' });
   });
 
-  it.each(['rosa', 'bosque', 'cafe', 'lavanda', 'infierno', 'glaciar'])('la paleta %s viaja a Drive y vuelve igual', (tema) => {
+  it.each(['rosa', 'bosque', 'cafe', 'lavanda', 'infierno', 'glaciar', 'cosmico'])('la paleta %s viaja a Drive y vuelve igual', (tema) => {
     expect(aparienciaQueViaja({ estilo: 'hoja', tema })).toEqual({ estilo: 'hoja', tema });
     expect(sanearMio({ apariencia: { estilo: 'hoja', tema } }).apariencia).toEqual({ estilo: 'hoja', tema });
     // The same through the union of the devices: the student's Drive says it and this device shows it.
@@ -31,6 +33,20 @@ describe('lo que viaja', () => {
     ponerMioUnido({ ...mioActual(), apariencia: { estilo: 'hoja', tema } });
     expect([ajustesActuales().estilo, ajustesActuales().tema]).toEqual(['hoja', tema]);
     expect(mioActual().apariencia).toEqual({ estilo: 'hoja', tema });
+  });
+
+  it('los filtros del fondo viajan a Drive, se unen entre dispositivos y vuelven iguales', () => {
+    const filtros = { fondoFiltro: 'sepia', fondoIntensidad: 35, fondoTono: 290, fondoDesenfoque: 40 };
+    expect(aparienciaQueViaja(filtros)).toEqual(filtros);
+    expect(sanearMio({ apariencia: filtros }).apariencia).toEqual(filtros);
+    // Another device: what its Drive says is what it shows.
+    fijarUsuario(5);
+    ponerMioUnido({ ...mioActual(), apariencia: filtros });
+    const a = ajustesActuales();
+    expect([a.fondoFiltro, a.fondoIntensidad, a.fondoTono, a.fondoDesenfoque]).toEqual(['sepia', 35, 290, 40]);
+    // Changed here, it goes to mio (and so to Drive).
+    cambiarAjustes({ fondoTono: 100 });
+    expect(mioActual().apariencia.fondoTono).toBe(100);
   });
 
   it('un Drive de antes de las paletas sigue entrando igual, y una paleta que no existe se descarta', () => {
@@ -82,5 +98,52 @@ describe('entre el dispositivo y lo del alumno', () => {
     fijarUsuario(5);
     expect(mioActual().apariencia).toEqual({ estilo: 'batman' });
     expect(ajustesActuales().estilo).toBe('batman');
+  });
+});
+
+describe('misma configuración en todos tus dispositivos', () => {
+  it('viene prendida y no viaja: es de cada dispositivo', () => {
+    expect(ajustesActuales().mismaEnTodos).toBe(true);
+    expect(aparienciaQueViaja({ estilo: 'hoja', mismaEnTodos: false })).toEqual({ estilo: 'hoja' });
+  });
+
+  it('apagada, este dispositivo no manda ni toma', () => {
+    fijarUsuario(5);
+    cambiarAjustes({ estilo: 'hoja' });
+    cambiarAjustes({ mismaEnTodos: false });
+    cambiarAjustes({ estilo: 'batman' });
+    expect(mioActual().apariencia).toEqual({ estilo: 'hoja' });
+    ponerMioUnido({ ...mioActual(), apariencia: { estilo: 'pizarron' } });
+    expect(ajustesActuales().estilo).toBe('batman');
+    fijarUsuario(null);
+    fijarUsuario(5);
+    expect(mioActual().apariencia).toEqual({ estilo: 'pizarron' });
+  });
+
+  it('apagada, un dispositivo cambiado no siembra su configuración al entrar', () => {
+    cambiarAjustes({ estilo: 'hoja', mismaEnTodos: false });
+    fijarUsuario(5);
+    expect(mioActual().apariencia).toBe(null);
+  });
+
+  it('prendida otra vez, toma la del alumno como un dispositivo nuevo', () => {
+    fijarUsuario(5);
+    cambiarAjustes({ mismaEnTodos: false });
+    ponerMioUnido({ ...mioActual(), apariencia: { estilo: 'pizarron', letra: 'grande' } });
+    cambiarAjustes({ estilo: 'batman' });
+    cambiarAjustes({ mismaEnTodos: true });
+    const a = ajustesActuales();
+    expect([a.estilo, a.letra, a.mismaEnTodos]).toEqual(['pizarron', 'grande', true]);
+    expect(mioActual().apariencia).toEqual({ estilo: 'pizarron', letra: 'grande' });
+  });
+});
+
+describe('volver a como venía', () => {
+  it('un dispositivo con su configuración la sigue teniendo aparte', () => {
+    fijarUsuario(5);
+    ponerMioUnido({ ...mioActual(), apariencia: { estilo: 'pizarron' } });
+    cambiarAjustes({ mismaEnTodos: false });
+    volverAjustesOriginales();
+    expect([ajustesActuales().estilo, ajustesActuales().mismaEnTodos]).toEqual(['original', false]);
   });
 });

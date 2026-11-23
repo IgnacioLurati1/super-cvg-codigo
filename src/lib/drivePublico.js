@@ -32,8 +32,8 @@ const A_LA_VEZ = 6;
 const NO_ES = 'Ese link no es de una carpeta de Google Drive.';
 const NO_PUBLICA = 'Esa carpeta no está compartida con cualquiera que tenga el link, o ya no existe.';
 const ES_ARCHIVO = 'Ese link es de un archivo. Pegá el de la carpeta que lo tiene.';
-const SIN_CLAVE = 'Drive no está disponible en este momento.';
-const ARCHIVO_NO_ESTA = 'Este archivo ya no está en Drive o dejó de estar compartido.';
+export const SIN_CLAVE = 'Drive no está disponible en este momento.';
+export const ARCHIVO_NO_ESTA = 'Este archivo ya no está en Drive o dejó de estar compartido.';
 const OCUPADO = 'Google Drive está ocupado. Probá de nuevo en un rato.';
 const ESPERA_DESCARGA = 6000;
 const FRENADAS_POR = 10 * 60 * 1000;
@@ -97,9 +97,24 @@ export function tipoDe(nodo) {
   return 'otro';
 }
 
-/** Google's own view of a file, for when Google stops the downloads (`FRENADO`): it opens in a frame of its own. */
-export function vistaDeGoogle(nodo) {
-  return enlaceDe(nodo).replace(/\/(edit|view)(?=\?|$)/, '/preview');
+/** Google's own view of a file, in a frame of its own: when Google stops the downloads (`FRENADO`), and for a file of
+ * Classroom shared only with the class, seen with the student's own Google session in that browser. `cuenta`: the mail
+ * of the account linked to Classroom, so Google opens it with that one when the browser has several. */
+export function vistaDeGoogle(nodo, cuenta = '') {
+  const url = new URL(enlaceDe(nodo).replace(/\/(edit|view)(?=\?|$)/, '/preview'));
+  if (/^[^\s@]{1,64}@[^\s@]{1,190}$/.test(cuenta)) url.searchParams.set('authuser', cuenta);
+  return url.href;
+}
+
+/** Whether the browser keeps Google's session out of a frame inside another site, so Google's viewer asks to sign in:
+ * Brave, Firefox and Safari (any browser on an iPhone or iPad is Safari underneath). */
+export function sinSesionDeGoogle(nav = typeof navigator === 'undefined' ? null : navigator) {
+  if (!nav) return false;
+  if (nav.brave) return true;
+  const ua = nav.userAgent ?? '';
+  if (/Firefox\/|FxiOS\//.test(ua)) return true;
+  if (/iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && nav.maxTouchPoints > 1)) return true;
+  return /Safari\//.test(ua) && /Version\//.test(ua) && !/Chrome\/|Chromium\/|Edg\/|OPR\//.test(ua);
 }
 
 /** The address of a node in Google Drive. */

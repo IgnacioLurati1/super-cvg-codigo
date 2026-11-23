@@ -116,6 +116,28 @@ describe('herramientas de la mesa en pantalla', () => {
     expect(cajas[1].querySelectorAll('.vpiz-svg rect.vpiz-figura[data-ajeno]')).toHaveLength(1);
   });
 
+  it('Pizarra: Mover elige lo que queda dentro del rectángulo hasta donde se soltó, aunque lo último no se haya dibujado', async () => {
+    const { cajas, sesiones } = await dos(Pizarra);
+    const mapa = sesiones[0].doc.getMap('h:p1');
+    await act(async () => {
+      agregar(mapa, { t: 'trazo', c: 0, g: 2, p: [10, 10, 60, 20] }, {});
+      agregar(mapa, { t: 'trazo', c: 0, g: 2, p: [10, 60, 60, 70] }, {});
+    });
+    await esperar();
+    const caja = cajas[0];
+    await act(async () => [...caja.querySelectorAll('.vh-barra button')].find((b) => b.textContent.trim() === 'Mover').click());
+    const hoja = caja.querySelector('.vpiz-hoja');
+    hoja.setPointerCapture ??= () => {};
+    const puntero = (tipo, x, y) => hoja.dispatchEvent(new MouseEvent(tipo, { bubbles: true, clientX: x, clientY: y, button: 0, buttons: 1 }));
+    await act(async () => puntero('pointerdown', -5000, -5000));
+    // Moved and let go at once, as a busy phone does: the last move isn't drawn yet when it's let go.
+    await act(async () => {
+      puntero('pointermove', 5000, 5000);
+      puntero('pointerup', 5000, 5000);
+    });
+    expect(caja.querySelectorAll('.vpiz-elegido')).toHaveLength(2);
+  });
+
   it('Calculadora: los datos que carga uno los ve el otro', async () => {
     const { cajas } = await dos(Calculadora, ([a]) => elegirCalculadora(a.doc.getMap('h:p1'), 'subred'));
     await esperar(400);

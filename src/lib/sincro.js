@@ -532,8 +532,8 @@ export async function borrarCopiaDrive() {
     if (!drive) throw falla('Volvé a conectar tu Drive para borrar la copia.', 'reconectar');
     apagarPorDentro(alumno);
     await enFila(alumno, async () => {
-      // The kept live sessions too (enVivo/sesionesEnDrive.js).
-      const deEste = new RegExp(`^super-cvg-${alumno}(\\.json|-[0-9a-f]{64}|-envivo-[0-9a-f]{32}\\.json)$`);
+      // The kept live sessions too (enVivo/sesionesEnDrive.js), and the copy of Sysacad (sysacadEnDrive.js).
+      const deEste = new RegExp(`^super-cvg-${alumno}(\\.json|-[0-9a-f]{64}|-envivo-[0-9a-f]{32}\\.json|-sysacad\\.json)$`);
       for (const f of await drive.listar()) if (deEste.test(f.name)) await drive.borrar(f.id);
     });
     const m = leerMarcas(alumno);

@@ -283,13 +283,14 @@ export default function Hoy() {
   const principal = useRef(null);
   const { avisar } = useUI();
   const [ahora] = useState(() => Math.floor(Date.now() / 1000));
-  const perfil = useConsulta(cargarPerfil);
-  const pendientes = useConsulta(cargarPendientes);
-  const avisos = useConsulta(cargarAvisos);
+  // What was kept shows at once, and changes when the campus answers (useConsulta.js).
+  const perfil = useConsulta(cargarPerfil, [], { alInstante: true });
+  const pendientes = useConsulta(cargarPendientes, [], { alInstante: true });
+  const avisos = useConsulta(cargarAvisos, [], { alInstante: true });
   const novedades = useConsulta(async () => {
     await cargarPerfil();
     return cargarIndice((await cargarMaterias()).enCurso);
-  });
+  }, [], { alInstante: true });
   const calendario = useConsulta(async () => {
     await cargarPerfil();
     const hoy = new Date(ahora * 1000);
@@ -302,17 +303,18 @@ export default function Hoy() {
       cargarNombres(),
     ]);
     return { eventos: [...new Map(meses.flat().map((e) => [e.id, e])).values()], nombres };
-  });
+  }, [], { alInstante: true });
 
   // Classroom, if connected: the course of each campus course (chosen, or found by the name) and of each course of
   // one's own, with its tasks not turned in and its messages.
   const google = useGoogle();
-  const classroom = useConsulta(async () => (google.conectado ? cargarClassroomUnido() : []), [google.conectado]);
+  const leeClassroom = google.conectado || google.sinRed;
+  const classroom = useConsulta(async () => (leeClassroom ? cargarClassroomUnido() : []), [leeClassroom]);
 
   const otrasMaterias = useConsulta(async () => {
     const sinUbicar = (avisos.datos ?? []).some((a) => a.materiaId || a.modulo);
     return sinUbicar ? cargarIndice((await cargarMaterias()).otras) : [];
-  }, [avisos.datos]);
+  }, [avisos.datos], { alInstante: true });
 
   const mio = useMio();
   const vista = useVista('hoy');
@@ -533,7 +535,7 @@ export default function Hoy() {
     facu: <ClasesDeHoy />,
     classroom: (
       <>
-        {hayUnidos && !google.conectado && (
+        {hayUnidos && !google.conectado && !google.sinRed && (
           <section className="bloque">
             <h2>Classroom</h2>
             <p className="classroom__bajada">Conectalo y ves acá sus tareas y sus mensajes nuevos.</p>
@@ -599,7 +601,7 @@ export default function Hoy() {
   const vacios = {
     pendientes: false,
     tareas: !tareas.length,
-    classroom: !(hayUnidos && !google.conectado) && !classroom.error,
+    classroom: !(hayUnidos && !google.conectado && !google.sinRed) && !classroom.error,
     ...(pendientes.datos && { hechas: !yaHechas.length }),
     ...(calendario.datos && { fechas: !proximasFechas.length }),
     ...(!classroom.cargando && { mensajes: !mensajesNuevos.length }),

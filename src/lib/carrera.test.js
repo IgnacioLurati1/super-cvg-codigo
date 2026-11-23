@@ -177,7 +177,7 @@ describe('what Consultron reads', () => {
     expect(dato('Podés cursar')).toContain('Legislación (4.º año)');
     expect(dato('Regulares')).toMatch(/Física II \(2\.º año, podés rendirla\)/);
     expect(dato('Te falta algo para cursarlas')).toMatch(/Redes de Datos \(4\.º año, te falta regularizar Comunicación de Datos\)/);
-    expect(p.resultado[0]).toEqual(['Lo que más te frena para cursar', expect.stringMatching(/^Simulación \(te abre 2 materias ya, frena 2 materias contando la cadena\); Análisis de Sistemas de Información \(te abre 1 materia ya, frena 6 materias contando la cadena\)/)]);
+    expect(p.resultado[0]).toEqual(['Lo que más te frena para cursar', expect.stringMatching(/^Simulación \(te abre 2 materias ya, frena 2 materias contando la cadena\); Análisis Matemático II \(te abre 1 materia ya, frena 4 materias contando la cadena\)/)]);
     expect(p.resultado[1]).toEqual(['Qué final rendir primero, contando solo las que la piden aprobada', 'Análisis Matemático II (te abre 1 materia ya, frena 4 materias contando la cadena); Física II (te abre 1 materia ya, frena 1 materia contando la cadena)']);
     expect(p.notas).toContain('hace 3 días');
   });

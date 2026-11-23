@@ -2,7 +2,225 @@
 // short title. What's new or improved goes in `funciones`: { tipo: 'nuevo' | 'mejora', nombre, texto, puntos? }, its
 // name, one sentence of what it is and, if needed, a few of what it does. The fixes, one short line each, in `arreglos`.
 // Older updates keep `cambios` ([kind, text]), shown the same way. In the student's words: nothing technical.
+
+// PENDING PUBLICATION, without a date and not shown: on publishing, it goes into NOVEDADES with that day's date.
+export const PENDIENTES = [];
+
 export const NOVEDADES = [
+  {
+    fecha: '2026-11-23',
+    titulo: 'Horizon',
+    funciones: [
+      {
+        tipo: 'nuevo',
+        nombre: 'Versión potente',
+        texto: 'Prendela abajo de los temas y cada uno pone su propio fondo, con estrellas, luciérnagas, nieve o brasas. Anda en todos los estilos.',
+        puntos: [
+          'Con «Movimiento del fondo» se mueve. En «Calidad del fondo» elegís cuánto detalle tiene, de baja a ultra. Arranca en media.',
+          'Con Violeta cósmico y movimiento, la nebulosa se mueve despacio.',
+          'Con alto contraste, el fondo se ve más suave.',
+          'Con Batman, Lavanda es su campo de noche.',
+        ],
+      },
+      {
+        tipo: 'nuevo',
+        nombre: 'Filtros del fondo',
+        texto: 'En «Cómo se ve», después de «Versión potente». Andan con cualquier fondo, también sin la versión potente.',
+        puntos: [
+          'Blanco y negro, sepia, más vivo o suave, con su intensidad.',
+          'Tono y desenfoque, que se suman a cualquier filtro.',
+          'Viajan en «Pasar tu estilo», en Diseños y con «Guardar en tu Google Drive».',
+        ],
+      },
+      {
+        tipo: 'nuevo',
+        nombre: 'Diseños',
+        texto: 'Los estilos que publican otros alumnos. Están en «Más» y en Configuración, arriba de todo en «Cómo se ve».',
+        puntos: [
+          'Probá uno en toda la página antes de usarlo y volvé al tuyo cuando quieras.',
+          'Puntuá de 1 a 5 y comentá.',
+          'Con tu cuenta de El Santo Resumen, publicá el tuyo.',
+        ],
+      },
+      {
+        tipo: 'nuevo',
+        nombre: 'Violeta cósmico',
+        texto: 'Un tema nuevo, oscuro y violeta. «Del sistema» pasó a ser el botón «Seguir a tu dispositivo», abajo de los temas.',
+      },
+      {
+        tipo: 'mejora',
+        nombre: 'Fogonazo amarillo',
+        texto: 'Con el estilo Batman, apagás la luz amarilla que aparece cada vez que cambiás de pantalla. Está en «Cómo se ve», abajo de «Bordes».',
+        puntos: [
+          'Viaja en «Pasar tu estilo» y en Diseños.',
+          'Mientras está prendido, el color «Resaltador» se llama «Resaltador y fogonazo». También pinta esa luz.',
+        ],
+      },
+      {
+        tipo: 'nuevo',
+        nombre: 'Según la hora',
+        texto: 'Un diseño de día y otro de noche, en Configuración. Cambia solo a la hora que elijas.',
+        puntos: ['De noche, Hoy lleva una luna en el menú.'],
+      },
+      {
+        tipo: 'nuevo',
+        nombre: 'Sin internet',
+        texto: 'Con «Seguir conectado», Super CVG abre sin conexión con lo último que trajo del campus.',
+        puntos: [
+          'Hoy, tus materias, el calendario y los archivos que ya abriste.',
+          'Una franja avisa desde cuándo es lo que ves.',
+          'Salir lo borra de ese dispositivo.',
+        ],
+      },
+      {
+        tipo: 'nuevo',
+        nombre: 'Sysacad y Tu carrera en el celu',
+        texto: 'Prendé «Guardar en tu Google Drive» en la compu con Sysacad Lindo y en el celu. Lo que abriste de Sysacad aparece también en el celu.',
+        puntos: [
+          'Con «Seguir conectado», también sin internet.',
+          '¿Tu nombre del campus no es el de Sysacad? Te preguntamos si las copias son tuyas.',
+          'Desvincular Sysacad Lindo lo borra de tu Drive.',
+        ],
+      },
+      {
+        tipo: 'nuevo',
+        nombre: 'Descargas inteligentes',
+        texto: 'Con Super CVG cerrado, el celu baja por wifi el material de las materias que cursás ese día. En clase lo tenés aunque no haya señal.',
+        puntos: [
+          'Se prende en Configuración, en Datos y dispositivos. Anda con Super CVG instalado en Android.',
+          'De noche baja lo del día siguiente. Nunca con datos del celu. Hasta 200 MB por día.',
+          'Elegís qué secciones de cada materia saltear. Lo que ya guardaste no se toca.',
+        ],
+      },
+      {
+        tipo: 'mejora',
+        nombre: 'Sin internet, más cosas',
+        texto: 'Con «Seguir conectado», Classroom y lo que abriste de El Santo Resumen también se ven sin conexión. Consultron te muestra lo que encontró en tus apuntes.',
+      },
+      {
+        tipo: 'mejora',
+        nombre: 'Mensajes sin señal',
+        texto: 'Si tocás Mandar sin señal, el mensaje queda «Por mandar» y sale solo cuando vuelve. Lo podés cancelar antes.',
+      },
+      {
+        tipo: 'mejora',
+        nombre: 'Señal mala',
+        texto: 'Si el campus no contesta en 15 segundos, ves lo guardado en vez de esperar minutos.',
+      },
+      {
+        tipo: 'nuevo',
+        nombre: 'Compartir a Super CVG',
+        texto: 'Desde WhatsApp, la galería o Archivos, compartí un PDF, una foto o un link. Elegís si va a una materia tuya o a Consultron.',
+        puntos: ['Con Super CVG instalado en Android.'],
+      },
+      {
+        tipo: 'nuevo',
+        nombre: 'Ahorro de datos',
+        texto: 'Se prende solo con el ahorro de datos del celu o una conexión lenta. En Configuración lo dejás siempre prendido o apagado.',
+        puntos: [
+          'Lo que no pediste espera a que lo abras.',
+          'Las tarjetas de Resúmenes van sin foto.',
+        ],
+      },
+      {
+        tipo: 'mejora',
+        nombre: 'Consultron, como un chat',
+        texto: 'Tus charlas van al costado y la caja para escribir queda abajo.',
+        puntos: [
+          'La respuesta aparece mientras se escribe. Esc la frena.',
+          'Si subís a leer, un botón te baja al final.',
+          'Los permisos y las opciones están en Ajustes.',
+        ],
+      },
+      {
+        tipo: 'mejora',
+        nombre: 'Usar Gemini',
+        texto: 'Un solo permiso para que Gemini, de Google, conteste todo lo que le preguntás a Consultron.',
+        puntos: [
+          'Apuntes, PDF, Classroom, fechas, tu carrera, preguntas generales, calculadoras y Practicar.',
+          'Anda en el celular y en compus sin placa de video, sin bajar nada.',
+          'Si Gemini no puede, contesta Groq.',
+          'Con Gemini prendido, Consultron se carga en tu compu solo si Gemini y Groq fallan.',
+        ],
+      },
+      {
+        tipo: 'mejora',
+        nombre: 'Más liviano en el celu',
+        texto: 'La primera vez baja menos de la mitad que antes. Cada pantalla se baja cuando la abrís.',
+        puntos: [
+          'Al actualizarse, baja solo lo que cambió.',
+          'El resto se baja solo con Wi-Fi.',
+        ],
+      },
+      {
+        tipo: 'mejora',
+        nombre: 'Pantallas al instante',
+        texto: 'Lo que ya abriste aparece enseguida y se actualiza cuando contesta el campus.',
+        puntos: ['Una pestaña nueva no le vuelve a pedir nada al campus.'],
+      },
+      {
+        tipo: 'mejora',
+        nombre: 'PDF grandes',
+        texto: 'Se bajan de a partes, a medida que leés.',
+        puntos: [
+          'Con internet lento, la primera página sale hasta cuatro veces más rápido.',
+          'Lo que leíste queda para verlo sin internet.',
+        ],
+      },
+      {
+        tipo: 'mejora',
+        nombre: 'En el celular',
+        texto: 'La página llega hasta el borde de abajo y el menú se desliza.',
+        puntos: [
+          'En un PDF, los botones se esconden mientras leés y vuelven al subir.',
+          'La nota de un resaltado queda arriba del teclado.',
+        ],
+      },
+      {
+        tipo: 'mejora',
+        nombre: 'Archivos de Classroom solo del curso',
+        texto: 'Los que el profe compartió solo con el curso se ven acá, con el visor de Google y tu cuenta. En Brave, Firefox y Safari se abren en Drive.',
+      },
+      {
+        tipo: 'mejora',
+        nombre: 'Lo que más te frena',
+        texto: '«Lo que más te frena» y «Finales para rendir» ponen primero lo que tenés más cerca. Lo que pide esa materia directo pesa más que lo de años más adelante.',
+      },
+      {
+        tipo: 'mejora',
+        nombre: 'Símbolos de tus materias',
+        texto: 'Cada materia tuya tiene su propio símbolo, distinto de las otras.',
+      },
+      {
+        tipo: 'mejora',
+        nombre: 'Cada dispositivo con su configuración',
+        texto: 'Con «Guardar en tu Google Drive», apagá «Misma configuración en todos tus dispositivos» y ese dispositivo tiene la suya.',
+      },
+      {
+        tipo: 'mejora',
+        nombre: 'Borde de la cabecera en Pizarrón',
+        texto: 'En Colores elegís el color de la línea de abajo de la cabecera.',
+      },
+    ],
+    arreglos: [
+      'Una pantalla que tarda en cargar muestra una barrita arriba.',
+      'Consultron al costado y el menú a la izquierda ya no corren la página si hay lugar.',
+      'Consultron aparece también en compus sin placa de video.',
+      'Abrir Consultron mientras carga una pantalla ya no te saca de donde escribís.',
+      'En el pizarrón de la sesión en vivo, mover y seleccionar ya no quedan cortos.',
+      'Una pregunta de Practicar que Consultron estaba corrigiendo ya no se pierde si recargás.',
+      'Si Gemini no contesta y tenés internet, Consultron ya no dice «Sin internet».',
+      'En Configuración, «Colores» está arriba de «Para leer mejor».',
+      'Al abrir Super CVG en el celu, el menú ya no se asoma un instante.',
+      'Al prender la versión potente, el fondo arranca moviéndose.',
+      'El desenfoque del fondo ya no lo agranda.',
+      'Después de usar un diseño, Configuración marca el estilo que elegís.',
+      'Con «Bordes», las secciones de Configuración tienen su espacio.',
+      'En el menú de la izquierda con solo íconos, la lupa queda centrada.',
+      'Si ya publicaste 5 estilos en el día, Diseños te lo dice en vez de pedirte que esperes un rato.',
+      'La vista previa de un diseño te sigue a las otras pantallas hasta que lo uses o vuelvas al tuyo. Mientras, Configuración queda en gris.',
+    ],
+  },
   {
     fecha: '2026-11-21',
     titulo: 'Tus materias, como las del campus',
