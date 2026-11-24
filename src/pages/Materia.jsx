@@ -20,7 +20,7 @@ import DeLaMateria from '../components/calculadoras/DeLaMateria';
 import { cambiarLectura, useContenido, useLectura, useVista } from '../lib/ajustes';
 import { leerDeBodega } from '../lib/bodega';
 import { compararFoto, fotoDe } from '../lib/cambios';
-import { cargarContenido, cargarMaterias, cargarPerfil, materiasYaCargadas } from '../lib/campus';
+import { alumnoListo, cargarContenido, cargarMaterias, materiasYaCargadas } from '../lib/campus';
 import { delTablon } from '../lib/classroom';
 import { buscar } from '../lib/datos';
 import { useSesionEnVivo } from '../lib/enVivo/estado';
@@ -169,7 +169,7 @@ export default function Materia() {
   useDesplazarAlArrastrar();
 
   const { datos, error, cargando, recargar } = useConsulta(async () => {
-    await cargarPerfil();
+    await alumnoListo();
     const { enCurso, otras } = await cargarMaterias();
     const materia = [...enCurso, ...otras].find((m) => String(m.id) === id);
     if (!materia) return { materia: null, items: [] };

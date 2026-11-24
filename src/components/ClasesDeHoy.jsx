@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { cargarMaterias, cargarPerfil } from '../lib/campus';
+import { alumnoListo, cargarMaterias } from '../lib/campus';
 import { useColorDeMateria } from '../lib/colores';
 import { fechaDeClave } from '../lib/datos';
 import { armarSemana, cuatrimestreEl, horaEnTexto, hoyClave, proximoLlamado, sinClasesEl } from '../lib/facultad';
@@ -38,7 +38,7 @@ export default function ClasesDeHoy() {
   const hoy = hoyClave(ahora);
   const cuatri = cuatrimestreEl(hoy);
   const { datos } = useConsulta(async () => {
-    await cargarPerfil();
+    await alumnoListo();
     const [{ enCurso }, horarios] = await Promise.all([cargarMaterias(), cargarHorarios()]);
     return { cursos: enCurso, horarios };
   });

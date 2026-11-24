@@ -1,11 +1,11 @@
-import { cargarMaterias, cargarPerfil } from './campus';
+import { alumnoListo, cargarMaterias } from './campus';
 import { cargarCursos, cargarDatosCurso, cargarEntregas, cursoParecido } from './classroom';
 import { materiaDe, mioActual } from './mio';
 
 /** The Classroom course of each campus course (chosen, or found by the name) and of each course of one's own, with
  * what it has and the tasks turned in. Only with Google already connected: it never asks. */
 export async function cargarClassroomUnido() {
-  await cargarPerfil();
+  await alumnoListo();
   const [{ enCurso }, cursos] = await Promise.all([cargarMaterias(), cargarCursos()]);
   const mio = mioActual();
   const unidos = new Map();

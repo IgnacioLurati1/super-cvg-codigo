@@ -5,7 +5,7 @@ import Combo from '../components/Combo';
 import { Cargando, ErrorConReintento } from '../components/Filas';
 import Simbolo, { Icono } from '../components/Simbolo';
 import { useUI } from '../components/ui';
-import { buscarCursos, cargarAreas, cargarMaterias, cargarPerfil, cursosDeCategoria, inscribirmeEn, revisarInscripcion } from '../lib/campus';
+import { alumnoListo, buscarCursos, cargarAreas, cargarMaterias, cursosDeCategoria, inscribirmeEn, revisarInscripcion } from '../lib/campus';
 import { textoError } from '../lib/errores';
 import { anioDe, categoriasConCursos, coincide, conDocentes, enRama, esDeOtroAnio, juntar, lugarDe, partesDe, porLetra, sinAnio } from '../lib/inscripcion';
 import { tituloDe, useSeo } from '../lib/seo';
@@ -379,7 +379,7 @@ export default function Inscripcion() {
   const consulta = quieto.replace(/ /g, '').length >= 2 ? quieto : '';
 
   const base = useConsulta(async () => {
-    await cargarPerfil();
+    await alumnoListo();
     const [arbol, { enCurso, otras }] = await Promise.all([cargarAreas(), cargarMaterias()]);
     return { arbol, mias: new Set([...enCurso, ...otras].map((m) => m.id)) };
   });

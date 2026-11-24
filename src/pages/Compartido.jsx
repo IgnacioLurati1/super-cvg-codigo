@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ImportarArchivo } from '../components/CompartirMateria';
 import { Cargando, ErrorConReintento } from '../components/Filas';
-import { cargarContenido, cargarMaterias, cargarPerfil } from '../lib/campus';
+import { alumnoListo, cargarContenido, cargarMaterias } from '../lib/campus';
 import { fecha, fechaHora } from '../lib/datos';
 import { textoError } from '../lib/errores';
 import { useMio } from '../lib/mio';
@@ -92,7 +92,7 @@ function QueCambia({ resumen }) {
 function Revision({ paquete, alCambiarPaquete }) {
   const mio = useMio();
   const { datos, error, cargando, recargar } = useConsulta(async () => {
-    await cargarPerfil();
+    await alumnoListo();
     const { enCurso, otras } = await cargarMaterias();
     const materia = [...enCurso, ...otras].find((m) => m.id === paquete.materiaId);
     if (!materia) return { materia: null, items: [] };

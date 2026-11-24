@@ -21,7 +21,7 @@ const RAIZ = path.resolve(import.meta.dirname, '..');
 // And the fonts in .woff: every browser that has service workers reads .woff2.
 export const SIN_PRECARGA = /^assets\/((consultron|python|c|sql|js)\.worker-|lib-three-)|\.woff$/;
 // Besides the first page (Hoy, Entrar), by their source: a screen renamed or moved fails here, not quietly.
-export const PANTALLAS_DEL_NUCLEO = ['src/pages/Materias.jsx', 'src/pages/Materia.jsx', 'src/pages/Calendario.jsx', 'src/components/PreviaHoja.jsx', 'src/components/VisorPdf.jsx'];
+export const PANTALLAS_DEL_NUCLEO = ['src/pages/Materias.jsx', 'src/pages/Materia.jsx', 'src/pages/Calendario.jsx', 'src/pages/Mensajes.jsx', 'src/pages/Carrera.jsx', 'src/components/PreviaHoja.jsx', 'src/components/VisorPdf.jsx'];
 // Of the fonts the first page links, only Barlow, the site's letter: the code ones and Kalam (the «Hoja» style and the
 // shared document) are kept when they show.
 const FUENTE = /\.woff2?$/;

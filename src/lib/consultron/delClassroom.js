@@ -2,7 +2,7 @@
 // (tasks, materials and messages of the stream), to look for answers there. Only if the student already connected
 // their Google account: Consultron never asks for it. What a file attached there says never comes: Classroom gives its
 // name and its link, nothing else. It stays where the rest of Classroom does (classroom.js): offline, what was kept.
-import { cargarMaterias, cargarPerfil } from '../campus.js';
+import { alumnoListo, cargarMaterias } from '../campus.js';
 import { cargarCursos, cargarDatosCurso, cargarEntregas, cursoParecido, pendientesDe, textosDeCurso } from '../classroom.js';
 import { guardadoSinRed, permisoGoogle } from '../google.js';
 import { materiaDe, mioActual } from '../mio.js';
@@ -37,7 +37,7 @@ export function unirCursos(enCurso, cursos, mio) {
  * that fails is left out. */
 export async function cargarUnidos() {
   if (!permisoGoogle('classroom') && !guardadoSinRed('classroom')) return [];
-  await cargarPerfil();
+  await alumnoListo();
   const [{ enCurso }, cursos] = await Promise.all([cargarMaterias(), cargarCursos()]);
   const unidos = unirCursos(enCurso, cursos, mioActual());
   const completos = await Promise.all(

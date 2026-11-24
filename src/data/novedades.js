@@ -8,6 +8,22 @@ export const PENDIENTES = [];
 
 export const NOVEDADES = [
   {
+    fecha: '2026-11-24',
+    titulo: 'Más rápido con poca señal',
+    funciones: [
+      {
+        tipo: 'mejora',
+        nombre: 'Abre más rápido con mala señal',
+        texto: 'Al abrir, Super CVG le pide todo al campus de una vez. Con poca señal, Hoy carga hasta un segundo y medio antes.',
+        puntos: [
+          'Mensajes y Tu carrera quedan guardados desde el principio. Abren al toque aunque tengas poca señal.',
+          'La app del celu muestra su primera pantalla sin esperar a internet. Una versión nueva se estrena la vez siguiente que la abrís.',
+          'Las pantallas empiezan a cargar apenas apoyás el dedo en su enlace.',
+        ],
+      },
+    ],
+  },
+  {
     fecha: '2026-11-23',
     titulo: 'Horizon',
     funciones: [

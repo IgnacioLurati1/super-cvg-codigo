@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CALCULADORAS } from '../lib/calculadoras/lista';
-import { cargarIndice, cargarMaterias, cargarPerfil } from '../lib/campus';
+import { alumnoListo, cargarIndice, cargarMaterias } from '../lib/campus';
 import { buscar } from '../lib/datos';
 import { estaOculto, personalizar, useMio } from '../lib/mio';
 import { extension } from './Filas';
@@ -193,7 +193,7 @@ export default function Paleta() {
     yaPedido.current = true;
     setDatos((d) => ({ ...d, cargando: true, fallo: false }));
     try {
-      await cargarPerfil();
+      await alumnoListo();
       const materias = await cargarMaterias();
       setDatos((d) => ({ ...d, materias }));
       const contenido = await cargarIndice([...materias.enCurso, ...materias.otras]);

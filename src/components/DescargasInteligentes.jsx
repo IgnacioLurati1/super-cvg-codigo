@@ -1,7 +1,7 @@
 // «Descargas inteligentes» in Configuración, under its switch: whether this device can, the last download, and the
 // sections each course skips (descargas.js). A course's sections are asked only when it is opened, one at a time.
 import { useState } from 'react';
-import { cargarContenido, cargarMaterias, cargarPerfil } from '../lib/campus';
+import { alumnoListo, cargarContenido, cargarMaterias } from '../lib/campus';
 import { useDescargas } from '../lib/descargas';
 import { descargarSeccion, useMio } from '../lib/mio';
 import { sesionRecordada, useToken } from '../lib/sesion';
@@ -104,7 +104,7 @@ function Materia({ materia, salteadas }) {
 export function SeccionesQueBaja() {
   const mio = useMio();
   const materias = useConsulta(async () => {
-    await cargarPerfil();
+    await alumnoListo();
     return cargarMaterias();
   }, [], { alInstante: true });
   return (

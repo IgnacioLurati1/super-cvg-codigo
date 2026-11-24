@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useUI } from '../components/ui';
-import { cargarMaterias, cargarPerfil } from '../lib/campus';
+import { alumnoListo, cargarMaterias } from '../lib/campus';
 import { peso } from '../lib/datos';
 import { textoError } from '../lib/errores';
 import { guardarMateria, hayMateriaEnHash, LIMITE_ZIP, leerArchivoMateria, materiaDeHash, resumenDeMateria } from '../lib/paquetePropia';
@@ -74,7 +74,7 @@ function Revision({ llegada, alCambiar }) {
   const r = resumenDeMateria(llegada);
 
   const { datos: suyas } = useConsulta(async () => {
-    await cargarPerfil();
+    await alumnoListo();
     const { enCurso, otras } = await cargarMaterias();
     return new Set([...enCurso, ...otras].map((m) => m.id));
   }, [], { alInstante: true });

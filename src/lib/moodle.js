@@ -1,5 +1,6 @@
 // The only module that talks to the campus. Three rules are enforced here:
-//   - Read only: `llamar` throws before any request for a function outside LECTURA.
+//   - Read only: `llamar` throws before any request for a function outside LECTURA. Reads asked at the same moment
+//     leave together in one request (JUNTAR, below), which only ever carries functions of LECTURA.
 //   - The writes, apart: `inscribirse` enrols the student in a course, and `subirArchivo`, `guardarEntrega` and
 //     `enviarEntrega` hand in a task. Only through ESCRITURA, one attempt each, and only after the screen asked.
 //     `responderEnConversacion` and `mandarMensaje` send a private message, after asking too, and `marcarLeida` marks a
@@ -149,7 +150,7 @@ export async function pedirClave(usuario, contrasena) {
 // trying again would send it twice.
 async function enviar(lista, token, funcion, parametros) {
   if (!lista.has(funcion)) throw new Error(`Función fuera de la lista: ${funcion}`);
-  const tope = lista === LECTURA ? conTope() : null;
+  const tope = lista === ESCRITURA ? null : conTope();
   try {
     const respuesta = await fetch(`${CAMPUS}/webservice/rest/server.php`, {
       method: 'POST',
@@ -167,9 +168,136 @@ async function enviar(lista, token, funcion, parametros) {
 
 export async function llamar(token, funcion, parametros = {}) {
   if (!LECTURA.has(funcion)) throw new Error(`Función fuera de la lista de lectura: ${funcion}`);
-  const datos = await enviar(LECTURA, token, funcion, parametros);
+  const datos = await leer(token, funcion, parametros);
   if (datos?.exception) throw errorDeAcceso(datos.errorcode);
   return datos;
+}
+
+// ---------- Reads that leave together ----------
+
+// The campus speaks HTTP/1.1: each request needs a connection of its own, the browser opens six at most and each new one
+// costs two round trips. The reads asked in the same moment go in one request, through the function the campus app
+// itself uses for that (Moodle 3.7+). It only ever carries functions of LECTURA, and only `leer` sends it: `llamar`
+// never takes it. Moodle runs them one after another and stops at the first error: what it left unanswered goes again
+// on its own. Measured against the campus on 23/11, Hoy's nine first reads: 1.64 s apart and 0.93 s together with a
+// bad signal, 0.39 s and 0.33 s on wifi.
+const JUNTAR = 'tool_mobile_call_external_functions';
+const SOLO_JUNTAR = new Set([JUNTAR]);
+const POR_TANDA = 10;
+// Keys whose campus did not take a batch: their reads go one by one.
+const sinTandas = new Set();
+/** Whether this key's reads still leave together (none of its batches was refused). */
+export const seJuntan = (token) => !sinTandas.has(token);
+// The heavy reads (a course's whole contents) leave in a batch of their own: Moodle answers a batch when its last read
+// is done, and the light ones of the same moment would wait for them.
+const PESADAS = new Set(['core_course_get_contents']);
+// And at most four together: a batch shares one time limit (conTope), and a slow campus would let every course go at once.
+const POR_TANDA_PESADA = 4;
+const enEspera = new Map();
+
+const NOMBRE_DE_CAMPO = /^[a-z_]+(?:\[[a-z0-9_]+\])*$/i;
+const PROHIBIDAS = new Set(['__proto__', 'constructor', 'prototype']);
+/** Moodle's form names (`courseids[0]`) as the object its JSON arguments take ({ courseids: [..] }). */
+export function anidar(parametros) {
+  const raiz = {};
+  for (const [nombre, valor] of Object.entries(parametros)) {
+    if (!NOMBRE_DE_CAMPO.test(nombre)) throw new Error(`Campo raro: ${nombre}`);
+    const partes = nombre.match(/[^[\]]+/g);
+    if (partes.some((parte) => PROHIBIDAS.has(parte))) throw new Error(`Campo raro: ${nombre}`);
+    let nodo = raiz;
+    partes.forEach((parte, i) => {
+      if (i === partes.length - 1) nodo[parte] = valor;
+      else {
+        if (!Object.hasOwn(nodo, parte)) nodo[parte] = /^\d+$/.test(partes[i + 1]) ? [] : {};
+        nodo = nodo[parte];
+      }
+    });
+  }
+  return raiz;
+}
+
+function juntable(parametros) {
+  try {
+    anidar(parametros);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function leer(token, funcion, parametros) {
+  if (sinTandas.has(token) || !juntable(parametros)) return enviar(LECTURA, token, funcion, parametros);
+  const grupo = PESADAS.has(funcion) ? 'pesadas' : 'livianas';
+  return new Promise((ok, mal) => {
+    let tanda = enEspera.get(grupo);
+    if (tanda?.token !== token) {
+      soltar(grupo);
+      tanda = { token, pedidos: [] };
+      enEspera.set(grupo, tanda);
+      // What else is asked in this same moment (the screens' first requests come together) joins it.
+      setTimeout(() => soltar(grupo, tanda), 0);
+    }
+    tanda.pedidos.push({ funcion, parametros, ok, mal });
+    if (tanda.pedidos.length >= (grupo === 'pesadas' ? POR_TANDA_PESADA : POR_TANDA)) soltar(grupo);
+  });
+}
+
+// The group's batch waiting, or only that one (`cual`) if it is still the one waiting.
+function soltar(grupo, cual) {
+  const tanda = enEspera.get(grupo);
+  if (!tanda || (cual && tanda !== cual)) return;
+  enEspera.delete(grupo);
+  if (!tanda.pedidos.length) return;
+  if (tanda.pedidos.length === 1) deAUno(tanda.token, tanda.pedidos);
+  else juntos(tanda.token, tanda.pedidos);
+}
+
+function deAUno(token, pedidos) {
+  for (const p of pedidos) enviar(LECTURA, token, p.funcion, p.parametros).then(p.ok, p.mal);
+}
+
+// An error inside the batch, as the campus answers it to a request on its own.
+function errorDeLaTanda(texto) {
+  let e = null;
+  try {
+    e = JSON.parse(texto);
+  } catch {
+    // Not JSON: an unknown error.
+  }
+  return { exception: 'tanda', errorcode: typeof e?.errorcode === 'string' ? e.errorcode : 'desconocido' };
+}
+
+async function juntos(token, pedidos) {
+  const cuerpo = {};
+  pedidos.forEach(({ funcion, parametros }, i) => {
+    cuerpo[`requests[${i}][function]`] = funcion;
+    cuerpo[`requests[${i}][arguments]`] = JSON.stringify(anidar(parametros));
+  });
+  let datos;
+  try {
+    if (!pedidos.every((p) => LECTURA.has(p.funcion))) throw new Error('Función fuera de la lista de lectura');
+    datos = await enviar(SOLO_JUNTAR, token, JUNTAR, cuerpo);
+  } catch (error) {
+    for (const p of pedidos) p.mal(error);
+    return;
+  }
+  const respuestas = Array.isArray(datos?.responses) ? datos.responses : null;
+  // The campus did not take it (closed for this key, or the key is dead): each read on its own says why.
+  if (!respuestas) {
+    sinTandas.add(token);
+    deAUno(token, pedidos);
+    return;
+  }
+  pedidos.forEach((p, i) => {
+    const r = respuestas[i];
+    if (!r) return deAUno(token, [p]);
+    if (r.error) return p.ok(errorDeLaTanda(r.exception));
+    try {
+      p.ok(r.data == null ? null : JSON.parse(r.data));
+    } catch {
+      p.mal(new ErrorCampus('El campus no pudo responder. Probá de nuevo en un rato.', 'respuesta_invalida'));
+    }
+  });
 }
 
 const CLAVE_MAL = new Set(['2', '3', '4']);

@@ -26,6 +26,8 @@ import { registrarTrabajador } from './lib/trabajador';
 import { limpiarCompartidoViejo } from './lib/compartido';
 import { contarVisita } from './lib/visita';
 import { sumarLetrasDeCodigo } from './lib/letrasDeCodigo';
+import { adelantarPedidos } from './lib/campus';
+import { escucharToques } from './lib/alTocar';
 
 // The small window Google came back to only hands over the permission and closes: no app, no visit counted.
 if (atenderVueltaDeGoogle()) {
@@ -34,6 +36,10 @@ if (atenderVueltaDeGoogle()) {
 } else if (window.top === window.self) {
   // A link from El Santo Resumen to link the account: its code leaves the address before anything else.
   iniciarVinculo();
+  // The campus starts answering while the rest is drawn: on a slow phone, while its logo still shows.
+  adelantarPedidos(location.pathname === '/');
+  // And each screen's, from the moment a finger touches its link.
+  escucharToques();
   // Nobody should be able to cover the login form from a page of their own.
   iniciarMovimiento();
   iniciarEscritura();

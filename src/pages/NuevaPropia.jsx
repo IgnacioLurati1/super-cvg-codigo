@@ -4,7 +4,7 @@ import Campo from '../components/Campo';
 import { BotonConectar, nombreDeCurso } from '../components/Classroom';
 import { ErrorConReintento } from '../components/Filas';
 import { useUI } from '../components/ui';
-import { cargarContenido, cargarMaterias, cargarPerfil } from '../lib/campus';
+import { alumnoListo, cargarContenido, cargarMaterias } from '../lib/campus';
 import { cargarCursos } from '../lib/classroom';
 import { textoError } from '../lib/errores';
 import { useGoogle } from '../lib/google';
@@ -24,7 +24,7 @@ export default function NuevaPropia() {
   const [parametros] = useSearchParams();
   const idTraer = useId();
   const { datos: materias, error: errorMaterias, recargar } = useConsulta(async () => {
-    await cargarPerfil();
+    await alumnoListo();
     const { enCurso, otras } = await cargarMaterias();
     return [...enCurso, ...otras];
   }, [], { alInstante: true });

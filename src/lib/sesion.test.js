@@ -1,5 +1,5 @@
 import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import { cerrarSesion, conCache, desdeLoGuardado, enCache, exigirCampus, iniciarSesion, olvidar, tokenActual, vaciarCache } from './sesion';
+import { alumnoRecordado, cerrarSesion, conCache, cursosRecordados, desdeLoGuardado, enCache, exigirCampus, iniciarSesion, olvidar, recordarAlumno, recordarCursos, tokenActual, vaciarCache } from './sesion';
 import { huellaDe } from './sinInternet';
 
 beforeEach(() => {
@@ -33,6 +33,73 @@ describe('sesion', () => {
     expect(Object.keys(localStorage)).toEqual(['otra-app']);
     await conCache('materias', 5, fn);
     expect(fn).toHaveBeenCalledTimes(2);
+  });
+
+  it('keeps the campus number next to the key, and it goes with the key', () => {
+    expect(alumnoRecordado()).toBeNull();
+    recordarAlumno(5);
+    expect(alumnoRecordado()).toBeNull();
+    iniciarSesion('k');
+    recordarAlumno(5);
+    expect(sessionStorage.getItem('cl.sesion.alumno')).toMatch(/^[a-z0-9]+:5$/);
+    expect(alumnoRecordado()).toBe(5);
+    recordarAlumno(-1);
+    recordarAlumno(1.5);
+    expect(alumnoRecordado()).toBe(5);
+    // Another key, after leaving, starts without it.
+    cerrarSesion();
+    iniciarSesion('k2', { recordar: true });
+    expect(alumnoRecordado()).toBeNull();
+    recordarAlumno(7);
+    expect(localStorage.getItem('cl.sesion.alumno')).toMatch(/^[a-z0-9]+:7$/);
+    expect(sessionStorage.getItem('cl.sesion.alumno')).toBeNull();
+    cerrarSesion();
+    expect(alumnoRecordado()).toBeNull();
+    expect(localStorage.getItem('cl.sesion.alumno')).toBeNull();
+  });
+
+  it('keeps only the numbers of the courses in progress, and they go with the key', () => {
+    recordarCursos([3, 4]);
+    expect(cursosRecordados()).toEqual([]);
+    iniciarSesion('k');
+    recordarCursos([3, 4]);
+    expect(sessionStorage.getItem('cl.sesion.cursos')).toMatch(/^[a-z0-9]+:3,4$/);
+    expect(cursosRecordados()).toEqual([3, 4]);
+    for (const malo of [[3, 'Física'], [0], [1.5], 'x']) recordarCursos(malo);
+    expect(cursosRecordados()).toEqual([3, 4]);
+    sessionStorage.setItem('cl.sesion.cursos', '3,<b>');
+    expect(cursosRecordados()).toEqual([]);
+    recordarCursos(Array.from({ length: 40 }, (_, i) => i + 1));
+    expect(cursosRecordados()).toHaveLength(30);
+    cerrarSesion();
+    expect(cursosRecordados()).toEqual([]);
+    expect(sessionStorage.getItem('cl.sesion.cursos')).toBeNull();
+  });
+
+  it('a number kept for another key is not taken, nor kept when the key changed meanwhile', () => {
+    iniciarSesion('de-ana', { recordar: true });
+    recordarAlumno(5);
+    recordarCursos([3]);
+    const deAna = { alumno: localStorage.getItem('cl.sesion.alumno'), cursos: localStorage.getItem('cl.sesion.cursos') };
+    // Another tab signs Beto in: what Ana's tab left behind, copied next to his key, is not his.
+    cerrarSesion();
+    iniciarSesion('de-beto', { recordar: true });
+    localStorage.setItem('cl.sesion.alumno', deAna.alumno);
+    localStorage.setItem('cl.sesion.cursos', deAna.cursos);
+    expect(alumnoRecordado()).toBeNull();
+    expect(cursosRecordados()).toEqual([]);
+    // Ana's profile, coming late with her key: nothing is kept for Beto.
+    recordarAlumno(5, 'de-ana');
+    recordarCursos([3], 'de-ana');
+    expect(alumnoRecordado()).toBeNull();
+    expect(cursosRecordados()).toEqual([]);
+    recordarAlumno(8, 'de-beto');
+    expect(alumnoRecordado()).toBe(8);
+  });
+
+  it('a number left without its key is not taken', () => {
+    sessionStorage.setItem('cl.sesion.alumno', '5');
+    expect(alumnoRecordado()).toBeNull();
   });
 });
 

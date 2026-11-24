@@ -4,7 +4,7 @@ import Campo from '../components/Campo';
 import FilaEnPdf from '../components/FilaEnPdf';
 import { Cargando, ErrorConReintento, esDeTipo, FilaItem, FiltroTipo, IconoDeFiltro, TIPOS } from '../components/Filas';
 import Simbolo from '../components/Simbolo';
-import { cargarIndice, cargarMaterias, cargarPerfil } from '../lib/campus';
+import { alumnoListo, cargarIndice, cargarMaterias } from '../lib/campus';
 import { buscar, normalizar } from '../lib/datos';
 import { buscarEnPdfs, cancelarLectura, cuentaDe, leerPdfs, pdfsDe, useIndicePdf } from '../lib/indicePdf';
 import { partesDe } from '../lib/inscripcion';
@@ -88,7 +88,7 @@ export default function Buscar() {
   const mio = useMio();
 
   const { datos, error, cargando, recargar } = useConsulta(async () => {
-    await cargarPerfil();
+    await alumnoListo();
     const { enCurso, otras } = await cargarMaterias();
     return cargarIndice([...enCurso, ...otras]);
   });

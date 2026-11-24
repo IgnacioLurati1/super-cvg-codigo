@@ -8,7 +8,7 @@ import Simbolo from '../components/Simbolo';
 import { simbolosDeTuyas } from '../lib/simbolos';
 import { useUI } from '../components/ui';
 import { useAjustes } from '../lib/ajustes';
-import { cargarMaterias, cargarPerfil } from '../lib/campus';
+import { alumnoListo, cargarMaterias } from '../lib/campus';
 import { useColorDeMateria } from '../lib/colores';
 import { materiaDe, ponerEnLista, ponerTarjeta, useMio } from '../lib/mio';
 import { resumenDePropia } from '../lib/propiasVista';
@@ -184,7 +184,7 @@ export default function Materias() {
   useSeo({ titulo: tituloDe('Materias'), noindex: true });
   const vista = useAjustes().vistas.materias;
   const { datos, error, cargando, recargar } = useConsulta(async () => {
-    await cargarPerfil();
+    await alumnoListo();
     return cargarMaterias();
   }, [], { alInstante: true });
 

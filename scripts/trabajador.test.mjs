@@ -20,6 +20,8 @@ const MANIFIESTO = {
   'src/pages/Materias.jsx': { file: 'assets/Materias-m1.js', src: 'src/pages/Materias.jsx', isDynamicEntry: true, imports: ['_app-p1.js'] },
   'src/pages/Materia.jsx': { file: 'assets/Materia-m2.js', src: 'src/pages/Materia.jsx', isDynamicEntry: true, imports: ['_app-p1.js'] },
   'src/pages/Calendario.jsx': { file: 'assets/Calendario-c2.js', src: 'src/pages/Calendario.jsx', isDynamicEntry: true },
+  'src/pages/Mensajes.jsx': { file: 'assets/Mensajes-s1.js', src: 'src/pages/Mensajes.jsx', isDynamicEntry: true, imports: ['_app-p1.js'] },
+  'src/pages/Carrera.jsx': { file: 'assets/Carrera-t1.js', src: 'src/pages/Carrera.jsx', isDynamicEntry: true },
   'src/components/PreviaHoja.jsx': { file: 'assets/PreviaHoja-h1.js', src: 'src/components/PreviaHoja.jsx', isDynamicEntry: true, dynamicImports: ['_VisorPdf-v1.js'] },
   '_VisorPdf-v1.js': { file: 'assets/VisorPdf-v1.js', name: 'VisorPdf', imports: ['_lib-pdfjs-d1.js'], dynamicImports: ['src/components/consultron/EnVisor.jsx'], css: ['assets/VisorPdf-v2.css'] },
   '_lib-pdfjs-d1.js': { file: 'assets/lib-pdfjs-d1.js', name: 'lib-pdfjs', assets: ['assets/pdf.worker.min-w1.mjs'] },
@@ -40,8 +42,10 @@ describe('the service worker', () => {
   it('keeps up front the first page and the main screens with what they import, and only the site font', () => {
     expect(nucleoDe(MANIFIESTO).sort()).toEqual([
       'assets/Calendario-c2.js',
+      'assets/Carrera-t1.js',
       'assets/Materia-m2.js',
       'assets/Materias-m1.js',
+      'assets/Mensajes-s1.js',
       'assets/PreviaHoja-h1.js',
       'assets/VisorPdf-v1.js',
       'assets/VisorPdf-v2.css',

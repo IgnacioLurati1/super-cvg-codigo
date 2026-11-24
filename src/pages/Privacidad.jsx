@@ -12,7 +12,7 @@ export default function Privacidad() {
       <p>La escribís acá y tu navegador la manda directo al campus para entrar. No se guarda en ningún lado.</p>
       <h2>Tu sesión</h2>
       <p>El campus devuelve la misma clave que usa la app oficial de Moodle. Super CVG la usa para leer, y para inscribirte a una materia, entregar una tarea o mandar un mensaje cuando vos lo pedís. La clave puede hacer más cosas en tu cuenta.</p>
-      <p>Queda solo en tu navegador. En una compu compartida tocá Salir, porque cerrar la pestaña no alcanza para borrarla del disco.</p>
+      <p>Queda solo en tu navegador, guardada con tu número de usuario del campus y los números de tus materias en curso. En una compu compartida tocá Salir, porque cerrar la pestaña no alcanza para borrarla del disco.</p>
       <p>Si elegís seguir conectado, queda en ese dispositivo hasta que toques Salir. Usá esa opción solo en un dispositivo tuyo.</p>
       <h2>Tus datos del campus</h2>
       <p>Tus materias, entregas, cuestionarios y notas quedan en la memoria de las pestañas de Super CVG que tengas abiertas, para no repetir pedidos al campus. Se borran al cerrarlas.</p>

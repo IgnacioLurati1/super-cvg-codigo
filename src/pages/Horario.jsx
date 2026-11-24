@@ -7,7 +7,7 @@ import Simbolo from '../components/Simbolo';
 import { useUI } from '../components/ui';
 import { CALENDARIO } from '../data/facultad/calendario';
 import { useAtajosDePagina } from '../lib/atajos';
-import { cargarMaterias, cargarPerfil } from '../lib/campus';
+import { alumnoListo, cargarMaterias } from '../lib/campus';
 import { useColorDeMateria } from '../lib/colores';
 import { fechaDeClave, normalizar } from '../lib/datos';
 import {
@@ -642,7 +642,7 @@ export default function Horario() {
   useAtajosDePagina({ 1: () => elegirCuatri(1), 2: () => elegirCuatri(2) });
 
   const { datos, error, cargando, recargar } = useConsulta(async () => {
-    await cargarPerfil();
+    await alumnoListo();
     const [{ enCurso }, horarios] = await Promise.all([cargarMaterias(), cargarHorarios()]);
     return { cursos: enCurso, horarios };
   }, [], { alInstante: true });

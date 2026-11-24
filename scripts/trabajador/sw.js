@@ -2,12 +2,13 @@
 // campus, of Google or of anyone else in its caches: a request to another origin goes on as if this weren't here. What
 // the student brought from the campus is kept apart, by the page (src/lib/sinInternet.js), and Salir deletes it.
 // scripts/trabajador.mjs fills in VERSION, NUCLEO, RESTO and MOTORES when building and writes it as dist/sw.js.
-//   - The pages: from the network, and without it the shell kept (the one of «/» or 404.html, like GitHub Pages).
+//   - The pages: the shell kept, at once (the one of «/» or 404.html, like GitHub Pages), with ajustes.js. A new
+//     version installs in the background and opens the next time; the previous one's cache stays for a page of it.
 //   - assets/: the files have their content in their name, so what was kept is used as is. NUCLEO is kept when
 //     installing; every other file, the first time it is used. RESTO is downloaded in the background only when the page
 //     says the connection allows it (puedeBajarTodo in src/lib/trabajador.js): mobile data is scarce.
 //   - motores/ and pdfjs/: kept only when they are used (they weigh a lot), in a cache named by their content.
-//   - The rest of the site (icons, ajustes.js, the drawings of the calculators): from the network, kept for later.
+//   - The rest of the site (icons, the drawings of the calculators): from the network, kept for later.
 //   - What another app shares (the manifest's share_target, a POST to /compartir): checked, kept apart only until the
 //     page places it (src/lib/compartido.js), and the page opens to ask where it goes.
 //   - «Descargas inteligentes»: with the site closed, `periodicsync` brings the material of the day's courses
@@ -24,10 +25,19 @@ const SITIO = `cvg-sitio-${VERSION}`;
 const CACHE_MOTORES = `cvg-motores-${MOTORES}`;
 const NUESTRAS = /^cvg-(sitio|motores)-/;
 const BASE = new URL('./', self.location).href;
-// How long a page waits for the network before opening the kept one, when there is one: a phone on the bus with one bar.
-const ESPERA_PAGINA = 4000;
+// The files outside assets/ that the page needs before drawing anything (ajustes.js runs in the head): kept first, like
+// the shells. The rest of the site's own files go to the network first.
+const DE_ARRANQUE = new Set(['ajustes.js']);
+// Each version's cache says when it was installed: the newest one before this stays, for a page of that version still
+// open (see activate).
+const INSTALADA = '__instalada';
 
 const direccion = (ruta) => new URL(ruta, BASE).href;
+
+// Every file is looked up by its address alone. A server that answers with `Vary: Origin` would otherwise hide a
+// module kept from a plain request: a page of the previous version, taken over by a new worker as it loads, didn't
+// start on his phone on 23/11.
+const POR_DIRECCION = { ignoreVary: true };
 
 /* compartido */
 
@@ -41,17 +51,18 @@ const direccion = (ruta) => new URL(ruta, BASE).href;
 // that: what the student opened before, or what came on a free connection, stays without internet after an update.
 async function precargar() {
   const cache = await caches.open(SITIO);
+  await cache.put(direccion(INSTALADA), new Response(String(Date.now())));
   for (const ruta of RESTO) {
-    const previo = await caches.match(direccion(ruta));
-    if (previo) await cache.put(direccion(ruta), previo);
+    const previo = await caches.match(direccion(ruta), POR_DIRECCION);
+    if (previo && guardable(previo, direccion(ruta))) await cache.put(direccion(ruta), previo);
   }
   const pendientes = [...NUCLEO];
   const trabajar = async () => {
     while (pendientes.length) {
       const ruta = pendientes.shift();
       const url = direccion(ruta);
-      const previo = ruta.startsWith('assets/') ? await caches.match(url) : undefined;
-      if (previo) {
+      const previo = ruta.startsWith('assets/') ? await caches.match(url, POR_DIRECCION) : undefined;
+      if (previo && guardable(previo, url)) {
         await cache.put(url, previo);
         continue;
       }
@@ -59,7 +70,7 @@ async function precargar() {
       // student already downloaded opening the site): on a phone, those megabytes are not paid twice.
       const respuesta = await fetch(url, { cache: ruta.startsWith('assets/') ? 'default' : 'no-cache', credentials: 'omit' });
       // A file missing means a publication half done: this version doesn't install, the previous one stays.
-      if (!respuesta.ok) throw new Error(`${ruta}: ${respuesta.status}`);
+      if (!guardable(respuesta, url)) throw new Error(`${ruta}: ${respuesta.status}`);
       await cache.put(url, respuesta);
     }
   };
@@ -73,15 +84,23 @@ self.addEventListener('install', (evento) => {
 self.addEventListener('activate', (evento) => {
   evento.waitUntil(
     (async () => {
-      for (const nombre of await caches.keys()) {
-        if (NUESTRAS.test(nombre) && nombre !== SITIO && nombre !== CACHE_MOTORES) await caches.delete(nombre);
-      }
+      // The previous version stays: a page opened from it (the shell opens from what was kept, before this worker
+      // arrived) may still ask for a screen of its own. Only the newest one before this; older ones go.
+      const otras = (await caches.keys()).filter((n) => NUESTRAS.test(n) && n !== SITIO && n !== CACHE_MOTORES);
+      const cuando = async (nombre) => Number(await (await (await caches.open(nombre)).match(direccion(INSTALADA)))?.text()) || 0;
+      const fechas = await Promise.all(otras.map(cuando));
+      const anterior = otras.filter((n) => n.startsWith('cvg-sitio-')).sort((a, b) => fechas[otras.indexOf(b)] - fechas[otras.indexOf(a)])[0];
+      for (const nombre of otras) if (nombre !== anterior) await caches.delete(nombre);
       await self.clients.claim();
     })(),
   );
 });
 
-const guardable = (respuesta) => respuesta.ok && respuesta.type === 'basic';
+// A page never stands in for code: a server that answers a missing file with the site's HTML (and a 200) would leave
+// the app unable to start for as long as that copy is kept. Seen with the preview server on 23/11.
+const CODIGO = /\.(?:m?js|css|wasm)$/;
+const guardable = (respuesta, url) =>
+  respuesta.ok && respuesta.type === 'basic' && !(CODIGO.test(new URL(url).pathname) && /html/i.test(respuesta.headers.get('content-type') ?? ''));
 
 // RESTO in the background, one file at a time so it doesn't compete with what the student is opening. The page asks
 // for it and stops it when the connection changes (`seguir`); without network it stops, and the next visit goes on.
@@ -92,14 +111,14 @@ async function bajarResto() {
   for (const ruta of RESTO) {
     if (!seguir) return;
     const url = direccion(ruta);
-    if (await cache.match(url)) continue;
+    if (await cache.match(url, POR_DIRECCION)) continue;
     let respuesta;
     try {
       respuesta = await fetch(url, { credentials: 'omit' });
     } catch {
       return;
     }
-    if (guardable(respuesta)) await cache.put(url, respuesta);
+    if (guardable(respuesta, url)) await cache.put(url, respuesta);
   }
 }
 
@@ -111,9 +130,9 @@ async function guardarCargadas(rutas) {
   for (const ruta of rutas.slice(0, 500)) {
     if (typeof ruta !== 'string' || !ARCHIVO.test(ruta)) continue;
     const url = direccion(ruta);
-    if (await cache.match(url)) continue;
+    if (await cache.match(url, POR_DIRECCION)) continue;
     const respuesta = await fetch(url, { cache: 'force-cache', credentials: 'omit' }).catch(() => null);
-    if (respuesta && guardable(respuesta)) await cache.put(url, respuesta);
+    if (respuesta && guardable(respuesta, url)) await cache.put(url, respuesta);
   }
 }
 
@@ -132,23 +151,24 @@ self.addEventListener('message', (evento) => {
 
 async function primeroGuardado(pedido, nombre) {
   const cache = await caches.open(nombre);
-  const guardada = await cache.match(pedido);
-  if (guardada) return guardada;
+  // In this version, or else in the previous one that stays (a page of that version still open).
+  const guardada = (await cache.match(pedido, POR_DIRECCION)) ?? (await caches.match(pedido, POR_DIRECCION));
+  if (guardada && guardable(guardada, pedido.url)) return guardada;
   const respuesta = await fetch(pedido);
-  if (guardable(respuesta)) await cache.put(pedido, respuesta.clone());
+  if (guardable(respuesta, pedido.url)) await cache.put(pedido, respuesta.clone());
   return respuesta;
 }
 
 async function primeroRed(pedido, nombre) {
   try {
     const respuesta = await fetch(pedido);
-    if (guardable(respuesta)) {
+    if (guardable(respuesta, pedido.url)) {
       const copia = respuesta.clone();
       caches.open(nombre).then((c) => c.put(pedido, copia)).catch(() => {});
     }
     return respuesta;
   } catch (error) {
-    const guardada = await caches.match(pedido, { ignoreSearch: true });
+    const guardada = await caches.match(pedido, { ...POR_DIRECCION, ignoreSearch: true });
     if (guardada) return guardada;
     throw error;
   }
@@ -156,24 +176,14 @@ async function primeroRed(pedido, nombre) {
 
 // The shell for a page: «/» has its own (with the content of the home page), every other address opens 404.html, which
 // is the same app, empty, as GitHub Pages does.
-const cascaronDe = (url) => caches.open(SITIO).then((c) => c.match(url.href === BASE ? BASE : direccion('404.html')));
+const cascaronDe = (url) => caches.open(SITIO).then((c) => c.match(url.href === BASE ? BASE : direccion('404.html'), POR_DIRECCION));
 
+// The kept shell, at once: waiting for GitHub before drawing anything cost 0.7 s on a phone with 4G (measured on 23/11)
+// and up to the whole wait with one bar. Its files are this version's, kept with it. A new version comes with a new
+// worker: the browser looks for it on each visit, it installs in the background and opens from the next time.
 async function pagina(pedido) {
-  const url = new URL(pedido.url);
-  const cascaron = cascaronDe(url);
-  const red = fetch(pedido);
-  // When the kept page wins, the network may still fail later: that is not an error of anyone.
-  red.catch(() => {});
-  const respaldo = new Promise((ok) => {
-    setTimeout(() => cascaron.then((c) => c && ok(c)), ESPERA_PAGINA);
-  });
-  try {
-    return await Promise.race([red, respaldo]);
-  } catch (error) {
-    const guardado = await cascaron;
-    if (guardado) return guardado;
-    throw error;
-  }
+  const guardado = await cascaronDe(new URL(pedido.url));
+  return guardado ?? fetch(pedido);
 }
 
 // What came waits in its own cache, the last share only: a new one takes the place of the one before. If it can't be
@@ -211,6 +221,7 @@ self.addEventListener('fetch', (evento) => {
   if (pedido.mode === 'navigate') evento.respondWith(pagina(pedido));
   else if (ruta.startsWith('assets/')) evento.respondWith(primeroGuardado(pedido, SITIO));
   else if (ruta.startsWith('motores/') || ruta.startsWith('pdfjs/')) evento.respondWith(primeroGuardado(pedido, CACHE_MOTORES));
+  else if (DE_ARRANQUE.has(ruta)) evento.respondWith(primeroGuardado(pedido, SITIO));
   else evento.respondWith(primeroRed(pedido, SITIO));
 });
 

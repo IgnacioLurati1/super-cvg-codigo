@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { TOPE_MS, bajarArchivo, CAMPUS, esArchivoDelCampus, pedirArchivo, enviarEntrega, ErrorCampus, ESCRITURA, guardarEntrega, inscribirse, LARGO_MAXIMO, largoEnBytes, LECTURA, llamar, mandarMensaje, marcarLeida, pedirClave, responderEnConversacion, responderEnForo, subirArchivo, textoAHtml } from './moodle';
+import { anidar, TOPE_MS, bajarArchivo, CAMPUS, esArchivoDelCampus, pedirArchivo, enviarEntrega, ErrorCampus, ESCRITURA, guardarEntrega, inscribirse, LARGO_MAXIMO, largoEnBytes, LECTURA, llamar, mandarMensaje, marcarLeida, pedirClave, responderEnConversacion, responderEnForo, subirArchivo, textoAHtml } from './moodle';
 
 const responder = (cuerpo, { status = 200, tipo = 'application/json' } = {}) =>
   vi.fn(async () => new Response(typeof cuerpo === 'string' ? cuerpo : JSON.stringify(cuerpo), { status, headers: { 'content-type': tipo } }));
@@ -55,6 +55,122 @@ describe('llamar', () => {
   it('reports a server failure without breaking on an HTML body', async () => {
     vi.stubGlobal('fetch', responder('<html>503</html>', { status: 503, tipo: 'text/html' }));
     await expect(llamar('k', 'core_webservice_get_site_info')).rejects.toMatchObject({ codigo: 'http_503' });
+  });
+});
+
+describe('reads that leave together', () => {
+  const JUNTAR = 'tool_mobile_call_external_functions';
+  // The campus of the test: a batch gets one answer per read, in order, until the first error (as Moodle does).
+  const campus = (responder) =>
+    vi.fn(async (url, { body }) => {
+      const f = body.get('wsfunction');
+      if (f !== JUNTAR) return new Response(JSON.stringify(responder(f, Object.fromEntries(body))));
+      const respuestas = [];
+      for (let i = 0; body.has(`requests[${i}][function]`); i++) {
+        const datos = responder(body.get(`requests[${i}][function]`), JSON.parse(body.get(`requests[${i}][arguments]`)));
+        if (datos?.exception) {
+          respuestas.push({ error: true, exception: JSON.stringify({ errorcode: datos.errorcode, message: 'interno' }) });
+          break;
+        }
+        respuestas.push({ error: false, data: JSON.stringify(datos) });
+      }
+      return new Response(JSON.stringify({ responses: respuestas }));
+    });
+  const funcionesDe = (pedido) => pedido.mock.calls.map(([, { body }]) => body.get('wsfunction'));
+
+  it('asked at the same moment, they go in one request, with the key in the body', async () => {
+    const pedido = campus((f, a) => ({ f, a }));
+    vi.stubGlobal('fetch', pedido);
+    const [info, cursos, materia] = await Promise.all([
+      llamar('k1', 'core_webservice_get_site_info'),
+      llamar('k1', 'core_enrol_get_users_courses', { userid: 5 }),
+      llamar('k1', 'mod_assign_get_assignments', { 'courseids[0]': '7' }),
+    ]);
+    expect(funcionesDe(pedido)).toEqual([JUNTAR]);
+    const [url, { body }] = pedido.mock.calls[0];
+    expect(String(url)).not.toContain('k1');
+    expect(body.get('wstoken')).toBe('k1');
+    expect(info).toEqual({ f: 'core_webservice_get_site_info', a: {} });
+    expect(cursos).toEqual({ f: 'core_enrol_get_users_courses', a: { userid: 5 } });
+    expect(materia).toEqual({ f: 'mod_assign_get_assignments', a: { courseids: ['7'] } });
+  });
+
+  it('a read alone goes on its own', async () => {
+    const pedido = campus(() => ({ ok: 1 }));
+    vi.stubGlobal('fetch', pedido);
+    await llamar('k2', 'core_webservice_get_site_info');
+    await llamar('k2', 'core_webservice_get_site_info');
+    expect(funcionesDe(pedido)).toEqual(['core_webservice_get_site_info', 'core_webservice_get_site_info']);
+  });
+
+  it('an error is that read’s, and what the campus left unanswered goes again on its own', async () => {
+    const pedido = campus((f, a) => (f === 'core_enrol_get_users_courses' && a.userid === 5 ? { exception: 'x', errorcode: 'dbfail' } : { f }));
+    vi.stubGlobal('fetch', pedido);
+    const [a, b, c] = await Promise.allSettled([
+      llamar('k3', 'core_webservice_get_site_info'),
+      llamar('k3', 'core_enrol_get_users_courses', { userid: 5 }),
+      llamar('k3', 'core_enrol_get_users_courses', { userid: 7 }),
+    ]);
+    expect(a.value).toEqual({ f: 'core_webservice_get_site_info' });
+    expect(b.reason).toMatchObject({ codigo: 'dbfail' });
+    expect(b.reason.message).not.toContain('interno');
+    expect(c.value).toEqual({ f: 'core_enrol_get_users_courses' });
+    expect(funcionesDe(pedido)).toEqual([JUNTAR, 'core_enrol_get_users_courses']);
+  });
+
+  it('a campus that does not take batches gets each read on its own, from then on too', async () => {
+    const pedido = vi.fn(async (url, { body }) => {
+      const f = body.get('wsfunction');
+      return new Response(JSON.stringify(f === JUNTAR ? { exception: 'x', errorcode: 'accessexception' } : { f }));
+    });
+    vi.stubGlobal('fetch', pedido);
+    const dos = () => Promise.all([llamar('k4', 'core_webservice_get_site_info'), llamar('k4', 'core_enrol_get_users_courses', { userid: 7 })]);
+    expect(await dos()).toEqual([{ f: 'core_webservice_get_site_info' }, { f: 'core_enrol_get_users_courses' }]);
+    await dos();
+    expect(funcionesDe(pedido)).toEqual([JUNTAR, 'core_webservice_get_site_info', 'core_enrol_get_users_courses', 'core_webservice_get_site_info', 'core_enrol_get_users_courses']);
+  });
+
+  it('a fall of the network fails every read of the batch', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => { throw new TypeError('Failed to fetch'); }));
+    const r = await Promise.allSettled([llamar('k5', 'core_webservice_get_site_info'), llamar('k5', 'core_enrol_get_users_courses', { userid: 7 })]);
+    expect(r.map((x) => x.status)).toEqual(['rejected', 'rejected']);
+  });
+
+  it('the contents of the courses leave in a batch of their own, so the light reads do not wait for them', async () => {
+    const pedido = campus((f) => ({ f }));
+    vi.stubGlobal('fetch', pedido);
+    await Promise.all([
+      llamar('k7', 'core_course_get_contents', { courseid: 3 }),
+      llamar('k7', 'core_webservice_get_site_info'),
+      llamar('k7', 'core_course_get_contents', { courseid: 4 }),
+      llamar('k7', 'core_enrol_get_users_courses', { userid: 7 }),
+    ]);
+    const tandas = pedido.mock.calls.map(([, { body }]) => [0, 1].map((i) => body.get(`requests[${i}][function]`)));
+    expect(tandas).toEqual([
+      ['core_course_get_contents', 'core_course_get_contents'],
+      ['core_webservice_get_site_info', 'core_enrol_get_users_courses'],
+    ]);
+  });
+
+  it('the contents go at most four in a batch', async () => {
+    const pedido = campus((f) => ({ f }));
+    vi.stubGlobal('fetch', pedido);
+    await Promise.all([1, 2, 3, 4, 5, 6].map((id) => llamar('k8', 'core_course_get_contents', { courseid: id })));
+    const cuantas = pedido.mock.calls.map(([, { body }]) => [...body.keys()].filter((k) => k.endsWith('[function]')).length);
+    expect(cuantas).toEqual([4, 2]);
+  });
+
+  it('never carries a function outside the read list', async () => {
+    const pedido = campus(() => ({}));
+    vi.stubGlobal('fetch', pedido);
+    const r = await Promise.allSettled([llamar('k6', 'core_webservice_get_site_info'), llamar('k6', 'mod_assign_save_submission'), llamar('k6', JUNTAR)]);
+    expect(r.map((x) => x.status)).toEqual(['fulfilled', 'rejected', 'rejected']);
+    expect(funcionesDe(pedido)).toEqual(['core_webservice_get_site_info']);
+  });
+
+  it('builds the arguments from the form names, and never from a dangerous one', () => {
+    expect(anidar({ courseids: 1, 'options[0][name]': 'a', 'options[0][value]': 'b', 'x[y]': 2 })).toEqual({ courseids: 1, options: [{ name: 'a', value: 'b' }], x: { y: 2 } });
+    for (const nombre of ['__proto__[x]', 'a[__proto__]', 'a[constructor]', 'a b', 'a[]']) expect(() => anidar({ [nombre]: 1 })).toThrow(/Campo raro/);
   });
 });
 

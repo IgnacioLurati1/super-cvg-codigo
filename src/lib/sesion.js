@@ -39,6 +39,86 @@ const leer = () => {
   }
 };
 
+// The campus number of whoever is in, next to the key and gone with it: the same number the student's own things
+// already carry in their names (cl.mio.<number>). With it, opening the site asks the campus everything at once, instead
+// of waiting for the profile to ask for what needs the number.
+const ALUMNO = 'cl.sesion.alumno';
+const dondeEstaLaClave = () => (sessionStorage.getItem(CLAVE) !== null ? sessionStorage : localStorage);
+
+// Each number goes with a mark of the key it came with (FNV-1a, next to that same key, so it tells nothing new): one
+// left by another session (another tab signed in, or an answer that came after Salir) is never taken.
+function marcaDe(token) {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < token.length; i++) h = Math.imul(h ^ token.charCodeAt(i), 0x01000193) >>> 0;
+  return h.toString(36);
+}
+// What is kept under `nombre` for the key in use, or null.
+function deEstaClave(nombre) {
+  const token = leer();
+  if (!token) return null;
+  const [marca, valor] = (dondeEstaLaClave().getItem(nombre) ?? '').split(':');
+  return marca === marcaDe(token) ? (valor ?? '') : null;
+}
+// Keeps `valor` for `token`, only while it is still the key in use.
+function guardarParaLaClave(nombre, token, valor) {
+  if (!token || token !== leer() || esDemo(token)) return;
+  dondeEstaLaClave().setItem(nombre, `${marcaDe(token)}:${valor}`);
+}
+
+/** The campus number kept next to this key, or null. */
+export function alumnoRecordado() {
+  try {
+    const n = Number(deEstaClave(ALUMNO) ?? NaN);
+    return Number.isSafeInteger(n) && n > 0 ? n : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Keeps the campus number of whoever is in next to `token`, the key that asked for it (campus.js, when the profile
+ * comes): nothing if the key changed meanwhile. */
+export function recordarAlumno(id, token = leer()) {
+  if (!Number.isSafeInteger(id) || id <= 0) return;
+  try {
+    guardarParaLaClave(ALUMNO, token, String(id));
+  } catch {
+    // Storage full or closed: the profile is waited for, as before.
+  }
+}
+
+// The numbers of the courses in progress, next to the key the same way: only numbers, never a name. With them, Hoy
+// asks for their contents in the first wave instead of waiting for the list of courses.
+const CURSOS = 'cl.sesion.cursos';
+const TOPE_DE_CURSOS = 30;
+const numeroDeCurso = (n) => Number.isSafeInteger(n) && n > 0;
+
+/** The course numbers kept next to this key, or [] . */
+export function cursosRecordados() {
+  try {
+    const lista = (deEstaClave(CURSOS) ?? '').split(',').filter(Boolean).map(Number);
+    return lista.every(numeroDeCurso) ? lista.slice(0, TOPE_DE_CURSOS) : [];
+  } catch {
+    return [];
+  }
+}
+
+/** Keeps the numbers of the courses in progress next to `token`, the key that asked for them (campus.js). */
+export function recordarCursos(ids, token = leer()) {
+  if (!Array.isArray(ids) || !ids.every(numeroDeCurso)) return;
+  try {
+    guardarParaLaClave(CURSOS, token, ids.slice(0, TOPE_DE_CURSOS).join(','));
+  } catch {
+    // Storage full or closed: Hoy waits for the list of courses, as before.
+  }
+}
+
+function olvidarAlumno() {
+  for (const nombre of [ALUMNO, CURSOS]) {
+    sessionStorage.removeItem(nombre);
+    localStorage.removeItem(nombre);
+  }
+}
+
 /** A request that started before this point can no longer write to the cache or be shared. */
 export function vaciarCache() {
   otraGeneracion();
@@ -93,6 +173,7 @@ function moverGoogle() {
 export function iniciarSesion(token, { recordar = false, conGoogle = false } = {}) {
   vaciarCache();
   olvidarDescargas();
+  olvidarAlumno();
   if (!conGoogle) {
     olvidarCuentaGoogle();
     olvidarPermisoGoogle();
@@ -111,6 +192,7 @@ export function iniciarSesion(token, { recordar = false, conGoogle = false } = {
 function borrarEstaPestana() {
   sessionStorage.removeItem(CLAVE);
   localStorage.removeItem(CLAVE);
+  olvidarAlumno();
   // The Classroom permission and its account go with the campus key.
   olvidarPermisoGoogle();
   olvidarCuentaGoogle();
@@ -192,13 +274,13 @@ export function olvidar(nombres) {
 export const enCache = (nombre) => cache.get(nombre)?.datos;
 
 // The campus number of whoever is in, from the profile already brought: what is kept for offline is kept for them.
-const alumnoDe = (nombre, datos) => (nombre === 'perfil' ? datos?.id : cache.get('perfil')?.datos?.id);
+const alumnoDe = (nombre, datos) => (nombre === 'perfil' ? datos?.id : cache.get('perfil')?.datos?.id ?? alumnoRecordado());
 
 /** Whose disk it is, for what is kept for offline outside conCache (respaldo.js): { token, alumno } with «Seguir
  * conectado» and the profile already here, or null (the sample mode keeps nothing). */
 export function quienGuarda() {
   const token = leer();
-  const alumno = cache.get('perfil')?.datos?.id ?? guardadas.get('perfil')?.datos?.id;
+  const alumno = cache.get('perfil')?.datos?.id ?? guardadas.get('perfil')?.datos?.id ?? alumnoRecordado();
   if (!token || !alumno || !sesionRecordada() || esDemo(token)) return null;
   return { token, alumno };
 }

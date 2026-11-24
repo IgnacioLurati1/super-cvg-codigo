@@ -11,7 +11,7 @@ import { borrarSinInternet, fichaGuardada, recuperar } from '../src/lib/sinInter
 import { armarTrabajador } from './trabajador.mjs';
 
 const MANIFIESTO = { 'index.html': { file: 'assets/index-a1.js', src: 'index.html', isEntry: true } };
-for (const f of ['Materias', 'Materia', 'Calendario']) MANIFIESTO[`src/pages/${f}.jsx`] = { file: `assets/${f}-x.js`, src: `src/pages/${f}.jsx` };
+for (const f of ['Materias', 'Materia', 'Calendario', 'Mensajes', 'Carrera']) MANIFIESTO[`src/pages/${f}.jsx`] = { file: `assets/${f}-x.js`, src: `src/pages/${f}.jsx` };
 for (const f of ['PreviaHoja', 'VisorPdf']) MANIFIESTO[`src/components/${f}.jsx`] = { file: `assets/${f}-x.js`, src: `src/components/${f}.jsx` };
 
 let dist;

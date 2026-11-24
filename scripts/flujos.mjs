@@ -714,6 +714,8 @@ await contexto.addInitScript(() => {
 const pagina = await contexto.newPage();
 
 const pedidos = [];
+// The batches of reads (responderTanda).
+const tandas = [];
 const errores = [];
 // «durante todo el recorrido» in parallel: what every batch sent, and its console errors.
 if (process.env.FLUJOS_REGISTROS) {
@@ -722,6 +724,7 @@ if (process.env.FLUJOS_REGISTROS) {
     pedidos.push(...otro.pedidos);
     errores.push(...otro.errores);
     for (const f of otro.sinSimular) sinSimular.add(f);
+    tandas.push(...otro.tandas);
   }
 }
 let sesionVencida = false;
@@ -856,6 +859,34 @@ self.onmessage = async ({ data }) => {
 // How many times Consultron's worker started: on its screen, or in the background as Super CVG opens.
 let arranquesConsultron = 0;
 
+// The reads that leave together (moodle.js), as Moodle 4.4's tool_mobile_call_external_functions answers them: one by
+// one, in order, until the first error. Each read is noted in `pedidos` as if it had gone on its own, so the tests
+// that count a function see it; the batches go apart in `tandas`.
+const JUNTAR = 'tool_mobile_call_external_functions';
+const aplanar = (valor, prefijo, salida = {}) => {
+  if (valor && typeof valor === 'object') for (const [k, v] of Object.entries(valor)) aplanar(v, prefijo ? `${prefijo}[${k}]` : k, salida);
+  else salida[prefijo] = String(valor);
+  return salida;
+};
+function responderTanda(p, url, pedido) {
+  tandas.push(pedidos.pop());
+  const respuestas = [];
+  for (let i = 0; p.has(`requests[${i}][function]`); i++) {
+    const funcion = p.get(`requests[${i}][function]`);
+    const uno = new URLSearchParams({ ...aplanar(JSON.parse(p.get(`requests[${i}][arguments]`)), ''), wstoken: p.get('wstoken'), wsfunction: funcion, moodlewsrestformat: 'json' });
+    pedidos.push({ url: url.href, metodo: pedido.method(), cuerpo: uno.toString(), cabeceras: pedido.headers(), enTanda: true });
+    const responder = RESPUESTAS[funcion];
+    if (!responder) sinSimular.add(funcion);
+    const datos = responder ? responder(uno) : { exception: 'moodle_exception', errorcode: 'sinsimular' };
+    if (datos?.exception) {
+      respuestas.push({ error: true, exception: JSON.stringify({ errorcode: datos.errorcode, message: 'interno' }) });
+      break;
+    }
+    respuestas.push({ error: false, data: JSON.stringify(datos) });
+  }
+  return { responses: respuestas };
+}
+
 async function atender(ruta) {
   const pedido = ruta.request();
   const url = new URL(pedido.url());
@@ -877,6 +908,7 @@ async function atender(ruta) {
   if (url.origin === CAMPUS && url.pathname === '/webservice/rest/server.php') {
     const p = new URLSearchParams(cuerpo);
     if (sesionVencida) return ruta.fulfill({ status: 200, headers: cors, contentType: 'application/json', body: JSON.stringify({ exception: 'x', errorcode: 'invalidtoken', message: 'interno' }) });
+    if (p.get('wsfunction') === JUNTAR) return ruta.fulfill({ status: 200, headers: cors, contentType: 'application/json', body: JSON.stringify(responderTanda(p, url, pedido)) });
     const responder = RESPUESTAS[p.get('wsfunction')];
     if (!responder) {
       sinSimular.add(p.get('wsfunction'));
@@ -2209,6 +2241,8 @@ try {
       await pagina.getByRole('link', { name: 'Ordenar' }).click();
       await pagina.waitForURL(/configuracion#hoy$/);
       const columna = (c) => pagina.locator(`.orden-hoy[data-columna="${c}"] .orden-hoy__nombre`).allTextContents();
+      // The screen comes apart: its list, once it is drawn.
+      await pagina.locator('.orden-hoy[data-columna="principal"] .orden-hoy__nombre').first().waitFor();
       assert.deepEqual(await columna('principal'), ['Vencimientos', 'Ya hecho', 'Para hacer', 'Próximas fechas']);
       // With the arrows on the handle, one place at a time, the focus staying on it.
       await boton('Mover Próximas fechas').focus();
@@ -11766,9 +11800,18 @@ try {
     const fuera = pedidos.filter((p) => (p.cuerpo.includes(TOKEN) || p.cuerpo.includes(CONTRASENA)) && !p.url.startsWith(CAMPUS) && !aSuDrive(p));
     assert.deepEqual(fuera, [], 'la clave o la contraseña fuera del campus');
     assert.deepEqual([...sinSimular], [], 'funciones del campus sin simular');
-    const funciones = new Set(pedidos.map((p) => new URLSearchParams(p.cuerpo).get('wsfunction')).filter(Boolean));
+    // A batch the simulated campus didn't answer (no connection, on purpose) stays among the requests: it goes with the
+    // batches, checked below.
+    const esTanda = (p) => new URLSearchParams(p.cuerpo).get('wsfunction') === JUNTAR;
+    const funciones = new Set(pedidos.filter((p) => !esTanda(p)).map((p) => new URLSearchParams(p.cuerpo).get('wsfunction')).filter(Boolean));
     // Reading only, but for the one enrolment the student confirmed (Inscripción).
     for (const f of funciones) assert.ok(/_get_|site_info/.test(f) || f === 'core_course_search_courses' || f === 'enrol_self_enrol_user' || f === 'mod_assign_save_submission' || f === 'mod_assign_submit_for_grading' || f === 'core_message_message_search_users' || f === 'core_message_send_messages_to_conversation' || f === 'core_message_send_instant_messages' || f === 'core_message_mark_all_conversation_messages_as_read', f);
+    // Reads asked together left in one request, which carried only reads.
+    assert.ok(tandas.length > 0, 'pedidos juntos');
+    for (const t of [...tandas, ...pedidos.filter(esTanda)]) {
+      const dentro = [...new URLSearchParams(t.cuerpo)].filter(([k]) => /^requests\[\d+\]\[function\]$/.test(k)).map(([, v]) => v);
+      assert.ok(dentro.length > 1 && dentro.every((f) => /_get_|site_info/.test(f) || f === 'core_course_search_courses' || f === 'core_message_message_search_users'), dentro.join(', '));
+    }
     // The bell asks its count and its list, and never marks a notification as read in the campus.
     assert.ok(funciones.has('message_popup_get_unread_popup_notification_count') && funciones.has('message_popup_get_popup_notifications'), 'la campana');
     assert.deepEqual([...funciones].filter((f) => /^core_message_mark_(?:notification_read|all_notifications_as_read)$/.test(f)), [], 'una notificación marcada leída');
@@ -11795,7 +11838,7 @@ try {
 } finally {
   await navegador.close();
   cerrar();
-  if (process.env.FLUJOS_REGISTRO) fs.writeFileSync(process.env.FLUJOS_REGISTRO, JSON.stringify({ resultados, pedidos, errores, sinSimular: [...sinSimular] }));
+  if (process.env.FLUJOS_REGISTRO) fs.writeFileSync(process.env.FLUJOS_REGISTRO, JSON.stringify({ resultados, pedidos, errores, sinSimular: [...sinSimular], tandas }));
 }
 
 const fallas = resultados.filter((r) => !r.ok).length;

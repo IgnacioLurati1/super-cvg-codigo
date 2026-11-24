@@ -4,7 +4,7 @@ import { Manija } from './Secciones';
 import { Cargando, ErrorConReintento } from './Filas';
 import { useUI } from './ui';
 import { useCalendarioGoogle } from '../lib/calendarioSincro';
-import { cargarMaterias, cargarPerfil } from '../lib/campus';
+import { alumnoListo, cargarMaterias } from '../lib/campus';
 import { BLOQUES_DE_HOY, CUENTAN_EN_HOY, DIAS_DE_HOY, SEMANAS_DE_HOY, cuentaEnHoy, diasDeHoy, fueraDeHoy, moverBloque, ordenDeHoy, semanaDeHoy } from '../lib/hoy';
 import { contarEnHoy, diasEnHoy, materiaEnHoy, mostrarEnHoy, ordenarHoy, semanaEnHoy, useMio } from '../lib/mio';
 import { useArrastreDeSecciones } from '../lib/useArrastreDeSecciones';
@@ -341,7 +341,7 @@ export function MateriasEnHoy() {
   const mio = useMio();
   const conGoogle = useCalendarioGoogle().prendido;
   const materias = useConsulta(async () => {
-    await cargarPerfil();
+    await alumnoListo();
     return cargarMaterias();
   }, [], { alInstante: true });
   if (materias.error && !materias.datos) return <ErrorConReintento texto={materias.error} recargar={materias.recargar} />;

@@ -3,12 +3,12 @@
 import { aplanarContenido, eventosDelMes, normalizarAviso, normalizarEvento, textoPlano } from './datos';
 import { armarAreas, cursoDelCatalogo, estaAbierta, inscripcionPropia, patronDeBusqueda } from './inscripcion';
 import { esDemo } from './modoDemo';
-import { bajarArchivo, enviarEntrega, ErrorCampus, guardarEntrega, inscribirse, leerInscripcion, llamar, subirArchivo } from './moodle';
+import { bajarArchivo, enviarEntrega, ErrorCampus, guardarEntrega, inscribirse, leerInscripcion, llamar, seJuntan, subirArchivo } from './moodle';
 import { leerMandado, leerPublicado, leerRespuesta, mandarMensaje, marcarLeida, responderEnConversacion, responderEnForo } from './moodle';
 import { conversaciones, mensaje, mismoTexto, personasHalladas, tandaDeMensajes } from './mensajes';
 import { fijarCursos } from './colores';
 import { fijarUsuario } from './mio';
-import { alHidratar, cerrarSesion, conCache, enCache, enLoGuardado, exigirCampus, olvidar, tokenActual } from './sesion';
+import { alHidratar, alumnoRecordado, cerrarSesion, conCache, cursosRecordados, enCache, enLoGuardado, exigirCampus, olvidar, recordarAlumno, recordarCursos, tokenActual } from './sesion';
 import { limpiarNotificacion, limpiarNotificaciones } from './notificaciones';
 import { aHtml, leerEstado, leerTareas } from './tareas';
 import { leerAcceso, leerCuestionarios, leerDevolucion, leerIntentos, leerMejorNota, leerOpcionesCombinadas, leerRevision, revisionDe, seVeLaDevolucion, terminados } from './cuestionarios';
@@ -67,6 +67,8 @@ const pedir = async (funcion, parametros) => {
 const materia = (c) => ({ id: c.id, nombre: textoPlano(c.fullnamedisplay || c.displayname || c.fullname), corto: textoPlano(c.shortname), oculta: Boolean(c.hidden) });
 
 export async function cargarPerfil() {
+  // The key that asks: an answer that comes after Salir, or after another session came in, sets nobody.
+  const token = tokenActual();
   const perfil = await conCache('perfil', 60, async () => {
     const info = await pedir('core_webservice_get_site_info');
     // The functions the campus opens to this access, when it lists them: the quizzes do not ask for one it leaves out.
@@ -76,8 +78,27 @@ export async function cargarPerfil() {
     return { id: info.userid, nombre: textoPlano(info.firstname), completo, funciones };
   });
   // Drawing from what was kept changes nothing: the student is set when the disk's copy comes to memory, below.
-  if (!enLoGuardado()) fijarUsuario(perfil.id);
+  if (!enLoGuardado() && tokenActual() === token) {
+    fijarUsuario(perfil.id);
+    recordarAlumno(perfil.id, token);
+  }
   return perfil;
+}
+
+/** The campus number of whoever is in: the one kept next to the key, at once, or the profile's. The profile is asked
+ * for all the same, alongside: it checks the key, and brings the name. */
+export async function idDelAlumno() {
+  const recordado = alumnoRecordado();
+  if (recordado === null) return (await cargarPerfil()).id;
+  cargarPerfil().catch(() => {});
+  return recordado;
+}
+
+/** Waits until the student is known, for a screen that needs it before asking the campus for the rest. With the number
+ * kept next to the key, nothing to wait for. */
+export async function alumnoListo() {
+  const id = await idDelAlumno();
+  if (!enLoGuardado()) fijarUsuario(id);
 }
 
 // The disk's copy is this key's (sinInternet.js): its student is the one coming in, before the campus answers.
@@ -97,7 +118,7 @@ export const materiasYaCargadas = () => enCache('materias');
 
 export const cargarMaterias = () =>
   conCache('materias', 30, async () => {
-    const { id } = await cargarPerfil();
+    const id = await idDelAlumno();
     const [enCurso, todas] = await Promise.all([
       pedir('core_course_get_enrolled_courses_by_timeline_classification', { classification: 'inprogress', limit: 0 }),
       pedir('core_enrol_get_users_courses', { userid: id }),
@@ -123,7 +144,7 @@ export const cargarPendientes = () =>
 const NOTIFICACIONES = 20;
 const leerNotificaciones = () =>
   conCache('notificaciones', 5, async () => {
-    const { id } = await cargarPerfil();
+    const id = await idDelAlumno();
     const respuesta = await pedir('message_popup_get_popup_notifications', { useridto: id, newestfirst: 1, limit: NOTIFICACIONES, offset: 0 });
     return Array.isArray(respuesta?.notifications) ? respuesta.notifications : [];
   });
@@ -141,7 +162,7 @@ export const cargarAvisos = () =>
 
 /** How many notifications are unread in the campus. Never cached: the bell asks it again on purpose (useSinLeer.js). */
 export async function contarNotificaciones() {
-  const { id } = await cargarPerfil();
+  const id = await idDelAlumno();
   const n = Number(await pedir('message_popup_get_unread_popup_notification_count', { useridto: id }));
   return Number.isSafeInteger(n) && n > 0 ? n : 0;
 }
@@ -153,10 +174,21 @@ export async function cargarNotificaciones({ fresco = false } = {}) {
   return limpiarNotificaciones(crudas, [...enCurso, ...otras]);
 }
 
-export const cargarContenido = (m) =>
-  conCache(`contenido.${m.id}`, 30, async () => aplanarContenido(await pedir('core_course_get_contents', { courseid: m.id }), m));
+// The contents Hoy asked for as the site opened, by the course numbers kept next to the key (adelantarPedidos): each
+// one waits here, in memory, for the first cargarContenido of its course, and is used once.
+const adelantados = new Map();
+const contenidoDelCampus = (id) => {
+  const adelantado = adelantados.get(id);
+  adelantados.delete(id);
+  return adelantado?.token === tokenActual() ? adelantado.pedido : pedir('core_course_get_contents', { courseid: id });
+};
+
+export const cargarContenido = (m) => conCache(`contenido.${m.id}`, 30, async () => aplanarContenido(await contenidoDelCampus(m.id), m));
 
 export async function cargarIndice(materias) {
+  // Together, the campus reads the courses one after another in one request: all at once. Apart, two at a time, so
+  // the campus doesn't get them all at the same moment.
+  if (seJuntan(tokenActual())) return (await Promise.all(materias.map(cargarContenido))).flat();
   const pendientes = [...materias];
   const resultados = [];
   const token = tokenActual();
@@ -169,6 +201,45 @@ export async function cargarIndice(materias) {
 
 export const cargarMes = (anio, mes) =>
   conCache(`mes.${anio}-${mes}`, 15, async () => eventosDelMes(await pedir('core_calendar_get_calendar_monthly_view', { year: anio, month: mes })));
+
+/** The months Hoy reads, as [year, month]: this one, the next, and up to the farthest «Próximas fechas» can look (hoy.js),
+ * which at the end of a month reaches the one after next. `ahora` in seconds. */
+export function mesesDeHoy(ahora) {
+  const hoy = new Date(ahora * 1000);
+  const siguiente = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 1);
+  const lejos = new Date((ahora + 31 * 86_400) * 1000);
+  const meses = [hoy, siguiente, lejos].map((d) => [d.getFullYear(), d.getMonth() + 1]);
+  return meses.filter(([a, m], i) => meses.findIndex(([b, n]) => a === b && m === n) === i);
+}
+
+/** What the first screens ask for, sent as the site opens, before anything is drawn: on a slow phone, while its
+ * logo shows. Each answer waits in conCache for the screen that asks for it. Only what conCache keeps (the counters
+ * of the bell and of Mensajes are asked again on purpose), and Hoy's own only on Hoy. */
+export function adelantarPedidos(enHoy) {
+  const token = tokenActual();
+  if (!token || esDemo(token)) return;
+  const nada = () => {};
+  idDelAlumno().catch(nada);
+  const materias = cargarMaterias();
+  materias.then((m) => recordarCursos(m.enCurso.map((c) => c.id), token)).catch(nada);
+  if (!enHoy) return;
+  cargarPendientes().catch(nada);
+  cargarAvisos().catch(nada);
+  for (const [anio, mes] of mesesDeHoy(Math.floor(Date.now() / 1000))) cargarMes(anio, mes).catch(nada);
+  // The contents of the courses kept from the last visit leave now, in a batch of their own (moodle.js), instead of
+  // waiting for the list of courses. Hoy takes them when that list says they are still in progress; one no longer
+  // there is not shown, and it is forgotten after a minute.
+  for (const id of cursosRecordados()) {
+    if (enCache(`contenido.${id}`)) continue;
+    const pedido = pedir('core_course_get_contents', { courseid: id });
+    const soltar = () => adelantados.get(id)?.pedido === pedido && adelantados.delete(id);
+    // One that failed is not handed over: Hoy asks again, with what conCache does when the campus fails.
+    pedido.catch(soltar);
+    adelantados.set(id, { token, pedido });
+    setTimeout(soltar, 60_000);
+  }
+  materias.then((m) => cargarIndice(m.enCurso)).catch(nada);
+}
 
 // Enrolling in a course (Inscripción). The catalog is read like everything else, once per visit and only in memory.
 
@@ -269,13 +340,13 @@ const pedirMensajes = async (funcion, parametros) => {
 
 /** How many conversations have unread messages. Never cached: it is asked again on purpose. */
 export async function contarSinLeer() {
-  const { id } = await cargarPerfil();
+  const id = await idDelAlumno();
   const n = Number(await pedirMensajes('core_message_get_unread_conversations_count', { useridto: id }));
   return Number.isSafeInteger(n) && n > 0 ? n : 0;
 }
 
 const leerConversaciones = async (desde) => {
-  const { id } = await cargarPerfil();
+  const id = await idDelAlumno();
   // One more than shown tells whether there are more, like the campus app does.
   const r = await pedirMensajes('core_message_get_conversations', { userid: id, limitfrom: desde, limitnum: CONVERSACIONES_POR_TANDA + 1 });
   const todas = Array.isArray(r?.conversations) ? r.conversations : [];
@@ -290,7 +361,7 @@ export const cargarConversaciones = (desde = 0, { fresco = false } = {}) => {
 };
 
 const leerMensajes = async (conversacionId, desde, cuantos) => {
-  const { id } = await cargarPerfil();
+  const id = await idDelAlumno();
   return tandaDeMensajes(await pedirMensajes('core_message_get_conversation_messages', { currentuserid: id, convid: conversacionId, limitfrom: desde, limitnum: cuantos, newest: 1 }));
 };
 
@@ -308,7 +379,7 @@ export const cargarMensajes = (conversacionId, desde = 0, { fresco = false } = {
 /** People to write to, by name: contacts first, without the student. */
 export const buscarPersonas = (consulta) =>
   conCache(`mensajes.personas.${consulta}`, 5, async () => {
-    const { id } = await cargarPerfil();
+    const id = await idDelAlumno();
     return personasHalladas(await pedirMensajes('core_message_message_search_users', { userid: id, search: consulta, limitfrom: 0, limitnum: 20 }), id);
   });
 
@@ -343,7 +414,7 @@ const enDuda = (error) => !(error instanceof ErrorCampus) || /^http_|^respuesta_
  * `conversacionId` looks among the last ones of the conversation newer than `despuesDe`; `personaId`, at the last one
  * of the student's latest conversations. Fails when the campus can't be read. */
 export async function buscarEnviado({ conversacionId, personaId, texto, despuesDe = 0 }) {
-  const { id: yo } = await cargarPerfil();
+  const yo = await idDelAlumno();
   if (conversacionId) {
     const ultimos = await leerMensajes(conversacionId, 0, 5);
     return ultimos.mensajes.findLast((m) => m.de === yo && m.id > despuesDe && mismoTexto(texto, m.texto)) ?? null;
@@ -369,7 +440,7 @@ async function siLlego(error, donde) {
 /** Answers in a conversation, after the screen asked: the message as the campus keeps it. `despuesDe`: the id of the
  * newest message shown, to find this one if the answer gets lost on the way. */
 export async function responderEn(conversacionId, texto, { despuesDe = 0 } = {}) {
-  const { id: yo } = await cargarPerfil();
+  const yo = await idDelAlumno();
   try {
     return mensaje(await escribirMensajes(
       'core_message_send_messages_to_conversation',
@@ -385,7 +456,7 @@ export async function responderEn(conversacionId, texto, { despuesDe = 0 } = {})
 
 /** Writes to someone with no conversation yet, after the screen asked: { conversacionId, mensaje }. */
 export async function escribirA(personaId, texto) {
-  const { id: yo } = await cargarPerfil();
+  const yo = await idDelAlumno();
   try {
     const r = await escribirMensajes(
       'core_message_send_instant_messages',
@@ -402,7 +473,7 @@ export async function escribirA(personaId, texto) {
 
 /** Marks a conversation as read when it is opened, what the campus does when it is opened there. It doesn't ask. */
 export async function marcarComoLeida(conversacionId) {
-  const { id } = await cargarPerfil();
+  const id = await idDelAlumno();
   await escribirMensajes(
     'core_message_mark_all_conversation_messages_as_read',
     (token) => marcarLeida(token, id, conversacionId),
@@ -470,7 +541,7 @@ export const cargarEstadoTarea = (tarea, materia) =>
 /** A task by its course and its module number (`cmid`, the one in its campus address): { materia, tarea, estado }.
  * `materia` is null when the course is not the student's, and `tarea` when the course has no task with that number. */
 export async function cargarTarea(materiaId, cmid) {
-  await cargarPerfil();
+  await alumnoListo();
   const { enCurso, otras } = await cargarMaterias();
   const materia = [...enCurso, ...otras].find((m) => m.id === materiaId) ?? null;
   if (!materia) return { materia: null, tarea: null, estado: null };
@@ -605,7 +676,7 @@ export const cargarEstadoCuestionario = (c) =>
  * course has no quiz with that number. `cerrado` when the campus does not open its quizzes: then `nombre` comes from
  * the course page, if it is there. */
 export async function cargarCuestionario(materiaId, cmid) {
-  await cargarPerfil();
+  await alumnoListo();
   const { enCurso, otras } = await cargarMaterias();
   const materia = [...enCurso, ...otras].find((m) => m.id === materiaId) ?? null;
   if (!materia) return { materia: null, cuestionario: null };
@@ -719,7 +790,7 @@ export const cargarHilo = (discusionId, { fresco = false } = {}) => {
  * says so; a cut connection or a lost answer is looked up in the discussion before saying it didn't go, so trying again
  * doesn't publish it twice. */
 export async function publicarEnForo(discusionId, postId, asunto, texto) {
-  const { id: yo } = await cargarPerfil();
+  const yo = await idDelAlumno();
   const token = tokenActual();
   if (!token) throw new ErrorCampus('Tu sesión terminó.', 'sin_sesion');
   const desde = Math.floor(Date.now() / 1000) - 120;

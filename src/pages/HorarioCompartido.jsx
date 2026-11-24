@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Cargando, ErrorConReintento } from '../components/Filas';
 import { useUI } from '../components/ui';
-import { cargarMaterias, cargarPerfil } from '../lib/campus';
+import { alumnoListo, cargarMaterias } from '../lib/campus';
 import { fechaDeClave } from '../lib/datos';
 import { textoError } from '../lib/errores';
 import { armarSemana, comisionesDeLaMateria, cuatrimestreEl, cuatrimestreQueSigue, DIAS_DE_CLASE, horaEnTexto, hoyClave } from '../lib/facultad';
@@ -255,7 +255,7 @@ function Comparar({ compartido }) {
   // What the student copied, by the classmate's subject: how to undo it, until they leave the screen.
   const [hechas, setHechas] = useState({});
   const { datos, error, cargando, recargar } = useConsulta(async () => {
-    await cargarPerfil();
+    await alumnoListo();
     const [{ enCurso }, horarios] = await Promise.all([cargarMaterias(), cargarHorarios()]);
     return { cursos: enCurso, horarios };
   });

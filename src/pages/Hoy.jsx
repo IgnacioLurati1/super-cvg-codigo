@@ -18,7 +18,7 @@ import { useAjustes, useVista } from '../lib/ajustes';
 import { eventosDeLaFacultad, marcaDelDia } from '../lib/facultad';
 import { compararFoto, fotoDe } from '../lib/cambios';
 import { fechasDe, mensajesDe, olvidarClassroom, pendientesDe } from '../lib/classroom';
-import { cargarAvisos, cargarIndice, cargarMaterias, cargarMes, cargarNombres, cargarPendientes, cargarPerfil } from '../lib/campus';
+import { alumnoListo, cargarAvisos, cargarIndice, cargarMaterias, cargarMes, cargarNombres, cargarPendientes, cargarPerfil, mesesDeHoy } from '../lib/campus';
 import { agruparPendientes, claveDeFecha, fecha, fechaDeClave, faltan, hoyEnTexto, materiaDeAviso, porDia, recientes } from '../lib/datos';
 import { useGoogle } from '../lib/google';
 import { claveDeHecha, conHechas, estaHecha, hechaDe, hechasEnTexto } from '../lib/hechas';
@@ -288,18 +288,13 @@ export default function Hoy() {
   const pendientes = useConsulta(cargarPendientes, [], { alInstante: true });
   const avisos = useConsulta(cargarAvisos, [], { alInstante: true });
   const novedades = useConsulta(async () => {
-    await cargarPerfil();
+    await alumnoListo();
     return cargarIndice((await cargarMaterias()).enCurso);
   }, [], { alInstante: true });
   const calendario = useConsulta(async () => {
-    await cargarPerfil();
-    const hoy = new Date(ahora * 1000);
-    const siguiente = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 1);
-    // Up to the farthest «Próximas fechas» can look (hoy.js): at the end of a month, it reaches the one after next.
-    const lejos = new Date((ahora + 31 * 86_400) * 1000);
-    const desde = [hoy, siguiente, lejos].filter((d, i, l) => l.findIndex((x) => x.getFullYear() === d.getFullYear() && x.getMonth() === d.getMonth()) === i);
+    await alumnoListo();
     const [meses, nombres] = await Promise.all([
-      Promise.all(desde.map((d) => cargarMes(d.getFullYear(), d.getMonth() + 1))),
+      Promise.all(mesesDeHoy(ahora).map(([anio, mes]) => cargarMes(anio, mes))),
       cargarNombres(),
     ]);
     return { eventos: [...new Map(meses.flat().map((e) => [e.id, e])).values()], nombres };

@@ -21,7 +21,7 @@ import { guardarArchivo } from '../lib/archivos';
 import { atajosDelSitio } from '../lib/atajos';
 import { ATAJOS_DEL_LECTOR } from '../components/lector/atajos';
 import { olvidarSacadas } from '../lib/campana';
-import { cargarMaterias, cargarPerfil } from '../lib/campus';
+import { alumnoListo, cargarMaterias, cargarPerfil } from '../lib/campus';
 import { codigoDeEstilo, leerCodigoDeEstilo, MAX_ESCRITO } from '../lib/codigoDeEstilo';
 import { COLORES } from '../lib/colores';
 import { vaciarBodega } from '../lib/bodega';
@@ -1175,7 +1175,7 @@ export default function Configuracion() {
   // The student's own courses for the preview of Materias: the same answer the rest of the site already asked for.
   const materias = useConsulta(async () => {
     if (seccion !== 'pantallas') return null;
-    await cargarPerfil();
+    await alumnoListo();
     return cargarMaterias();
   }, [seccion === 'pantallas'], { alInstante: true });
   const elegirPantalla = (id) => {

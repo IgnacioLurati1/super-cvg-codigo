@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { cargarContenido, cargarMaterias, cargarPerfil } from './campus';
+import { alumnoListo, cargarContenido, cargarMaterias } from './campus';
 import { personalizar, useMio } from './mio';
 import { materiasQueUsa } from './propiasVista';
 import { useConsulta } from './useConsulta';
@@ -10,7 +10,7 @@ export function useCampusDePropia(propia) {
   const mio = useMio();
   const usa = propia ? materiasQueUsa(propia) : [];
   const { datos, error, cargando, recargar } = useConsulta(async () => {
-    await cargarPerfil();
+    await alumnoListo();
     const { enCurso, otras } = await cargarMaterias();
     const materias = [...enCurso, ...otras];
     const suyas = new Map(materias.map((m) => [m.id, m]));
