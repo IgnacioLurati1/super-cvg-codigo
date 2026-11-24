@@ -278,7 +278,7 @@ export default function Layout() {
       {!enLaboratorio && !enConsultron && (
         <footer className="pie">
           <div className="contenedor pie__fila">
-            <p>Herramienta no oficial, sin relación con UTN. <span className="pie__enlaces"><Link to="/privacidad">Tu privacidad</Link> <Link to="/novedades">Notas del parche</Link> <Link to="/opinar">Opinar</Link></span></p>
+            <p>Herramienta no oficial, sin relación con UTN. <span className="pie__enlaces"><Link to="/preguntas">Preguntas frecuentes</Link> <Link to="/privacidad">Tu privacidad</Link> <Link to="/novedades">Notas del parche</Link> <Link to="/opinar">Opinar</Link></span></p>
             <p>
               <span lang="en">Powered by</span> <a href="https://lutastudios.com/" target="_blank" rel="noreferrer">Luta Studios<span className="solo-lectores"> Se abre en otra pestaña.</span></a>
             </p>

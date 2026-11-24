@@ -26,6 +26,11 @@ export const NOVEDADES = [
         nombre: 'Classroom llega antes',
         texto: 'Al abrir, tus cursos de Classroom se piden todos juntos. Llegan a Hoy hasta un segundo antes.',
       },
+      {
+        tipo: 'nuevo',
+        nombre: 'Preguntas frecuentes',
+        texto: 'Qué es Super CVG, si es oficial y qué pasa con tu contraseña, en una página. Está abajo de todo, junto a Tu privacidad.',
+      },
     ],
   },
   {

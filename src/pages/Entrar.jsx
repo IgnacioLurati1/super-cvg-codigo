@@ -6,6 +6,8 @@ import Entrada3D from '../components/entrada3d/Entrada3D';
 import { textoError } from '../lib/errores';
 import { CLIENTE_GOOGLE, cancelarConexion, conectarGoogle, olvidarGoogle } from '../lib/google';
 import { CAMPUS, pedirClave } from '../lib/moodle';
+import { SITIO } from '../../sitio.config.js';
+import { useDatosEstructurados } from '../lib/seo';
 import { iniciarSesion } from '../lib/sesion';
 
 // On a phone «Seguir conectado» goes above Entrar, where it is seen without scrolling; on a computer, last. In the
@@ -18,7 +20,22 @@ const suscribirCelu = (f) => {
 };
 const useCelu = () => useSyncExternalStore(suscribirCelu, () => window.matchMedia(CELU).matches, () => false);
 
+// What Google reads about the site, from what's true of it: free, on the web, for studying, by Luta Studios.
+const APLICACION = {
+  '@type': 'WebApplication',
+  name: SITIO.nombre,
+  url: `${SITIO.url}/`,
+  description: SITIO.descripcion,
+  applicationCategory: 'EducationalApplication',
+  operatingSystem: 'Web',
+  inLanguage: SITIO.idioma,
+  isAccessibleForFree: true,
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'ARS' },
+  creator: { '@type': 'Organization', name: 'Luta Studios', url: 'https://lutastudios.com/' },
+};
+
 export default function Entrar() {
+  useDatosEstructurados(APLICACION);
   const [usuario, setUsuario] = useState('');
   const [contrasena, setContrasena] = useState('');
   const [recordar, setRecordar] = useState(false);
@@ -103,7 +120,7 @@ export default function Entrar() {
       <Entrada3D modo="fondo" />
       <div className="entrar__texto">
         <h1 id="entrar-titulo" data-aparece="">Todo lo que tenés que entregar, en una sola pantalla</h1>
-        <p className="entrar__bajada" data-aparece="" style={{ '--orden': 1 }}>Entregas, archivos y notas de tus materias del campus de UTN FRRO.{CLIENTE_GOOGLE && ' Si tu materia usa Google Classroom, también sus temas, avisos y tareas.'}</p>
+        <p className="entrar__bajada" data-aparece="" style={{ '--orden': 1 }}>Entregas, archivos y notas de tus materias del CVG, el campus virtual de UTN FRRO.{CLIENTE_GOOGLE && ' Si tu materia usa Google Classroom, también sus temas, avisos y tareas.'}</p>
         <Cuaderno3D />
         <ul className="entrar__promesas" data-aparece="" style={{ '--orden': 2 }}>
           <li>Tu contraseña va directo al campus y no se guarda.</li>

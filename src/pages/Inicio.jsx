@@ -10,8 +10,9 @@ import Hoy from './Hoy';
 import './panel.css';
 
 export default function Inicio() {
-  useSeo({ titulo: SITIO.nombre, descripcion: SITIO.descripcion });
   const token = useToken();
+  // Signed out it's the landing Google shows, with the long title; signed in, Hoy in a tab.
+  useSeo({ titulo: token ? SITIO.nombre : SITIO.publicas[0].titulo, descripcion: SITIO.descripcion });
   const navegar = useNavigate();
 
   useEffect(() => {

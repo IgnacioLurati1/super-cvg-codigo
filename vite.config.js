@@ -1,3 +1,4 @@
+import { execFileSync } from 'node:child_process';
 import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { extname, resolve } from 'node:path';
 import { defineConfig } from 'vite';
@@ -16,10 +17,27 @@ export const CSP = "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; st
 
 const escapar = (t) => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
 
+// GitHub Pages serves each page from its folder: without the final slash it answers with a redirect.
+const direccion = (ruta) => `${SITIO.url}/${ruta ? `${ruta}/` : ''}`;
+
+// The date of a page for the sitemap: the last commit of the file with its content. A shallow clone (the deploy's
+// checkout) only knows its last commit, which would date every page today: then there's no date.
+function fechaDe(fuente, raiz) {
+  if (!fuente) return '';
+  try {
+    const git = (...args) => execFileSync('git', args, { cwd: raiz, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim();
+    if (git('rev-parse', '--is-shallow-repository') === 'true') return '';
+    const fecha = git('log', '-1', '--format=%cs', '--', fuente);
+    return /^\d{4}-\d{2}-\d{2}$/.test(fecha) ? fecha : '';
+  } catch {
+    return '';
+  }
+}
+
 function conCabeza(html, { ruta, titulo, descripcion, noindex }) {
   const t = escapar(titulo);
   const d = escapar(descripcion);
-  const canonica = SITIO.url && !noindex ? `${SITIO.url}/${ruta}` : '';
+  const canonica = SITIO.url && !noindex ? direccion(ruta) : '';
   const metas = [
     '<meta property="og:type" content="website" />',
     `<meta property="og:site_name" content="${escapar(SITIO.nombre)}" />`,
@@ -31,6 +49,7 @@ function conCabeza(html, { ruta, titulo, descripcion, noindex }) {
     SITIO.url && SITIO.imagen && `<meta property="og:image" content="${SITIO.url}/${SITIO.imagen}" />`,
     SITIO.url && SITIO.imagen && '<meta property="og:image:width" content="1200" />',
     SITIO.url && SITIO.imagen && '<meta property="og:image:height" content="630" />',
+    SITIO.url && SITIO.imagen && SITIO.imagenAlt && `<meta property="og:image:alt" content="${escapar(SITIO.imagenAlt)}" />`,
     '<meta name="twitter:card" content="summary_large_image" />',
     noindex && '<meta name="robots" content="noindex" />',
   ].filter(Boolean);
@@ -80,7 +99,12 @@ function paginas() {
         writeFileSync(resolve(carpeta, 'index.html'), conCabeza(html, { ruta, titulo: SITIO.nombre, descripcion: SITIO.descripcion, noindex: true }));
       }
       if (SITIO.url) {
-        const urls = publicas.map((p) => `  <url><loc>${SITIO.url}/${p.ruta}</loc></url>`).join('\n');
+        const urls = publicas
+          .map((p) => {
+            const fecha = fechaDe(p.fuente, raiz);
+            return `  <url><loc>${direccion(p.ruta)}</loc>${fecha ? `<lastmod>${fecha}</lastmod>` : ''}</url>`;
+          })
+          .join('\n');
         writeFileSync(resolve(dist, 'sitemap.xml'), `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>\n`);
       }
       writeFileSync(resolve(dist, 'robots.txt'), `User-agent: *\nAllow: /\n${SITIO.url ? `Sitemap: ${SITIO.url}/sitemap.xml\n` : ''}`);

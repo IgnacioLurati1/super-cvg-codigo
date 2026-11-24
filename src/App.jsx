@@ -40,6 +40,7 @@ const router = createBrowserRouter(
             { index: true, element: <Inicio /> },
             { path: 'privacidad', lazy: aparte(() => import('./pages/Privacidad')) },
             { path: 'novedades', lazy: aparte(() => import('./pages/Novedades')) },
+            { path: 'preguntas', lazy: aparte(() => import('./pages/Preguntas')) },
             // Only in dev: the tools of a live session, two-up, without Realtime (BancoEnVivo.jsx).
             ...(import.meta.env.DEV ? [{ path: 'en-vivo/banco', lazy: aparte(() => import('./pages/BancoEnVivo')) }] : []),
             { path: 'opinar', lazy: aparte(() => import('./pages/Opinar')) },

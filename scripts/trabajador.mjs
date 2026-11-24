@@ -26,7 +26,7 @@ export const PANTALLAS_DEL_NUCLEO = ['src/pages/Materias.jsx', 'src/pages/Materi
 // shared document) are kept when they show.
 const FUENTE = /\.woff2?$/;
 const FUENTE_DEL_NUCLEO = /^assets\/barlow-[^/]+\.woff2$/;
-const SUELTOS = ['ajustes.js', 'manifest.webmanifest', 'favicon.svg', 'apple-touch-icon.png', 'icono-192.png', 'icono-512.png', 'icono-maskable-512.png'];
+const SUELTOS = ['ajustes.js', 'manifest.webmanifest', 'favicon.ico', 'favicon.svg', 'apple-touch-icon.png', 'icono-192.png', 'icono-512.png', 'icono-maskable-512.png'];
 export const MANIFIESTO = path.join('.vite', 'manifest.json');
 
 const archivosDe = (carpeta, base = carpeta) =>
