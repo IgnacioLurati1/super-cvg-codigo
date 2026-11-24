@@ -40,6 +40,7 @@ import './configuracion.css';
 import './materias.css';
 import '../components/consultron/consultron.css';
 import { ESTILOS_DE_TARJETA, NOMBRES_DE_TARJETA } from '../lib/tarjetas';
+import { sinAceleracion } from '../lib/aceleracion';
 
 const SECCION_DISPOSITIVOS = 'tus-dispositivos';
 const SECCION_AHORRO = 'ahorro-de-datos';
@@ -158,6 +159,24 @@ const SE_MUEVE = {
   glaciar: 'Cae nieve.',
   cosmico: 'Las estrellas titilan y cada tanto pasa una fugaz.',
 };
+
+// The strong version without the graphics card (src/lib/aceleracion.js). Brave gets its own steps: it often keeps
+// drawing in software after the switch, so it also says what's left.
+function AvisoSinAceleracion() {
+  const brave = Boolean(globalThis.navigator?.brave);
+  return (
+    <p className="ajustes__alerta" role="status">
+      {brave ? 'Brave' : 'Tu navegador'} no está usando la placa de video. La versión potente puede andar lenta.{' '}
+      {brave ? (
+        <>
+          En <code>brave://settings/system</code>, prendé «Usar la aceleración de gráficos cuando esté disponible» y reiniciá Brave. Si sigue igual, probá con Chrome o Edge, o apagá la versión potente.
+        </>
+      ) : (
+        'Prendé la aceleración de gráficos en su configuración y reiniciá el navegador.'
+      )}
+    </p>
+  );
+}
 
 // A page of a PDF in small, under the same filter as the real ones (configuracion.css): one paper, or two halves.
 function DibujoPdf({ papeles }) {
@@ -1277,6 +1296,7 @@ export default function Configuracion() {
           />
           {ajustes.potente && (
             <>
+              {sinAceleracion() && <AvisoSinAceleracion />}
               <Interruptor
                 id="fondo-mueve"
                 nombre="Movimiento del fondo"

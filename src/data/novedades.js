@@ -20,6 +20,7 @@ export const NOVEDADES = [
           'Con Violeta cósmico y movimiento, la nebulosa se mueve despacio.',
           'Con alto contraste, el fondo se ve más suave.',
           'Con Batman, Lavanda es su campo de noche.',
+          'Si tu navegador no usa la placa de video, te avisa cómo prenderla.',
         ],
       },
       {
