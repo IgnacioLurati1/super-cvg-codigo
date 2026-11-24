@@ -3,11 +3,11 @@ import Campo from '../components/Campo';
 import { Cargando, ErrorConReintento } from '../components/Filas';
 import MiniaturaDeDiseno from '../components/MiniaturaDeDiseno';
 import { useUI } from '../components/ui';
-import { useAjustesGuardados } from '../lib/ajustes';
+import { ajustesActuales, disenoQueSeVe, editarDiseno as editarDelDia, useAjustesGuardados } from '../lib/ajustes';
 import { cargarPerfil } from '../lib/campus';
 import { codigoDeEstilo } from '../lib/codigoDeEstilo';
 import {
-  ajustesDeCodigo, borrarComentario, borrarDiseno, cargarComentarios, cargarDisenos, comentarDiseno, denunciar, disenoSigue, largo, limpiarTexto, MAX_BUSCAR,
+  ajustesDeCodigo, borrarComentario, borrarDiseno, cargarComentarios, cargarDisenos, comentarDiseno, denunciar, disenoSigue, editarDiseno, largo, limpiarTexto, MAX_BUSCAR,
   MAX_COMENTARIO, MAX_DESCRIPCION, MAX_NOMBRE, olvidarDisenoEnUso, problemaDeTexto, publicarDiseno, resumenDeDiseno, useDisenoEnUso, usarDiseno, probarDiseno,
   terminarPrueba, volverAlTuyo, votarDiseno,
 } from '../lib/disenos';
@@ -88,7 +88,8 @@ function Hoja({ titulo, idTitulo, onCerrar, children }) {
       ref={dialogo}
       className="previa disenos__hoja"
       aria-labelledby={idTitulo}
-      onClose={onCerrar}
+      // Only its own: a sheet opened inside this one (Editar) also reaches here through React.
+      onClose={(e) => { if (e.target === dialogo.current) onCerrar(); }}
       onPointerDown={(e) => { desdeFondo.current = e.target === dialogo.current; }}
       onClick={(e) => { if (desdeFondo.current && e.target === dialogo.current) dialogo.current.close(); }}
     >
@@ -179,7 +180,7 @@ function Estrellas({ valor, onElegir, ocupado }) {
   );
 }
 
-function Ficha({ d, alumno, llave, probando, onProbar, onUsar, onCambio, onBorrado, onCerrar, onLlaveCortada }) {
+function Ficha({ d, alumno, llave, ajustes, mio, probando, onProbar, onUsar, onCambio, onBorrado, onCerrar, onLlaveCortada }) {
   const idTitulo = useId();
   const { confirmar, avisar } = useUI();
   const [aviso, mostrar] = useAvisoDeHoja();
@@ -188,8 +189,16 @@ function Ficha({ d, alumno, llave, probando, onProbar, onUsar, onCambio, onBorra
   const [error, setError] = useState('');
   const [enviando, setEnviando] = useState(false);
   const [votando, setVotando] = useState(false);
+  const [editando, setEditando] = useState(false);
   const votandoYa = useRef(false);
   const campo = useRef(null);
+  const botonEditar = useRef(null);
+  // After saving, the edit sheet goes away without closing, so the browser doesn't give the focus back: it goes here.
+  const estabaEditando = useRef(false);
+  useEffect(() => {
+    if (estabaEditando.current && !editando && document.activeElement === document.body) botonEditar.current?.focus();
+    estabaEditando.current = editando;
+  }, [editando]);
 
   const fallo = (e) => {
     if (e.motivo === 'llave') onLlaveCortada();
@@ -338,28 +347,50 @@ function Ficha({ d, alumno, llave, probando, onProbar, onUsar, onCambio, onBorra
       {llave && (
         <div className="disenos__al-pie">
           {d.mio ? (
-            <button type="button" className="boton boton--secundario boton--chico disenos__borrar" onClick={borrarElDiseno}>Borrar este diseño</button>
+            <>
+              <button ref={botonEditar} type="button" className="boton boton--secundario boton--chico" onClick={() => setEditando(true)}>Editar este diseño</button>
+              <button type="button" className="boton boton--secundario boton--chico disenos__borrar" onClick={borrarElDiseno}>Borrar este diseño</button>
+            </>
           ) : (
             <button type="button" className="disenos__link" onClick={() => denunciarAlgo('diseno', d.id)}>Denunciar este diseño</button>
           )}
         </div>
       )}
       {aviso}
+      {editando && (
+        <Publicar
+          alumno={alumno}
+          llave={llave}
+          ajustes={ajustes}
+          mio={mio}
+          diseno={d}
+          onCerrar={() => setEditando(false)}
+          onPublicado={(nuevo) => {
+            onCambio(d.id, nuevo);
+            setEditando(false);
+            mostrar('Cambios guardados.');
+          }}
+          onLlaveCortada={onLlaveCortada}
+        />
+      )}
     </Hoja>
   );
 }
 
-function Publicar({ alumno, llave, ajustes, mio, onCerrar, onPublicado, onLlaveCortada }) {
+// Publicar tu estilo o, con `diseno`, editar uno tuyo: el estilo queda salvo que elijas el de ahora.
+function Publicar({ alumno, llave, ajustes, mio, diseno = null, onCerrar, onPublicado, onLlaveCortada }) {
   const idTitulo = useId();
   const { avisar } = useUI();
-  const [nombre, setNombre] = useState('');
-  const [descripcion, setDescripcion] = useState('');
+  const [nombre, setNombre] = useState(diseno?.nombre ?? '');
+  const [descripcion, setDescripcion] = useState(diseno?.descripcion ?? '');
+  const [conElDeAhora, setConElDeAhora] = useState(!diseno);
   const [errores, setErrores] = useState({});
   const [enviando, setEnviando] = useState(false);
   const [falla, setFalla] = useState('');
   const campoNombre = useRef(null);
   const campoDescripcion = useRef(null);
-  const actuales = useMemo(() => ajustesDeCodigo(codigoDeEstilo(ajustes, mio), ajustes) ?? ajustes, [ajustes, mio]);
+  const deAhora = useMemo(() => ajustesDeCodigo(codigoDeEstilo(ajustes, mio), ajustes) ?? ajustes, [ajustes, mio]);
+  const actuales = conElDeAhora ? deAhora : diseno.ajustes;
 
   const publicar = async (e) => {
     e.preventDefault();
@@ -374,6 +405,10 @@ function Publicar({ alumno, llave, ajustes, mio, onCerrar, onPublicado, onLlaveC
     setEnviando(true);
     setFalla('');
     try {
+      if (diseno) {
+        onPublicado(await editarDiseno(llave, diseno.id, conElDeAhora ? { nombre, descripcion, ajustes, mio } : { nombre, descripcion, codigo: diseno.codigo }));
+        return;
+      }
       await publicarDiseno(llave, { nombre, descripcion, ajustes, mio });
       // The sheet closes: this one is said on the page.
       avisar('Diseño publicado');
@@ -387,10 +422,19 @@ function Publicar({ alumno, llave, ajustes, mio, onCerrar, onPublicado, onLlaveC
   };
 
   return (
-    <Hoja titulo="Publicar tu estilo" idTitulo={idTitulo} onCerrar={onCerrar}>
+    <Hoja titulo={diseno ? `Editar «${diseno.nombre}»` : 'Publicar tu estilo'} idTitulo={idTitulo} onCerrar={onCerrar}>
       <MiniaturaDeDiseno ajustes={actuales} grande />
       <p className="diseno__resumen">{resumenDeDiseno(actuales)}</p>
-      <p className="previa__dato">Se publica toda tu configuración de ahora, como en «Pasar tu estilo». Tus materias y lo que anotaste no van.</p>
+      {diseno && (
+        <label className="disenos__casilla">
+          <input type="checkbox" checked={conElDeAhora} onChange={(e) => setConElDeAhora(e.target.checked)} />
+          Cambiar el estilo por tu configuración de ahora
+        </label>
+      )}
+      {conElDeAhora && (
+        <p className="previa__dato">Se publica toda tu configuración de ahora, como en «Pasar tu estilo». Tus materias y lo que anotaste no van.</p>
+      )}
+      {diseno && <p className="previa__dato">Los puntajes y comentarios quedan.</p>}
       {!llave ? (
         <Vincular alumno={alumno} texto="Para publicar, vinculá tu cuenta de El Santo Resumen. Tu diseño sale con tu nombre de usuario de ahí." />
       ) : (
@@ -402,7 +446,9 @@ function Publicar({ alumno, llave, ajustes, mio, onCerrar, onPublicado, onLlaveC
             <textarea ref={campoDescripcion} className="campo__control" rows={3} value={descripcion} onChange={(e) => setDescripcion(e.target.value)} />
           </Campo>
           <p className="mensaje mensaje--error" role="alert" hidden={!falla}>{falla}</p>
-          <button type="submit" className="boton" disabled={enviando}>{enviando ? 'Publicando' : 'Publicar'}</button>
+          <button type="submit" className="boton" disabled={enviando}>
+            {diseno ? (enviando ? 'Guardando' : 'Guardar cambios') : enviando ? 'Publicando' : 'Publicar'}
+          </button>
         </form>
       )}
     </Hoja>
@@ -411,6 +457,7 @@ function Publicar({ alumno, llave, ajustes, mio, onCerrar, onPublicado, onLlaveC
 
 function DelAlumno({ alumno }) {
   const ajustes = useAjustesGuardados();
+
   const mio = useMio();
   const vinculo = useVinculo(alumno);
   const llave = vinculo?.llave ?? null;
@@ -480,14 +527,21 @@ function DelAlumno({ alumno }) {
   const probar = (d) => probarDiseno(d);
   // `avisarEn`: from a sheet, its own notices (the page's stay behind it).
   const usar = async (d, avisarEn = null) => {
-    const seguro = await confirmar({
+    // With «Según la hora», the student chooses which of their two designs it goes into: the one showing, to start.
+    const segun = Boolean(ajustes.segunLaHora);
+    const respuesta = await confirmar({
       titulo: `¿Usar «${d.nombre}»?`,
       texto: 'Cambia toda tu configuración, menos daltonismo, movimiento y Sensible a la luz. Después podés volver a la tuya.',
       boton: 'Usar este diseño',
+      elegir: segun ? { titulo: 'En tu diseño de', opciones: [{ valor: 'dia', nombre: 'Día' }, { valor: 'noche', nombre: 'Noche' }], valor: disenoQueSeVe() } : undefined,
     });
-    if (!seguro) return;
-    if (!usarDiseno(d, { ajustes, mio })) (avisarEn ?? avisar)('No se pudo guardar. Vale hasta que cierres esta pestaña.', 'error');
-    else avisarEn?.(`Usás «${d.nombre}».`);
+    if (!respuesta) return;
+    // The chosen one, only while it's used (editarDiseno of ajustes.js): then the hour's shows again.
+    if (segun) editarDelDia(respuesta);
+    const bien = usarDiseno(d, { ajustes: segun ? ajustesActuales() : ajustes, mio });
+    if (segun) editarDelDia(null);
+    if (!bien) (avisarEn ?? avisar)('No se pudo guardar. Vale hasta que cierres esta pestaña.', 'error');
+    else avisarEn?.(segun ? `Usás «${d.nombre}» de ${respuesta === 'noche' ? 'noche' : 'día'}.` : `Usás «${d.nombre}».`);
   };
   const volver = async () => {
     const seguro = await confirmar({
@@ -575,6 +629,8 @@ function DelAlumno({ alumno }) {
           d={abiertoAhora}
           alumno={alumno}
           llave={llave}
+          ajustes={ajustes}
+          mio={mio}
           probando={previa?.id === abiertoAhora.id}
           onProbar={() => probar(abiertoAhora)}
           onUsar={(avisarEn) => usar(abiertoAhora, avisarEn)}

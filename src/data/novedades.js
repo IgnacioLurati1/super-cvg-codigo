@@ -9,8 +9,60 @@ export const PENDIENTES = [];
 export const NOVEDADES = [
   {
     fecha: '2026-11-24',
-    titulo: 'Más rápido con poca señal',
+    titulo: 'Gemini mira tus fotos',
     funciones: [
+      {
+        tipo: 'mejora',
+        nombre: 'Gemini mira tus fotos',
+        texto: 'Con «Usar Gemini», Consultron le pasa a Gemini la foto que adjuntás. Así entiende diagramas, gráficos y fotos sin texto.',
+        puntos: ['Si lo de la foto no está en tus apuntes, te lo explica con lo que sabe.'],
+      },
+      {
+        tipo: 'nuevo',
+        nombre: 'Buscador en Configuración',
+        texto: 'Escribí lo que querés cambiar y te lleva directo, aunque esté en otra pestaña.',
+      },
+      {
+        tipo: 'mejora',
+        nombre: 'Editar tus diseños',
+        texto: 'En Diseños, cambiale el nombre, la descripción o el estilo a uno que publicaste. Sus puntajes y comentarios quedan.',
+      },
+      {
+        tipo: 'nuevo',
+        nombre: 'Color del tema',
+        texto: 'Con la versión potente elegís el color de los bordes, el brillo de la cabecera y el fundido de los títulos. Viaja en Pasar tu estilo.',
+      },
+      {
+        tipo: 'nuevo',
+        nombre: 'Muestra del PDF',
+        texto: 'En Configuración, PDF, una página de ejemplo cambia al toque con el color de las páginas y la letra de las oscuras.',
+      },
+      {
+        tipo: 'mejora',
+        nombre: 'Según la hora',
+        texto: 'Si lo apagás y lo volvés a prender, vuelven tus diseños de día y de noche con sus horas.',
+        puntos: ['Al usar un diseño de Diseños, elegís si va a tu diseño de día o al de noche.'],
+      },
+      {
+        tipo: 'mejora',
+        nombre: 'Consultron sin saltos',
+        texto: 'Al entrar, Consultron aparece ya armado mientras revisa tu compu. Nada se mueve cuando termina.',
+      },
+      {
+        tipo: 'mejora',
+        nombre: 'Instalar desde Preguntas frecuentes',
+        texto: 'En «¿Anda en el celu?» la instalás con un botón, o ves los pasos si tenés iPhone.',
+      },
+      {
+        tipo: 'mejora',
+        nombre: 'Barra de abajo en el celu',
+        texto: 'Con Super CVG instalada, la barra de gestos sigue el modo claro u oscuro de tu celu.',
+      },
+      {
+        tipo: 'mejora',
+        nombre: 'Luna de Batman',
+        texto: 'Con el estilo Batman, Hoy lleva la luna en el menú a toda hora.',
+      },
       {
         tipo: 'mejora',
         nombre: 'Abre más rápido con mala señal',
@@ -31,6 +83,10 @@ export const NOVEDADES = [
         nombre: 'Preguntas frecuentes',
         texto: 'Qué es Super CVG, si es oficial y qué pasa con tu contraseña, en una página. Está abajo de todo, junto a Tu privacidad.',
       },
+    ],
+    arreglos: [
+      'En Diseños, «Borrar este diseño» se lee en todos los estilos.',
+      'En Consultron, el fundido arriba de donde escribís tiene el ancho de la caja.',
     ],
   },
   {

@@ -1,11 +1,14 @@
-import { Fragment } from 'react';
+import { Fragment, useRef } from 'react';
 import { Link } from 'react-router-dom';
+import PasosDeIos from '../components/PasosDeIos';
+import { instalar, useInstalar } from '../lib/instalar';
 import { CLIENTE_GOOGLE } from '../lib/google';
 import { CAMPUS } from '../lib/moodle';
 import { SITIO } from '../../sitio.config.js';
 import { useDatosEstructurados, useSeo } from '../lib/seo';
 
-// Each answer is plain text: it is also what Google reads (FAQPage). `enlace` adds a closing link on the page only.
+// Each answer is plain text: it is also what Google reads (FAQPage). `enlace` adds a closing link on the page only, and
+// `instalar` the way to install it right there.
 const PREGUNTAS = [
   {
     pregunta: '¿Qué es Super CVG?',
@@ -35,7 +38,7 @@ const PREGUNTAS = [
     pregunta: '¿Qué más trae?',
     respuesta: `Tu horario, el calendario académico${CLIENTE_GOOGLE ? ' y tus cursos de Google Classroom' : ''}. Un laboratorio para programar en Python, C, SQL y JavaScript. Consultron, un asistente que responde con tus apuntes.`,
   },
-  { pregunta: '¿Anda en el celu?', respuesta: 'Sí. Lo instalás desde el navegador como una app.' },
+  { pregunta: '¿Anda en el celu?', respuesta: 'Sí. Lo instalás desde el navegador como una app.', instalar: true },
   { pregunta: '¿Anda sin internet?', respuesta: 'Si al entrar marcás «Seguir conectado», ves tus materias y los archivos que ya abriste.' },
 ];
 
@@ -51,6 +54,23 @@ const FAQ = {
   })),
 };
 
+/** Where the browser offers it, the button that installs it; on iPhone and iPad, the steps; installed or where it can't,
+ * nothing (lib/instalar.js). After the browser's window the button goes: the focus goes back to the question. */
+function InstalarDesdeAca({ volver }) {
+  const como = useInstalar();
+  if (como === 'ios') return <PasosDeIos />;
+  if (como !== 'boton') return null;
+  const tocar = async () => {
+    await instalar();
+    volver.current?.focus();
+  };
+  return (
+    <p>
+      <button type="button" className="boton boton--chico" onClick={tocar}>Instalar Super CVG</button>
+    </p>
+  );
+}
+
 function Enlace({ a, texto }) {
   if (a.startsWith('/')) return <Link to={a}>{texto}</Link>;
   return (
@@ -62,6 +82,7 @@ function Enlace({ a, texto }) {
 }
 
 export default function Preguntas() {
+  const celu = useRef(null);
   useSeo(PAGINA);
   useDatosEstructurados(FAQ);
   return (
@@ -69,7 +90,7 @@ export default function Preguntas() {
       <h1 id="preguntas-titulo">Preguntas frecuentes</h1>
       {PREGUNTAS.map((p) => (
         <Fragment key={p.pregunta}>
-          <h2>{p.pregunta}</h2>
+          <h2 ref={p.instalar ? celu : undefined} tabIndex={p.instalar ? -1 : undefined}>{p.pregunta}</h2>
           <p>
             {p.respuesta}
             {p.enlace && (
@@ -79,6 +100,7 @@ export default function Preguntas() {
               </>
             )}
           </p>
+          {p.instalar && <InstalarDesdeAca volver={celu} />}
         </Fragment>
       ))}
     </article>

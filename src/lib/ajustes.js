@@ -231,7 +231,7 @@ const brilloValido = (valor) =>
 
 /** What makes a design, the part that changes with the hour. The letter, color blindness, movement and the reader stay:
  * they are what the student needs, not a look. public/ajustes.js has the same list. */
-export const CLAVES_DEL_DISENO = ['estilo', 'tema', 'contraste', 'accion', 'resaltador', 'cabecera', 'bandeja', 'bordes', 'bordesDelEstilo', 'potente', 'fondoMueve', 'fondoCalidad', 'fondoFiltro', 'fondoIntensidad', 'fondoTono', 'fondoDesenfoque', 'fogonazo'];
+export const CLAVES_DEL_DISENO = ['estilo', 'tema', 'contraste', 'accion', 'resaltador', 'cabecera', 'bandeja', 'bordes', 'bordesDelEstilo', 'potente', 'fondoMueve', 'fondoCalidad', 'fondoFiltro', 'fondoIntensidad', 'fondoTono', 'fondoDesenfoque', 'fogonazo', 'temaColor'];
 /** When the night starts and ends, as the student hasn't chosen. Also the sun and the moon of Hoy in the menu. */
 export const NOCHE_POR_DEFECTO = { desde: '20:00', hasta: '07:00' };
 const ES_HORA = /^([01]\d|2[0-3]):[0-5]\d$/;
@@ -272,6 +272,9 @@ export function normalizar(crudo) {
     cabecera: colorValido(datos.cabecera),
     // The color of the line under the header in Pizarrón, its chalk tray (public/ajustes.js). null: the wood's.
     bandeja: colorValido(datos.bandeja),
+    // The theme's own color with the strong version: its borders, glows and the fade of the titles (public/ajustes.js).
+    // null: the theme's.
+    temaColor: colorValido(datos.temaColor),
     vistas: Object.fromEntries(Object.entries(VISTAS).map(([pantalla, lista]) => [pantalla, lista.includes(vistas[pantalla]) ? vistas[pantalla] : (VISTA_DE_ENTRADA[pantalla] ?? lista[0])])),
     // «Sensible a la luz», for photosensitivity: no jumps of brightness, softer whites, animated pictures still until
     // tapped, and everything still as with «Sin animaciones» (public/ajustes.js writes `data-luz`, styles/luz.css does
@@ -296,6 +299,8 @@ export function normalizar(crudo) {
     fondoTono: enPasos(datos.fondoTono, TONO_DEL_FILTRO),
     fondoDesenfoque: enPasos(datos.fondoDesenfoque, DESENFOQUE_DEL_FONDO),
     segunLaHora: segunLaHoraValida(datos.segunLaHora),
+    // The two designs while «Según la hora» is off, to have them back when it's turned on again.
+    segunLaHoraAntes: datos.segunLaHora ? null : segunLaHoraValida(datos.segunLaHoraAntes),
     // «Marcar lo que ya viste»: null until the student chooses (vistos.js decides then).
     vistos: typeof datos.vistos === 'boolean' ? datos.vistos : null,
     // The page of the live Documento, dark or light: null follows the theme of the site, until the student chooses.
@@ -476,9 +481,13 @@ function guardar(ajustes) {
   return guardado;
 }
 
-/** Turns «Según la hora» on (the night starts as this design, dark) or off (what shows now stays). */
+/** Turns «Según la hora» on or off. Off, what shows now stays and the two designs are kept (`segunLaHoraAntes`); on
+ * again, they come back. The first time, the night starts as this design, dark. */
 export function cambiarSegunLaHora(si) {
-  if (!si) return cambiarAjustes({ segunLaHora: null });
+  if (!si) return cambiarAjustes({ segunLaHora: null, segunLaHoraAntes: actual.segunLaHora ?? actual.segunLaHoraAntes });
+  if (actual.segunLaHoraAntes) {
+    return guardar(conElDeLaHora(normalizar({ ...actual, segunLaHora: actual.segunLaHoraAntes, segunLaHoraAntes: null })));
+  }
   const dia = disenoDe(actual);
   const oscuro = ['sistema', 'claro', 'lavanda'].includes(dia.tema) && !SIEMPRE_OSCUROS.includes(dia.estilo) ? { tema: 'oscuro' } : {};
   const ahora = periodoDe({ segunLaHora: NOCHE_POR_DEFECTO });
@@ -631,6 +640,8 @@ export function colorActual(ajustes, clave) {
   if (clave === 'consultronColor') return ajustes.consultronColor ?? ajustes.accion ?? ORIGINALES[tema].accion;
   // The header's starts as the one on screen, the one public/ajustes.js gives the browser's bar.
   // Pizarrón's tray starts as the one on screen.
+  // The theme's starts as the one the titles fade to.
+  if (clave === 'temaColor') return ajustes.temaColor ?? (getComputedStyle(document.documentElement).getPropertyValue('--titulo-fin').trim() || ORIGINALES[tema].accion);
   if (clave === 'bandeja') return ajustes.bandeja ?? (getComputedStyle(document.documentElement).getPropertyValue('--pizarron-bandeja').trim() || '#6f5236');
   if (clave === 'cabecera') return ajustes.cabecera ?? document.querySelector('meta[name="theme-color"]')?.getAttribute('content') ?? ORIGINALES[tema].accion;
   return ajustes[clave] ?? ORIGINALES[tema][clave];

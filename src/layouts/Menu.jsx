@@ -1,6 +1,6 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
-import { useDeNoche } from '../lib/ajustes';
+import { SIEMPRE_OSCUROS, useAjustes, useDeNoche } from '../lib/ajustes';
 
 // The screens of the header, in the order they came. Configuración (ajustes.js) says how it looks, where each one goes
 // (in sight, inside «Más» or nowhere) and their order, which is also the one of Alt and a number (atajos.js).
@@ -90,15 +90,16 @@ const DIBUJOS = {
   ),
 };
 
-// Hoy at night: the moon instead of the sun (the hours of «Según la hora», or 20 to 7).
+// Hoy at night: the moon instead of the sun (the hours of «Según la hora», or 20 to 7). Always with Batman, a night style.
 const LUNA = <path d="M19.5 14.6A8 8 0 0 1 9.4 4.5a8 8 0 1 0 10.1 10.1z" />;
 
 /** The drawing of a screen of the menu. */
 export function IconoMenu({ nombre }) {
   const deNoche = useDeNoche();
+  const siempreNoche = SIEMPRE_OSCUROS.includes(useAjustes().estilo);
   return (
     <svg className="icono-menu" viewBox="0 0 24 24" aria-hidden="true" focusable="false" strokeLinecap="round">
-      {nombre === 'hoy' && deNoche ? LUNA : DIBUJOS[nombre]}
+      {nombre === 'hoy' && (deNoche || siempreNoche) ? LUNA : DIBUJOS[nombre]}
     </svg>
   );
 }

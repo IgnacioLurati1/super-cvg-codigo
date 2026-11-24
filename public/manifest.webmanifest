@@ -9,7 +9,6 @@
   "scope": "/",
   "display": "standalone",
   "background_color": "#eef2f6",
-  "theme_color": "#17324d",
   "categories": ["education", "productivity"],
   "share_target": {
     "action": "/compartir",

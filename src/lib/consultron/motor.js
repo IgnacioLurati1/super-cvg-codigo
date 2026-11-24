@@ -6,8 +6,9 @@ import { anotarAlAbrir, leerAlAbrir } from './alAbrir';
 import { borrarCharla, guardarCharla, leerCharla } from './charlas';
 import { mensajeDeCarga, revisarCompu } from './compu';
 import urlTrabajador from './consultron.worker.js?worker&url';
+import { fotosDe } from './fotosParaGemini';
 import { contestoGroq, nubeEnElLugar, nubePara, nubeSinRed, porQueNoNube, preguntarNube, quedanHoy, sinCompu, usaGemini } from './nube';
-import { NO_ESTA, SISTEMA, SISTEMA_CHARLA, SISTEMA_GENERAL, SISTEMA_HUMOR, SISTEMA_SITIO, UNA_COSA, armarPedido, conCitaQueFalta, esPuntual, hastaLoEntero, noEsta, puedeSerNoEsta, respuestaSinRed } from './pedido';
+import { NO_ESTA, SISTEMA, nombreDeTrozo, SISTEMA_CHARLA, SISTEMA_GENERAL, SISTEMA_HUMOR, SISTEMA_SITIO, UNA_COSA, armarPedido, conCitaQueFalta, esPuntual, hastaLoEntero, noEsta, puedeSerNoEsta, respuestaSinRed } from './pedido';
 
 // Consultron on this side: its worker (consultron.worker.js), how the model is doing, and the questions of this visit.
 // One for the whole tab: leaving the screen doesn't stop a download or an answer. Once on this computer it loads as soon
@@ -188,8 +189,8 @@ function alMensaje({ data: m }) {
   } else if (m.tipo === 'fin') {
     const e = hilo.find((x) => x.id === m.id);
     // The pieces didn't have it: it answers again with what it knows in general.
-    // Not about the site nor about what was attached: there, what it knows in general would be made up.
-    if (e && !m.frenado && !e.general && !e.soloSitio && !e.enResumen && !e.adjuntos?.length && noEsta(e.texto + (e.guardado ?? ''))) enGeneral(m.id);
+    // Not about the site: there, what it knows in general would make up screens. An attachment goes with it.
+    if (e && !m.frenado && !e.general && !e.soloSitio && !e.enResumen && noEsta(e.texto + (e.guardado ?? ''))) enGeneral(m.id);
     // Cut by its length limit: back to its last whole sentence.
     else {
       cambiarEntrada(m.id, (x) => {
@@ -422,7 +423,8 @@ export function responder(id, elegidos, charla = '', { soloSitio = false, humor 
     ...(sinCharla ? [] : charlaAntes(hilo, id, { sinPropias: !soloSitio, soloNube: Boolean(nube) && nube !== 'todo' })),
     { role: 'user', content: elegidos.length ? armarPedido(pedido ?? entrada.pregunta, elegidos, { puntual }) : charla },
   ];
-  if (nube) porLaNube(id, mensajes, nube, puntual);
+  // The photos it attached go too: Gemini looks at them, beyond the text read here.
+  if (nube) porLaNube(id, mensajes, nube, puntual, fotosDe(elegidos));
   else worker.postMessage({ tipo: 'preguntar', id, corto: puntual, mensajes });
 }
 
@@ -430,10 +432,10 @@ export function responder(id, elegidos, charla = '', { soloSitio = false, humor 
 const enLaNube = new Map();
 
 /** Asks Gemini; what it answers ends as the model's answers do. Without an answer, the computer answers it. */
-async function porLaNube(id, mensajes, cual, puntual) {
+async function porLaNube(id, mensajes, cual, puntual, fotos = []) {
   const control = new AbortController();
   enLaNube.set(id, control);
-  const texto = await preguntarNube(mensajes, cual, { senal: control.signal });
+  const texto = await preguntarNube(mensajes, cual, { senal: control.signal, fotos });
   enLaNube.delete(id);
   const e = hilo.find((x) => x.id === id);
   // Stopped or cleared meanwhile.
@@ -463,7 +465,7 @@ async function porLaNube(id, mensajes, cual, puntual) {
   if (noEsta(texto) && !e.general) {
     if (cual === 'todo') {
       // With «Usar Gemini», Gemini answers again with what it knows, where that may be (as at the end of an answer).
-      if (!e.soloSitio && !e.enResumen && !e.adjuntos?.length) {
+      if (!e.soloSitio && !e.enResumen) {
         enGeneral(id);
         return;
       }
@@ -521,6 +523,9 @@ function escribirDeNube(id, texto) {
 
 /** What isn't in the notes nor in the guide of the site: the model answers with what it knows, and the screen says so
  * (`general`). */
+// What of an attachment goes with a question answered in general: a page or a photo.
+const MAX_ADJUNTO = 6000;
+
 function enGeneral(id, humor = false, pedido = null, corto = null) {
   const entrada = hilo.find((e) => e.id === id);
   if (!entrada) return;
@@ -536,11 +541,20 @@ function enGeneral(id, humor = false, pedido = null, corto = null) {
       : { texto: sinCompu(estado.fase), estado: 'no-esta' }));
     return;
   }
+  // What the student attached goes with the question: it's what it asks about (the text read from a photo or a file).
+  const fotos = humor ? [] : fotosDe(entrada.elegidos);
+  const adjunto = (entrada.elegidos ?? [])
+    .filter((x) => x.trozo?.fuente?.tipo === 'adjunto')
+    .map((x) => `(${nombreDeTrozo(x.trozo)})\n${x.trozo.texto}`)
+    .join('\n\n')
+    .slice(0, MAX_ADJUNTO);
+  const pregunta = puntual ? `${mensaje}\n${UNA_COSA}` : mensaje;
   // A joke asked for isn't «not in the notes»: it goes without that notice.
   cambiarEntrada(id, { general: humor ? 'humor' : true, elegidos: [], texto: '', guardado: undefined, estado: 'leyendo', nube: undefined, nubeFallo: undefined, nubeTope: undefined });
   enviadas.add(id);
-  const mensajes = [{ role: 'system', content: humor ? SISTEMA_HUMOR : SISTEMA_GENERAL }, ...charlaAntes(hilo, id, { sinPropias: true }), { role: 'user', content: puntual ? `${mensaje}\n${UNA_COSA}` : mensaje }];
-  if (nube) porLaNube(id, mensajes, nube, puntual);
+  const contenido = adjunto ? `Adjuntó esto, leído de su archivo (puede traer letras cambiadas):\n\n${adjunto}\n\nPregunta: ${pregunta}` : pregunta;
+  const mensajes = [{ role: 'system', content: humor ? SISTEMA_HUMOR : SISTEMA_GENERAL }, ...charlaAntes(hilo, id, { sinPropias: true }), { role: 'user', content: contenido }];
+  if (nube) porLaNube(id, mensajes, nube, puntual, fotos);
   else worker.postMessage({ tipo: 'preguntar', id, humor, corto: puntual, mensajes });
 }
 
@@ -793,3 +807,8 @@ export const useConsultron = () => useSyncExternalStore(escuchar, leer, leer);
  * { enResumen }, nube.js), also while the model isn't there or is getting ready. Not while the computer is looked at. */
 // Where the computer can't run the model, also without «Usar Gemini»: the first question asks for it (Charla.jsx).
 export const sePuedePreguntar = (estado, permisos, lugar = {}) => ['listo', 'no-puede'].includes(estado.fase) || (!['quieto', 'revisando', 'borrando'].includes(estado.fase) && nubeEnElLugar(permisos, lugar));
+
+/** While the computer is looked at, whether questions will be possible once it's done: Gemini on for the place, or a
+ * browser without WebGPU (it ends in `no-puede`). The screen draws the talk already, so nothing jumps when it's done;
+ * a question asked meanwhile waits (Charla.jsx). */
+export const porPoderPreguntar = (estado, permisos, lugar = {}, nav = globalThis.navigator) => ['quieto', 'revisando'].includes(estado.fase) && (nubeEnElLugar(permisos, lugar) || !nav?.gpu);

@@ -3,12 +3,13 @@
 // sume después, y nada más. Ni nombres ni nada del campus: cómo se ve la página.
 //
 // Todo pasa por la función supercvg-disenos de utn-apuntes (el Supabase de El Santo Resumen). Leer no pide cuenta;
-// publicar, puntuar, comentar, borrar y denunciar, la cuenta de El Santo Resumen vinculada (resumenes.js): su llave va
+// publicar, editar, puntuar, comentar, borrar y denunciar, la cuenta de El Santo Resumen vinculada (resumenes.js): su llave va
 // solo en la cabecera x-utn-llave. Lo que vuelve se valida acá y se muestra como texto: un diseño con un código que no
 // se lee no aparece.
 //   POST { a: 'lista', orden, buscar, desde }      { ok, disenos: [...], mas }
 //   POST { a: 'comentarios', id }                  { ok, comentarios: [...] }
 //   POST { a: 'publicar', nombre, descripcion, codigo }  { ok, id }
+//   POST { a: 'editar', id, nombre, descripcion, codigo }  { ok, diseno }
 //   POST { a: 'borrar' | 'borrar-comentario', id } { ok }
 //   POST { a: 'votar', id, estrellas }             { ok, estrellas, votos, mi_voto }
 //   POST { a: 'comentar', id, texto }              { ok, comentario }
@@ -76,6 +77,10 @@ const SEGUN = {
   publicar: {
     tope: 'Ya tenés 20 diseños publicados. Borrá uno para publicar otro.',
     seguido: 'Ya publicaste 5 estilos hoy. Probá mañana.',
+  },
+  editar: {
+    repetido: 'Ya publicaste este mismo estilo en otro diseño.',
+    seguido: 'Editaste muchas veces hoy. Probá mañana.',
   },
   votar: { propio: 'Tu propio diseño no se puntúa.' },
   comentar: { tope: 'Este diseño no recibe más comentarios.' },
@@ -224,6 +229,20 @@ export async function publicarDiseno(llave, { nombre, descripcion = '', ajustes,
   const r = await hacer({ a: 'publicar', nombre: n, descripcion: d, codigo: codigoDeEstilo(ajustes, mio) }, conLlave(llave, 'publicar'), opciones);
   if (typeof r.id !== 'string' || !ID.test(r.id)) throw falla('publicar', 'error');
   return r.id.toLowerCase();
+}
+
+/** Cambia nombre, descripción y estilo de un diseño propio: puntajes y comentarios quedan. Con `ajustes` y `mio`, el
+ * estilo de ahora (como al publicar); si no, el `codigo` que ya tenía. Devuelve el diseño como quedó. */
+export async function editarDiseno(llave, id, { nombre, descripcion = '', codigo, ajustes, mio }, opciones) {
+  const n = limpiarTexto(nombre);
+  const d = limpiarTexto(descripcion);
+  if (problemaDeTexto(n, { max: MAX_NOMBRE }) || problemaDeTexto(d, { max: MAX_DESCRIPCION, obligatorio: false })) throw falla('editar', 'invalido');
+  const elCodigo = ajustes ? codigoDeEstilo(ajustes, mio) : codigo;
+  if (typeof elCodigo !== 'string' || !ajustesDeCodigo(elCodigo)) throw falla('editar', 'invalido');
+  const r = await hacer({ a: 'editar', id: conId(id, 'editar'), nombre: n, descripcion: d, codigo: elCodigo }, conLlave(llave, 'editar'), opciones);
+  const diseno = leerDiseno(r.diseno);
+  if (!diseno || diseno.id !== id.toLowerCase()) throw falla('editar', 'error');
+  return diseno;
 }
 
 export async function borrarDiseno(llave, id, opciones) {

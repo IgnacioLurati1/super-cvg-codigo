@@ -164,6 +164,18 @@ describe('quién contesta', () => {
     expect(sePuedePreguntar({ fase: 'no-puede' }, {})).toBe(true);
   });
 
+  it('mientras revisa la compu, la charla ya se dibuja si después se va a poder preguntar', async () => {
+    const { porPoderPreguntar } = await import('./motor');
+    const conPlaca = { gpu: {} };
+    for (const fase of ['quieto', 'revisando']) {
+      expect(porPoderPreguntar({ fase }, { todo: true }, {}, conPlaca), fase).toBe(true);
+      expect(porPoderPreguntar({ fase }, {}, {}, conPlaca), `${fase}, sin Gemini`).toBe(false);
+      // Without WebGPU it ends in `no-puede`, where it can always be asked.
+      expect(porPoderPreguntar({ fase }, {}, {}, {}), `${fase}, sin WebGPU`).toBe(true);
+    }
+    for (const fase of ['borrando', 'sin-bajar', 'listo']) expect(porPoderPreguntar({ fase }, { todo: true }, {}, conPlaca), fase).toBe(false);
+  });
+
   it('sin Gemini ni el modelo, dice por qué', async () => {
     const { permitirNube, porQueNoNube, preguntarNube, sinCompu } = await nube();
     expect(sinCompu('no-puede')).toBe('Acá Consultron contesta con Gemini. Prendé «Usar Gemini» para preguntarle.');

@@ -4,7 +4,7 @@ import Charla, { Robot } from '../components/consultron/Charla';
 import { Anuncio, Arranque, Pie } from '../components/consultron/Modelo';
 import { useAjustes } from '../lib/ajustes';
 import { materiaDeRuta } from '../lib/consultron/donde';
-import { cargarSiHaceFalta, respondiendo, revisar, sePuedePreguntar, usar, useConsultron } from '../lib/consultron/motor';
+import { cargarSiHaceFalta, porPoderPreguntar, respondiendo, revisar, sePuedePreguntar, usar, useConsultron } from '../lib/consultron/motor';
 import { usePermisosNube } from '../lib/consultron/nube';
 import { abrirPanel, useEscritorio } from '../lib/consultron/panel';
 import { tituloDe, useSeo } from '../lib/seo';
@@ -39,6 +39,18 @@ function Ajustes({ dialogo, idTitulo, estado, preguntar, ocupado, sinModelo, con
   );
 }
 
+/** While the computer is looked at: the shape of the two cards that usually come after it (Gemini and «Bajá
+ * Consultron»), so the greeting doesn't jump up when they arrive. */
+function EsperaArranque() {
+  return (
+    <div className="consultron__opciones consultron__espera">
+      <p className="solo-lectores" role="status">Revisando tu compu…</p>
+      <div className="consultron__oferta" aria-hidden="true"><i /><i /><i /><b /></div>
+      <div className="consultron__arranque" aria-hidden="true"><i /><i /><i /><b /></div>
+    </div>
+  );
+}
+
 export default function Consultron() {
   useSeo({ titulo: tituloDe('Consultron'), noindex: true });
   const { estado, hilo } = useConsultron();
@@ -52,6 +64,8 @@ export default function Consultron() {
   const listo = estado.fase === 'listo';
   const permisos = usePermisosNube();
   const preguntar = sePuedePreguntar(estado, permisos);
+  // While the computer is looked at, the talk is already drawn if it'll end there: nothing jumps once it's done.
+  const conCharla = preguntar || porPoderPreguntar(estado, permisos);
   // Where only Gemini answers: the settings only once it's approved, to turn it off.
   const sinModelo = estado.fase === 'no-puede';
   // The settings of the model, once it's there or loading. Before, only «Usar Gemini».
@@ -89,8 +103,9 @@ export default function Consultron() {
           <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9 4v5H4M15 20v-5h5M4 9l6-6M20 15l-6 6" /></svg>
         </button>
       )}
-      {conAjustes && (
-        <button type="button" className="consultron__abrir-ajustes" aria-haspopup="dialog" data-cargando={cargando || undefined} onClick={() => dialogo.current?.showModal()}>
+      {/* While the computer is looked at it keeps its place, off: it doesn't pop in afterwards. */}
+      {(conAjustes || estado.fase !== 'borrando') && (
+        <button type="button" className="consultron__abrir-ajustes" aria-haspopup="dialog" disabled={!conAjustes} data-cargando={cargando || undefined} onClick={() => dialogo.current?.showModal()}>
           <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 7h10M18 7h2M4 17h4M12 17h8M14 4.5v5M8 14.5v5" /></svg>
           <span className="consultron__abrir-ajustes-texto">Ajustes</span>
           {cargando && <span className="solo-lectores">, {estado.fase === 'bajando' ? 'bajando Consultron' : 'preparando Consultron'}</span>}
@@ -102,7 +117,7 @@ export default function Consultron() {
   return (
     <div className="consultron consultron--chat">
       <Anuncio estado={estado} />
-      {preguntar ? (
+      {conCharla ? (
         <Charla inicial={materiaDeRuta(desde)} alIr={conRincon ? abrirPanel : undefined} pagina="/consultron" vista="pagina" barra={{ titulo, acciones }} />
       ) : (
         // Before it can be asked: what it takes, in the middle of the screen.
@@ -119,7 +134,7 @@ export default function Consultron() {
                   <p className="charla__hola">¿Qué estudiamos hoy?</p>
                   <p className="charla__bajada">Preguntale a tus apuntes o pasale un ejercicio para las calculadoras. Busca en los PDF del campus y en El Santo Resumen.</p>
                 </div>
-                <Arranque estado={estado} />
+                {['quieto', 'revisando'].includes(estado.fase) ? <EsperaArranque /> : <Arranque estado={estado} />}
               </div>
             </div>
           </div>

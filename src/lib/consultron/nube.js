@@ -7,6 +7,7 @@
 // (Ignacio, 22/11/2026); with any other failure (the day's limit, both busy, offline), the model of the computer
 // answers if it's in the browser.
 import { useSyncExternalStore } from 'react';
+import { fotosParaGemini } from './fotosParaGemini';
 
 export const NUBE = 'https://lomhlulbgfovtnljbqzp.supabase.co/functions/v1/supercvg-consultron';
 const CLAVE = 'cl.consultron.gemini';
@@ -136,9 +137,10 @@ const ROL = { system: 'sistema', user: 'alumno', assistant: 'consultron' };
 
 /**
  * Asks Gemini with the messages Consultron would give the model ({ role, content }). Resolves with the text, or null
- * if it should be answered on the computer (no permission, the day's limit, Google busy, offline, stopped).
+ * if it should be answered on the computer (no permission, the day's limit, Google busy, offline, stopped). `fotos`:
+ * the photos the student attached to the question (Files), for Gemini to look at them; only with «Usar Gemini».
  */
-export async function preguntarNube(mensajes, cual, { senal, pedir = (...a) => fetch(...a) } = {}) {
+export async function preguntarNube(mensajes, cual, { senal, fotos = [], pedir = (...a) => fetch(...a), hacerFoto } = {}) {
   motivo = null;
   modelo = null;
   if (!cual || !actual[cual] || quedanHoy() === 0) return null;
@@ -148,10 +150,13 @@ export async function preguntarNube(mensajes, cual, { senal, pedir = (...a) => f
   }
   const tiempo = AbortSignal.timeout(ESPERA_MS);
   try {
+    // The photos go with the question (the last message), made here (fotosParaGemini.js).
+    const suyas = cual === 'todo' && fotos.length ? await fotosParaGemini(fotos, hacerFoto) : [];
+    const cuerpo = mensajes.map((m, i) => ({ rol: ROL[m.role], texto: m.content, ...(i === mensajes.length - 1 && suyas.length ? { fotos: suyas } : {}) }));
     const r = await pedir(NUBE, {
       method: 'POST',
       // A text body keeps it a simple request: no preflight.
-      body: JSON.stringify({ dispositivo: dispositivo(), mensajes: mensajes.map((m) => ({ rol: ROL[m.role], texto: m.content })) }),
+      body: JSON.stringify({ dispositivo: dispositivo(), mensajes: cuerpo }),
       credentials: 'omit',
       referrerPolicy: 'no-referrer',
       signal: senal ? AbortSignal.any([senal, tiempo]) : tiempo,
@@ -162,6 +167,8 @@ export async function preguntarNube(mensajes, cual, { senal, pedir = (...a) => f
       modelo = d.modelo === 'groq' ? 'groq' : 'gemini';
       return d.texto;
     }
+    // A service from before the photos says the request isn't valid: the same question again, without them.
+    if (d?.motivo === 'invalido' && suyas.length && !senal?.aborted) return preguntarNube(mensajes, cual, { senal, pedir });
     motivo = typeof d?.motivo === 'string' ? d.motivo : 'error';
     if (d?.motivo === 'tope_alumno') guardar({ quedan: 0, dia: diaDeGoogle() });
     return null;

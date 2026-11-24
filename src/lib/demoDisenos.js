@@ -93,8 +93,15 @@ function atender(p, yo) {
       disenos.unshift(d);
       return { ok: true, id: d.id };
     }
+    case 'editar': {
+      const d = disenos.find((x) => x.id === p.id && x.autor === yo);
+      if (!d) return { ok: false, motivo: 'no-existe' };
+      if (disenos.some((x) => x !== d && x.autor === yo && x.codigo === p.codigo)) return { ok: false, motivo: 'repetido' };
+      Object.assign(d, { nombre: p.nombre, descripcion: p.descripcion, codigo: p.codigo });
+      return { ok: true, diseno: fila(d, yo) };
+    }
     case 'borrar': {
-      const i = disenos.findIndex((d) => d.id === p.id && d.autor === yo);
+      const i =disenos.findIndex((d) => d.id === p.id && d.autor === yo);
       if (i < 0) return { ok: false, motivo: 'no-existe' };
       disenos.splice(i, 1);
       return { ok: true };

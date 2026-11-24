@@ -1,6 +1,6 @@
 import { act } from 'react';
 import { createRoot } from 'react-dom/client';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { armarPdf } from '../../lib/pdfDeEjemplo';
 import { datosDeApunte } from '../../lib/enVivo/apunte';
 import { fijarSesionEnVivo, useSesionEnVivo } from '../../lib/enVivo/estado';
@@ -82,7 +82,8 @@ describe('Llevar a la sesión', () => {
       mal.click();
       await esperar(20);
     });
-    expect(pestanas(a.doc)).toMatchObject([{ tipo: 'resumen', titulo: 'Ohm' }]);
+    // The summary's module loads on the click: on a busy machine it takes longer than the 20 ms.
+    await act(() => vi.waitFor(() => expect(pestanas(a.doc)).toMatchObject([{ tipo: 'resumen', titulo: 'Ohm' }]), { timeout: 5000 }));
     expect(caja.querySelector('[role="alert"]').textContent).toBe('Este resumen no se puede llevar a la sesión.');
   });
 });

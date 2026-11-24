@@ -2605,8 +2605,9 @@ html[data-consultron-lado='izquierda'] .flotante > .lector__consultron-borde::af
   content: '';
   position: absolute;
   bottom: 100%;
-  left: 0;
-  right: 0;
+  /* As wide as the box, not its side margins. */
+  left: var(--margen);
+  right: var(--margen);
   height: 20px;
   background: linear-gradient(to bottom, transparent, var(--fondo));
   pointer-events: none;
@@ -2931,5 +2932,77 @@ html[data-consultron-lado='izquierda'] .flotante > .lector__consultron-borde::af
     padding-bottom: env(safe-area-inset-bottom);
     border-radius: 16px 16px 0 0;
     transform-origin: bottom center;
+  }
+}
+
+/* While the browser or the computer is looked at: the shape of what comes, never a jump when it's there. */
+.charlas__esqueleto {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.charlas__esqueleto li {
+  display: grid;
+  align-content: center;
+  gap: 6px;
+  min-height: 52px;
+  padding: 8px 12px;
+}
+.consultron__espera i,
+.consultron__espera b,
+.charlas__esqueleto i {
+  display: block;
+  height: 0.8em;
+  border-radius: 6px;
+  background: var(--superficie-2);
+}
+.charlas__esqueleto i:first-child {
+  width: 80%;
+}
+.charlas__esqueleto i:last-child {
+  width: 35%;
+  height: 0.6em;
+}
+.consultron__espera > div {
+  align-content: start;
+}
+.consultron__espera .consultron__oferta {
+  min-height: 11.4rem;
+}
+.consultron__espera .consultron__arranque {
+  min-height: 13.75rem;
+}
+.consultron__espera i:first-child {
+  width: 55%;
+  height: 1.1em;
+  margin-bottom: 0.4em;
+}
+.consultron__espera i:nth-child(3) {
+  width: 70%;
+}
+.consultron__espera b {
+  width: 9rem;
+  height: 2.5rem;
+  margin-top: 0.6em;
+  border-radius: var(--radio-control, 8px);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .consultron__espera i,
+  .consultron__espera b,
+  .charlas__esqueleto i {
+    animation: consultron-esqueleto 1.4s ease-in-out infinite;
+  }
+}
+:root[data-movimiento='reducido'] .consultron__espera :is(i, b),
+:root[data-movimiento='ninguno'] .consultron__espera :is(i, b),
+:root[data-movimiento='reducido'] .charlas__esqueleto i,
+:root[data-movimiento='ninguno'] .charlas__esqueleto i {
+  animation: none;
+}
+@keyframes consultron-esqueleto {
+  50% {
+    opacity: 0.55;
   }
 }

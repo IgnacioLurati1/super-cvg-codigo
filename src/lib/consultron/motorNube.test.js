@@ -50,6 +50,33 @@ describe('Consultron con «Usar Gemini»', () => {
     expect(cuerpos).toHaveLength(2);
   });
 
+  it('una foto que no está en los apuntes: Gemini contesta con lo que sabe, con el texto de la foto', async () => {
+    const cuerpos = respuestas(NO_ESTA, 'Es la fórmula de Bayes.');
+    const m = await motor();
+    const foto = { trozo: { doc: 'adjunto:1', texto: 'P(A|B) = P(B|A) P(A) / P(B)', pagina: 1, fuente: { tipo: 'adjunto', clase: 'foto', nombre: 'pizarron.jpg' } }, puntaje: Infinity, cubre: 0 };
+    const id = m.empezar('¿Qué es esto?', '', [{ id: 1, nombre: 'pizarron.jpg', clase: 'foto' }]);
+    m.responder(id, [foto]);
+    expect(await m.alTerminar(id)).toMatchObject({ estado: 'listo', general: true, nube: 'todo', texto: 'Es la fórmula de Bayes.' });
+    expect(cuerpos).toHaveLength(2);
+    expect(cuerpos[1].mensajes.at(-1).texto).toContain('P(A|B) = P(B|A) P(A) / P(B)');
+    expect(cuerpos[1].mensajes.at(-1).texto).toContain('¿Qué es esto?');
+  });
+
+  it('las fotos que adjuntó van con la pregunta para que Gemini las mire, también al contestar en general', async () => {
+    const cuerpos = respuestas(NO_ESTA, 'Es un grafo dirigido.');
+    vi.stubGlobal('createImageBitmap', undefined);
+    const m = await motor();
+    const archivo = new File(['x'], 'grafo.png', { type: 'image/png' });
+    const foto = { trozo: { doc: 'adjunto:7', texto: 'La foto no tiene texto escrito.', pagina: 1, fuente: { tipo: 'adjunto', clase: 'foto', nombre: 'grafo.png', adjunto: 7, archivo } }, puntaje: Infinity, cubre: 0 };
+    const { fotosDe } = await import('./fotosParaGemini');
+    expect(fotosDe([foto, foto, apunte])).toEqual([archivo]);
+    const id = m.empezar('¿Qué es esto?', '', [{ id: 7, nombre: 'grafo.png', clase: 'foto' }]);
+    m.responder(id, [foto]);
+    expect(await m.alTerminar(id)).toMatchObject({ estado: 'listo', general: true, texto: 'Es un grafo dirigido.' });
+    // This test browser can't draw it: it goes without the photo, never failing the question.
+    expect(cuerpos.map((c) => c.mensajes.at(-1).fotos)).toEqual([undefined, undefined]);
+  });
+
   it('sin trozos (un saludo o algo general), también Gemini', async () => {
     respuestas('Hola, ¿en qué te ayudo?');
     const m = await motor();

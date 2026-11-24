@@ -144,7 +144,7 @@
   };
 
   // «Según la hora» (src/lib/ajustes.js, CLAVES_DEL_DISENO and esDeNoche): the design of the hour over the rest.
-  var CLAVES_DEL_DISENO = ['estilo', 'tema', 'contraste', 'accion', 'resaltador', 'cabecera', 'bandeja', 'bordes', 'bordesDelEstilo', 'potente', 'fondoMueve', 'fondoCalidad', 'fondoFiltro', 'fondoIntensidad', 'fondoTono', 'fondoDesenfoque', 'fogonazo'];
+  var CLAVES_DEL_DISENO = ['estilo', 'tema', 'contraste', 'accion', 'resaltador', 'cabecera', 'bandeja', 'bordes', 'bordesDelEstilo', 'potente', 'fondoMueve', 'fondoCalidad', 'fondoFiltro', 'fondoIntensidad', 'fondoTono', 'fondoDesenfoque', 'fogonazo', 'temaColor'];
   var ES_HORA = /^([01]\d|2[0-3]):[0-5]\d$/;
   var enMinutos = function (hora) {
     return Number(hora.slice(0, 2)) * 60 + Number(hora.slice(3));
@@ -273,6 +273,13 @@
       '--cabecera-elegida-texto': cabecera && textoSobre(cabecera),
       // The line under the header in Pizarrón (estilos.css).
       '--bandeja-elegida': bandeja,
+    });
+    // The theme's own color, only with the strong version: the glow of borders and header and where titles fade to
+    // (estilos.css, through --brillo as «r g b» and --titulo-fin).
+    var temaColor = datos.potente === true ? colorValido(datos.temaColor) : null;
+    ponerVariables(raiz.style, {
+      '--brillo': temaColor && [1, 3, 5].map(function (i) { return parseInt(temaColor.slice(i, i + 2), 16); }).join(' '),
+      '--titulo-fin': temaColor,
     });
     if (cabecera) raiz.setAttribute('data-cabecera', 'propia');
     else raiz.removeAttribute('data-cabecera');

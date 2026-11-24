@@ -6,7 +6,7 @@ import { reiniciarDemoDisenos } from './demoDisenos';
 import { TOKEN_DEMO } from './modoDemo';
 import { cerrarSesion, iniciarSesion } from './sesion';
 import {
-  ajustesDeCodigo, borrarComentario, cargarComentarios, cargarDisenos, CLAVE_ANTES, comentarDiseno, denunciar, DISENOS, dibujoDe, disenoSigue, leerComentario,
+  ajustesDeCodigo, borrarComentario, cargarComentarios, cargarDisenos, CLAVE_ANTES, comentarDiseno, denunciar, DISENOS, dibujoDe, disenoSigue, editarDiseno, leerComentario,
   leerDiseno, leerLista, olvidarDisenoEnUso, pantallasALaVista, probarDiseno, problemaDeTexto, publicarDiseno, resumenDeDiseno, terminarPrueba, usarDiseno, verDiseno, volverAlTuyo,
   votarDiseno,
 } from './disenos';
@@ -128,6 +128,28 @@ describe('con el servicio de ejemplo (/?demo=1)', () => {
     await borrarDiseno_(id);
   });
 
+  it('el autor edita nombre, descripción y estilo sin perder puntajes ni comentarios', async () => {
+    const OTRA = 'otra-llave-de-prueba-0000';
+    const id = await publicarDiseno(LLAVE, { nombre: 'Mi estilo', ajustes: normalizar({ estilo: 'hoja' }), mio: MIO });
+    await votarDiseno(OTRA, id, 4);
+    await comentarDiseno(OTRA, id, 'Lindo.');
+    const antes = (await cargarDisenos({ orden: 'nuevos', llave: LLAVE })).disenos.find((d) => d.id === id);
+
+    const mismo = await editarDiseno(LLAVE, id, { nombre: ' Mi hoja ', descripcion: 'Con renglones.', codigo: antes.codigo });
+    expect(mismo).toMatchObject({ id, nombre: 'Mi hoja', descripcion: 'Con renglones.', codigo: antes.codigo, votos: 1, estrellas: 4, comentarios: 1, mio: true });
+    const otro = await editarDiseno(LLAVE, id, { nombre: 'Mi plano', ajustes: normalizar({ estilo: 'plano' }), mio: MIO });
+    expect(otro).toMatchObject({ id, nombre: 'Mi plano', descripcion: '', votos: 1, comentarios: 1 });
+    expect(otro.ajustes.estilo).toBe('plano');
+    expect((await cargarComentarios(id)).map((c) => c.texto)).toEqual(['Lindo.']);
+
+    await expect(editarDiseno(OTRA, id, { nombre: 'Mío', codigo: otro.codigo })).rejects.toMatchObject({ motivo: 'no-existe' });
+    await publicarDiseno(LLAVE, { nombre: 'Segundo', ajustes: normalizar({ estilo: 'batman' }), mio: MIO });
+    await expect(editarDiseno(LLAVE, id, { nombre: 'Mi plano', ajustes: normalizar({ estilo: 'batman' }), mio: MIO })).rejects.toThrow('Ya publicaste este mismo estilo en otro diseño.');
+    await expect(editarDiseno(LLAVE, id, { nombre: '<b>x</b>', codigo: otro.codigo })).rejects.toMatchObject({ motivo: 'invalido' });
+    await expect(editarDiseno(LLAVE, id, { nombre: 'Sin código', codigo: 'CVG-AAAAA' })).rejects.toMatchObject({ motivo: 'invalido' });
+    await expect(editarDiseno(null, id, { nombre: 'Sin llave', codigo: otro.codigo })).rejects.toMatchObject({ motivo: 'llave' });
+  });
+
   it('lo que no se puede mandar no sale', async () => {
     await expect(comentarDiseno(LLAVE, ID, '<b>hola</b>')).rejects.toMatchObject({ motivo: 'invalido' });
     await expect(votarDiseno(LLAVE, ID, 6)).rejects.toMatchObject({ motivo: 'invalido' });
@@ -172,6 +194,17 @@ describe('con la función de verdad (el sitio publicado)', () => {
     expect(op.body).not.toContain(LLAVE);
     expect(JSON.parse(op.body)).toEqual({ a: 'lista', orden: 'nuevos', buscar: 'noche', desde: 0 });
     expect(op).toMatchObject({ method: 'POST', credentials: 'omit', referrerPolicy: 'no-referrer' });
+  });
+
+  it('editar manda el id y el código con la llave en la cabecera, y valida lo que vuelve', async () => {
+    const fetch = vi.fn(async () => new Response(JSON.stringify({ ok: true, diseno: crudo({ nombre: 'Noche nueva', mio: true }) }), { status: 200 }));
+    vi.stubGlobal('fetch', fetch);
+    expect(await editarDiseno(LLAVE, ID, { nombre: 'Noche nueva', codigo: CODIGO }, { origen })).toMatchObject({ id: ID, nombre: 'Noche nueva', votos: 3 });
+    const [, op] = fetch.mock.calls[0];
+    expect(op.headers['x-utn-llave']).toBe(LLAVE);
+    expect(JSON.parse(op.body)).toEqual({ a: 'editar', id: ID, nombre: 'Noche nueva', descripcion: '', codigo: CODIGO });
+    vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify({ ok: true, diseno: crudo({ nombre: '<b>x</b>' }) }), { status: 200 })));
+    await expect(editarDiseno(LLAVE, ID, { nombre: 'Noche', codigo: CODIGO }, { origen })).rejects.toMatchObject({ motivo: 'error' });
   });
 
   it('sin llave no manda la cabecera', async () => {

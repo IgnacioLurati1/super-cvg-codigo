@@ -18,7 +18,7 @@ import { cargarUnidos, docsDeClassroom } from '../../lib/consultron/delClassroom
 import { TODAS, dePropias, dondeBusca, esFoto, lectorDe, notasDeMaterias, valorDePropia } from '../../lib/consultron/donde';
 import { pantallaAhora, pideAlgoNuevo, senalaLaPantalla } from '../../lib/consultron/pantalla';
 import { delSitio } from '../../lib/consultron/sitio';
-import { alTerminar, empezar, frenar, limpiar, mostrarCalculo, mostrarEjemplo, mostrarSoloEjemplo, noPudoLeer, pedirDatos, respondiendo, responder, sePuedePreguntar, sinTextoAbierto, sugerir, useConsultron } from '../../lib/consultron/motor';
+import { alTerminar, empezar, frenar, limpiar, mostrarCalculo, mostrarEjemplo, mostrarSoloEjemplo, noPudoLeer, pedirDatos, porPoderPreguntar, respondiendo, responder, sePuedePreguntar, sinTextoAbierto, sugerir, useConsultron } from '../../lib/consultron/motor';
 import { usePermisosNube } from '../../lib/consultron/nube';
 import { cambiarNube, OfertaNube } from './Modelo';
 import { aclara, armarCharla, citasDe, leerRespuesta, objeta, pideOtraVez, preguntaAclarada, preguntaObjetada, preguntaOtraVez, sinPensar } from '../../lib/consultron/pedido';
@@ -641,6 +641,8 @@ export default function Charla({ inicial = TODAS, nivel = 2, compacta = false, a
   const permisos = usePermisosNube();
   const { confirmar: confirmarGemini } = useUI();
   const listo = sePuedePreguntar(estado, permisos, { enResumen });
+  // The computer still being looked at, and questions will be possible: drawn as ready, a question waits.
+  const porListo = !listo && porPoderPreguntar(estado, permisos, { enResumen });
   // The same one for the whole talk, so that an entry already written isn't drawn again when this screen is.
   const alIrAhora = useRef(alIr);
   useLayoutEffect(() => {
@@ -688,7 +690,12 @@ export default function Charla({ inicial = TODAS, nivel = 2, compacta = false, a
     const escrita = (typeof dada === 'string' ? dada : pregunta).trim();
     // On a phone, the keyboard would cover the answer.
     if (window.matchMedia('(hover: hover) and (pointer: fine)').matches) campo.current?.focus();
-    if ((!escrita && !adjuntos.pendientes.length && !marcado) || ocupado || !listo) return;
+    if ((!escrita && !adjuntos.pendientes.length && !marcado) || ocupado || !(listo || porListo)) return;
+    // The computer is still being looked at: it waits, and goes by itself once it's done.
+    if (porListo) {
+      setEnEspera({ dada });
+      return;
+    }
     // Where only Gemini answers and it wasn't approved: it asks for it now, once. Back, nothing is asked.
     const aprobado = permisos.todo || (enResumen === true && permisos.resumenes);
     if (estado.fase === 'no-puede' && !aprobado) {
@@ -926,12 +933,12 @@ export default function Charla({ inicial = TODAS, nivel = 2, compacta = false, a
     preguntarAhora.current = preguntar;
   });
   useEffect(() => {
-    if (!enEspera || buscando) return;
+    if (!enEspera || buscando || porListo) return;
     const { dada } = enEspera;
     // eslint-disable-next-line react-hooks/set-state-in-effect -- a wait that ends once, when what it waited for is here
     setEnEspera(null);
     preguntarAhora.current(null, dada);
-  }, [enEspera, buscando]);
+  }, [enEspera, buscando, porListo]);
   // The talk on screen stays saved (charlas.js): a new one asks nothing.
   const charlaNueva = () => {
     limpiar();
@@ -1090,7 +1097,8 @@ export default function Charla({ inicial = TODAS, nivel = 2, compacta = false, a
       despues={<ProblemasAdjuntos problemas={adjuntos.problemas} />}
     />
   );
-  const ideas = listo && !buscando && (
+  // There from the start, also while the courses come: an idea asked meanwhile waits for them.
+  const ideas = (listo || porListo) && (
     <ul className="charla__ideas" aria-label="Ideas para preguntar">
       {ideasPara(pagina).map((idea) => (
         <li key={idea}>

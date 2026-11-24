@@ -44,13 +44,23 @@ export default function Charlas({ nivel = 2, ocupado = false, alAbrir, lateral =
       .then((lista) => {
         if (vivo) setCharlas({ de: alumno, lista });
       })
-      .catch(() => {});
+      .catch(() => {
+        if (vivo) setCharlas((antes) => (antes.de === alumno ? antes : { de: alumno, lista: [] }));
+      });
     return () => {
       vivo = false;
     };
   }, [alumno, version]);
 
   const lista = charlas.de === alumno ? charlas.lista : [];
+  // In the side column, while the browser hands them over: the shape of a few, so they don't pop in from nothing.
+  if (lateral && charlas.de !== alumno) {
+    return (
+      <ul className="charlas__lista charlas__lista--lateral charlas__esqueleto" aria-hidden="true">
+        {[0, 1, 2].map((i) => <li key={i}><i /><i /></li>)}
+      </ul>
+    );
+  }
   if (!lista.length) return null;
   const vistas = todas || lateral ? lista : lista.slice(0, CORTA);
   // Read as it's drawn: the talk on screen gets its id when it's first kept, and that redraws the list.

@@ -7305,7 +7305,8 @@ try {
     assert.equal(manifest.start_url, '/');
     assert.equal(manifest.scope, '/');
     assert.equal(manifest.display, 'standalone');
-    assert.equal(manifest.theme_color.toLowerCase(), token('accion'));
+    // Without theme_color: Android paints the gesture bar of the installed app with the phone's light or dark mode.
+    assert.equal(manifest.theme_color, undefined);
     assert.equal(manifest.background_color.toLowerCase(), token('fondo'));
     // One of 192 and one of 512 for any shape, and a maskable one.
     const proposito = (i) => (i.purpose ?? 'any').split(' ');

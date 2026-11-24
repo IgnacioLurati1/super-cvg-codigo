@@ -7,6 +7,8 @@ import './ui.css';
 //   const { confirmar, avisar } = useUI();
 //   if (await confirmar({ titulo: '¿Cancelar el pedido?', boton: 'Cancelar pedido', peligro: true })) …
 //   const contrasena = await confirmar({ titulo: '…', contrasena: 'Tu contraseña' });  // the field's value, or false
+//   const cual = await confirmar({ titulo: '…', elegir: { titulo: 'En cuál', opciones: [{ valor, nombre }], valor } });
+//     // the chosen `valor`, or false
 //   avisar('Pedido cancelado');            avisar('No se pudo guardar', 'error');
 const Contexto = createContext(null);
 
@@ -47,6 +49,10 @@ function Dialogo({ pedido, responder }) {
             campo.current?.focus();
             return;
           }
+          if (pedido.elegir) {
+            cerrar(new FormData(e.currentTarget).get('dialogo-elegir') ?? pedido.elegir.valor);
+            return;
+          }
           cerrar(pedido.contrasena ? campo.current.value : true);
         }}
       >
@@ -58,6 +64,17 @@ function Dialogo({ pedido, responder }) {
               <input ref={campo} className="campo__control" type="password" autoComplete="current-password" required />
             </Campo>
           </div>
+        )}
+        {pedido.elegir && (
+          <fieldset className="dialogo__elegir">
+            <legend className="dialogo__elegir-titulo">{pedido.elegir.titulo}</legend>
+            {pedido.elegir.opciones.map((o) => (
+              <label key={o.valor} className="dialogo__opcion">
+                <input type="radio" name="dialogo-elegir" value={o.valor} defaultChecked={o.valor === pedido.elegir.valor} />
+                {o.nombre}
+              </label>
+            ))}
+          </fieldset>
         )}
         <div className="dialogo__botones">
           {/* En una acción peligrosa el foco arranca en «Volver»: un Enter de más no borra nada. */}

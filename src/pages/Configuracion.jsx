@@ -8,6 +8,7 @@ import GuardarEnDrive from '../components/GuardarEnDrive';
 import EntrarConGoogle from '../components/EntrarConGoogle';
 import { Cargando, ErrorConReintento } from '../components/Filas';
 import { EstadoDescargas, SeccionesQueBaja } from '../components/DescargasInteligentes';
+import PasosDeIos from '../components/PasosDeIos';
 import { useUI } from '../components/ui';
 import { COLORES_DEL_CODIGO, CONTRASTE_MINIMO, contraste, LAB_TAMANO, LETRAS_DE_CODIGO, SIEMPRE_OSCUROS, cambiarAjustes, cambiarSegunLaHora, cambioDeBordes, cambioDeEstilo, disenoQueSeVe, editarDiseno, horasDeLaNoche, colorActual, cuestaLeerSobre, elegirVista, ponerEstiloDeMenu, useAjustes, volverAjustesOriginales } from '../lib/ajustes';
 import { DESENFOQUE_DEL_FONDO, INTENSIDAD_DEL_FILTRO, TONO_DEL_FILTRO, movimientoDe, ponerAlineacionDelMenu, ponerAnchoDelMenu, ponerPosicionDelMenu } from '../lib/ajustes';
@@ -15,6 +16,7 @@ import PantallasDelMenu from '../components/PantallasDelMenu';
 import QueAvisosVes from '../components/QueAvisosVes';
 import { AvisosEnMiniatura, HoyEnMiniatura, MateriaEnMiniatura, MateriasEnMiniatura, VistaPrevia } from '../components/VistaPrevia';
 import { IconoMenu } from '../layouts/Menu';
+import BuscarAjuste from '../components/BuscarAjuste';
 import MuestraMenu from '../components/MuestraMenu';
 import { useAhorro } from '../lib/ahorro';
 import { guardarArchivo } from '../lib/archivos';
@@ -57,6 +59,7 @@ const SECCIONES = [
   { id: 'teclado', nombre: 'Teclado' },
   { id: 'datos', nombre: 'Datos y dispositivos' },
 ];
+const NOMBRES_DE_SECCIONES = Object.fromEntries(SECCIONES.map((s) => [s.id, s.nombre]));
 // Pantallas goes by screen too, each with its preview: #hoy, #materias, #calendario, #avisos, and what is inside one.
 const PANTALLAS_DE_AJUSTES = [
   { id: 'hoy', nombre: 'Hoy' },
@@ -64,6 +67,7 @@ const PANTALLAS_DE_AJUSTES = [
   { id: 'calendario', nombre: 'Calendario' },
   { id: 'avisos', nombre: 'Avisos' },
 ];
+const NOMBRES_DE_PANTALLAS = Object.fromEntries(PANTALLAS_DE_AJUSTES.map((p) => [p.id, p.nombre]));
 const PANTALLA_DE_ANCLA = { 'materias-en-hoy': 'hoy', tarjetas: 'materias' };
 const pantallaDe = (hash) => {
   const id = hash.replace(/^#/, '');
@@ -264,6 +268,16 @@ const COLORES_CABECERA = [
   { valor: '#5b3a9d', nombre: 'Violeta' },
 ];
 
+// The theme's color with the strong version: mid tones, a glow on the dark themes and a fade that reads on the light ones.
+const COLORES_DEL_TEMA = [
+  { valor: '#8b5cf6', nombre: 'Violeta' },
+  { valor: '#ec4899', nombre: 'Rosa' },
+  { valor: '#0ea5e9', nombre: 'Celeste' },
+  { valor: '#10b981', nombre: 'Verde' },
+  { valor: '#f59e0b', nombre: 'Ámbar' },
+  { valor: '#ef4444', nombre: 'Rojo' },
+];
+
 const COLORES_RESALTADOR = [
   { valor: '#ffe14d', nombre: 'Amarillo' },
   { valor: '#b6f36b', nombre: 'Lima' },
@@ -390,6 +404,28 @@ function MuestraConsultron() {
             </div>
           </div>
         </div>
+      </div>
+    </div>
+  );
+}
+
+/** A page of a PDF as the reader shows it: the same filters (pages/ajustes.css), by the same marks on the root, so it
+ * follows the color, «Como el tema» and the slider as they change. */
+function MuestraPdf() {
+  return (
+    <div className="muestra-pdf" aria-hidden="true">
+      <div className="muestra-pdf__hoja">
+        <p className="muestra-pdf__titulo">Unidad 3: Colas de espera</p>
+        <p>
+          Un sistema M/M/1 tiene <span className="muestra-pdf__marca">un solo servidor</span> y llegadas que siguen una
+          distribución de Poisson. Con una tasa de llegada <em>λ</em> y de servicio <em>μ</em>, la utilización es{' '}
+          <span className="muestra-pdf__marca muestra-pdf__marca--celeste">ρ = λ / μ</span>.
+        </p>
+        <svg className="muestra-pdf__grafico" viewBox="0 0 200 70">
+          <path className="muestra-pdf__ejes" d="M10 5v58h185" />
+          <path className="muestra-pdf__curva" d="M12 60C70 58 120 50 150 30S180 8 190 6" />
+          <path className="muestra-pdf__curva muestra-pdf__curva--roja" d="M12 50L190 50" />
+        </svg>
       </div>
     </div>
   );
@@ -789,18 +825,7 @@ function InstalarApp() {
         </span>
         {como === 'boton' && <button type="button" className="boton boton--chico" aria-describedby="instalar-ayuda" onClick={tocar}>Instalar</button>}
       </div>
-      {como === 'ios' && (
-        <ol className="instalar__pasos">
-          <li>
-            Tocá Compartir{' '}
-            <svg className="instalar__compartir" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-              <path d="M12 3.5v11M8 7.5l4-4 4 4M8.5 10H7a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2h-1.5" />
-            </svg>
-            . Si no lo ves, buscalo en el menú de los tres puntos.
-          </li>
-          <li>Elegí «Agregar a inicio» y confirmá con Agregar.</li>
-        </ol>
-      )}
+      {como === 'ios' && <PasosDeIos />}
     </div>
   );
 }
@@ -1152,6 +1177,8 @@ export default function Configuracion() {
   const ahorrando = useAhorro();
   const marcarVistos = useMarcarVistos();
   const siempreOscuro = SIEMPRE_OSCUROS.includes(ajustes.estilo);
+  // The styles that paint the theme's color (estilos.css): the rest don't show it.
+  const conBrillo = ['profesional', 'batman'].includes(ajustes.estilo);
   // Batman's yellow beam takes the highlighter's color (animaciones.css): while it's on, that color says so.
   const conFogonazo = ajustes.estilo === 'batman' && ajustes.fogonazo;
   // With «Seguir a tu dispositivo», the theme the device shows now (public/ajustes.js marks it).
@@ -1205,6 +1232,14 @@ export default function Configuracion() {
     });
   };
 
+  // From the search: its tab and its screen of Pantallas, without moving the page (the search brings it into view).
+  const raiz = useRef(null);
+  const irAlAjuste = ({ seccion: otra, pantalla: suya }) => {
+    if (otra !== seccion) setSeccion(otra);
+    if (suya && suya !== pantalla) setPantalla(suya);
+    window.history.replaceState(window.history.state, '', `#${suya ?? otra}`);
+  };
+
   const poner = (cambio) => {
     if (!cambiarAjustes(cambio)) avisar('No se pudo guardar. Vale hasta que cierres esta pestaña.', 'error');
   };
@@ -1221,7 +1256,7 @@ export default function Configuracion() {
   };
 
   return (
-    <div className="contenedor pagina ajustes">
+    <div ref={raiz} className="contenedor pagina ajustes">
       <div className="titular">
         <div>
           <h1>Configuración</h1>
@@ -1229,6 +1264,7 @@ export default function Configuracion() {
         </div>
       </div>
 
+      <BuscarAjuste raiz={raiz} pestanas={NOMBRES_DE_SECCIONES} pantallas={NOMBRES_DE_PANTALLAS} alIr={irAlAjuste} />
       <Pestanas actual={seccion} alElegir={elegirSeccion} />
       {enPrueba && (
         <p className="ajustes__en-prueba">
@@ -1305,6 +1341,16 @@ export default function Configuracion() {
                 alCambiar={(fondoMueve) => poner({ fondoMueve })}
               />
               <Elecciones titulo="Calidad del fondo" nombre="fondo-calidad" opciones={CALIDADES} valor={ajustes.fondoCalidad} alElegir={(fondoCalidad) => poner({ fondoCalidad })} />
+              <ElegirColor
+                clave="temaColor"
+                titulo="Color del tema"
+                ayuda={conBrillo ? 'Los bordes, el brillo de la cabecera y el fundido de los títulos.' : 'Los bordes, el brillo de la cabecera y el fundido de los títulos. Se ve con los estilos Profesional y Batman.'}
+                otroColor="Otro color del tema"
+                opciones={COLORES_DEL_TEMA}
+                ajustes={ajustes}
+                poner={poner}
+                previa={<span className="ajustes__tema-muestra">Así queda</span>}
+              />
             </>
           )}
           {/* The background's filters, with or without the strong version: three rows that go together. */}
@@ -1452,6 +1498,9 @@ export default function Configuracion() {
       <Panel bloqueado={Boolean(enPrueba)} id="pdf" actual={seccion}>
         <Seccion titulo="Lector de PDF">
           <div className="ajustes__pdf">
+            <VistaPrevia>
+              <MuestraPdf />
+            </VistaPrevia>
             <Elecciones
               titulo="Color de las páginas"
               ayuda="En el lector las pasás a oscuras con la luna o con la tecla O. Al volver quedan claras o sepia, como las tenías."

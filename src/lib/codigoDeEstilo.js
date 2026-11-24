@@ -23,9 +23,10 @@ import { VELOCIDADES } from './voz';
 // version, or of 5 made before Diseños, still reads with the screens it had then, and Diseños where it starts. Version 6,
 // the background's filters (its strength, the tone and the blur), after the others. Version 7, the color of the line
 // under the header in Pizarrón, after the colors. Version 8, Batman's yellow beam (`fogonazo`), after the others: an older
-// code reads it on, as it always was.
-const VERSION = '8';
-const VERSIONES = ['1', '2', '3', '4', '5', '6', '7', '8'];
+// code reads it on, as it always was. Version 9, the theme's own color with the strong version (`temaColor`), after the
+// colors.
+const VERSION = '9';
+const VERSIONES = ['1', '2', '3', '4', '5', '6', '7', '8', '9'];
 const PREFIJO = 'CVG';
 // The longest a typed code can be (the field in Configuración takes this much too): far more than any code is.
 export const MAX_ESCRITO = 200;
@@ -95,7 +96,7 @@ const COLUMNA_DE_ENTRADA = Object.fromEntries(BLOQUES_DE_HOY.map((b) => [b.clave
 const CUENTAN = ['entregas', 'cuestionarios', 'classroom', 'propias'];
 const AVISOS = GRUPOS_DE_AVISOS.map((g) => g.clave);
 const NULO_SI = [null, true, false];
-const COLORES = [{ clave: 'accion' }, { clave: 'resaltador' }, { clave: 'consultronColor' }, { clave: 'cabecera', desde: '4' }, { clave: 'bandeja', desde: '7' }];
+const COLORES = [{ clave: 'accion' }, { clave: 'resaltador' }, { clave: 'consultronColor' }, { clave: 'cabecera', desde: '4' }, { clave: 'bandeja', desde: '7' }, { clave: 'temaColor', desde: '9' }];
 
 const eleccion = (clave, lista) => ({
   ancho: 1,

@@ -92,6 +92,29 @@ describe('un diseño de día y uno de noche', () => {
     expect(normalizar({ segunLaHora: { dia: 1 } }).segunLaHora).toBeNull();
     expect(normalizar({ segunLaHora: { dia: {}, noche: { estilo: '<x>' }, desde: '25:00' } }).segunLaHora).toMatchObject({ desde: '20:00', noche: { estilo: 'original' } });
   });
+
+  it('apagarlo y prenderlo de nuevo devuelve los dos diseños y las horas que tenías', () => {
+    cambiarSegunLaHora(true);
+    editarDiseno('noche');
+    cambiarAjustes({ estilo: 'batman' });
+    editarDiseno(null);
+    horasDeLaNoche('21:30', '06:00');
+    cambiarSegunLaHora(false);
+    // Off: what shows stays, and meanwhile the look changes freely.
+    cambiarAjustes({ estilo: 'plano' });
+    expect(ajustesActuales().segunLaHora).toBeNull();
+    cambiarSegunLaHora(true);
+    const s = ajustesActuales().segunLaHora;
+    expect([s.desde, s.hasta, s.dia.estilo, s.noche.estilo]).toEqual(['21:30', '06:00', 'original', 'batman']);
+    // At noon, the day's shows again.
+    expect(ajustesActuales().estilo).toBe('original');
+    expect(ajustesActuales().segunLaHoraAntes).toBeNull();
+    // Off twice in a row keeps them too.
+    cambiarSegunLaHora(false);
+    cambiarSegunLaHora(false);
+    cambiarSegunLaHora(true);
+    expect(ajustesActuales().segunLaHora.noche.estilo).toBe('batman');
+  });
 });
 
 describe('public/ajustes.js antes del primer pintado', () => {

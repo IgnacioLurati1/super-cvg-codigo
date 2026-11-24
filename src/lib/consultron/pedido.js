@@ -128,7 +128,11 @@ export function armarPedido(pregunta, elegidos, { puntual = false } = {}) {
   const marcado = elegidos.findIndex((e) => e.trozo.marcado);
   const resto = elegidos.length > 1 ? ' Los demás fragmentos son solo contexto.' : '';
   const esto = marcado >= 0 ? `\n(Pregunta por el texto que marcó [${marcado + 1}]. Respondé solo sobre ese texto, sin explicar lo que viene antes ni después.${resto})` : '';
-  return `Fragmentos:\n\n${fragmentos}\n\nPregunta: ${String(pregunta).trim()}${aca}${esto}${puntual ? `\n${UNA_COSA}` : ''}`;
+  // What the student attached is what «esto» names; the notes around it are context. If they don't explain it, the
+  // model does with what it knows.
+  const adjuntos = elegidos.map((e, i) => (e.trozo.fuente?.tipo === 'adjunto' ? i + 1 : 0)).filter(Boolean);
+  const suyo = marcado < 0 && adjuntos.length ? `\n(Pregunta por lo que adjuntó [${adjuntos.join(', ')}]. Si sus apuntes no lo explican, explicalo con lo que sabés.)` : '';
+  return `Fragmentos:\n\n${fragmentos}\n\nPregunta: ${String(pregunta).trim()}${aca}${esto}${suyo}${puntual ? `\n${UNA_COSA}` : ''}`;
 }
 
 // «Solo el primer paso», «el paso 2», «en una oración», «cortito»: it asks for one thing, and the answer is that alone.

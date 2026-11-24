@@ -70,6 +70,8 @@ describe('cómo se lee cada uno', () => {
     const foto = archivo('ej.jpg');
     expect(await leerArchivo(foto, 'foto', { leer: leer({ foto: async () => 'x² + 3x = 0' }) })).toEqual({ paginas: ['x² + 3x = 0'] });
     await expect(leerArchivo(foto, 'foto', { leer: leer({ foto: async () => ' . ' }) })).rejects.toMatchObject({ problema: 'No encontré texto en «ej.jpg». Probá con una foto más nítida.' });
+    // With «Usar Gemini» it stays: Gemini looks at the photo itself.
+    expect(await leerArchivo(foto, 'foto', { leer: leer({ foto: async () => ' . ' }), fotoSinTexto: true })).toEqual({ paginas: ['La foto no tiene texto escrito.'] });
     await expect(leerArchivo(foto, 'foto', { leer: leer({ foto: async () => { throw Object.assign(new Error(), { motivo: 'lector' }); } }) })).rejects.toMatchObject({ problema: 'No pude cargar el lector de fotos. Probá de nuevo en un rato.' });
     await expect(leerArchivo(foto, 'foto', { leer: leer({ foto: async () => { throw new Error('rota'); } }) })).rejects.toMatchObject({ problema: 'No pude abrir «ej.jpg». Probá con otra foto.' });
     await expect(leerArchivo(foto, 'foto', { leer: leer({ foto: async () => { throw new DOMException('x', 'AbortError'); } }) })).rejects.toMatchObject({ name: 'AbortError' });
@@ -121,7 +123,7 @@ describe('cómo se suman a las piezas', () => {
     expect(nombreDeTrozo({ fuente: { tipo: 'propia', clase: 'texto', nombre: 'Servos', materia: 'Robótica' }, pagina: 1 })).toBe('texto «Servos» que escribió el alumno en Robótica');
     expect(nombreDeTrozo({ fuente: { tipo: 'propia', clase: 'nota', nombre: 'Tu nota', materia: 'Redes' }, pagina: 1 })).toBe('nota que escribió el alumno en Redes');
     expect(nombreDeTrozo({ fuente: { tipo: 'pantalla', nombre: 'Raíces de una función' }, pagina: 1 })).toBe('lo que muestra ahora «Raíces de una función» en la pantalla del alumno');
-    expect(armarPedido('¿Qué dice?', [{ trozo: { fuente: { ...foto, clase: 'texto', nombre: 'n.txt' }, pagina: 1, texto: 'Hola' } }])).toBe('Fragmentos:\n\n[1] (archivo «n.txt» que adjuntó el alumno)\nHola\n\nPregunta: ¿Qué dice?');
+    expect(armarPedido('¿Qué dice?', [{ trozo: { fuente: { ...foto, clase: 'texto', nombre: 'n.txt' }, pagina: 1, texto: 'Hola' } }])).toBe('Fragmentos:\n\n[1] (archivo «n.txt» que adjuntó el alumno)\nHola\n\nPregunta: ¿Qué dice?\n(Pregunta por lo que adjuntó [1]. Si sus apuntes no lo explican, explicalo con lo que sabés.)');
     const previa = previaDe(foto, 1);
     expect(previa).toMatchObject({ tipo: 'archivo', nombre: 'ej.jpg', mime: 'image/jpeg' });
     expect(previa.abrirEn).toBeUndefined();

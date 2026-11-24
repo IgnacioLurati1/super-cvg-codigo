@@ -104,7 +104,7 @@
 
 .diseno__marca {
   margin: 4px 0 0;
-  color: var(--error-texto, var(--error));
+  color: var(--error);
   font-size: var(--t-chica);
 }
 
@@ -541,19 +541,35 @@ html .mini-diseno .mini-diseno__pagina[data-luz='claro'][data-cual='pizarron'] {
 }
 
 .disenos__quedan[data-sobra] {
-  color: var(--error-texto, var(--error));
+  color: var(--error);
 }
 
 .disenos__al-pie {
   display: flex;
+  flex-wrap: wrap;
   justify-content: flex-end;
+  gap: 8px;
   padding-top: 12px;
   border-top: 1px solid var(--borde);
 }
 
+.disenos__casilla {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+}
+
+.disenos__casilla input {
+  width: 20px;
+  height: 20px;
+  flex: none;
+  accent-color: var(--accion);
+}
+
 .disenos__borrar {
   border-color: var(--error);
-  color: var(--error-texto, var(--error));
+  color: var(--error);
 }
 
 @media (max-width: 40rem) {

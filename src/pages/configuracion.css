@@ -799,26 +799,6 @@ html[data-tema='claro'] .dibujo-tema[data-cual='pizarron']::before {
   flex: none;
 }
 
-.instalar__pasos {
-  display: grid;
-  gap: 6px;
-  margin: 0;
-  padding-left: 1.4em;
-}
-
-/* Safari's Compartir, drawn as it looks there, so it's found at a glance. */
-.instalar__compartir {
-  display: inline-block;
-  width: 1.15em;
-  height: 1.15em;
-  vertical-align: -0.2em;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 1.8;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
 @media (prefers-reduced-motion: reduce) {
   .ajuste-drive__linea[data-tono='espera']::before {
     animation: none;
@@ -1645,4 +1625,178 @@ h3.ajustes__leyenda {
 .ajustes__horas .campo {
   flex: 1 1 9rem;
   max-width: 14rem;
+}
+
+/* A page of a PDF, with the reader's filters (pages/ajustes.css): it follows the choices and the slider live. Its colors
+   are the paper's, not the theme's, as in a real PDF. */
+.muestra-pdf {
+  /* The reader's highlighters (lector.css). */
+  --r-amarillo: #ffe14d;
+  --r-celeste: #9ed7ff;
+  padding: 16px;
+  background: var(--fondo);
+}
+.muestra-pdf__hoja {
+  display: grid;
+  gap: 10px;
+  max-width: 26rem;
+  padding: 20px 22px;
+  background: var(--papel);
+  box-shadow: 0 1px 2px rgb(23 50 77 / 0.16), 0 6px 18px rgb(23 50 77 / 0.08);
+  color: #1d1d1d;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+.muestra-pdf__hoja p {
+  margin: 0;
+}
+.muestra-pdf__titulo {
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+.muestra-pdf__marca {
+  background: var(--r-amarillo);
+}
+.muestra-pdf__marca--celeste {
+  background: var(--r-celeste);
+}
+.muestra-pdf__grafico {
+  width: 100%;
+  max-width: 16rem;
+  height: auto;
+  fill: none;
+  stroke-width: 2;
+}
+.muestra-pdf__ejes {
+  stroke: #1d1d1d;
+  stroke-width: 1.2;
+}
+.muestra-pdf__curva {
+  stroke: #1f5fbf;
+}
+.muestra-pdf__curva--roja {
+  stroke: #c0392b;
+  stroke-dasharray: 5 4;
+}
+:root[data-pdf='oscuro'] .muestra-pdf__hoja,
+:root[data-pdf='tema'][data-tema='oscuro'] .muestra-pdf__hoja {
+  filter: var(--pdf-oscuras);
+  box-shadow: 0 0 0 1px rgb(203 203 203);
+}
+:root[data-pdf='sepia'] .muestra-pdf__hoja,
+:root[data-pdf='tema'][data-tema='claro'][data-pdf-claro='sepia'] .muestra-pdf__hoja {
+  filter: var(--pdf-sepia);
+}
+
+/* The theme's color: a title that fades to it, framed by its glow, as Profesional and Batman paint them. */
+.ajustes__tema-muestra {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: var(--radio-control);
+  box-shadow: 0 0 0 1px rgb(var(--brillo, 0 0 0) / 0.45);
+  background-image: linear-gradient(100deg, var(--texto) 35%, var(--titulo-fin, var(--texto)));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  font-weight: 700;
+}
+
+/* The search of Configuración: a field over the tabs and, while typing, the list of what matches under it. */
+.buscar-ajuste {
+  position: relative;
+  max-width: 30rem;
+  margin-top: 16px;
+}
+.buscar-ajuste__lupa {
+  position: absolute;
+  top: 50%;
+  left: 12px;
+  width: 18px;
+  height: 18px;
+  transform: translateY(-50%);
+  fill: none;
+  stroke: var(--texto-suave);
+  stroke-width: 2;
+  stroke-linecap: round;
+  pointer-events: none;
+}
+.buscar-ajuste__campo {
+  width: 100%;
+  padding-left: 38px;
+}
+.buscar-ajuste__lista {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  left: 0;
+  z-index: 20;
+  display: grid;
+  gap: 2px;
+  max-height: min(24rem, 60vh);
+  margin: 0;
+  padding: 6px;
+  overflow-y: auto;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-bloque);
+  background: var(--superficie);
+  box-shadow: 0 12px 32px -12px var(--sombra, rgb(0 0 0 / 0.3));
+  list-style: none;
+}
+.buscar-ajuste__lista[hidden] {
+  display: none;
+}
+.buscar-ajuste__opcion {
+  display: grid;
+  gap: 2px;
+  min-height: 44px;
+  padding: 6px 10px;
+  border-radius: var(--radio-control);
+  cursor: pointer;
+}
+.buscar-ajuste__opcion[aria-selected='true'] {
+  background: var(--superficie-2);
+  outline: 2px solid var(--foco, var(--accion));
+  outline-offset: -2px;
+}
+.buscar-ajuste__nombre {
+  color: var(--texto);
+  font-weight: 600;
+}
+.buscar-ajuste__nombre mark {
+  background: none;
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+}
+.buscar-ajuste__de,
+.buscar-ajuste__donde {
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+  font-weight: 400;
+}
+.buscar-ajuste__estado {
+  margin: 6px 0 0;
+  color: var(--texto-suave);
+  font-size: var(--t-chica);
+}
+/* Where the search took the student: marked a moment, as the highlighter does. */
+[data-encontrado] {
+  border-radius: var(--radio-control);
+  outline: 3px solid var(--resaltador, #ffe14d);
+  outline-offset: 4px;
+}
+@media (prefers-reduced-motion: no-preference) {
+  html:not([data-movimiento='reducido'], [data-movimiento='ninguno']) [data-encontrado] {
+    animation: ajuste-encontrado 1.6s ease-out forwards;
+  }
+}
+@keyframes ajuste-encontrado {
+  70% {
+    outline-color: var(--resaltador, #ffe14d);
+  }
+  100% {
+    outline-color: transparent;
+  }
 }

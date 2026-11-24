@@ -1,6 +1,7 @@
 // What the student attaches to Consultron: photos, PDF and text files, read in this browser and kept only in memory.
 // Nothing is uploaded nor goes to disk. Each one is read as soon as it's attached, one at a time: a photo with ocr.js
-// (the model reads only text), a PDF with leerTexto.js, a text file as it is. What was read becomes a document of the
+// (the model reads only text; with «Usar Gemini», Gemini also gets the photo with its question, fotosParaGemini.js), a
+// PDF with leerTexto.js, a text file as it is. What was read becomes a document of the
 // talk (fuente `adjunto`): it goes with its question, and later questions search it together with the notes. Until
 // «Borrar las preguntas» (motor.js, `limpiar`) or another session, which also let go of the addresses of the photos
 // (`blob:`, for their thumbnails). The attachments in the box are one for the tab, whichever view shows them.
@@ -8,6 +9,7 @@ import { useSyncExternalStore } from 'react';
 import { tokenActual } from '../sesion';
 import { elegir, indexar, trozar } from './fragmentos';
 import { olvidar } from './fuentes';
+import { usaGemini } from './nube';
 import { leerFoto } from './ocr';
 
 export const MAX_ADJUNTOS = 5;
@@ -104,6 +106,9 @@ export function paginasDeTexto(texto) {
   return paginas;
 }
 
+/** What a photo without text says to the model: Gemini sees the photo itself. */
+export const FOTO_SIN_TEXTO = 'La foto no tiene texto escrito.';
+
 const problema = (texto) => Object.assign(new Error(texto), { problema: texto });
 const cancelado = (e) => e?.name === 'AbortError';
 
@@ -116,9 +121,10 @@ const LECTORES = {
 /**
  * What a file says, in pages: one for a photo, one per page for a PDF, of about PAGINA_TEXTO letters for a text file.
  * { paginas, aviso }, `aviso` if it read only part of it. Throws with `problema`, what to tell the student, if there's
- * nothing to read. `alAvance`: how reading a photo goes (ocr.js). `leer`: the readers, for the tests.
+ * nothing to read. `alAvance`: how reading a photo goes (ocr.js). `leer`: the readers, for the tests. `fotoSinTexto`: a
+ * photo without text is kept (with «Usar Gemini», Gemini looks at it).
  */
-export async function leerArchivo(archivo, clase, { senal, alAvance = () => {}, leer = LECTORES } = {}) {
+export async function leerArchivo(archivo, clase, { senal, alAvance = () => {}, leer = LECTORES, fotoSinTexto = false } = {}) {
   if (clase === 'foto') {
     let texto;
     try {
@@ -127,7 +133,10 @@ export async function leerArchivo(archivo, clase, { senal, alAvance = () => {}, 
       if (cancelado(e)) throw e;
       throw problema(e?.motivo === 'lector' ? 'No pude cargar el lector de fotos. Probá de nuevo en un rato.' : `No pude abrir ${entre(archivo)}. Probá con otra foto.`);
     }
-    if (!tieneTexto(texto)) throw problema(`No encontré texto en ${entre(archivo)}. Probá con una foto más nítida.`);
+    if (!tieneTexto(texto)) {
+      if (fotoSinTexto) return { paginas: [FOTO_SIN_TEXTO] };
+      throw problema(`No encontré texto en ${entre(archivo)}. Probá con una foto más nítida.`);
+    }
     return { paginas: [texto] };
   }
   if (clase === 'pdf') {
@@ -316,6 +325,7 @@ function leerEnCola(a) {
     try {
       const { paginas, aviso } = await leerArchivo(a.archivo, a.clase, {
         senal: a.corte.signal,
+        fotoSinTexto: usaGemini(),
         alAvance: (p) => {
           if (!sigue()) return;
           leyendo = { id: a.id, clase: a.clase, ...p };

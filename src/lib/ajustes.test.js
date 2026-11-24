@@ -234,7 +234,7 @@ describe('tokens', () => {
 describe('leer los ajustes', () => {
   it('sin nada, los valores de siempre', () => {
     expect(normalizar(null)).toEqual({
-      estilo: 'original', tema: 'sistema', contraste: 'normal', daltonismo: 'ninguno', letra: 'normal', movimiento: 'sistema', pdf: 'claro', pdfClaro: 'claro', pdfBrillo: 0.92, accion: null, resaltador: null, cabecera: null, bandeja: null,
+      estilo: 'original', tema: 'sistema', contraste: 'normal', daltonismo: 'ninguno', letra: 'normal', movimiento: 'sistema', pdf: 'claro', pdfClaro: 'claro', pdfBrillo: 0.92, accion: null, resaltador: null, cabecera: null, bandeja: null, temaColor: null,
       vistas: { hoy: 'agenda', materia: 'tarjetas', materias: 'tarjetas', calendario: 'mes' },
       luz: false,
       lectura: false,
@@ -249,6 +249,7 @@ describe('leer los ajustes', () => {
       fondoTono: 0,
       fondoDesenfoque: 0,
       segunLaHora: null,
+      segunLaHoraAntes: null,
       vistos: null,
       documentoOscuro: null,
       avisoBajarConsultron: true,
