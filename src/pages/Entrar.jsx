@@ -20,22 +20,28 @@ const suscribirCelu = (f) => {
 };
 const useCelu = () => useSyncExternalStore(suscribirCelu, () => window.matchMedia(CELU).matches, () => false);
 
-// What Google reads about the site, from what's true of it: free, on the web, for studying, by Luta Studios.
-const APLICACION = {
-  '@type': 'WebApplication',
-  name: SITIO.nombre,
-  url: `${SITIO.url}/`,
-  description: SITIO.descripcion,
-  applicationCategory: 'EducationalApplication',
-  operatingSystem: 'Web',
-  inLanguage: SITIO.idioma,
-  isAccessibleForFree: true,
-  offers: { '@type': 'Offer', price: '0', priceCurrency: 'ARS' },
-  creator: { '@type': 'Organization', name: 'Luta Studios', url: 'https://lutastudios.com/' },
+// What Google reads about the site, from what's true of it. WebSite gives the name Google shows above the result
+// (otherwise it may show the domain); WebApplication: free, on the web, for studying, by Luta Studios.
+const DATOS = {
+  '@graph': [
+    { '@type': 'WebSite', name: SITIO.nombre, url: `${SITIO.url}/`, inLanguage: SITIO.idioma },
+    {
+      '@type': 'WebApplication',
+      name: SITIO.nombre,
+      url: `${SITIO.url}/`,
+      description: SITIO.descripcion,
+      applicationCategory: 'EducationalApplication',
+      operatingSystem: 'Web',
+      inLanguage: SITIO.idioma,
+      isAccessibleForFree: true,
+      offers: { '@type': 'Offer', price: '0', priceCurrency: 'ARS' },
+      creator: { '@type': 'Organization', name: 'Luta Studios', url: 'https://lutastudios.com/' },
+    },
+  ],
 };
 
 export default function Entrar() {
-  useDatosEstructurados(APLICACION);
+  useDatosEstructurados(DATOS);
   const [usuario, setUsuario] = useState('');
   const [contrasena, setContrasena] = useState('');
   const [recordar, setRecordar] = useState(false);
