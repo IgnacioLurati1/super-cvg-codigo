@@ -28,6 +28,7 @@ import { contarVisita } from './lib/visita';
 import { sumarLetrasDeCodigo } from './lib/letrasDeCodigo';
 import { adelantarPedidos } from './lib/campus';
 import { escucharToques } from './lib/alTocar';
+import { adelantarClassroom } from './lib/classroomUnido';
 
 // The small window Google came back to only hands over the permission and closes: no app, no visit counted.
 if (atenderVueltaDeGoogle()) {
@@ -38,6 +39,8 @@ if (atenderVueltaDeGoogle()) {
   iniciarVinculo();
   // The campus starts answering while the rest is drawn: on a slow phone, while its logo still shows.
   adelantarPedidos(location.pathname === '/');
+  // Classroom too, on the screens that show it: Google is the slowest to answer.
+  if (location.pathname === '/' || location.pathname === '/calendario') adelantarClassroom();
   // And each screen's, from the moment a finger touches its link.
   escucharToques();
   // Nobody should be able to cover the login form from a page of their own.

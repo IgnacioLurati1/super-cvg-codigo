@@ -59,6 +59,7 @@ export const alcancesDe = (usos) => [...new Set([...usos.flatMap((u) => [...(USO
 export const CLAVE_GOOGLE = 'cl.classroom';
 export const CLAVE_CUENTA = 'cl.google';
 export const CLAVE_USOS = 'cl.google.usos';
+export const CLAVE_CURSOS = 'cl.google.cursos';
 const CANAL = 'super-cvg-google';
 const CERROJO = 'super-cvg-google-renovar';
 const ESPERA_MS = 5 * 60 * 1000;
@@ -177,6 +178,38 @@ function olvidarCuenta() {
   for (const a of almacenes()) {
     a.removeItem(CLAVE_CUENTA);
     a.removeItem(CLAVE_USOS);
+    a.removeItem(CLAVE_CURSOS);
+  }
+}
+
+// The Classroom courses joined to the student's last time (classroomUnido.js), only their numbers, next to the account
+// they are of: opening the site asks for them at once, without waiting for the list of courses.
+const CURSO = /^\d{1,24}$/;
+const TOPE_DE_CURSOS = 30;
+
+/** The numbers of the Classroom courses joined last time, for the account connected now; [] if none. */
+export function cursosDeClassroom() {
+  const sub = cuentaGoogle();
+  if (!sub) return [];
+  for (const a of almacenes()) {
+    const v = a.getItem(CLAVE_CURSOS);
+    if (v === null) continue;
+    const [de, lista = ''] = v.split(':');
+    const ids = lista.split(',').filter(Boolean);
+    return de === sub && ids.every((id) => CURSO.test(id)) ? ids.slice(0, TOPE_DE_CURSOS) : [];
+  }
+  return [];
+}
+
+/** Keeps the numbers of the Classroom courses joined now, for the connected account. */
+export function recordarCursosDeClassroom(ids) {
+  const sub = cuentaGoogle();
+  if (!sub || !Array.isArray(ids) || !ids.every((id) => typeof id === 'string' && CURSO.test(id))) return;
+  try {
+    for (const a of almacenes()) a.removeItem(CLAVE_CURSOS);
+    (sesionRecordada() ? localStorage : sessionStorage).setItem(CLAVE_CURSOS, `${sub}:${ids.slice(0, TOPE_DE_CURSOS).join(',')}`);
+  } catch {
+    // Not stored: the next visit waits for the list of courses, as before.
   }
 }
 
@@ -296,7 +329,10 @@ export function olvidarGoogle({ revocar = false } = {}) {
  * too. If another use is still on, the permission stays: Google gives it whole, and the other one needs it. */
 export function soltarGoogle(uso) {
   queridos.delete(uso);
-  if (uso === 'classroom') borrarAparte('classroom.');
+  if (uso === 'classroom') {
+    borrarAparte('classroom.');
+    for (const a of almacenes()) a.removeItem(CLAVE_CURSOS);
+  }
   const quedan = usosActuales().filter((u) => u !== uso);
   if (!quedan.length) {
     olvidarGoogle({ revocar: true });
@@ -581,7 +617,7 @@ export function cancelarConexion() {
 }
 
 // Another open tab of the same student may have a newer permission, for the same uses.
-function pedirAOtraPestana(mejorQue, usos) {
+function pedirAOtraPestana(mejorQue, usos, corte = {}) {
   escuchar();
   const id = azar();
   return new Promise((ok) => {
@@ -590,6 +626,7 @@ function pedirAOtraPestana(mejorQue, usos) {
       prestamos.delete(id);
       ok(r);
     };
+    (corte.parar ??= []).push(() => fin(false));
     const reloj = setTimeout(() => fin(false), PRESTAMO_MS);
     prestamos.set(id, (m) => {
       if (typeof m.token !== 'string' || !m.token || !Number.isFinite(m.vence) || m.vence <= Date.now() + 60_000) return;
@@ -609,7 +646,7 @@ function pedirAOtraPestana(mejorQue, usos) {
 
 // Google again, in a hidden frame, for the account it already had and the uses turned on. If the browser keeps
 // Google's session out of frames, Google answers with an error (or nothing) and it stays for a click.
-function enSilencio(cuenta, alcances) {
+function enSilencio(cuenta, alcances, corte = {}) {
   escuchar();
   const estado = azar();
   const nonce = azar();
@@ -626,6 +663,7 @@ function enSilencio(cuenta, alcances) {
       ok(r);
     };
     const reloj = setTimeout(() => fin(false), SILENCIO_MS);
+    (corte.parar ??= []).push(() => fin(false));
     esperas.set(estado, { nonce, alcances, ok: () => fin(true), mal: () => fin(false) });
     document.body.append(marco);
   });
@@ -646,10 +684,22 @@ export function renovarGoogle() {
     // Another tab renewed it while this one waited.
     const v = leer();
     if (v && v.vence > antes && v.vence > Date.now() + RENOVAR_ANTES_MS && usos.every((u) => cubre(v, u))) return true;
-    if (await pedirAOtraPestana(venceGoogle() ?? 0, usos)) return true;
+    // Another tab that has it, and Google, at the same time: the first that brings it, and the other stops. Waiting for
+    // the tabs first cost 0.4 s on every renewal of the phone's app, which never has another (measured on 24/11).
+    const corte = {};
+    const deOtra = pedirAOtraPestana(venceGoogle() ?? 0, usos, corte);
     const cuenta = cuentaParaPedir();
-    if (!cuenta || !usos.length) return false;
-    return enSilencio(cuenta, alcancesDe(usos));
+    if (!cuenta || !usos.length) return deOtra;
+    const deGoogle = enSilencio(cuenta, alcancesDe(usos), corte);
+    const trajo = await new Promise((ok) => {
+      let quedan = 2;
+      const una = (si) => (si ? ok(true) : --quedan === 0 && ok(false));
+      // A failure counts as nothing brought: the lock of enFila is never left held.
+      deOtra.then(una, () => una(false));
+      deGoogle.then(una, () => una(false));
+    });
+    for (const parar of corte.parar) parar();
+    return trajo;
   }).catch(() => false).finally(() => {
     renovando = null;
     avisar();

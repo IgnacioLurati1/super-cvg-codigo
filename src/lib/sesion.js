@@ -140,6 +140,9 @@ function olvidarCuentaGoogle() {
   // And the uses it had on (Classroom, Drive).
   sessionStorage.removeItem('cl.google.usos');
   localStorage.removeItem('cl.google.usos');
+  // And the numbers of its Classroom courses.
+  sessionStorage.removeItem('cl.google.cursos');
+  localStorage.removeItem('cl.google.cursos');
 }
 
 // The Classroom permission (google.js) lives next to the key, in the tab or in this browser.
@@ -159,7 +162,7 @@ export const sesionRecordada = () => {
 
 // With «Entrar con Google» (entrarConGoogle.js) the Google permission came first, in this tab: it stays, and goes where the key
 // goes.
-const DE_GOOGLE = ['cl.google', 'cl.google.usos', 'cl.classroom'];
+const DE_GOOGLE = ['cl.google', 'cl.google.usos', 'cl.google.cursos', 'cl.classroom'];
 function moverGoogle() {
   for (const k of DE_GOOGLE) {
     const v = sessionStorage.getItem(k);

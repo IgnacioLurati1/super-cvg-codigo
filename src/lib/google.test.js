@@ -491,6 +491,49 @@ describe('sin desconectarse', () => {
     expect(marco()).toBeNull();
   });
 
+  it('le pide a Google al mismo tiempo que a las otras pestañas, sin esperarlas', async () => {
+    sessionStorage.setItem(g.CLAVE_CUENTA, '42');
+    const renovando = g.renovarGoogle();
+    // Before the 0.4 s the tabs have to answer.
+    await vi.waitFor(() => expect(marco()).not.toBeNull(), { timeout: 150, interval: 5 });
+    const p = new URL(marco().src).searchParams;
+    responder({ state: p.get('state'), token: 'nuevo', vence: 3600, idToken: idToken(p.get('nonce')) });
+    expect(await renovando).toBe(true);
+    expect(g.tokenGoogle()).toBe('nuevo');
+  });
+
+  it('si otra pestaña lo presta primero, el marco de Google se saca', async () => {
+    sessionStorage.setItem(g.CLAVE_CUENTA, '42');
+    const otra = new BroadcastChannel('super-cvg-google');
+    otra.onmessage = ({ data }) => {
+      if (data.pide) otra.postMessage({ presta: data.pide, token: 'prestado', vence: Date.now() + 3_000_000, sub: '42' });
+    };
+    expect(await g.renovarGoogle()).toBe(true);
+    otra.close();
+    expect(g.tokenGoogle()).toBe('prestado');
+    expect(marco()).toBeNull();
+  });
+
+  it('recuerda los números de los cursos de Classroom solo para la cuenta que los tiene, y se van con ella', () => {
+    sessionStorage.setItem(g.CLAVE_CUENTA, '42');
+    g.recordarCursosDeClassroom(['111', '222']);
+    expect(g.cursosDeClassroom()).toEqual(['111', '222']);
+    for (const malo of [['111', 'x'], [111], 'x']) g.recordarCursosDeClassroom(malo);
+    expect(g.cursosDeClassroom()).toEqual(['111', '222']);
+    // Another account, the same browser: they are not its.
+    sessionStorage.setItem(g.CLAVE_CUENTA, '43');
+    expect(g.cursosDeClassroom()).toEqual([]);
+    sessionStorage.setItem(g.CLAVE_CUENTA, '42');
+    // Desconectar Classroom with Drive still on: the numbers go, the account stays.
+    sessionStorage.setItem(g.CLAVE_USOS, 'classroom drive');
+    g.soltarGoogle('classroom');
+    expect(sessionStorage.getItem(g.CLAVE_CURSOS)).toBeNull();
+    expect(g.cuentaGoogle()).toBe('42');
+    g.recordarCursosDeClassroom(['111']);
+    g.olvidarGoogle({ revocar: true });
+    expect(sessionStorage.getItem(g.CLAVE_CURSOS)).toBeNull();
+  });
+
   it('sin una cuenta conectada antes, no intenta nada', async () => {
     expect(await g.renovarGoogle()).toBe(false);
     expect(marco()).toBeNull();

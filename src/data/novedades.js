@@ -21,6 +21,11 @@ export const NOVEDADES = [
           'Las pantallas empiezan a cargar apenas apoyás el dedo en su enlace.',
         ],
       },
+      {
+        tipo: 'mejora',
+        nombre: 'Classroom llega antes',
+        texto: 'Al abrir, tus cursos de Classroom se piden todos juntos. Llegan a Hoy hasta un segundo antes.',
+      },
     ],
   },
   {

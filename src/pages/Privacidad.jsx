@@ -138,7 +138,7 @@ export default function Privacidad() {
         <>
           <h2>Classroom</h2>
           <p>Si conectás Classroom, Google te pregunta si Super CVG puede leer tus cursos, sus temas, materiales, tareas y avisos, y qué tareas entregaste. También tu dirección de mail, para mostrarte con qué cuenta entraste. Es solo lectura. No entrega, no publica y no ve tus mails ni tus archivos de Drive, salvo la carpeta oculta de la copia si la prendés y los archivos que mandás por Mensajes.</p>
-          <p>Tu navegador le pide todo directo a Google, sin pasar por nosotros. El permiso dura una hora y se renueva solo mientras usás Super CVG. Queda en la pestaña, junto con tu dirección de mail.</p>
+          <p>Tu navegador le pide todo directo a Google, sin pasar por nosotros. El permiso dura una hora y se renueva solo mientras usás Super CVG. Queda en la pestaña, o en este navegador con «Seguir conectado», junto con tu dirección de mail y los números de los cursos que ves en Super CVG.</p>
           <p>Un archivo de Classroom compartido solo con el curso se ve con el visor de Google, que se carga desde Google con tu sesión de ese navegador. Le pasa tu mail para abrirlo con la cuenta conectada.</p>
           <p>Si elegiste seguir conectado, el permiso queda en ese navegador hasta que vence, así no se corta al cerrar la pestaña.</p>
           <p>Para renovarlo sin preguntarte, tu navegador guarda el número de tu cuenta de Google junto a tu sesión del campus. Salir borra el permiso y ese número, y Desconectar también. Si guardás en tu Drive, Desconectar deja el permiso y el número queda aunque salgas.</p>
