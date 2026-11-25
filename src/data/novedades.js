@@ -9,7 +9,7 @@ export const PENDIENTES = [];
 export const NOVEDADES = [
   {
     fecha: '2026-11-24',
-    titulo: 'Gemini mira tus fotos',
+    titulo: 'Gemini y fotos',
     funciones: [
       {
         tipo: 'mejora',
@@ -86,7 +86,11 @@ export const NOVEDADES = [
     ],
     arreglos: [
       'En Diseños, «Borrar este diseño» se lee en todos los estilos.',
-      'En Consultron, el fundido arriba de donde escribís tiene el ancho de la caja.',
+      'En Consultron, la charla se desvanece al llegar a donde escribís, sin franja de color.',
+      'Cambiar de estilo ya no repite la entrada de la pantalla ni hace parpadear el fondo.',
+      'Pasar de un diseño a otro cambia todo a la vez: el fondo ya no llega después ni se tiñe de otro color por un instante.',
+      'Probando un diseño, Consultron y el Laboratorio ocupan toda la pantalla y dejan lugar abajo para la barra.',
+      'En Profesional y Batman, la cola de la «g» y la «j» de los títulos ya no se corta.',
     ],
   },
   {

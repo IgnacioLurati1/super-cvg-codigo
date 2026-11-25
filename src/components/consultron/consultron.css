@@ -2177,10 +2177,11 @@ html[data-consultron-lado='izquierda'] .flotante > .lector__consultron-borde::af
 /* ---------- Consultron's own screen: a chat (Consultron.jsx, Charla.jsx with vista="pagina") ----------
    The height of the window, without the footer (Layout.jsx). The talks in a quiet column on the left, a drawer on a
    phone. In the middle, one column to read: the student's bubbles on the right, the answers in plain text with their
-   yellow tabs, and the box to write at the bottom. Empty, the greeting and the box go to the middle of the screen. */
+   yellow tabs, and the box to write at the bottom. Empty, the greeting and the box go to the middle of the screen.
+   Trying a design (BarraDePrueba.jsx), it keeps the whole height: what's inside leaves the bar's room at the bottom. */
 .consultron--chat {
-  height: calc(100vh - var(--alto-cabecera) - var(--alto-sin-internet, 0px) - var(--alto-barra-prueba, 0px));
-  height: calc(100dvh - var(--alto-cabecera) - var(--alto-sin-internet, 0px) - var(--alto-barra-prueba, 0px));
+  height: calc(100vh - var(--alto-cabecera) - var(--alto-sin-internet, 0px));
+  height: calc(100dvh - var(--alto-cabecera) - var(--alto-sin-internet, 0px));
   min-height: 26rem;
 }
 
@@ -2201,7 +2202,7 @@ html[data-consultron-lado='izquierda'] .flotante > .lector__consultron-borde::af
   flex-direction: column;
   gap: 6px;
   min-height: 0;
-  padding: 14px 10px 16px;
+  padding: 14px 10px calc(16px + var(--alto-barra-prueba, 0px));
   overflow-y: auto;
   overscroll-behavior: contain;
   border-right: 1px solid var(--borde);
@@ -2397,6 +2398,7 @@ html[data-consultron-lado='izquierda'] .flotante > .lector__consultron-borde::af
   flex-direction: column;
   min-width: 0;
   min-height: 0;
+  padding-bottom: var(--alto-barra-prueba, 0px);
 }
 
 .charla__barra {
@@ -2526,6 +2528,17 @@ html[data-consultron-lado='izquierda'] .flotante > .lector__consultron-borde::af
   overscroll-behavior: contain;
 }
 
+/* The talk fades out as it reaches the box: the text itself turns transparent, over whatever background is behind, with
+   no band of color and no edges at the sides. */
+.charla[data-vista='pagina']:not([data-vacia]) .charla__lista {
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 28px), transparent);
+}
+
+/* At the end of the talk, its last line sits above the fade. */
+.charla[data-vista='pagina']:not([data-vacia]) .charla__columna {
+  padding-bottom: 28px;
+}
+
 .charla__columna {
   width: 100%;
   max-width: calc(var(--ancho-consultron) + 2 * var(--margen));
@@ -2591,7 +2604,7 @@ html[data-consultron-lado='izquierda'] .flotante > .lector__consultron-borde::af
   font-size: 0.8125rem;
 }
 
-/* The box at the bottom, the width of the column, with the talk fading under its top edge. */
+/* The box at the bottom, the width of the column. */
 .charla__abajo {
   position: relative;
   flex: none;
@@ -2599,18 +2612,6 @@ html[data-consultron-lado='izquierda'] .flotante > .lector__consultron-borde::af
   max-width: calc(var(--ancho-consultron) + 2 * var(--margen));
   margin: 0 auto;
   padding: 0 var(--margen) max(10px, env(safe-area-inset-bottom));
-}
-
-.charla__abajo::before {
-  content: '';
-  position: absolute;
-  bottom: 100%;
-  /* As wide as the box, not its side margins. */
-  left: var(--margen);
-  right: var(--margen);
-  height: 20px;
-  background: linear-gradient(to bottom, transparent, var(--fondo));
-  pointer-events: none;
 }
 
 .charla[data-vista='pagina'] .consultron__caja {
@@ -2785,10 +2786,6 @@ html[data-consultron-lado='izquierda'] .flotante > .lector__consultron-borde::af
 .charla[data-vista='pagina'][data-vacia] .charla__abajo {
   margin-bottom: auto;
   padding-bottom: 24px;
-}
-
-.charla[data-vista='pagina'][data-vacia] .charla__abajo::before {
-  content: none;
 }
 
 .charla[data-vista='pagina'] .charla__ideas {

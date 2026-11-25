@@ -209,6 +209,9 @@ html:is([data-estilo='profesional'], [data-estilo='batman']) :where(.marcado, .s
 }
 
 html:is([data-estilo='profesional'], [data-estilo='batman']):not([data-contraste='alto']) main h1 {
+  /* The gradient paints only inside the title's box: without this room the tail of a «g» or a «j», below the line, was
+     cut flat. */
+  padding-bottom: 0.1em;
   background-image: linear-gradient(100deg, var(--texto) 35%, var(--titulo-fin));
   -webkit-background-clip: text;
   background-clip: text;

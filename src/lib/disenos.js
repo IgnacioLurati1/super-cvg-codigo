@@ -283,9 +283,9 @@ export async function denunciar(llave, tipo, id, opciones) {
 
 /** Muestra un diseño en toda la página sin guardarlo: lo de cada uno (daltonismo, movimiento, Sensible a la luz)
  * queda, también si cambia mientras dura. Sin código, vuelve a lo guardado. */
-export function verDiseno(codigo, ajustes = ajustesActuales()) {
+export function verDiseno(codigo, ajustes = ajustesActuales(), luego) {
   const bien = Boolean(codigo && ajustesDeCodigo(codigo, ajustes));
-  probarAjustes(bien ? (base) => ajustesDeCodigo(codigo, base) : null);
+  probarAjustes(bien ? (base) => ajustesDeCodigo(codigo, base) : null, bien ? luego : undefined);
   return bien;
 }
 
@@ -296,15 +296,13 @@ export function probarDiseno(diseno) {
     terminarPrueba();
     return true;
   }
-  if (!verDiseno(diseno.codigo)) return false;
-  ponerEnPrueba(diseno);
-  return true;
+  // Its bar shows with it, in the same frame (public/ajustes.js).
+  return verDiseno(diseno.codigo, undefined, () => ponerEnPrueba(diseno));
 }
 
 export function terminarPrueba() {
   if (!disenoEnPrueba()) return;
-  ponerEnPrueba(null);
-  verDiseno(null);
+  probarAjustes(null, () => ponerEnPrueba(null));
 }
 
 // The style the student had before using one, as a code, to go back to it another day. Per student on this device,
@@ -375,8 +373,7 @@ export function usarDiseno(diseno, { ajustes, mio }) {
   const bien = poner(cambio);
   // The preview ends here, after saving so nothing flashes: left on, the screens would keep drawing it over every later
   // change until a reload. The bar of the preview goes with it.
-  ponerEnPrueba(null);
-  probarAjustes(null);
+  probarAjustes(null, () => ponerEnPrueba(null));
   // `usado`: how the settings look right after using it, to tell whether they changed afterwards (disenoSigue).
   guardarAntes({ codigo: tuyo, nombre: diseno.nombre, usado: codigoDeEstilo(ajustesActuales(), mioActual()) });
   return bien;

@@ -102,7 +102,8 @@ describe('con el servicio de ejemplo (/?demo=1)', () => {
     expect(ajustesDeCodigo(d.codigo)).toMatchObject(filtros);
     volverAjustesOriginales();
     fijarUsuario(4242);
-    window.aplicarAjustes = vi.fn();
+    // Like public/ajustes.js: the screens are told once the page has the settings.
+    window.aplicarAjustes = vi.fn((_, luego) => luego?.());
     expect(usarDiseno(d, { ajustes: ajustesActuales(), mio: MIO })).toBe(true);
     expect(ajustesActuales()).toMatchObject({ estilo: 'plano', ...filtros });
     fijarUsuario(null);
@@ -235,7 +236,8 @@ describe('probar y usar', () => {
     volverAjustesOriginales();
     fijarUsuario(4242);
     localStorage.clear();
-    window.aplicarAjustes = vi.fn();
+    // Like public/ajustes.js: the screens are told once the page has the settings.
+    window.aplicarAjustes = vi.fn((_, luego) => luego?.());
   });
 
   it('la vista previa pinta sin guardar y deja lo de cada uno', () => {
@@ -262,6 +264,23 @@ describe('probar y usar', () => {
     expect(disenoEnPrueba()).toBe(null);
     expect(ajustesQueSeVen().estilo).toBe('hoja');
     expect(window.aplicarAjustes.mock.calls.at(-1)[0]).toBeUndefined();
+  });
+
+  it('mientras la página espera el cielo nuevo, las pantallas y la barra siguen con lo de antes, y cambian juntas', () => {
+    let luego = null;
+    window.aplicarAjustes = vi.fn((_, f) => {
+      luego = f;
+    });
+    const antes = ajustesQueSeVen();
+    const d = leerDiseno(crudo());
+    expect(probarDiseno(d)).toBe(true);
+    expect(ajustesQueSeVen()).toBe(antes);
+    expect(disenoEnPrueba()).toBe(null);
+    luego();
+    expect(ajustesQueSeVen().estilo).toBe('plano');
+    expect(disenoEnPrueba()).toBe(d);
+    window.aplicarAjustes = vi.fn((_, f) => f?.());
+    terminarPrueba();
   });
 
   it('probar el mismo otra vez la termina', () => {

@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { act, createElement } from 'react';
 import { createRoot } from 'react-dom/client';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ALINEACIONES_DEL_MENU, ANCHOS_DEL_MENU, EN_EL_MENU, aparienciaQueViaja, conApariencia, POSICIONES_DEL_MENU, movimientoDe, ordenarMenu, ordenValido, ponerPosicionDelMenu } from './ajustes';
 import { APARIENCIA_CONSULTRON, LAB_TAMANO, LETRAS_DE_CODIGO, SIEMPRE_OSCUROS, cambioDeBordes, cambioDeEstilo, ALTO_CONSULTRON, BRILLO_PDF, CLAVE_AJUSTES, OPCIONES, ORIGINALES, PANEL_CONSULTRON, PANEL_PDF, PDF_CLAROS, RINCON_CONSULTRON, VISTAS, ajustesActuales, alternarPdfOscuro, cambiarAjustes, contraste, cuestaLeerSobre, elegirVista, normalizar, pdfOscuro, textoSobre, useVista, volverAjustesOriginales } from './ajustes';
 import { ESTILOS_DE_TARJETA } from './tarjetas';
@@ -507,6 +507,36 @@ describe('public/ajustes.js', () => {
         const esperado = clave === 'tema' ? { sistema: 'claro', ...PALETAS }[valor] ?? valor : valor;
         expect(atributo(clave)).toBe(esperado);
       }
+    }
+  });
+
+  it('cambiar de estilo con una pantalla abierta no repite su entrada: termina lo que el cambio arrancó en la página', () => {
+    const main = document.createElement('main');
+    const tarjeta = document.createElement('div');
+    main.append(tarjeta);
+    document.body.append(main);
+    const animacion = (target, iterations = 1) => ({ animationName: 'batman-luz', effect: { target, getTiming: () => ({ iterations }) }, finish: vi.fn() });
+    const yaEstaba = animacion(tarjeta);
+    const entrada = animacion(tarjeta);
+    const sinFin = animacion(tarjeta, Infinity);
+    const afuera = animacion(document.body);
+    let despues = false;
+    document.getAnimations = () => (despues ? [yaEstaba, entrada, sinFin, afuera] : [yaEstaba]);
+    const poner = raiz.setAttribute.bind(raiz);
+    const espia = vi.spyOn(raiz, 'setAttribute').mockImplementation((a, v) => {
+      if (a === 'data-estilo') despues = true;
+      poner(a, v);
+    });
+    try {
+      aplicar({ estilo: 'batman' });
+      expect(entrada.finish).toHaveBeenCalledOnce();
+      expect(yaEstaba.finish).not.toHaveBeenCalled();
+      expect(sinFin.finish).not.toHaveBeenCalled();
+      expect(afuera.finish).not.toHaveBeenCalled();
+    } finally {
+      espia.mockRestore();
+      delete document.getAnimations;
+      main.remove();
     }
   });
 

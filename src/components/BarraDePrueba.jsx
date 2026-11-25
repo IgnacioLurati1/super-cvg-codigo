@@ -7,7 +7,7 @@ import './barraDePrueba.css';
 
 /** While a design from Diseños is being tried, on every screen: it stays until the student uses it or goes back to
  * theirs. Layout loads it only then (enPrueba.js). `conHueco`: room at the end of the page; the screens the height of
- * the window (Laboratorio, Consultron) take --alto-barra-prueba off their height instead. */
+ * the window (Laboratorio, Consultron) keep their height and leave --alto-barra-prueba inside, at the bottom. */
 export default function BarraDePrueba({ diseno, conHueco = true }) {
   const ajustes = useAjustesGuardados();
   const mio = useMio();

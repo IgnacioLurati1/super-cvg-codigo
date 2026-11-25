@@ -57,12 +57,15 @@ export function iniciarFondo() {
   let mueve = null;
   let vidaLienzo = null;
   let vida = null;
+  let vidaClave = '';
+  let mueveClave = '';
   let ultimaVida = 0;
   let sistema = null;
   let cuadro = 0;
   let antes = 0;
   let modulos = null;
   let turno = 0;
+  let pendiente = false;
 
   const cargar = () => (modulos ??= Promise.all([import('./escenas'), import('./particulas'), import('./ruido')]));
 
@@ -104,10 +107,22 @@ export function iniciarFondo() {
     cuadro = requestAnimationFrame(vuelta);
   };
 
+  // Each canvas keeps the filter («Cómo se ve», filtros.css) it was painted with until it's painted again: a design brings
+  // its theme and its filter at once, and the new filter over the old sky flashed another color (the cherry sky in
+  // red, the cosmic one in blue) for the frames the new one took to arrive.
+  const fijarFiltro = () => {
+    for (const c of [escena, vidaLienzo, mueve]) {
+      if (!c) continue;
+      c.style.filter = '';
+      c.style.filter = getComputedStyle(c).filter;
+    }
+  };
+
   const soltarVida = () => {
     vida?.soltar();
     vidaLienzo?.remove();
     vida = vidaLienzo = null;
+    vidaClave = '';
   };
 
   const dibujar = async () => {
@@ -120,6 +135,8 @@ export function iniciarFondo() {
       escena?.remove();
       mueve?.remove();
       escena = mueve = sistema = actual = null;
+      mueveClave = '';
+      pendiente = false;
       return;
     }
     const [{ pintarEscena }, { crearParticulas }, { aRgb }] = await cargar();
@@ -141,43 +158,73 @@ export function iniciarFondo() {
       escena = null;
     }
 
-    // A new canvas each time: a WebGL context let go can't be used again.
-    soltarVida();
-    if (vivo && escena) {
+    // What lives over the sky and what moves depend only on the theme and the size: a change of style keeps them as
+    // they are. Made again, the new layer is drawn before the old one leaves, or a frame without it flashes.
+    const clave = `${plan.tema}|${window.innerWidth}|${altoDelFondo()}`;
+    if (!(vivo && escena)) soltarVida();
+    else if (!vida || vidaClave !== clave) {
+      const vieja = { vida, vidaLienzo };
+      vida = vidaLienzo = null;
+      // A new canvas each time: a WebGL context let go can't be used again.
       vidaLienzo = crearLienzo('vida');
-      escena.after(vidaLienzo);
+      (vieja.vidaLienzo ?? escena).after(vidaLienzo);
       vida = vivo.crearVida(vidaLienzo, plan.tema, window.innerWidth, altoDelFondo());
       if (!vida) soltarVida();
-      // Still: one frame, always the same.
-      else if (!plan.mueve) vida.pintar(40);
+      else {
+        vidaClave = clave;
+        // Still: one frame, always the same. Moving: its first frame now, the rest from the loop.
+        vida.pintar(plan.mueve ? performance.now() / 1000 : 40);
+      }
+      requestAnimationFrame(() =>
+        requestAnimationFrame(() => {
+          vieja.vida?.soltar();
+          vieja.vidaLienzo?.remove();
+        }),
+      );
     }
 
     if (plan.mueve) {
       mueve ??= crearLienzo('mueve');
       // After the sky, so it stays on top of it.
       (vidaLienzo ?? escena)?.after(mueve);
-      mueve._medida = medir(mueve, 1.5);
-      sistema = crearParticulas(plan.tema, mueve._medida.ancho, mueve._medida.alto);
+      if (!sistema || mueveClave !== clave) {
+        mueve._medida = medir(mueve, 1.5);
+        sistema = crearParticulas(plan.tema, mueve._medida.ancho, mueve._medida.alto);
+        mueveClave = clave;
+      }
       andar();
     } else {
       mueve?.remove();
       mueve = sistema = null;
+      mueveClave = '';
     }
+    pendiente = false;
+    fijarFiltro();
   };
 
   let espera = 0;
   const pronto = () => {
+    pendiente = true;
     clearTimeout(espera);
     espera = setTimeout(dibujar, 120);
   };
 
   // public/ajustes.js writes every attribute on any change of the settings, even with the same value: only a real change
   // paints again, or the sky would start over (and its animation with it) each time something else changes.
-  const cambioDeVerdad = (cambios) => cambios.some((c) => c.oldValue !== document.documentElement.getAttribute(c.attributeName));
-  new MutationObserver((cambios) => cambioDeVerdad(cambios) && pronto()).observe(document.documentElement, {
+  // Only the filter changing (Configuración) goes on at once; with something else, together with the new sky.
+  const deVerdad = (cambios) => cambios.filter((c) => c.oldValue !== document.documentElement.getAttribute(c.attributeName));
+  const DEL_CIELO = new Set(Object.values(ATRIBUTOS));
+  const revisar = (cambios) => {
+    const reales = deVerdad(cambios);
+    if (reales.some((c) => DEL_CIELO.has(c.attributeName))) return pronto();
+    if (reales.length && !pendiente) fijarFiltro();
+  };
+  const observador = new MutationObserver(revisar);
+  observador.observe(document.documentElement, {
     attributes: true,
     attributeOldValue: true,
-    attributeFilter: Object.values(ATRIBUTOS),
+    // `style`: --fondo-filtro and the blur (public/ajustes.js).
+    attributeFilter: [...DEL_CIELO, 'data-fondo-filtro', 'data-fondo-desenfoque', 'style'],
   });
   // On a phone the address bar changes the window's height while scrolling, but not the tallest window the canvases
   // measure (100lvh, potentes.css): only a new width or a new tallest height (rotating, a split screen) paints again.
@@ -189,6 +236,18 @@ export function iniciarFondo() {
     if (actual) pronto();
   });
   menos?.addEventListener?.('change', pronto);
+  // public/ajustes.js, with a new sky: paints it now instead of in a moment, and says when it's on screen, so the page
+  // and the sky change in the same frame. Never longer than a second: the page doesn't wait for a slow GPU.
+  window.fondoAlDia = () => {
+    const cambios = observador.takeRecords();
+    if (!deVerdad(cambios).some((c) => DEL_CIELO.has(c.attributeName))) {
+      revisar(cambios);
+      return Promise.resolve();
+    }
+    clearTimeout(espera);
+    pendiente = true;
+    return Promise.race([dibujar().catch(() => {}), new Promise((listo) => setTimeout(listo, 1000))]);
+  };
   document.addEventListener('visibilitychange', () => (document.visibilityState === 'visible' ? andar() : parar()));
   dibujar();
 }

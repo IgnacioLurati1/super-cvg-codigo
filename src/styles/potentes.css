@@ -282,3 +282,10 @@ html[data-potente='si'][data-paleta='cosmico'][data-fondo-mueve='si']:not([data-
     animation: none;
   }
 }
+
+/* A new sky arrives with the page in one frame (public/ajustes.js, `data-cambio-de-cielo`): no crossfade between them. */
+html[data-cambio-de-cielo]::view-transition-group(root),
+html[data-cambio-de-cielo]::view-transition-old(root),
+html[data-cambio-de-cielo]::view-transition-new(root) {
+  animation: none;
+}

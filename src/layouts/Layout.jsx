@@ -97,6 +97,15 @@ function useCabeceraCompacta(fila, activa, cerrarMenu, forma) {
     };
     const observador = new ResizeObserver(medir);
     [el, marca, menu].forEach((n) => n && observador.observe(n));
+    // Unfolded, it measures now, before the first paint: if it has to fold, it folds in this same frame, and nothing
+    // stays hidden (a new design changes the whole page in one frame, public/ajustes.js). Folded, it unfolds to measure
+    // and has to wait for the observer.
+    if (!estado.current) {
+      medir();
+      cancelAnimationFrame(reloj);
+      clearTimeout(porLasDudas);
+      cabecera?.removeAttribute('data-midiendo');
+    }
     return () => {
       observador.disconnect();
       clearTimeout(porLasDudas);

@@ -434,22 +434,36 @@ export function conApariencia(ajustes, apariencia) {
 // change, so nothing paints the saved ones over it while it lasts. Null goes back to what is saved.
 let armarPrevia = null;
 let previa = null;
-function pintar(ajustes) {
+// `luego`: the screens, told after the page has the new settings (public/ajustes.js holds a new sky's page as it was
+// until everything is ready, and they change with it).
+function pintar(ajustes, luego) {
   const a = armarPrevia?.(actual);
   previa = a ? normalizar(a) : null;
   // public/ajustes.js paints it too when it repaints on its own (the device's theme, another tab).
   window.ajustesEnPrueba = previa ?? undefined;
-  window.aplicarAjustes?.(previa ?? ajustes);
+  if (window.aplicarAjustes) window.aplicarAjustes(previa ?? ajustes, luego);
+  else luego?.();
 }
 /** A design over the saved settings: a function of them (called again when they change), settings, or null. */
-export function probarAjustes(armar) {
+// `luego`: what changes together with it (the bar of the design being tried, disenos.js).
+export function probarAjustes(armar, luego) {
   armarPrevia = typeof armar === 'function' ? armar : armar ? () => armar : null;
-  pintar(undefined);
-  avisar();
+  pintar(undefined, () => {
+    mostrar();
+    luego?.();
+  });
 }
 
 const avisados = new Set();
 const avisar = () => avisados.forEach((f) => f());
+// What the screens draw: it changes only when the page has the new settings (pintar's `luego`). public/ajustes.js holds
+// a new sky's page as it was until it's ready, and a screen drawn with the new settings in the meantime got into that
+// frozen frame, half one design and half the other.
+let vistos = { actual, previa: null };
+const mostrar = () => {
+  vistos = { actual, previa };
+  avisar();
+};
 
 function suscribir(f) {
   avisados.add(f);
@@ -460,8 +474,7 @@ if (typeof window !== 'undefined') {
   window.addEventListener('storage', (e) => {
     if (e.key !== CLAVE_AJUSTES && e.key !== null) return;
     actual = conElDeLaHora(normalizar(leer()));
-    pintar(forzado ? actual : undefined);
-    avisar();
+    pintar(forzado ? actual : undefined, mostrar);
   });
 }
 
@@ -476,8 +489,7 @@ function guardar(ajustes) {
     guardado = false;
   }
   // Showing the other design to edit it, the page gets it as it is: the saved one is read with the hour's.
-  pintar(guardado && !forzado ? undefined : ajustes);
-  avisar();
+  pintar(guardado && !forzado ? undefined : ajustes, mostrar);
   return guardado;
 }
 
@@ -509,8 +521,7 @@ export function editarDiseno(periodo) {
   forzado = nuevo;
   if (!actual.segunLaHora) return;
   actual = conElDeLaHora(actual);
-  pintar(forzado ? actual : undefined);
-  avisar();
+  pintar(forzado ? actual : undefined, mostrar);
 }
 
 /** 'dia' or 'noche': the design showing, with «Según la hora». */
@@ -575,19 +586,18 @@ export function volverAjustesOriginales() {
   } catch {
     // Nothing was stored in the first place, or it can't be: the choice still applies to this tab.
   }
-  pintar(actual);
-  avisar();
+  pintar(actual, mostrar);
 }
 
 /** How much moves on this device: «Sensible a la luz» keeps everything still, whatever Movimiento says. */
 export const movimientoDe = (ajustes) => (ajustes.luz ? 'ninguno' : ajustes.movimiento);
 
 /** What the screens draw: the design being tried, if there is one, or the saved settings. */
-export const ajustesQueSeVen = () => previa ?? actual;
+export const ajustesQueSeVen = () => vistos.previa ?? vistos.actual;
 export const useAjustes = () => useSyncExternalStore(suscribir, ajustesQueSeVen, () => POR_DEFECTO);
 
 /** Only the saved settings, while a design is tried (Diseños compares and builds on these). */
-export const useAjustesGuardados = () => useSyncExternalStore(suscribir, () => actual, () => POR_DEFECTO);
+export const useAjustesGuardados = () => useSyncExternalStore(suscribir, () => vistos.actual, () => POR_DEFECTO);
 
 /** The settings now, and their changes, outside the screens (calendarioSincro.js follows the academic calendar). */
 export const ajustesActuales = () => actual;

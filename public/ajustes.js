@@ -326,7 +326,6 @@
   // With «Sensible a la luz», a change of light or dark (the theme, a style, the contrast, or the mode itself) fades over
   // half a second instead of switching at once: the browser crossfades the page as it was and as it is (`data-fundido`,
   // styles/luz.css). Never on the first paint, nor in a tab out of sight, nor where the browser can't.
-  var fundidos = 0;
   var cambiaLaLuz = function (datos) {
     var raiz = document.documentElement;
     if (!raiz.hasAttribute('data-tema')) return false;
@@ -343,28 +342,108 @@
     );
   };
 
-  // `elegido` is only for when localStorage refuses to save: the choice still applies to this tab.
-  var aplicar = function (elegido) {
-    // A design being tried in Diseños (src/lib/ajustes.js) stays over the saved settings until it ends.
-    var datos = elegido || window.ajustesEnPrueba || leer();
+  // A screen's entrance (styles/animaciones.css) belongs to arriving at it. A new style on a screen already open would
+  // play it again at every change, Batman's beam included: what the change starts inside the page ends at once.
+  var sinEntradas = function (cambio) {
+    var pagina = document.querySelector('main');
+    if (!pagina || typeof document.getAnimations !== 'function') return cambio();
+    var antes = document.getAnimations();
+    cambio();
+    document.getAnimations().forEach(function (a) {
+      var efecto = a.effect;
+      var objetivo = efecto && efecto.target;
+      if (antes.indexOf(a) >= 0 || !a.animationName || !objetivo || !pagina.contains(objetivo)) return;
+      if (efecto.getTiming().iterations === Infinity) return;
+      try {
+        a.finish();
+      } catch {
+        // One that can't end stays as it is.
+      }
+    });
+  };
+
+  // With the strong version, a new sky (another style, theme or palette, Diseños) arrives all at once with the page:
+  // the browser holds the page as it was until src/lib/fondo/fondo.js has painted the new sky (window.fondoAlDia), and
+  // then switches everything in one frame (`data-cambio-de-cielo`, styles/potentes.css). Before, the colors came
+  // first and the sky a moment later.
+  var cambiaElCielo = function (datos) {
     var raiz = document.documentElement;
-    if (typeof document.startViewTransition !== 'function' || document.visibilityState !== 'visible' || !cambiaLaLuz(datos)) {
-      poner(datos);
+    if (!raiz.hasAttribute('data-tema') || typeof window.fondoAlDia !== 'function') return false;
+    var potente = datos.potente === true;
+    if (!potente && raiz.getAttribute('data-potente') !== 'si') return false;
+    var estilo = entre(LISTAS.estilo, datos.estilo);
+    return (
+      raiz.getAttribute('data-estilo') !== estilo ||
+      raiz.getAttribute('data-tema') !== temaDe(datos, estilo) ||
+      (raiz.getAttribute('data-paleta') || null) !== paletaDe(datos) ||
+      raiz.getAttribute('data-potente') !== (potente ? 'si' : 'no') ||
+      raiz.getAttribute('data-fondo-mueve') !== (potente && datos.fondoMueve === true ? 'si' : 'no') ||
+      raiz.getAttribute('data-fondo-calidad') !== (potente ? calidadDelFondo(datos) : 'baja') ||
+      raiz.getAttribute('data-movimiento') !== (datos.luz === true ? 'ninguno' : entre(LISTAS.movimiento, datos.movimiento))
+    );
+  };
+
+  // One change on its way at a time: what arrives meanwhile joins it, with the newest settings.
+  var enCamino = null;
+  var marcas = {};
+
+  // `elegido` is only for when localStorage refuses to save: the choice still applies to this tab. `luego`: what has to
+  // change together with the page (src/lib/ajustes.js: the screens drawn with the new settings).
+  var aplicar = function (elegido, luego) {
+    var raiz = document.documentElement;
+    // A design being tried in Diseños (src/lib/ajustes.js) stays over the saved settings until it ends.
+    var datosDe = function (e) {
+      return e || window.ajustesEnPrueba || leer();
+    };
+    var ponerYa = function (d) {
+      sinEntradas(function () {
+        poner(d);
+      });
+    };
+    var avisar = function (lista) {
+      lista.forEach(function (f) {
+        try {
+          f();
+        } catch {
+          // The page gets its settings anyway.
+        }
+      });
+    };
+    if (enCamino) {
+      enCamino.elegido = elegido;
+      if (luego) enCamino.luegos.push(luego);
       return;
     }
-    fundidos += 1;
-    raiz.setAttribute('data-fundido', '');
+    var datos = datosDe(elegido);
+    var puede = typeof document.startViewTransition === 'function' && document.visibilityState === 'visible';
+    var luz = puede && cambiaLaLuz(datos);
+    if (!luz && !(puede && cambiaElCielo(datos))) {
+      ponerYa(datos);
+      if (luego) avisar([luego]);
+      return;
+    }
+    var marca = luz ? 'data-fundido' : 'data-cambio-de-cielo';
+    marcas[marca] = (marcas[marca] || 0) + 1;
+    raiz.setAttribute(marca, '');
     var listo = function () {
-      fundidos -= 1;
-      if (!fundidos) raiz.removeAttribute('data-fundido');
+      marcas[marca] -= 1;
+      if (!marcas[marca]) raiz.removeAttribute(marca);
+    };
+    enCamino = { elegido: elegido, luegos: luego ? [luego] : [] };
+    var cambio = function () {
+      var este = enCamino;
+      enCamino = null;
+      if (!este) return undefined;
+      ponerYa(datosDe(este.elegido));
+      avisar(este.luegos);
+      // Nothing here may wait for a frame: the browser draws none until this ends.
+      return typeof window.fondoAlDia === 'function' ? window.fondoAlDia() : undefined;
     };
     try {
-      document.startViewTransition(function () {
-        poner(datos);
-      }).finished.then(listo, listo);
+      document.startViewTransition(cambio).finished.then(listo, listo);
     } catch {
       listo();
-      poner(datos);
+      cambio();
     }
   };
 
