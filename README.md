@@ -30,6 +30,13 @@ npm run check
 
 Abrí un issue o un pull request. Lo que se suma al sitio oficial se pasa a mano.
 
+Antes de tocar código, leé [AGENTS.md](AGENTS.md): cómo está armado, cómo se prueba y las reglas que cuidan la sesión
+de cada alumno. `npm test` las controla. Cada pull request corre las pruebas en GitHub.
+
+Los asistentes de código (Claude Code, Codex, Cursor) leen `AGENTS.md` solos. En `.claude/skills/` hay guías para
+`aportar` (revisar el cambio y armar el pull request), `calculadora-nueva` y `horarios-facultad`. Trabajá con
+`/?demo=1`. Nunca le pases tu usuario ni tu clave del campus a un asistente.
+
 ## Licencia
 
 [GNU AGPL v3.0](LICENSE). Si publicás una versión modificada como sitio, compartís su código con la misma licencia.

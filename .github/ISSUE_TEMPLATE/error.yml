@@ -1,0 +1,25 @@
+name: Algo no anda
+description: Un error del sitio o del código.
+labels: [error]
+body:
+  - type: markdown
+    attributes:
+      value: Nunca pegues tu clave del campus, tu contraseña ni datos de otros alumnos. Si una captura los muestra, tapalos.
+  - type: textarea
+    id: que
+    attributes:
+      label: Qué pasó
+      description: Qué hiciste, qué esperabas y qué pasó.
+    validations:
+      required: true
+  - type: input
+    id: donde
+    attributes:
+      label: Dónde
+      description: La pantalla (por ejemplo, Calendario) y si fue en el celular o en la compu, con qué navegador.
+    validations:
+      required: true
+  - type: textarea
+    id: capturas
+    attributes:
+      label: Capturas

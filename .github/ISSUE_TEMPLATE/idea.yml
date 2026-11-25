@@ -1,0 +1,25 @@
+name: Una idea
+description: Algo que te gustaría que el sitio haga.
+labels: [idea]
+body:
+  - type: markdown
+    attributes:
+      value: Super CVG solo lee lo que el campus abre en su API. Una idea que necesita escribir en el campus o leer algo que la API no da queda afuera.
+  - type: textarea
+    id: para
+    attributes:
+      label: Para qué
+      description: Qué querés resolver, como alumno.
+    validations:
+      required: true
+  - type: textarea
+    id: como
+    attributes:
+      label: Cómo te lo imaginás
+  - type: dropdown
+    id: hacerla
+    attributes:
+      label: ¿La querés hacer vos?
+      options:
+        - Sí, mando el pull request
+        - Prefiero que la haga otro
