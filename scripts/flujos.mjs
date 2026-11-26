@@ -2054,6 +2054,8 @@ try {
     await hoja.getByText('Elegí una materia.').waitFor();
     await hoja.getByLabel('Materia').selectOption({ label: 'Materia A' });
     assert.equal(await hoja.getByLabel('Sección').inputValue(), 'nueva');
+    // The campus sections of the course are offered too.
+    await hoja.getByLabel('Sección').locator('optgroup[label="Del campus"] option').first().waitFor({ state: 'attached' });
     await hoja.getByRole('button', { name: 'Mandar el link' }).click();
     await hoja.getByText(/^Quedó en Materia A, en «Del Drive»\.$/).waitFor();
     const aDrive = pedidos.filter((p) => p.url.includes('archivoParcial000001') && p.metodo === 'GET');
@@ -3086,7 +3088,7 @@ try {
     // «Más»: opens under its button, the arrows go through it, Esc gives the focus back, and going somewhere closes it.
     await mas.click();
     const lista = pagina.locator('.cabecera__panel-mas');
-    assert.deepEqual(await lista.getByRole('link').allInnerTexts(), ['Calendario', 'Horario', 'Sysacad', 'Laboratorio', 'Calculadoras', 'Repaso', 'Consultron', 'En vivo', 'Diseños']);
+    assert.deepEqual(await lista.getByRole('link').allInnerTexts(), ['Calendario', 'Horario', 'Sysacad', 'Laboratorio', 'Calculadoras', 'Repaso', 'Consultron', 'En vivo', 'Diseños', 'Escáner']);
     await pagina.evaluate(AXE);
     const fallas = await pagina.evaluate(async () => (await window.axe.run(document.querySelector('.cabecera'), { runOnly: ['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa'] })).violations.map((v) => `${v.id}: ${v.nodes[0].target}`));
     assert.deepEqual(fallas, [], 'la cabecera con «Más» abierto');
@@ -3138,7 +3140,7 @@ try {
     assert.equal(await pagina.locator('#menu .cabecera__ajustes').count(), 1, 'el engranaje va adentro del menú');
     assert.equal(await pagina.locator('#menu .cabecera__rapido').count(), 1, 'el menú rápido va adentro del menú');
     await pagina.locator('#menu .cabecera__grupo-boton').click();
-    assert.deepEqual(await grupo.getByRole('link').allInnerTexts(), ['Calendario', 'Horario', 'Sysacad', 'Laboratorio', 'Calculadoras', 'Repaso', 'Consultron', 'En vivo', 'Diseños']);
+    assert.deepEqual(await grupo.getByRole('link').allInnerTexts(), ['Calendario', 'Horario', 'Sysacad', 'Laboratorio', 'Calculadoras', 'Repaso', 'Consultron', 'En vivo', 'Diseños', 'Escáner']);
     await fin('menu-plegado-con-mas');
     await pagina.setViewportSize({ width: 1280, height: 860 });
 
@@ -6877,7 +6879,7 @@ try {
       for (let i = 0; i < 13; i++) await pagina.keyboard.press('ArrowUp');
       await pagina.waitForFunction(() => document.querySelector('.lugares-menu > li')?.textContent.includes('Consultron'));
       assert.equal(await pagina.evaluate(() => document.activeElement?.getAttribute('aria-label')), 'Mover Consultron');
-      assert.equal(await anuncio.textContent(), 'Consultron quedó en el lugar 1 de 16');
+      assert.equal(await anuncio.textContent(), 'Consultron quedó en el lugar 1 de 17');
 
       // A tap on the handle, for whoever can't drag: «Subir» and «Bajar». Hoy goes down one.
       await manija('Hoy').click();

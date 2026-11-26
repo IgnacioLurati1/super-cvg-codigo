@@ -1,6 +1,6 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import ElegirMateria, { ElegirSeccion, NUEVA, seccionInicial, useMaterias } from '../components/ElegirMateria';
+import ElegirMateria, { ElegirSeccion, NUEVA, seccionInicial, useMaterias, useSeccionesDelCampus } from '../components/ElegirMateria';
 import { Cargando } from '../components/Filas';
 import { useAbrirPrevia } from '../components/Previa';
 import { IconoDeItem } from '../components/Simbolo';
@@ -123,6 +123,7 @@ function GuardarEnMateria({ llegado, alGuardar, alVolver }) {
   const [estado, setEstado] = useState('');
   const form = useRef(null);
   const secciones = seccionesDondeSumar(mio, materia);
+  const seccionesDelCampus = useSeccionesDelCampus(materia, materias.nombres.get(materia));
   const sinNinguna = materias.cargadas && !materias.grupos.length;
 
   // The first field, once the courses are there to choose.
@@ -148,7 +149,7 @@ function GuardarEnMateria({ llegado, alGuardar, alVolver }) {
     setEstado('Guardando');
     const { bloques: deArchivos, avisos } = llegado.archivos.length ? await guardarArchivos(llegado.archivos, (t) => setEstado(t || 'Guardando')) : { bloques: [], avisos: [] };
     const bloques = [...deArchivos, ...bloquesDeTexto(llegado)];
-    const nombreSeccion = seccion === NUEVA ? NOMBRE_NUEVA : (secciones.find((c) => c.id === seccion)?.nombre ?? NOMBRE_NUEVA);
+    const nombreSeccion = seccion === NUEVA ? NOMBRE_NUEVA : ([...secciones, ...seccionesDelCampus].find((c) => c.id === seccion)?.nombre ?? NOMBRE_NUEVA);
     const entraron = bloques.length ? sumarDondeSea(materia, seccion === NUEVA ? null : seccion, NOMBRE_NUEVA, bloques) : 0;
     // The files that didn't fit don't stay in the browser.
     soltarSobrantes(deArchivos.slice(entraron));
@@ -174,7 +175,7 @@ function GuardarEnMateria({ llegado, alGuardar, alVolver }) {
             </p>
           )}
           {!sinNinguna && <ElegirMateria valor={materia} materias={materias} alElegir={elegirMateria} ninguna="Elegí una" error={error.donde === 'materia' ? error.texto : ''} />}
-          {materia !== null && <ElegirSeccion secciones={secciones} valor={seccion} nueva={NOMBRE_NUEVA} alElegir={setSeccion} error={error.donde === 'seccion' ? error.texto : ''} />}
+          {materia !== null && <ElegirSeccion secciones={secciones} delCampus={seccionesDelCampus} valor={seccion} nueva={NOMBRE_NUEVA} alElegir={setSeccion} error={error.donde === 'seccion' ? error.texto : ''} />}
         </>
       )}
       {error.texto && !error.donde && <p className="campo__error" role="alert">{error.texto}</p>}
@@ -316,7 +317,7 @@ export default function Compartir() {
                   <div className="recibido__opciones">
                     <button ref={botonMateria} type="button" className="recibido__opcion" onClick={() => !yendo && setEligiendo(true)} aria-disabled={yendo ? 'true' : undefined}>
                       <span className="recibido__opcion-titulo">Guardar en una materia</span>
-                      <span className="recibido__opcion-texto">Queda en una sección tuya.</span>
+                      <span className="recibido__opcion-texto">Queda en la sección que elijas.</span>
                     </button>
                     <button type="button" className="recibido__opcion" onClick={aConsultron} aria-disabled={yendo ? 'true' : undefined}>
                       <span className="recibido__opcion-titulo">{yendo ? 'Abriendo Consultron…' : 'Preguntarle a Consultron'}</span>

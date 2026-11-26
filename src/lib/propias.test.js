@@ -191,6 +191,9 @@ describe('materias propias', () => {
     expect(sumarDondeSea(7, nueva.id, 'Compartido', [texto])).toBe(1);
     expect(seccionesDondeSumar(mioActual(), 7)[0].bloques).toHaveLength(3);
     expect(sumarDondeSea(7, 999, 'Compartido', [texto])).toBe(0);
+    // A section of the campus: in the category tied to it.
+    expect(sumarDondeSea(7, 'c3', 'Compartido', [texto])).toBe(1);
+    expect(agregadaDe(mioActual(), 7).categorias.find((c) => c.campus === 3).bloques).toHaveLength(1);
     // A course of the student's own.
     const id = crearPropia({ nombre: 'Mía' });
     const [general] = seccionesDondeSumar(mioActual(), id);

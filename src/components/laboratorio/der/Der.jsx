@@ -476,7 +476,9 @@ function Adentro({ texto, nombre, alCambiar, alCrearSql, avisar, compartido = nu
     asomado.current = true;
     const centro = raiz.current?.closest('.lab-centro');
     if (centro) centro.scrollIntoView({ block: 'start', behavior: 'instant' });
-  }, [angosta, compartido]);
+    // The first «Ver todo» ran before knowing it was a phone, on a sheet of another size: once more, with the phone's.
+    requestAnimationFrame(() => flujo.fitView(VER_TODO_ANGOSTA));
+  }, [angosta, compartido]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (roto) {
     return (

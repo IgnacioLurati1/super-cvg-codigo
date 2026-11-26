@@ -106,6 +106,8 @@ const DISCO = [
   'src/lib/mapasDrive.js',
   'src/lib/marcas.js',
   'src/lib/mio.js',
+  // The board photos not saved yet: the student's own, until saved, deleted or Salir.
+  'src/lib/pizarron/borrador.js',
   'src/lib/porMandar.js',
   'src/lib/resumenes.js',
   'src/lib/sesion.js',

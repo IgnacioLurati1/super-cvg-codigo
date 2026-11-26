@@ -283,7 +283,7 @@ describe('leer los ajustes', () => {
       labCerrar: false,
       labLineaActual: true,
       labColores: {},
-      menu: { estilo: 'texto', lugares: { horario: 'mas', sysacad: 'mas', carrera: 'mas', laboratorio: 'mas', calculadoras: 'mas', repaso: 'mas', consultron: 'mas', envivo: 'mas', disenos: 'mas' }, orden: EN_EL_MENU, posicion: 'arriba', alineacion: 'derecha', ancho: 'pagina' },
+      menu: { estilo: 'texto', lugares: { horario: 'mas', sysacad: 'mas', carrera: 'mas', laboratorio: 'mas', calculadoras: 'mas', repaso: 'mas', consultron: 'mas', envivo: 'mas', disenos: 'mas', pizarron: 'mas' }, orden: EN_EL_MENU, posicion: 'arriba', alineacion: 'derecha', ancho: 'pagina' },
       tarjeta: 'simbolo',
       contenido: 'icono',
       consultronLetra: 'normal',
@@ -296,9 +296,9 @@ describe('leer los ajustes', () => {
 
   it('el menú: un estilo de la lista, y solo «Más» u «Oculta» para las pantallas que tiene; Configuración no se oculta', () => {
     expect(normalizar({ menu: { estilo: 'pastillas', lugares: { notas: 'oculta', sysacad: 'mas', horario: 'oculta', hoy: 'vista', configuracion: 'oculta', otra: 'mas', buscar: 'x' } } }).menu)
-      .toEqual({ estilo: 'pastillas', lugares: { sysacad: 'mas', carrera: 'mas', horario: 'oculta', laboratorio: 'mas', calculadoras: 'mas', repaso: 'mas', consultron: 'mas', envivo: 'mas', disenos: 'mas' }, orden: EN_EL_MENU, posicion: 'arriba', alineacion: 'derecha', ancho: 'pagina' });
-    expect(normalizar({ menu: { estilo: '"><b>', lugares: { configuracion: 'mas' } } }).menu).toEqual({ estilo: 'texto', lugares: { horario: 'mas', sysacad: 'mas', carrera: 'mas', configuracion: 'mas', laboratorio: 'mas', calculadoras: 'mas', repaso: 'mas', consultron: 'mas', envivo: 'mas', disenos: 'mas' }, orden: EN_EL_MENU, posicion: 'arriba', alineacion: 'derecha', ancho: 'pagina' });
-    for (const raro of ['x', 1, null, []]) expect(normalizar({ menu: raro }).menu).toEqual({ estilo: 'texto', lugares: { horario: 'mas', sysacad: 'mas', carrera: 'mas', laboratorio: 'mas', calculadoras: 'mas', repaso: 'mas', consultron: 'mas', envivo: 'mas', disenos: 'mas' }, orden: EN_EL_MENU, posicion: 'arriba', alineacion: 'derecha', ancho: 'pagina' });
+      .toEqual({ estilo: 'pastillas', lugares: { sysacad: 'mas', carrera: 'mas', horario: 'oculta', laboratorio: 'mas', calculadoras: 'mas', repaso: 'mas', consultron: 'mas', envivo: 'mas', disenos: 'mas', pizarron: 'mas' }, orden: EN_EL_MENU, posicion: 'arriba', alineacion: 'derecha', ancho: 'pagina' });
+    expect(normalizar({ menu: { estilo: '"><b>', lugares: { configuracion: 'mas' } } }).menu).toEqual({ estilo: 'texto', lugares: { horario: 'mas', sysacad: 'mas', carrera: 'mas', configuracion: 'mas', laboratorio: 'mas', calculadoras: 'mas', repaso: 'mas', consultron: 'mas', envivo: 'mas', disenos: 'mas', pizarron: 'mas' }, orden: EN_EL_MENU, posicion: 'arriba', alineacion: 'derecha', ancho: 'pagina' });
+    for (const raro of ['x', 1, null, []]) expect(normalizar({ menu: raro }).menu).toEqual({ estilo: 'texto', lugares: { horario: 'mas', sysacad: 'mas', carrera: 'mas', laboratorio: 'mas', calculadoras: 'mas', repaso: 'mas', consultron: 'mas', envivo: 'mas', disenos: 'mas', pizarron: 'mas' }, orden: EN_EL_MENU, posicion: 'arriba', alineacion: 'derecha', ancho: 'pagina' });
   });
 
   it('el orden del menú: las conocidas una vez, en el orden elegido, y las que faltan al final como vinieron', () => {
@@ -322,9 +322,9 @@ describe('leer los ajustes', () => {
   });
 
   it('el laboratorio arranca en «Más», y puede ir a la vista o quedar oculto', () => {
-    expect(normalizar({ menu: { lugares: { laboratorio: 'vista' } } }).menu.lugares).toEqual({ horario: 'mas', sysacad: 'mas', carrera: 'mas', laboratorio: 'vista', calculadoras: 'mas', repaso: 'mas', consultron: 'mas', envivo: 'mas', disenos: 'mas' });
-    expect(normalizar({ menu: { lugares: { laboratorio: 'oculta' } } }).menu.lugares).toEqual({ horario: 'mas', sysacad: 'mas', carrera: 'mas', laboratorio: 'oculta', calculadoras: 'mas', repaso: 'mas', consultron: 'mas', envivo: 'mas', disenos: 'mas' });
-    expect(normalizar({ menu: { lugares: { laboratorio: 'x' } } }).menu.lugares).toEqual({ horario: 'mas', sysacad: 'mas', carrera: 'mas', calculadoras: 'mas', repaso: 'mas', consultron: 'mas', envivo: 'mas', disenos: 'mas' });
+    expect(normalizar({ menu: { lugares: { laboratorio: 'vista' } } }).menu.lugares).toEqual({ horario: 'mas', sysacad: 'mas', carrera: 'mas', laboratorio: 'vista', calculadoras: 'mas', repaso: 'mas', consultron: 'mas', envivo: 'mas', disenos: 'mas', pizarron: 'mas' });
+    expect(normalizar({ menu: { lugares: { laboratorio: 'oculta' } } }).menu.lugares).toEqual({ horario: 'mas', sysacad: 'mas', carrera: 'mas', laboratorio: 'oculta', calculadoras: 'mas', repaso: 'mas', consultron: 'mas', envivo: 'mas', disenos: 'mas', pizarron: 'mas' });
+    expect(normalizar({ menu: { lugares: { laboratorio: 'x' } } }).menu.lugares).toEqual({ horario: 'mas', sysacad: 'mas', carrera: 'mas', calculadoras: 'mas', repaso: 'mas', consultron: 'mas', envivo: 'mas', disenos: 'mas', pizarron: 'mas' });
     // Sysacad came later: it starts inside «Más», and can go in sight or hide.
     expect(normalizar({ menu: { lugares: { sysacad: 'vista' } } }).menu.lugares.sysacad).toBe('vista');
     expect(normalizar({ menu: { lugares: { sysacad: 'oculta' } } }).menu.lugares.sysacad).toBe('oculta');

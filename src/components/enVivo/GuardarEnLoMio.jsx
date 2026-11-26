@@ -1,6 +1,6 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import ElegirMateria, { ElegirSeccion, NUEVA, seccionInicial, useMaterias } from '../ElegirMateria';
+import ElegirMateria, { ElegirSeccion, NUEVA, seccionInicial, useMaterias, useSeccionesDelCampus } from '../ElegirMateria';
 import { guardarArchivos } from '../SumarCosas';
 import { useMio } from '../../lib/mio';
 import { agregarAlProyecto, borrarProyecto, cambiarProyecto, crearProyecto, guardarArchivoNuevo } from '../../lib/laboratorio/guardado';
@@ -38,6 +38,7 @@ export default function GuardarEnLoMio({ dar, titulo, alCerrar }) {
   const id = useId();
   const form = useRef(null);
   const secciones = seccionesDondeSumar(mio, materia);
+  const seccionesDelCampus = useSeccionesDelCampus(materia, materias.nombres.get(materia));
 
   // What the tab gives, once: it may take a moment (an image of the board).
   useEffect(() => {
@@ -94,7 +95,7 @@ export default function GuardarEnLoMio({ dar, titulo, alCerrar }) {
     } else {
       bloques = [{ tipo: 'texto', texto: `${String(que.nombre || titulo).slice(0, 150)}\n\n${que.texto}` }];
     }
-    const nombreSeccion = seccion === NUEVA ? NOMBRE_NUEVA : (secciones.find((c) => c.id === seccion)?.nombre ?? NOMBRE_NUEVA);
+    const nombreSeccion = seccion === NUEVA ? NOMBRE_NUEVA : ([...secciones, ...seccionesDelCampus].find((c) => c.id === seccion)?.nombre ?? NOMBRE_NUEVA);
     const ok = sumarDondeSea(materia, seccion === NUEVA ? null : seccion, NOMBRE_NUEVA, bloques) > 0;
     setGuardando(false);
     if (!ok) {
@@ -133,7 +134,7 @@ export default function GuardarEnLoMio({ dar, titulo, alCerrar }) {
         <form ref={form} className="envivo-guardar__form" onSubmit={guardar} noValidate>
           <p className="envivo-guardar__que">{que.archivo ? `Se guarda como archivo, «${que.nombre}».` : 'Se guarda como texto.'}</p>
           <ElegirMateria valor={materia} materias={materias} alElegir={elegirMateria} ninguna="Elegí una" />
-          {materia !== null && <ElegirSeccion secciones={secciones} valor={seccion} nueva={NOMBRE_NUEVA} alElegir={setSeccion} />}
+          {materia !== null && <ElegirSeccion secciones={secciones} delCampus={seccionesDelCampus} valor={seccion} nueva={NOMBRE_NUEVA} alElegir={setSeccion} />}
           {error && <p className="campo__error" role="alert">{error}</p>}
           <div className="envivo-guardar__botones">
             <button type="submit" className="boton boton--chico" disabled={guardando}>{guardando ? 'Guardando…' : 'Guardar'}</button>

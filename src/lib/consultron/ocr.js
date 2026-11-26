@@ -15,6 +15,8 @@ export const LADO_MAX = 2400;
 const LADO_MIN = 1000;
 /** Below this mean confidence (0 to 100) what came out is noise, not text: handwriting, a blurred photo. */
 export const CONFIANZA_MIN = 30;
+// A line that goes in a PDF of the board: below this it is noise read in a drawing or a scribble.
+const CONFIANZA_LINEA = 55;
 
 const del = (archivo) => new URL(`${import.meta.env.BASE_URL}motores/ocr/${archivo}`, window.location.href).href;
 
@@ -84,12 +86,24 @@ export async function prepararFoto(archivo) {
   }
 }
 
+/** The lines read with what they say and where they are, in fractions of the photo; the ones it's unsure of, out. */
+async function lineasDe(data, imagen) {
+  const medida = await createImageBitmap(imagen);
+  const { width: W, height: H } = medida;
+  medida.close();
+  return (data.blocks ?? [])
+    .flatMap((b) => b.paragraphs ?? [])
+    .flatMap((p) => p.lines ?? [])
+    .filter((l) => l.confidence >= CONFIANZA_LINEA && String(l.text ?? '').trim())
+    .map(({ text, bbox }) => ({ texto: text.trim(), x0: bbox.x0 / W, y0: bbox.y0 / H, x1: bbox.x1 / W, y1: bbox.y1 / H }));
+}
+
 /**
- * The text of a photo, or '' if it has none it can read. One photo at a time. `alAvance({ fase, fraccion })`: 'preparando'
+ * The text of a photo, or '' if it has none it can read. With `lineas`, { texto, lineas } (lineasDe). One photo at a time. `alAvance({ fase, fraccion })`: 'preparando'
  * while the reader loads (the first time), 'leyendo' with how much is done. Throws if the photo can't be opened
  * (`motivo: 'foto'`) or the reader didn't load (`motivo: 'lector'`). `senal`: if aborted before its turn, it isn't read.
  */
-export function leerFoto(archivo, { alAvance = () => {}, senal } = {}) {
+export function leerFoto(archivo, { alAvance = () => {}, senal, lineas = false } = {}) {
   const turno = cola.then(async () => {
     if (senal?.aborted) throw new DOMException('Cancelado', 'AbortError');
     clearTimeout(suelto);
@@ -112,9 +126,11 @@ export function leerFoto(archivo, { alAvance = () => {}, senal } = {}) {
         trabajador = null;
         throw Object.assign(new Error('No cargó el lector de fotos'), { motivo: 'lector' });
       }
-      const { data } = await ocr.recognize(imagen, { rotateAuto: true });
+      const { data } = await ocr.recognize(imagen, { rotateAuto: true }, lineas ? { text: true, blocks: true } : undefined);
       const texto = String(data?.text ?? '').replace(/[ \t]+\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
-      if ((data?.confidence ?? 0) < CONFIANZA_MIN) return '';
+      const legible = (data?.confidence ?? 0) >= CONFIANZA_MIN;
+      if (lineas) return { texto: legible ? texto : '', lineas: legible ? await lineasDe(data, imagen) : [] };
+      if (!legible) return '';
       return texto;
     } finally {
       oyente = null;

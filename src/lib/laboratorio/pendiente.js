@@ -4,6 +4,7 @@
 import { LENGUAJES } from './lenguajes';
 
 let desdePdf = null;
+let archivoQueAbre = null;
 let mesa = null;
 // What else goes with them (the engines, motor.js, with what the code left in them).
 const tambien = new Set();
@@ -12,6 +13,18 @@ export const alOlvidarLaboratorio = (f) => tambien.add(f);
 /** From the reader: the selected code, its language and where it came from ({ materia, apunte, pagina }). */
 export function llevarAlLaboratorio({ codigo, lenguaje, adivinado, materia = null, apunte = '', pagina = null }) {
   desdePdf = { codigo: String(codigo), lenguaje, adivinado: adivinado ?? lenguaje, materia, apunte: String(apunte).slice(0, 200), pagina };
+}
+
+/** A file already saved in the lab (by its id) to open on arriving: the DER of a board photo (Pizarron.jsx). */
+export function abrirEnElLaboratorio(id) {
+  archivoQueAbre = String(id);
+}
+
+/** The file to open on arriving, once. */
+export function tomarArchivoQueAbre() {
+  const a = archivoQueAbre;
+  archivoQueAbre = null;
+  return a;
 }
 
 /** What came from a PDF, once. */
@@ -34,6 +47,7 @@ export const guardarMesa = (m) => {
 /** Leaving (or another student coming in) drops it all. */
 export function olvidarLaboratorio() {
   desdePdf = null;
+  archivoQueAbre = null;
   mesa = null;
   tambien.forEach((f) => f());
 }

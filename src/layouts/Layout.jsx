@@ -204,6 +204,8 @@ export default function Layout() {
       if (habiaSesion.current) olvidarPestanasSysacad();
       olvidarSysacad();
       olvidarLaboratorio();
+      // The board photos not saved yet, too.
+      import('../lib/pizarron/sesion').then((m) => m.olvidarPizarron()).catch(() => {});
       // The design being tried goes with the session: the next one sees their own.
       if (disenoEnPrueba()) import('../lib/disenos').then((m) => m.terminarPrueba()).catch(() => {});
       // Leaving the site leaves the live session too.

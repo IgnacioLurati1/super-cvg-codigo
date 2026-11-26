@@ -4,6 +4,7 @@ import { borrarCharlas } from './consultron/charlas';
 import { borrarDescargas, soltarPeriodico } from './descargasFondo';
 import { borrarCompartido } from './compartido';
 import { borrarGuardadas } from './enVivo/guardadas';
+import { borrarBorradores } from './pizarron/borrador';
 import { olvidarVacios } from './hoyVacios';
 import { esDemo } from './modoDemo';
 import { avisarPestanas, dejarDeEstar, escucharPestanas, otrasPestanas } from './pestanas';
@@ -208,6 +209,8 @@ function borrarEstaPestana() {
   sessionStorage.removeItem('cl.agente');
   // And the kept live sessions (enVivo/guardadas.js), with their codes.
   borrarGuardadas();
+  // And the board photos not saved yet (pizarron/borrador.js).
+  borrarBorradores();
   // And the maps of the Drive folders (mapasDrive.js), which say which folders the student added.
   borrarMapasDrive();
   // And what the programs of the lab wrote (laboratorio/escritos.js): the copy in Drive brings it back.

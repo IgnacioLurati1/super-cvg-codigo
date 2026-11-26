@@ -138,9 +138,9 @@ export const LAB_SANGRIAS = [4, 2];
 // Some screens start inside «Más» (`LUGAR_DE_ENTRADA`): the ones that came later, so the header the student had doesn't
 // grow, and Horario, which is looked at now and then. «A la vista» brings any of them back.
 export const ESTILOS_DE_MENU = ['texto', 'iconos', 'solo-iconos', 'pastillas'];
-export const EN_EL_MENU = ['hoy', 'materias', 'calendario', 'buscar', 'resumenes', 'horario', 'sysacad', 'carrera', 'mensajes', 'configuracion', 'laboratorio', 'calculadoras', 'repaso', 'consultron', 'envivo', 'disenos'];
+export const EN_EL_MENU = ['hoy', 'materias', 'calendario', 'buscar', 'resumenes', 'horario', 'sysacad', 'carrera', 'mensajes', 'configuracion', 'laboratorio', 'calculadoras', 'repaso', 'consultron', 'envivo', 'disenos', 'pizarron'];
 export const LUGARES_EN_EL_MENU = ['vista', 'mas', 'oculta'];
-const LUGAR_DE_ENTRADA = { horario: 'mas', sysacad: 'mas', carrera: 'mas', laboratorio: 'mas', calculadoras: 'mas', repaso: 'mas', consultron: 'mas', envivo: 'mas', disenos: 'mas' };
+const LUGAR_DE_ENTRADA = { horario: 'mas', sysacad: 'mas', carrera: 'mas', laboratorio: 'mas', calculadoras: 'mas', repaso: 'mas', consultron: 'mas', envivo: 'mas', disenos: 'mas', pizarron: 'mas' };
 const lugarValido = (clave, lugar) =>
   lugar === 'mas' || (lugar === 'oculta' && clave !== 'configuracion') || (lugar === 'vista' && clave in LUGAR_DE_ENTRADA);
 

@@ -228,9 +228,12 @@ export function agregarBloques(id, catId, bloques) {
   return cambiarCategoria(id, catId, (c) => ({ ...c, bloques: [...c.bloques, ...entran] })) ? entran.length : 0;
 }
 
-/** Adds blocks to a section of `seccionesDondeSumar`, or with `seccion` null to a new one named `nueva`. How many went
- * in: the first ones. */
+/** Adds blocks to a section of `seccionesDondeSumar`, to one of the campus (`c` and its number, useSeccionesDelCampus)
+ * or with `seccion` null to a new one named `nueva`. How many went in: the first ones. */
 export function sumarDondeSea(materia, seccion, nueva, bloques) {
+  if (typeof seccion === 'string' && /^c\d{1,16}$/.test(seccion)) {
+    return typeof materia === 'string' ? 0 : (sumarEnSeccion(materia, Number(seccion.slice(1)), bloques)?.ids.length ?? 0);
+  }
   if (typeof materia === 'string') {
     const cat = seccion === null ? agregarCategoria(materia, nueva) : seccion;
     return cat === null ? 0 : agregarBloques(materia, cat, bloques);

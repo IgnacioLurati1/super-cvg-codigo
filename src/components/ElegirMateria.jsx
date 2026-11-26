@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import Campo from './Campo';
-import { cargarMaterias } from '../lib/campus';
+import { cargarContenido, cargarMaterias } from '../lib/campus';
 import { useConsulta } from '../lib/useConsulta';
 
 // The campus didn't answer: only the student's own courses are offered.
@@ -53,14 +53,46 @@ export const NUEVA = 'nueva';
 /** Where something goes in the course chosen: the section called `nueva` if there's one, or a new one by that name. */
 export const seccionInicial = (secciones, nueva) => secciones.find((c) => c.nombre === nueva)?.id ?? NUEVA;
 
+/** The sections of a campus course (`materia`, its number; `nombre`, its name, kept with what the campus brings), in
+ * its order, for ElegirSeccion: `c` and the section's number. None for a course of the student's or while it loads. */
+export function useSeccionesDelCampus(materia, nombre) {
+  const delCampus = typeof materia === 'number' && Boolean(nombre);
+  const { datos } = useConsulta(async () => ({ materia, items: delCampus ? await cargarContenido({ id: materia, nombre }).catch(() => []) : [] }), [materia, delCampus]);
+  return useMemo(() => {
+    const vistas = new Map();
+    // Until the sections of the course just chosen come, none: never the ones of the one before.
+    for (const item of delCampus && datos?.materia === materia && Array.isArray(datos.items) ? datos.items : []) {
+      if (Number.isSafeInteger(item.seccionId) && !vistas.has(item.seccionId)) vistas.set(item.seccionId, item.seccion || 'Sin nombre');
+    }
+    return [...vistas].map(([id, n]) => ({ id: `c${id}`, nombre: n }));
+  }, [datos, delCampus, materia]);
+}
+
+const deSeccion = (v) => (v === NUEVA || /^c\d+$/.test(v) ? v : Number(v));
+
 /** The section of a course where something goes (`secciones`, from seccionesDondeSumar of propias.js): one of the
- * student's, or a new one named `nueva` (NUEVA) when none is called so. */
-export function ElegirSeccion({ secciones, valor, nueva, alElegir, error }) {
+ * student's, one of the campus (`delCampus`, from useSeccionesDelCampus) or a new one named `nueva` (NUEVA) when none
+ * is called so. */
+export function ElegirSeccion({ secciones, delCampus = [], valor, nueva, alElegir, error }) {
+  const tuyas = (
+    <>
+      {secciones.map((c) => <option key={c.id} value={c.id}>{c.nombre}</option>)}
+      {!secciones.some((c) => c.nombre === nueva) && <option value={NUEVA}>Una nueva, «{nueva}»</option>}
+    </>
+  );
   return (
     <Campo etiqueta="Sección" error={error}>
-      <select className="campo__control" value={valor} onChange={(e) => alElegir(e.target.value === NUEVA ? NUEVA : Number(e.target.value))}>
-        {secciones.map((c) => <option key={c.id} value={c.id}>{c.nombre}</option>)}
-        {!secciones.some((c) => c.nombre === nueva) && <option value={NUEVA}>Una nueva, «{nueva}»</option>}
+      <select className="campo__control" value={valor} onChange={(e) => alElegir(deSeccion(e.target.value))}>
+        {delCampus.length ? (
+          <>
+            <optgroup label="Tuyas">{tuyas}</optgroup>
+            <optgroup label="Del campus">
+              {delCampus.map((c) => <option key={c.id} value={c.id}>{c.nombre}</option>)}
+            </optgroup>
+          </>
+        ) : (
+          tuyas
+        )}
       </select>
     </Campo>
   );

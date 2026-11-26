@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { EN_EL_MENU, normalizar } from './ajustes';
-import { codigoDeEstilo, leerCodigoDeEstilo, MAX_ESCRITO } from './codigoDeEstilo';
+import { codigoDeEstilo, leerCodigoDeEstilo, MAX_ESCRITO, MENU_DEL_CODIGO } from './codigoDeEstilo';
 import { CODIGOS_DE_ANTES } from './codigoDeEstilo.fixture';
 import { moverBloque, ordenDeHoy } from './hoy';
 import { sanearMio } from './mio';
@@ -209,7 +209,7 @@ describe('pasar tu estilo con un código', () => {
     // The same, Batman's beam on, as it was before version 8, and the theme's color as the theme's, before version 9.
     expect(leerCodigoDeEstilo(codigo, TUYOS)).toEqual({ ...leido, ajustes: { ...leido.ajustes, fogonazo: true, temaColor: null } });
     const { ajustes } = aplicar(leerCodigoDeEstilo(codigo, TUYOS));
-    expect(ajustes.menu.orden.at(-1)).toBe('disenos');
+    expect(ajustes.menu.orden.filter((c) => MENU_DEL_CODIGO.includes(c)).at(-1)).toBe('disenos');
     expect(ajustes.menu.lugares.disenos).toBe('mas');
   });
 
@@ -247,9 +247,9 @@ describe('pasar tu estilo con un código', () => {
 
   it('cualquier orden del menú vuelve igual, también con las últimas pantallas primero', () => {
     for (const primera of ['envivo', 'consultron', 'disenos', 'repaso']) {
-      const orden = [primera, ...[...EN_EL_MENU].reverse().filter((c) => c !== primera)];
+      const orden = [primera, ...[...MENU_DEL_CODIGO].reverse().filter((c) => c !== primera)];
       const { ajustes } = aplicar(leerCodigoDeEstilo(codigoDeEstilo(normalizar({ menu: { orden } }), MIO), TUYOS));
-      expect(ajustes.menu.orden).toEqual(orden);
+      expect(ajustes.menu.orden).toEqual(normalizar({ menu: { orden } }).menu.orden);
     }
   });
 
@@ -261,12 +261,12 @@ describe('pasar tu estilo con un código', () => {
       return semilla / 2147483648;
     };
     for (let n = 0; n < 200; n++) {
-      const orden = [...EN_EL_MENU];
+      const orden = [...MENU_DEL_CODIGO];
       for (let i = orden.length - 1; i > 0; i--) {
         const j = Math.floor(azar() * (i + 1));
         [orden[i], orden[j]] = [orden[j], orden[i]];
       }
-      const menu = { orden, lugares: Object.fromEntries(EN_EL_MENU.map((c, i) => [c, lugares[(n + i) % 3]])) };
+      const menu = { orden, lugares: Object.fromEntries(MENU_DEL_CODIGO.map((c, i) => [c, lugares[(n + i) % 3]])) };
       const colores = n % 2 ? { accion: '#123456', cabecera: '#abcdef' } : {};
       const mios = normalizar({ menu, ...colores });
       const codigo = codigoDeEstilo(mios, MIO);

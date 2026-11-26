@@ -1,0 +1,741 @@
+/* Pizarrón: the photos of the board. The photo sits on a board of its own (the --pizarron tokens), the corners are
+   chalk marks; the rest of the screen is the site's usual controls. */
+
+.pizarron__bajada {
+  max-width: 60ch;
+  color: var(--texto-suave);
+}
+
+.pizarron__subtitulo {
+  font-size: var(--t-h3);
+  margin: 0;
+}
+
+.pizarron__ahora {
+  margin: 0 0 12px;
+  font-weight: 600;
+}
+
+.pizarron__vacio,
+.pizarron__clase,
+.pizarron__editor {
+  display: grid;
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.pizarron__editor:focus {
+  outline: none;
+}
+
+/* The buttons are labels of hidden file fields: the field's focus shows on its label. */
+.pizarron__tomar input:focus-visible + label {
+  outline: 3px solid var(--foco);
+  outline-offset: 2px;
+}
+
+/* Buttons that go together share the width, also on a phone. */
+.pizarron__botones {
+  display: flex;
+  gap: 10px;
+}
+
+.pizarron__botones > .boton {
+  flex: 1 1 0;
+  text-align: center;
+}
+
+.pizarron__barrer-todo {
+  justify-self: start;
+}
+
+.pizarron__pista {
+  margin: 0;
+  color: var(--texto-suave);
+}
+
+/* The sticky save bar never covers the control that has the focus. */
+html:has(.pizarron__pie) {
+  scroll-padding-bottom: 88px;
+}
+
+.pizarron__aviso {
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: var(--radio-control);
+  background: var(--fondo-aviso);
+  color: var(--aviso);
+  font-weight: 600;
+}
+
+/* Where the photo is worked: a board around it, so the cleaned page reads as a sheet laid on it. */
+.pizarron__escenario {
+  display: grid;
+  place-items: center;
+  padding: clamp(10px, 3vw, 20px);
+  border: 6px solid var(--pizarron-marco);
+  border-bottom-width: 10px;
+  border-radius: var(--radio-bloque);
+  background: var(--pizarron);
+  min-height: 200px;
+}
+
+.pizarron__resultado {
+  display: block;
+  max-width: 100%;
+  max-height: 70dvh;
+  width: auto;
+  height: auto;
+  box-shadow: 0 2px 10px rgb(0 0 0 / 0.35);
+  transition: opacity 160ms ease-out;
+}
+
+.pizarron__resultado[data-procesando] {
+  opacity: 0.6;
+}
+
+/* The cleaned board and, over it, the strokes of the finger going over faint writing. */
+.pizarron__lienzo {
+  position: relative;
+  max-width: 100%;
+}
+
+.pizarron__lienzo[data-repasando] {
+  touch-action: none;
+  cursor: crosshair;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.pizarron__repasos {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  fill: none;
+  stroke: var(--accion);
+  stroke-opacity: 0.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.pizarron__repasos path[data-borra] {
+  stroke: var(--error);
+  stroke-opacity: 0.5;
+}
+
+/* Each part of the editor in its own box with its title, so they don't run into each other. */
+.pizarron__panel {
+  display: grid;
+  gap: 10px;
+  padding: 14px 16px 16px;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-bloque);
+  background: var(--superficie);
+}
+
+/* The titles of the boxes, «Lo que dice» too, all the same. */
+.pizarron__panel-titulo,
+.pizarron__lectura .pizarron__subtitulo {
+  margin: 0;
+  font-size: 1.0625rem;
+}
+
+.pizarron__arreglar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 14px;
+}
+
+.pizarron__arreglar .boton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pizarron__arreglar .pizarron__nota {
+  margin: 0;
+}
+
+.pizarron__repasar {
+  display: grid;
+  gap: 8px;
+}
+
+/* The finger's tools float down on the screen, over the page, so they stay at hand while the photo scrolls. They leave
+   the corner of Consultron's button free; the page leaves their height free under its end. */
+.pizarron__herramientas {
+  position: fixed;
+  z-index: 25;
+  left: max(12px, env(safe-area-inset-left));
+  right: max(12px, env(safe-area-inset-right));
+  bottom: max(12px, env(safe-area-inset-bottom));
+  max-width: 40rem;
+  max-height: calc(100dvh - var(--alto-cabecera, 64px) - 24px);
+  margin-inline: auto;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  box-shadow: 0 12px 36px rgb(0 0 0 / 0.28);
+  transition: opacity 200ms ease-out, transform 240ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+html:has(.flotante__boton) .pizarron__herramientas {
+  right: calc(max(20px, env(safe-area-inset-right)) + var(--barra-derecha, 0px) + 68px);
+}
+
+@starting-style {
+  .pizarron__herramientas {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pizarron__herramientas {
+    transition: opacity 200ms ease-out;
+  }
+
+  @starting-style {
+    .pizarron__herramientas {
+      transform: none;
+    }
+  }
+}
+
+.pizarron[style*='--alto-herramientas'] {
+  padding-bottom: calc(var(--alto-herramientas) + 32px);
+}
+
+html:has(.pizarron__herramientas) {
+  scroll-padding-bottom: calc(var(--alto-herramientas, 0px) + 32px);
+}
+
+.pizarron__repasar .pizarron__pista {
+  margin: 0;
+}
+
+.pizarron__repasar .pizarron__intensidad {
+  max-width: 32rem;
+}
+
+.pizarron__repasar .boton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+/* On a phone the drawing goes over the name, so three options still fit on one line. */
+@media (max-width: 30rem) {
+  .pizarron__segmento span,
+  .pizarron__repasar .pizarron__botones > .boton {
+    flex-direction: column;
+    gap: 2px;
+    padding-inline: 6px;
+  }
+
+  .pizarron__repasar .pizarron__botones > .boton {
+    min-width: 0;
+  }
+}
+
+.pizarron__icono {
+  flex: none;
+  inline-size: 20px;
+  block-size: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* What «Automático» chose, under the chalk options. */
+.pizarron__elegido {
+  margin: 6px 0 0;
+  font-size: var(--t-chica);
+  color: var(--texto-suave);
+}
+
+.pizarron__icono .pizarron__lleno {
+  fill: currentColor;
+}
+
+/* With a mouse, how wide the tool draws. */
+.pizarron__aro {
+  fill: none;
+  stroke: var(--accion);
+  stroke-opacity: 0.8;
+  stroke-width: 3px;
+  vector-effect: non-scaling-stroke;
+}
+
+.pizarron__aro[data-borra] {
+  stroke: var(--error);
+}
+
+.pizarron__repasar .boton[aria-pressed='true'] {
+  background: var(--accion);
+  color: var(--accion-texto);
+  border-color: var(--accion);
+}
+
+.pizarron__intensidad {
+  display: block;
+  flex: 1 1 22rem;
+}
+
+.pizarron__barra {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: var(--t-chica);
+}
+
+.pizarron__barra input {
+  flex: 1;
+  min-width: 0;
+  min-height: 44px;
+  accent-color: var(--accion);
+}
+
+.pizarron__esqueleto {
+  display: block;
+  width: 100%;
+  min-height: 180px;
+  border-radius: var(--radio-control);
+  background: linear-gradient(90deg, rgb(255 255 255 / 0.06), rgb(255 255 255 / 0.14), rgb(255 255 255 / 0.06)) 0 0 / 200% 100%;
+  animation: pizarron-brillo 1.4s linear infinite;
+}
+
+@keyframes pizarron-brillo {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pizarron__esqueleto {
+    animation: none;
+  }
+}
+
+.pizarron__ajustes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 24px;
+}
+
+/* Each group takes the whole row on a phone, so its options fit on one line; on a wide screen two to a row. */
+.pizarron__ajustes > .pizarron__opciones {
+  flex: 1 1 22rem;
+}
+
+.pizarron__opciones {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+
+.pizarron__leyenda {
+  padding: 0;
+  margin-bottom: 6px;
+  font-size: var(--t-chica);
+  font-weight: 700;
+  color: var(--texto-suave);
+}
+
+/* A row of options that go together: they share the width on a phone. */
+.pizarron__segmentos {
+  display: flex;
+  border: 1px solid var(--borde-control);
+  border-radius: var(--radio-control);
+  overflow: hidden;
+}
+
+.pizarron__segmento {
+  flex: 1 1 0;
+  position: relative;
+  display: flex;
+}
+
+/* All the options of a row as tall as the tallest, when one name takes two lines. */
+.pizarron__segmento > span {
+  flex: 1;
+}
+
+.pizarron__segmento input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  margin: 0;
+  cursor: pointer;
+}
+
+.pizarron__segmento span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 6px 10px;
+  text-align: center;
+  font-weight: 600;
+  transition: background-color 120ms ease, color 120ms ease, transform 120ms ease-out;
+}
+
+.pizarron__segmento + .pizarron__segmento span {
+  border-left: 1px solid var(--borde-control);
+}
+
+.pizarron__segmento:active span {
+  transform: scale(0.97);
+}
+
+.pizarron__segmento input:checked + span {
+  background: var(--accion);
+  color: var(--accion-texto);
+}
+
+.pizarron__segmento input:focus-visible + span {
+  outline: 3px solid var(--foco);
+  outline-offset: -3px;
+}
+
+/* The photos of the class, in a row that scrolls sideways on a phone. */
+.pizarron__tira {
+  display: flex;
+  gap: 10px;
+  margin: 0;
+  padding: 6px 6px 10px;
+  list-style: none;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+}
+
+.pizarron__mini {
+  display: block;
+  width: 132px;
+  height: 99px;
+  padding: 0;
+  border: 4px solid var(--pizarron-marco);
+  border-radius: var(--radio-control);
+  background: var(--pizarron);
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 120ms ease-out;
+}
+
+.pizarron__mini:active {
+  transform: scale(0.97);
+}
+
+.pizarron__mini img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.pizarron__mini .pizarron__esqueleto {
+  min-height: 0;
+  height: 100%;
+}
+
+.pizarron__guardar {
+  display: grid;
+  gap: 12px;
+  max-width: 34rem;
+}
+
+.pizarron__casilla {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  min-height: 44px;
+  cursor: pointer;
+}
+
+.pizarron__casilla input {
+  width: 20px;
+  height: 20px;
+  margin-top: 2px;
+  flex: none;
+}
+
+.pizarron__nota {
+  display: block;
+  font-size: var(--t-chica);
+  color: var(--texto-suave);
+}
+
+/* Saving stays in reach at the bottom of a phone, over the safe area. */
+.pizarron__pie {
+  position: sticky;
+  bottom: 0;
+  padding: 10px 0 calc(10px + env(safe-area-inset-bottom));
+  /* Only the button floats: a plain bar is a dark box over a sky (Violeta cósmico, potentes.css). */
+  pointer-events: none;
+}
+
+.pizarron__pie > * {
+  pointer-events: auto;
+}
+
+.pizarron__pie .boton {
+  width: 100%;
+}
+
+/* The corners over the photo. */
+.esquinas {
+  position: relative;
+  width: 100%;
+  max-width: calc(70dvh * var(--proporcion, 10));
+  margin: 0 auto;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.esquinas__foto {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  pointer-events: none;
+}
+
+.esquinas__marco {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.esquinas__fuera {
+  fill: rgb(0 0 0 / 0.45);
+}
+
+.esquinas__borde {
+  fill: none;
+  stroke: var(--pizarron-tiza);
+  stroke-width: 2.5px;
+  stroke-dasharray: 8 5;
+}
+
+/* Each corner: a 44 px place to touch, with a chalk ring in the middle. */
+.esquinas__punto {
+  position: absolute;
+  width: 44px;
+  height: 44px;
+  margin: -22px 0 0 -22px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  cursor: grab;
+  touch-action: none;
+}
+
+.esquinas__punto::after {
+  content: '';
+  position: absolute;
+  inset: 11px;
+  border: 3px solid var(--pizarron-tiza);
+  border-radius: 50%;
+  background: rgb(35 56 47 / 0.55);
+  box-shadow: 0 0 0 1px rgb(0 0 0 / 0.5);
+  transition: transform 120ms ease-out;
+}
+
+/* A corner picked with a touch: the next touch on the photo puts it there. */
+.esquinas__punto[aria-pressed='true']::after {
+  border-color: var(--pizarron-amarillo);
+  transform: scale(1.25);
+}
+
+.esquinas[data-eligiendo] {
+  cursor: crosshair;
+}
+
+.esquinas__punto:active {
+  cursor: grabbing;
+}
+
+.esquinas__punto:active::after {
+  transform: scale(1.25);
+}
+
+.esquinas__punto:focus-visible {
+  outline: 3px solid var(--foco);
+  outline-offset: 0;
+}
+
+/* Above the finger, what's under it, bigger. */
+.esquinas__lupa {
+  position: absolute;
+  width: 112px;
+  height: 112px;
+  border: 3px solid var(--pizarron-tiza);
+  border-radius: 50%;
+  background-repeat: no-repeat;
+  box-shadow: 0 4px 14px rgb(0 0 0 / 0.45);
+  pointer-events: none;
+}
+
+.esquinas__lupa::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 14px;
+  height: 14px;
+  margin: -7px 0 0 -7px;
+  border: 2px solid var(--pizarron-amarillo);
+  border-radius: 50%;
+}
+
+
+/* On a wide screen, rows of buttons and the view switch keep a hand's width. */
+.pizarron__botones,
+.pizarron__editor > .pizarron__opciones {
+  max-width: 34rem;
+}
+
+/* What Gemini read on the photo. */
+.pizarron__lectura {
+  display: grid;
+  gap: 12px;
+  padding: 14px 16px 16px;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-bloque);
+  background: var(--superficie);
+}
+
+.pizarron__lectura-nota {
+  margin: 0;
+  color: var(--texto-suave);
+}
+
+.pizarron__lectura-texto {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  max-width: 72ch;
+  overflow-wrap: anywhere;
+}
+
+.pizarron__lectura-texto p,
+.pizarron__lectura-texto ul,
+.pizarron__lectura-texto ol {
+  margin: 0;
+}
+
+.pizarron__lectura-titulo {
+  margin: 4px 0 0;
+  font-size: var(--t-h3);
+}
+
+/* A formula wider than the phone scrolls sideways instead of pushing the page. */
+.pizarron__lectura-formula {
+  display: block;
+  overflow-x: auto;
+  padding-block: 4px;
+  scrollbar-width: thin;
+  overscroll-behavior-x: contain;
+}
+
+.pizarron__lectura-formula:focus-visible {
+  outline: 2px solid var(--foco);
+  outline-offset: 2px;
+}
+
+.pizarron__lectura-pieza {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+}
+
+.pizarron__lectura-pieza p {
+  margin: 0;
+}
+
+.pizarron__lectura-pieza pre {
+  margin: 0;
+  padding: 12px 14px;
+  overflow-x: auto;
+  border-radius: var(--radio-bloque);
+  background: var(--superficie);
+  font-family: var(--codigo-letra, ui-monospace, 'Cascadia Mono', Consolas, monospace);
+  font-size: var(--t-chica);
+  overscroll-behavior-x: contain;
+}
+
+.pizarron__lectura-tabla {
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+}
+
+.pizarron__lectura-otra {
+  justify-self: start;
+}
+
+.pizarron__lectura-tabla table {
+  border-collapse: collapse;
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+.pizarron__lectura-tabla th,
+.pizarron__lectura-tabla td {
+  padding: 6px 12px;
+  border: 1px solid var(--borde-control);
+  text-align: left;
+}
+
+.pizarron__lectura-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.pizarron__lectura-pieza pre:focus-visible,
+.pizarron__lectura-tabla:focus-visible {
+  outline: 2px solid var(--foco);
+  outline-offset: 2px;
+}
+
+.pizarron__lectura-esqueleto {
+  display: grid;
+  gap: 10px;
+}
+
+.pizarron__lectura-esqueleto span {
+  display: block;
+  height: 14px;
+  border-radius: 4px;
+  background: color-mix(in srgb, currentColor 12%, transparent);
+  animation: pizarron-latido 1.2s ease-in-out infinite alternate;
+}
+
+.pizarron__lectura-esqueleto span:nth-child(2) {
+  width: 82%;
+}
+
+.pizarron__lectura-esqueleto span:nth-child(3) {
+  width: 64%;
+}
+
+@keyframes pizarron-latido {
+  to {
+    opacity: 0.45;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pizarron__lectura-esqueleto span {
+    animation: none;
+  }
+}

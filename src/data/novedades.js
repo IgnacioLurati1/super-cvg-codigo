@@ -8,6 +8,43 @@ export const PENDIENTES = [];
 
 export const NOVEDADES = [
   {
+    fecha: '2026-11-26',
+    titulo: 'Escáner',
+    funciones: [
+      {
+        tipo: 'nuevo',
+        nombre: 'Escáner',
+        texto: 'Sacale una foto al pizarrón, verde o blanco, y queda derecha y limpia. Está en «Más».',
+        puntos: [
+          'Pasalo a hoja blanca, con la tiza de color en su color, o dejalo como pizarrón parejo.',
+          '«Auto» elige cómo queda cada foto y te dice qué eligió.',
+          'La foto se abre en sus bordes, para acomodarlos primero, y como la sacaste. «Arreglar todo» la limpia de una: elige la tiza, repasa las líneas que casi no se ven y saca lo que sobra.',
+          '«Birome» deja la tiza como marcador, sin polvo y del grosor que elijas. «Remarcada» une la tiza que salió en puntos.',
+          'En el pizarrón blanco elegís lo mismo para el fibrón.',
+          'Si la tiza casi no se ve, subí la intensidad o pasale el lápiz: sigue la línea y la remarca del grosor de las demás.',
+          'Lo que sobra lo sacás con la goma. La escoba se lleva solo lo que no es escritura y, en toda la foto, te marca en rojo lo que va a sacar.',
+          'El lápiz, la escoba y la goma quedan abajo en la pantalla mientras recorrés la foto. Ctrl+Z deshace el último trazo.',
+          'Las fotos de una clase van juntas en un PDF de la materia que tenés a esa hora, en la sección que elijas, también una del campus.',
+          'Con Gemini, «Pasar a texto» te da las fórmulas, las tablas y el código.',
+          'El código lo abrís en el Laboratorio y un DER, en su diagrama.',
+          'Lo que dice queda en el PDF: lo encontrás en Buscar y Consultron lo usa como apunte.',
+          '«Preguntarle a Consultron» le pasa la foto para que le preguntes lo que quieras.',
+          'Si se cierra la pestaña antes de guardarlas, las fotos te esperan al volver.',
+        ],
+      },
+      {
+        tipo: 'mejora',
+        nombre: 'DER en el celu',
+        texto: 'En el celu, el diagrama se abre entero a la vista.',
+      },
+      {
+        tipo: 'mejora',
+        nombre: 'Secciones del campus',
+        texto: 'Lo que compartís, mandás a una materia o guardás de una sesión en vivo también puede ir a una sección del campus.',
+      },
+    ],
+  },
+  {
     fecha: '2026-11-24',
     titulo: 'Gemini y fotos',
     funciones: [

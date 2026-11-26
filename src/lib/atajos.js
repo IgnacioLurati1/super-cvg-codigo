@@ -26,6 +26,7 @@ const PANTALLAS = [
   { clave: 'consultron', a: '/consultron', nombre: 'Consultron' },
   { clave: 'envivo', a: '/en-vivo', nombre: 'En vivo' },
   { clave: 'disenos', a: '/disenos', nombre: 'Diseños' },
+  { clave: 'pizarron', a: '/escaner', nombre: 'Escáner' },
 ];
 
 /**
@@ -105,6 +106,10 @@ export const ATAJOS = [
       { teclas: ['1'], texto: 'Primer cuatrimestre' },
       { teclas: ['2'], texto: 'Segundo cuatrimestre' },
     ],
+  },
+  {
+    grupo: 'En el Escáner',
+    lista: [{ con: ['Ctrl', 'Z'], texto: 'Deshacer el último trazo con el dedo', siempre: true }],
   },
 ];
 

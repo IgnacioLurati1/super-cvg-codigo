@@ -73,12 +73,16 @@ const deBase3 = (n, cuantos) => Array.from({ length: cuantos }, () => {
   return v;
 });
 
-// The screens of the menu before Diseños: `menu: 'antes'` reads them (never written), `menu: 'ahora'` writes and reads all.
-const ANTES_DE_DISENOS = EN_EL_MENU.filter((s) => s !== 'disenos');
+// The screens a code carries, always the same so the codes already shared keep reading: a screen that came later
+// (Pizarrón) isn't in them, and goes where it starts (ajustes.js). The ones before Diseños: `menu: 'antes'` reads them
+// (never written), `menu: 'ahora'` writes and reads all of MENU_DEL_CODIGO.
+const DESPUES_DEL_CODIGO = ['pizarron'];
+export const MENU_DEL_CODIGO = EN_EL_MENU.filter((s) => !DESPUES_DEL_CODIGO.includes(s));
+const ANTES_DE_DISENOS = MENU_DEL_CODIGO.filter((s) => s !== 'disenos');
 
 /** The order of the menu and where each screen is, for the screens of `lista`, in `orden` and `lugares` characters. */
 const delMenu = (lista, { orden, lugares, menu }) => [
-  { ancho: orden, menu, de: (a) => rangoDe(a.menu.orden, lista), a: (n, c) => { c.ajustes.menu.orden = ordenDe(n, lista); }, tope: factorial(lista.length) },
+  { ancho: orden, menu, de: (a) => rangoDe(a.menu.orden.filter((s) => lista.includes(s)), lista), a: (n, c) => { c.ajustes.menu.orden = ordenDe(n, lista); }, tope: factorial(lista.length) },
   {
     ancho: lugares,
     menu,
@@ -135,7 +139,7 @@ const CAMPOS = [
   { ancho: 1, de: (a) => ESTILOS_DE_MENU.indexOf(a.menu.estilo), a: (n, c) => { c.ajustes.menu.estilo = ESTILOS_DE_MENU[n]; }, tope: ESTILOS_DE_MENU.length },
   { ancho: 1, de: (a) => POSICIONES_DEL_MENU.indexOf(a.menu.posicion), a: (n, c) => { c.ajustes.menu.posicion = POSICIONES_DEL_MENU[n]; }, tope: POSICIONES_DEL_MENU.length },
   ...delMenu(ANTES_DE_DISENOS, { orden: 8, lugares: 5, menu: 'antes' }),
-  ...delMenu(EN_EL_MENU, { orden: 9, lugares: 6, menu: 'ahora' }),
+  ...delMenu(MENU_DEL_CODIGO, { orden: 9, lugares: 6, menu: 'ahora' }),
   // Hoy, from mio: its blocks in order, the column of each, the hidden ones, what enters «Vencimientos» and how far it looks.
   {
     ancho: 5,

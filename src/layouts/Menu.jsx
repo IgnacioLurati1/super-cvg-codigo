@@ -21,6 +21,7 @@ export const PANTALLAS_DEL_MENU = [
   { clave: 'consultron', a: '/consultron', texto: 'Consultron' },
   { clave: 'envivo', a: '/en-vivo', texto: 'En vivo' },
   { clave: 'disenos', a: '/disenos', texto: 'Diseños' },
+  { clave: 'pizarron', a: '/escaner', texto: 'Escáner' },
 ];
 
 // Mensajes and Configuración always go with their drawing; the rest, with the styles that have them.
@@ -79,6 +80,8 @@ const DIBUJOS = {
   laboratorio: <path d="M8 7l-5 5 5 5M16 7l5 5-5 5M14 4l-4 16" />,
   // Diseños: a painter's palette, with three dots of paint.
   disenos: <path d="M12 3.5a8.5 8.5 0 1 0 0 17c1.1 0 1.7-.7 1.7-1.6 0-.5-.2-.8-.5-1.2-.3-.3-.5-.7-.5-1.2 0-.9.7-1.6 1.6-1.6h1.9a4.3 4.3 0 0 0 4.3-4.3c0-3.9-3.8-7.1-8.5-7.1zM7.5 12h.01M9.5 8h.01M14.5 8h.01" />,
+  // Pizarrón: a board on its tray, with a line of chalk.
+  pizarron: <path d="M3.5 5h17v11.5h-17zM2.5 19.5h19M7 9.5c1.5-1 2.5 1 4 0s2.5 1 4 0M7 13h5" />,
   // Repaso: two index cards, one over the other.
   repaso: <path d="M7.5 4.5h13v10h-13zM3.5 8.5v11h13M10.5 8h7M10.5 11h4.5" />,
   consultron: <path d="M12 4.6V7M13.3 3.3a1.3 1.3 0 1 1-2.6 0 1.3 1.3 0 0 1 2.6 0zM8 7h8a3.5 3.5 0 0 1 3.5 3.5V15a3.5 3.5 0 0 1-3.5 3.5H8A3.5 3.5 0 0 1 4.5 15v-4.5A3.5 3.5 0 0 1 8 7zM2.5 11.5v3M21.5 11.5v3M9.5 11.6v.9M14.5 11.6v.9M10 15.3c1.2.8 2.8.8 4 0" />,

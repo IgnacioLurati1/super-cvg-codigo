@@ -81,6 +81,7 @@ const router = createBrowserRouter(
                 { path: 'en-vivo', lazy: aparte(() => import('./pages/EnVivo')) },
                 // The styles other students published: try one, use it, rate it and comment (disenos.js).
                 { path: 'disenos', lazy: aparte(() => import('./pages/Disenos')) },
+                { path: 'escaner', lazy: aparte(() => import('./pages/Pizarron')) },
                 { path: 'compartido', lazy: aparte(() => import('./pages/Compartido')) },
                 // A file sent without Drive, from the link of a message (temporales.js).
                 { path: 'archivo', lazy: aparte(() => import('./pages/Archivo')) },

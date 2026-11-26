@@ -66,15 +66,15 @@ describe('Alt y un número', () => {
 
 describe('la lista de atajos', () => {
   it('cada pantalla con su número, del 1 al 9 y el 0, en el orden del menú: la que llegó después no corre a ninguna', () => {
-    expect(PANTALLAS_CON_ATAJO.map((p) => p.numero)).toEqual(['1', '2', '3', '4', '5', '6', null, '7', '8', '9', '0', null, null, null, null, null]);
-    expect(PANTALLAS_CON_ATAJO.map((p) => p.a)).toEqual(['/', '/materias', '/calendario', '/buscar', '/resumenes', '/horario', '/sysacad', '/carrera', '/mensajes', '/configuracion', '/laboratorio', '/calculadoras', '/repaso', '/consultron', '/en-vivo', '/disenos']);
+    expect(PANTALLAS_CON_ATAJO.map((p) => p.numero)).toEqual(['1', '2', '3', '4', '5', '6', null, '7', '8', '9', '0', null, null, null, null, null, null]);
+    expect(PANTALLAS_CON_ATAJO.map((p) => p.a)).toEqual(['/', '/materias', '/calendario', '/buscar', '/resumenes', '/horario', '/sysacad', '/carrera', '/mensajes', '/configuracion', '/laboratorio', '/calculadoras', '/repaso', '/consultron', '/en-vivo', '/disenos', '/escaner']);
   });
 
   it('con el menú ordenado, los números siguen ese orden: las diez primeras, también Sysacad', () => {
     const orden = ['repaso', 'sysacad', ...EN_EL_MENU.filter((c) => c !== 'repaso' && c !== 'sysacad')];
     const lista = pantallasConAtajo(orden);
-    expect(lista.map((p) => p.a)).toEqual(['/repaso', '/sysacad', '/', '/materias', '/calendario', '/buscar', '/resumenes', '/horario', '/carrera', '/mensajes', '/configuracion', '/laboratorio', '/calculadoras', '/consultron', '/en-vivo', '/disenos']);
-    expect(lista.map((p) => p.numero)).toEqual(['1', '2', '3', '4', '5', '6', '7', '8', '9', '0', null, null, null, null, null, null]);
+    expect(lista.map((p) => p.a)).toEqual(['/repaso', '/sysacad', '/', '/materias', '/calendario', '/buscar', '/resumenes', '/horario', '/carrera', '/mensajes', '/configuracion', '/laboratorio', '/calculadoras', '/consultron', '/en-vivo', '/disenos', '/escaner']);
+    expect(lista.map((p) => p.numero)).toEqual(['1', '2', '3', '4', '5', '6', '7', '8', '9', '0', null, null, null, null, null, null, null]);
   });
 
   it('Alt y un número llevan a la pantalla que ocupa ese lugar en el menú', () => {

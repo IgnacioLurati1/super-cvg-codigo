@@ -46,7 +46,7 @@ import { enCriollo } from '../lib/laboratorio/mensajes';
 import { motorDe, useMotor } from '../lib/laboratorio/motor';
 import { leerRecorrido, lineasDelPaso, TOPE_PASOS } from '../lib/laboratorio/pasos';
 import { useRevision } from '../lib/laboratorio/revisar';
-import { borradorEscrito, guardarMesa, mesaGuardada, tomarDelPdf } from '../lib/laboratorio/pendiente';
+import { borradorEscrito, guardarMesa, mesaGuardada, tomarArchivoQueAbre, tomarDelPdf } from '../lib/laboratorio/pendiente';
 import { EXTENSIONES, MAX_CODIGO, MAX_PROYECTOS, nombreValido } from '../lib/laboratorio/saneo';
 import { comoVolvio } from '../lib/laboratorio/tuBase';
 import { leerSubido, leerZip, partirNombre, TOPE_ZIP, zipDeCarpetas, zipDeProyecto } from '../lib/laboratorio/zip';
@@ -99,7 +99,13 @@ function inicio() {
     guardarMesa(lugar);
     return lugar;
   }
-  return antes ? { escrito: null, pestanas: [], ...antes } : { mesa: mesaNueva(), abierto: null, escrito: null, pestanas: [] };
+  const lugar = antes ? { escrito: null, pestanas: [], ...antes } : { mesa: mesaNueva(), abierto: null, escrito: null, pestanas: [] };
+  // A file saved from another screen opens in its tab, next to the ones that were open.
+  const archivo = tomarArchivoQueAbre();
+  if (!archivo) return lugar;
+  const conArchivo = { ...lugar, abierto: archivo, escrito: null, pestanas: [...lugar.pestanas.filter((t) => t !== `a:${archivo}`), `a:${archivo}`] };
+  guardarMesa(conArchivo);
+  return conArchivo;
 }
 
 const DIBUJOS = {

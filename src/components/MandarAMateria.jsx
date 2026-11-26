@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import ElegirMateria, { ElegirSeccion, NUEVA, seccionInicial, useMaterias } from './ElegirMateria';
+import ElegirMateria, { ElegirSeccion, NUEVA, seccionInicial, useMaterias, useSeccionesDelCampus } from './ElegirMateria';
 import { enlaceDe } from '../lib/drivePublico';
 import { useMio } from '../lib/mio';
 import { esAgregada, seccionesDondeSumar, sumarDondeSea } from '../lib/propias';
@@ -17,6 +17,7 @@ export default function MandarAMateria({ id, nodo, alMandar, alCancelar }) {
   const [error, setError] = useState('');
   const form = useRef(null);
   const secciones = seccionesDondeSumar(mio, materia);
+  const seccionesDelCampus = useSeccionesDelCampus(materia, materias.nombres.get(materia));
   useEffect(() => form.current?.querySelector('select')?.focus(), []);
 
   const elegirMateria = (id) => {
@@ -32,7 +33,7 @@ export default function MandarAMateria({ id, nodo, alMandar, alCancelar }) {
       return;
     }
     const bloque = { tipo: 'enlace', url: enlaceDe(nodo), titulo: nodo.n.slice(0, 200) };
-    const nombreSeccion = seccion === NUEVA ? NOMBRE_NUEVA : (secciones.find((c) => c.id === seccion)?.nombre ?? NOMBRE_NUEVA);
+    const nombreSeccion = seccion === NUEVA ? NOMBRE_NUEVA : ([...secciones, ...seccionesDelCampus].find((c) => c.id === seccion)?.nombre ?? NOMBRE_NUEVA);
     if (!sumarDondeSea(materia, seccion === NUEVA ? null : seccion, NOMBRE_NUEVA, [bloque])) {
       setError('No entra en esa sección. Probá con otra.');
       return;
@@ -43,7 +44,7 @@ export default function MandarAMateria({ id, nodo, alMandar, alCancelar }) {
   return (
     <form ref={form} id={id} className="mandar" onSubmit={mandar} noValidate>
       <ElegirMateria valor={materia} materias={materias} alElegir={elegirMateria} ninguna="Elegí una" />
-      {materia !== null && <ElegirSeccion secciones={secciones} valor={seccion} nueva={NOMBRE_NUEVA} alElegir={setSeccion} />}
+      {materia !== null && <ElegirSeccion secciones={secciones} delCampus={seccionesDelCampus} valor={seccion} nueva={NOMBRE_NUEVA} alElegir={setSeccion} />}
       {error && <p className="mandar__error" role="alert">{error}</p>}
       <div className="mandar__botones">
         <button type="submit" className="boton boton--chico">Mandar el link</button>
