@@ -125,6 +125,7 @@ export default function Entrar() {
       {/* Behind the whole page, only with a real graphics card: the faculty's entrance (also at /entrada). */}
       <Entrada3D modo="fondo" />
       <div className="entrar__texto">
+        <p className="entrar__nombre" data-aparece="">Super CVG</p>
         <h1 id="entrar-titulo" data-aparece="">Todo lo que tenés que entregar, en una sola pantalla</h1>
         <p className="entrar__bajada" data-aparece="" style={{ '--orden': 1 }}>Entregas, archivos y notas de tus materias del CVG, el campus virtual de UTN FRRO.{CLIENTE_GOOGLE && ' Si tu materia usa Google Classroom, también sus temas, avisos y tareas.'}</p>
         <Cuaderno3D />

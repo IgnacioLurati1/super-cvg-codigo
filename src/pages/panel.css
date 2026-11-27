@@ -6,6 +6,13 @@
   gap: clamp(32px, 6vw, 72px);
 }
 
+/* The name in plain text over the title: who searches «super cvg» finds it on the page, not only in the tab. */
+.entrar__nombre {
+  margin: 0 0 8px;
+  font-size: var(--t-chica);
+  font-weight: 700;
+}
+
 .entrar h1 {
   font-size: clamp(2.25rem, 5vw, 3.5rem);
   line-height: 1.05;

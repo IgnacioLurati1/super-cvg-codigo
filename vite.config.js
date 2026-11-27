@@ -100,6 +100,7 @@ function paginas() {
       }
       if (SITIO.url) {
         const urls = publicas
+          .filter((p) => !p.noindex)
           .map((p) => {
             const fecha = fechaDe(p.fuente, raiz);
             return `  <url><loc>${direccion(p.ruta)}</loc>${fecha ? `<lastmod>${fecha}</lastmod>` : ''}</url>`;
