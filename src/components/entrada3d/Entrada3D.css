@@ -11,6 +11,13 @@
   pointer-events: none;
 }
 
+/* With the entrance behind the page, the design's sky (styles/potentes.css, src/lib/fondo) stays out from the first
+   frame: it showed while the page and the entrance faded in, and the entrance seemed to replace it. */
+html[data-potente='si']:has(.entrada3d--fondo) body::before,
+html:has(.entrada3d--fondo) .fondo-potente {
+  display: none;
+}
+
 /* The veil: thicker where the texts are (left on a computer, everywhere on a phone), thinner over the door. */
 .entrada3d--fondo::after {
   content: '';

@@ -15,6 +15,8 @@ export const NOVEDADES = [
       'Con la vista Tabla, el tablón de Classroom ya no muestra los títulos con una letra por renglón.',
       'Al apagar Sensible a la luz vuelven el tema y las páginas del PDF que tenías.',
       'Buscar le pide tus materias al campus de a poco. La primera búsqueda puede tardar más.',
+      'Al salir, la portada ya no muestra un momento el fondo de tu diseño antes de la facu en 3D.',
+      'Si una foto de las calculadoras no carga, ves una calculadora dibujada en vez del ícono de imagen rota.',
     ],
   },
   {

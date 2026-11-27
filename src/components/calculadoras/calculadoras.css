@@ -129,6 +129,20 @@
   object-position: left top;
 }
 
+.calcs__sin-foto {
+  width: 40px;
+  height: 40px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.calcs__sin-foto path {
+  stroke-width: 2.25;
+}
+
 .calcs__foto-oscuro,
 :root[data-tema='oscuro'] .calcs__foto-claro {
   display: none !important;
