@@ -14,6 +14,7 @@ export const NOVEDADES = [
     arreglos: [
       'Con la vista Tabla, el tablón de Classroom ya no muestra los títulos con una letra por renglón.',
       'Al apagar Sensible a la luz vuelven el tema y las páginas del PDF que tenías.',
+      'Buscar le pide tus materias al campus de a poco. La primera búsqueda puede tardar más.',
     ],
   },
   {

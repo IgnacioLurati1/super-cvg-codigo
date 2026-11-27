@@ -97,3 +97,41 @@ describe('opening the site', () => {
     expect(tandas.flat()).not.toContain('core_course_get_contents');
   });
 });
+
+describe('every course at once (Buscar, the palette, Consultron)', () => {
+  // On 27/11 Buscar asked for the contents of all the student's courses in the same moment, and the campus fell.
+  it('never more than two requests with contents at the same time, together or apart', async () => {
+    for (const juntas of [true, false]) {
+      let enVuelo = 0;
+      let maximo = 0;
+      const pedidos = [];
+      vi.stubGlobal('fetch', vi.fn(async (_url, { body }) => {
+        enVuelo++;
+        maximo = Math.max(maximo, enVuelo);
+        await new Promise((ok) => setTimeout(ok, 5));
+        enVuelo--;
+        if (body.get('wsfunction') === 'tool_mobile_call_external_functions') {
+          if (!juntas) return new Response(JSON.stringify({ exception: 'x', errorcode: 'servicenotavailable' }));
+          const responses = [];
+          for (let i = 0; body.has(`requests[${i}][function]`); i++) {
+            const { courseid } = JSON.parse(body.get(`requests[${i}][arguments]`));
+            pedidos.push(courseid);
+            responses.push({ error: false, data: JSON.stringify(RESPUESTAS.core_course_get_contents({ courseid })) });
+          }
+          return new Response(JSON.stringify({ responses }));
+        }
+        const courseid = Number(body.get('courseid'));
+        pedidos.push(courseid);
+        return new Response(JSON.stringify(RESPUESTAS.core_course_get_contents({ courseid })));
+      }));
+      iniciarSesion(juntas ? 'clave' : 'otra');
+      const materias = Array.from({ length: 23 }, (_, i) => ({ id: i + 1, nombre: `Materia ${i + 1}` }));
+      const indice = await cargarIndice(materias);
+      expect(maximo).toBeLessThanOrEqual(2);
+      expect(new Set(pedidos).size).toBe(23);
+      expect(JSON.stringify(indice)).toContain('Apunte 23');
+      cerrarSesion();
+      vaciarCache();
+    }
+  });
+});

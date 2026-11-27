@@ -3,7 +3,7 @@
 import { aplanarContenido, eventosDelMes, normalizarAviso, normalizarEvento, textoPlano } from './datos';
 import { armarAreas, cursoDelCatalogo, estaAbierta, inscripcionPropia, patronDeBusqueda } from './inscripcion';
 import { esDemo } from './modoDemo';
-import { bajarArchivo, enviarEntrega, ErrorCampus, guardarEntrega, inscribirse, leerInscripcion, llamar, seJuntan, subirArchivo } from './moodle';
+import { bajarArchivo, enviarEntrega, ErrorCampus, guardarEntrega, inscribirse, leerInscripcion, llamar, POR_TANDA_PESADA, seJuntan, subirArchivo } from './moodle';
 import { leerMandado, leerPublicado, leerRespuesta, mandarMensaje, marcarLeida, responderEnConversacion, responderEnForo } from './moodle';
 import { conversaciones, mensaje, mismoTexto, personasHalladas, tandaDeMensajes } from './mensajes';
 import { fijarCursos } from './colores';
@@ -185,18 +185,31 @@ const contenidoDelCampus = (id) => {
 
 export const cargarContenido = (m) => conCache(`contenido.${m.id}`, 30, async () => aplanarContenido(await contenidoDelCampus(m.id), m));
 
+// A course's whole contents is the campus's slowest read: never more than two requests with them at once, as before the
+// batches. Together, four courses in each (moodle.js); apart, one. On 27/11 Buscar asked for every course of the student
+// at the same moment (six connections with four courses each) and the campus fell while it answered.
+const CONTENIDOS_A_LA_VEZ = 2;
+
 export async function cargarIndice(materias) {
-  // Together, the campus reads the courses one after another in one request: all at once. Apart, two at a time, so
-  // the campus doesn't get them all at the same moment.
-  if (seJuntan(tokenActual())) return (await Promise.all(materias.map(cargarContenido))).flat();
-  const pendientes = [...materias];
+  const porPedido = seJuntan(tokenActual()) ? POR_TANDA_PESADA : 1;
+  const grupos = [];
+  for (let i = 0; i < materias.length; i += porPedido) grupos.push(materias.slice(i, i + porPedido));
   const resultados = [];
   const token = tokenActual();
+  let siguiente = 0;
   const trabajador = async () => {
-    while (pendientes.length && tokenActual() === token) resultados.push(...(await cargarContenido(pendientes.shift())));
+    while (siguiente < grupos.length && tokenActual() === token) {
+      const n = siguiente++;
+      // The campus may refuse batches halfway: from then on, one course after another.
+      if (seJuntan(token)) resultados[n] = (await Promise.all(grupos[n].map(cargarContenido))).flat();
+      else {
+        resultados[n] = [];
+        for (const m of grupos[n]) resultados[n].push(...(await cargarContenido(m)));
+      }
+    }
   };
-  await Promise.all([trabajador(), trabajador()]);
-  return resultados;
+  await Promise.all(Array.from({ length: CONTENIDOS_A_LA_VEZ }, trabajador));
+  return resultados.filter(Boolean).flat();
 }
 
 export const cargarMes = (anio, mes) =>
@@ -229,7 +242,7 @@ export function adelantarPedidos(enHoy) {
   // The contents of the courses kept from the last visit leave now, in a batch of their own (moodle.js), instead of
   // waiting for the list of courses. Hoy takes them when that list says they are still in progress; one no longer
   // there is not shown, and it is forgotten after a minute.
-  for (const id of cursosRecordados()) {
+  for (const id of cursosRecordados().slice(0, CONTENIDOS_A_LA_VEZ * POR_TANDA_PESADA)) {
     if (enCache(`contenido.${id}`)) continue;
     const pedido = pedir('core_course_get_contents', { courseid: id });
     const soltar = () => adelantados.get(id)?.pedido === pedido && adelantados.delete(id);

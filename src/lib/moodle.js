@@ -192,7 +192,7 @@ export const seJuntan = (token) => !sinTandas.has(token);
 // is done, and the light ones of the same moment would wait for them.
 const PESADAS = new Set(['core_course_get_contents']);
 // And at most four together: a batch shares one time limit (conTope), and a slow campus would let every course go at once.
-const POR_TANDA_PESADA = 4;
+export const POR_TANDA_PESADA = 4;
 const enEspera = new Map();
 
 const NOMBRE_DE_CAMPO = /^[a-z_]+(?:\[[a-z0-9_]+\])*$/i;
@@ -285,7 +285,8 @@ async function juntos(token, pedidos) {
   // The campus did not take it (closed for this key, or the key is dead): each read on its own says why.
   if (!respuestas) {
     sinTandas.add(token);
-    deAUno(token, pedidos);
+    // One after another: heavy reads let loose at once are what the batches keep from the campus.
+    for (const p of pedidos) await enviar(LECTURA, token, p.funcion, p.parametros).then(p.ok, p.mal);
     return;
   }
   pedidos.forEach((p, i) => {
