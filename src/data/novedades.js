@@ -43,6 +43,9 @@ export const NOVEDADES = [
         texto: 'Lo que compartís, mandás a una materia o guardás de una sesión en vivo también puede ir a una sección del campus.',
       },
     ],
+    arreglos: [
+      'Las calculadoras de Sistemas Operativos, Redes y Estadística y la graficadora 3D vuelven a abrir.',
+    ],
   },
   {
     fecha: '2026-11-24',
