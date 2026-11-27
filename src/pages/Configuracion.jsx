@@ -10,7 +10,7 @@ import { Cargando, ErrorConReintento } from '../components/Filas';
 import { EstadoDescargas, SeccionesQueBaja } from '../components/DescargasInteligentes';
 import PasosDeIos from '../components/PasosDeIos';
 import { useUI } from '../components/ui';
-import { COLORES_DEL_CODIGO, CONTRASTE_MINIMO, contraste, LAB_TAMANO, LETRAS_DE_CODIGO, SIEMPRE_OSCUROS, cambiarAjustes, cambiarSegunLaHora, cambioDeBordes, cambioDeEstilo, disenoQueSeVe, editarDiseno, horasDeLaNoche, colorActual, cuestaLeerSobre, elegirVista, ponerEstiloDeMenu, useAjustes, volverAjustesOriginales } from '../lib/ajustes';
+import { COLORES_DEL_CODIGO, CONTRASTE_MINIMO, contraste, LAB_TAMANO, LETRAS_DE_CODIGO, SIEMPRE_OSCUROS, cambiarAjustes, cambiarLuz, cambiarSegunLaHora, cambioDeBordes, cambioDeEstilo, disenoQueSeVe, editarDiseno, horasDeLaNoche, colorActual, cuestaLeerSobre, elegirVista, ponerEstiloDeMenu, useAjustes, volverAjustesOriginales } from '../lib/ajustes';
 import { DESENFOQUE_DEL_FONDO, INTENSIDAD_DEL_FILTRO, TONO_DEL_FILTRO, movimientoDe, ponerAlineacionDelMenu, ponerAnchoDelMenu, ponerPosicionDelMenu } from '../lib/ajustes';
 import PantallasDelMenu from '../components/PantallasDelMenu';
 import QueAvisosVes from '../components/QueAvisosVes';
@@ -1467,7 +1467,7 @@ export default function Configuracion() {
             nombre="Sensible a la luz"
             ayuda="Pone el tema y los PDF oscuros, sin destellos ni saltos de brillo y con las imágenes animadas quietas. Después los podés cambiar."
             prendido={ajustes.luz}
-            alCambiar={(luz) => poner(luz ? { luz, tema: 'oscuro', pdf: 'oscuro' } : { luz })}
+            alCambiar={(luz) => { if (!cambiarLuz(luz)) avisar('No se pudo guardar. Vale hasta que cierres esta pestaña.', 'error'); }}
           />
         </Seccion>
 

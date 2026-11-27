@@ -257,6 +257,12 @@ function segunLaHoraValida(valor) {
   };
 }
 
+// Null, or the theme, the PDF and, with «Según la hora», the design they were in ('dia' or 'noche').
+function luzAntesValida(valor) {
+  if (!valor || typeof valor !== 'object' || !OPCIONES.tema.includes(valor.tema) || !OPCIONES.pdf.includes(valor.pdf)) return null;
+  return { tema: valor.tema, pdf: valor.pdf, periodo: valor.periodo === 'dia' || valor.periodo === 'noche' ? valor.periodo : null };
+}
+
 export function normalizar(crudo) {
   const datos = crudo && typeof crudo === 'object' ? crudo : {};
   const vistas = datos.vistas && typeof datos.vistas === 'object' ? datos.vistas : {};
@@ -281,6 +287,8 @@ export function normalizar(crudo) {
     // the rest). Off unless turned on. The student's own, like daltonismo and movimiento: «Pasar tu estilo» doesn't take
     // it, and «Volver todo» leaves it as it is.
     luz: datos.luz === true,
+    // The theme and the PDF from before turning it on (it puts both dark), to have them back when it's turned off.
+    luzAntes: datos.luz === true ? luzAntesValida(datos.luzAntes) : null,
     // Reading mode: the tools to arrange a course (options, dragging, hiding, sections) go away until it's turned off.
     lectura: datos.lectura === true,
     // Each block in a frame of its own, in any style. Off unless turned on: the site doesn't box everything, on purpose.
@@ -566,7 +574,26 @@ export const useDeNoche = () =>
 /** False when the browser refused to save: the change still lasts until the tab closes. */
 export const cambiarAjustes = (cambio) => guardar(normalizar({ ...actual, ...cambio }));
 
-export const elegirVista = (pantalla, vista) => cambiarAjustes({ vistas: { ...actual.vistas, [pantalla]: vista } });
+/** Turns «Sensible a la luz» on or off. On, the theme and the PDF go dark and what they were waits (`luzAntes`); off,
+ * they come back, unless the student changed them in the meantime. With «Según la hora», in the design that went dark. */
+export function cambiarLuz(si) {
+  if (si) {
+    if (actual.luz) return true;
+    const periodo = actual.segunLaHora ? periodoQueSeVe(actual) : null;
+    return cambiarAjustes({ luz: true, luzAntes: { tema: actual.tema, pdf: actual.pdf, periodo }, tema: 'oscuro', pdf: 'oscuro' });
+  }
+  const antes = actual.luzAntes;
+  if (!antes) return cambiarAjustes({ luz: false });
+  const pdf = actual.pdf === 'oscuro' ? { pdf: antes.pdf } : {};
+  const otro = antes.periodo && actual.segunLaHora && antes.periodo !== periodoQueSeVe(actual) ? antes.periodo : null;
+  if (!otro) return cambiarAjustes({ luz: false, ...pdf, ...(actual.tema === 'oscuro' ? { tema: antes.tema } : {}) });
+  // The hour changed while it was on: the design that went dark is the other one.
+  const suyo = actual.segunLaHora[otro];
+  const segunLaHora = suyo.tema === 'oscuro' ? { ...actual.segunLaHora, [otro]: { ...suyo, tema: antes.tema } } : actual.segunLaHora;
+  return cambiarAjustes({ luz: false, ...pdf, segunLaHora });
+}
+
+export const elegirVista =(pantalla, vista) => cambiarAjustes({ vistas: { ...actual.vistas, [pantalla]: vista } });
 
 export function volverAjustesOriginales() {
   // «Sensible a la luz» stays: whoever needs it shouldn't get the flashes back by starting over. The data saver isn't

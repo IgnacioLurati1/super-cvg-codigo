@@ -421,7 +421,9 @@
   padding-block: 2px;
 }
 
-.materia[data-vista='tabla'] .fila__texto {
+/* Not in the narrow column on the right (Classroom's card): there the date took the width and the name stood one letter
+   per line. */
+.materia[data-vista='tabla'] .fila__texto:not(:where(.materia__lateral .fila__texto)) {
   grid-template-columns: minmax(0, 1fr) minmax(0, 15em);
   align-items: baseline;
   gap: 16px;

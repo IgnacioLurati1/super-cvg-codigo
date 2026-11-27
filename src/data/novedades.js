@@ -8,6 +8,15 @@ export const PENDIENTES = [];
 
 export const NOVEDADES = [
   {
+    fecha: '2026-11-27',
+    titulo: 'Arreglos',
+    funciones: [],
+    arreglos: [
+      'Con la vista Tabla, el tablón de Classroom ya no muestra los títulos con una letra por renglón.',
+      'Al apagar Sensible a la luz vuelven el tema y las páginas del PDF que tenías.',
+    ],
+  },
+  {
     fecha: '2026-11-26',
     titulo: 'Escáner',
     funciones: [

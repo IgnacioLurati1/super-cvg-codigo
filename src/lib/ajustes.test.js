@@ -237,6 +237,7 @@ describe('leer los ajustes', () => {
       estilo: 'original', tema: 'sistema', contraste: 'normal', daltonismo: 'ninguno', letra: 'normal', movimiento: 'sistema', pdf: 'claro', pdfClaro: 'claro', pdfBrillo: 0.92, accion: null, resaltador: null, cabecera: null, bandeja: null, temaColor: null,
       vistas: { hoy: 'agenda', materia: 'tarjetas', materias: 'tarjetas', calendario: 'mes' },
       luz: false,
+      luzAntes: null,
       lectura: false,
       bordes: false,
       bordesDelEstilo: false,
